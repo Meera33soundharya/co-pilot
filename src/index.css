@@ -1,0 +1,144 @@
+@import "tailwindcss";
+
+/* ── Keyframes (must be at root level in Tailwind v4) ── */
+@keyframes scanline {
+  from {
+    transform: translateY(-100%);
+  }
+
+  to {
+    transform: translateY(1000%);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes count-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-gold {
+
+  0%,
+  100% {
+    opacity: 1;
+    filter: drop-shadow(0 0 5px #D4AF37);
+  }
+
+  50% {
+    opacity: 0.7;
+    filter: drop-shadow(0 0 2px #D4AF37);
+  }
+}
+
+/* ── Theme tokens ── */
+@theme {
+  --font-display: "Outfit", "Inter", sans-serif;
+
+  /* Government Enterprise Palette */
+  --color-gov-navy: #0B1221;
+  --color-gov-navy-light: #162238;
+  --color-gov-gold: #D4AF37;
+  --color-gov-blue: #3B82F6;
+  --color-gov-emerald: #10B981;
+  --color-gov-rose: #EF4444;
+
+  /* UI Tokens */
+  --color-background: #F8FAFC;
+  --color-foreground: #0F172A;
+}
+
+/* ── Base ── */
+@layer base {
+  body {
+    background-color: #F8FAFC;
+    color: #0F172A;
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+/* ── Components ── */
+@layer components {
+
+  .glass-panel {
+    @apply bg-white/70 backdrop-blur-xl border border-white/20 shadow-xl;
+  }
+
+  .navy-panel {
+    @apply bg-[#0B1221] text-white border border-white/5 shadow-2xl;
+  }
+
+  .gold-accent-text {
+    @apply text-[#D4AF37] font-extrabold tracking-widest uppercase;
+  }
+
+  .animate-scanline {
+    animation: scanline 8s linear infinite;
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.4s ease-out both;
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.25s ease-out both;
+  }
+
+  /* Fixed: no spaces inside rgba() in @apply, use plain CSS instead */
+  .glow-hover:hover {
+    box-shadow: 0 0 30px rgba(59, 130, 246, 0.15);
+    transition: all 0.5s;
+    transform: scale(1.01);
+  }
+
+  .kpi-card-refined {
+    @apply bg-white border border-gray-100 rounded-3xl p-6 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1;
+  }
+}
+
+/* ── Recharts overrides (plain CSS, no @apply with !important) ── */
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: #F1F5F9;
+}
+
+.recharts-default-tooltip {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid #F1F5F9 !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12) !important;
+  padding: 1rem !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  color: #0F172A !important;
+}
