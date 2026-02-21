@@ -87,7 +87,7 @@ export default function Analytics() {
                             </button>
                         ))}
                     </div>
-                    <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-black text-gray-600 hover:bg-gray-50 transition-all shadow-sm">
+                    <button onClick={() => alert('Exporting analytics report as PDF...')} className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-black text-gray-600 hover:bg-gray-50 transition-all shadow-sm">
                         <Download className="w-3.5 h-3.5" />
                         Export Report
                     </button>

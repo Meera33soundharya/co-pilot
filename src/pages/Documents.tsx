@@ -45,7 +45,7 @@ export default function Documents() {
                             className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
                         />
                     </div>
-                    <button className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20">
+                    <button onClick={() => alert('Upload feature coming soon! This would open a file picker dialog.')} className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20">
                         <Upload className="w-4 h-4" />
                         Upload Document
                     </button>
@@ -59,7 +59,7 @@ export default function Documents() {
                     </h2>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                         {folders.map(folder => (
-                            <div key={folder.name} className={`group cursor-pointer p-5 rounded-2xl border-2 ${folder.color} hover:shadow-md transition-all hover:-translate-y-0.5`}>
+                            <div key={folder.name} onClick={() => alert(`Opening folder: ${folder.name} (${folder.count} files)`)} className={`group cursor-pointer p-5 rounded-2xl border-2 ${folder.color} hover:shadow-md transition-all hover:-translate-y-0.5`}>
                                 <FolderOpen className="w-7 h-7 mb-3 opacity-80" />
                                 <p className="text-xs font-black leading-tight mb-1">{folder.name}</p>
                                 <p className="text-[10px] opacity-60 font-bold">{folder.count} files</p>
@@ -104,10 +104,10 @@ export default function Documents() {
                                     ) : (
                                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
                                     )}
-                                    <button className="h-8 w-8 rounded-xl bg-gray-100 hover:bg-blue-600 hover:text-white flex items-center justify-center transition-all">
+                                    <button onClick={() => alert(`Viewing: ${doc.name}`)} className="h-8 w-8 rounded-xl bg-gray-100 hover:bg-blue-600 hover:text-white flex items-center justify-center transition-all">
                                         <Eye className="w-3.5 h-3.5" />
                                     </button>
-                                    <button className="h-8 w-8 rounded-xl bg-gray-100 hover:bg-blue-600 hover:text-white flex items-center justify-center transition-all">
+                                    <button onClick={() => alert(`Downloading: ${doc.name} (${doc.size})`)} className="h-8 w-8 rounded-xl bg-gray-100 hover:bg-blue-600 hover:text-white flex items-center justify-center transition-all">
                                         <Download className="w-3.5 h-3.5" />
                                     </button>
                                 </div>

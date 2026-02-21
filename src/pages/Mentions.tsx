@@ -83,7 +83,7 @@ export default function Mentions() {
                                     </button>
                                 ))}
                             </div>
-                            <button className="flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-xl text-[10px] font-black text-gray-500 hover:bg-gray-50 transition-all">
+                            <button onClick={() => window.alert('Refreshing social media feed...')} className="flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-xl text-[10px] font-black text-gray-500 hover:bg-gray-50 transition-all">
                                 <RefreshCw className="w-3.5 h-3.5" />
                                 Refresh
                             </button>
@@ -91,7 +91,7 @@ export default function Mentions() {
 
                         <div className="space-y-3">
                             {filtered.map((m, i) => (
-                                <div key={i} className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all cursor-pointer group">
+                                <div key={i} onClick={() => window.alert(`Mention Detail:\n\nHandle: ${m.handle}\nPlatform: ${m.platform}\nSentiment: ${m.sentiment}\nReach: ${m.reach}\n\n"${m.text}"`)} className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all cursor-pointer group text-left">
                                     <div className="flex items-start gap-4">
                                         <div className={`p-2.5 rounded-xl shrink-0 ${m.platform === "Twitter" ? "bg-sky-50" : "bg-blue-50"}`}>
                                             {m.platform === "Twitter" ? (
@@ -113,7 +113,7 @@ export default function Mentions() {
                                             <div className="flex items-center gap-4 mt-3 text-[10px] text-gray-400 font-bold">
                                                 <span>👍 {m.engagement.toLocaleString()}</span>
                                                 <span>📡 {m.reach} reach</span>
-                                                <button className="flex items-center gap-1 ml-auto text-blue-500 hover:text-blue-700 transition-colors">
+                                                <button onClick={(e) => { e.stopPropagation(); window.alert(`Opening source post from ${m.handle} on ${m.platform}...`); }} className="flex items-center gap-1 ml-auto text-blue-500 hover:text-blue-700 transition-colors">
                                                     <ExternalLink className="w-3 h-3" /> View
                                                 </button>
                                             </div>

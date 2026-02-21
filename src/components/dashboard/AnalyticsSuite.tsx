@@ -5,6 +5,7 @@ import {
     PolarGrid, PolarAngleAxis, PolarRadiusAxis
 } from "recharts";
 import { TrendingUp, ArrowUpRight, Flame, Layers } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const trendData = [
     { month: "Aug", complaints: 310, resolved: 260, pending: 50 },
@@ -71,6 +72,7 @@ const timeframes = ["7D", "30D", "90D"];
 
 export function AnalyticsSuite() {
     const [timeframe, setTimeframe] = useState("30D");
+    const navigate = useNavigate();
 
     const wardColor = (v: number) => v >= 70 ? "#EF4444" : v >= 40 ? "#F59E0B" : "#10B981";
 
@@ -83,7 +85,7 @@ export function AnalyticsSuite() {
                     <h2 className="text-base font-black text-gray-900 tracking-tight">Analytics Intelligence</h2>
                     <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 bg-gray-100 px-2 py-0.5 rounded-lg">Multi-dimensional</span>
                 </div>
-                <button className="flex items-center gap-1.5 text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:text-indigo-800 transition-colors">
+                <button onClick={() => navigate("/analytics")} className="flex items-center gap-1.5 text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:text-indigo-800 transition-colors">
                     Deep Analytics <ArrowUpRight className="w-3.5 h-3.5" />
                 </button>
             </div>

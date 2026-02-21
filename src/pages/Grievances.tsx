@@ -10,7 +10,7 @@ const grievances = [
     { id: "GRV-8291", citizen: "Ananya Iyer", issue: "Garbage collection missed for 3 consecutive days", ward: "Ward 09", priority: "Medium", status: "Resolved", time: "1d ago", dept: "Sanitation" },
     { id: "GRV-8290", citizen: "Karan Mehta", issue: "Drainage blockage after heavy rain", ward: "Ward 03", priority: "High", status: "In Progress", time: "1d ago", dept: "Drainage" },
     { id: "GRV-8289", citizen: "Priya Sharma", issue: "Broken playground equipment in community park", ward: "Ward 07", priority: "Low", status: "Open", time: "2d ago", dept: "Parks" },
-    { id: "GRV-8288", citizen: "Rajesh Kumar", issue: "Noisy construction violating night hours", ward: "Ward 11", priority: "Medium", status: "Closed", time: "3d ago", dept: "Enforcement" },
+    { id: "GRV-8288", citizen: "Rajesh Sharma", issue: "Noisy construction violating night hours", ward: "Ward 11", priority: "Medium", status: "Closed", time: "3d ago", dept: "Enforcement" },
     { id: "GRV-8287", citizen: "Deepika Nair", issue: "Pothole causing damage to vehicles by temple road", ward: "Ward 04", priority: "High", status: "In Progress", time: "3d ago", dept: "Roads" },
     { id: "GRV-8286", citizen: "Mohammed Ali", issue: "Public toilet not cleaned in Ward Office Area", ward: "Ward 02", priority: "Medium", status: "Open", time: "4d ago", dept: "Sanitation" },
     { id: "GRV-8285", citizen: "Suresh Babu", issue: "Illegal encroachment on footpath near market", ward: "Ward 08", priority: "Low", status: "Resolved", time: "5d ago", dept: "Enforcement" },
@@ -93,7 +93,7 @@ export default function Grievances() {
                             ))}
                         </div>
 
-                        <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all shadow-md shadow-blue-500/20">
+                        <button onClick={() => alert('New grievance form coming soon!')} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all shadow-md shadow-blue-500/20">
                             <Plus className="w-3.5 h-3.5" />
                             New
                         </button>
@@ -135,7 +135,7 @@ export default function Grievances() {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <button className="h-8 w-8 rounded-xl bg-gray-50 hover:bg-blue-100 flex items-center justify-center transition-all group-hover:bg-blue-600 group-hover:text-white border border-gray-100">
+                                            <button onClick={() => alert(`Opening grievance ${g.id}: ${g.issue}\nCitizen: ${g.citizen}\nWard: ${g.ward}\nStatus: ${g.status}`)} className="h-8 w-8 rounded-xl bg-gray-50 hover:bg-blue-100 flex items-center justify-center transition-all group-hover:bg-blue-600 group-hover:text-white border border-gray-100">
                                                 <ArrowUpRight className="w-3.5 h-3.5" />
                                             </button>
                                         </td>

@@ -11,11 +11,13 @@ const recentSpeeches = [
 
 const toneOptions = ["Formal", "Empathetic", "Urgent", "Informational", "Motivational"];
 const langOptions = ["English", "Hindi", "Tamil", "Telugu", "Bengali", "Marathi"];
+const audienceOptions = ["Constituents", "Youth", "Senior Citizens", "Opposition", "Media"];
 
 export default function SpeechAI() {
     const [inputText, setInputText] = useState("");
     const [selectedTone, setSelectedTone] = useState("Formal");
     const [selectedLang, setSelectedLang] = useState("English");
+    const [selectedAudience, setSelectedAudience] = useState("Constituents");
     const [isGenerating, setIsGenerating] = useState(false);
     const [generated, setGenerated] = useState(false);
 
@@ -78,6 +80,21 @@ export default function SpeechAI() {
                                     ))}
                                 </div>
                             </div>
+
+                            <div className="flex-1 min-w-[160px]">
+                                <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Target Audience</label>
+                                <div className="flex flex-wrap gap-2">
+                                    {audienceOptions.map(a => (
+                                        <button
+                                            key={a}
+                                            onClick={() => setSelectedAudience(a)}
+                                            className={`px-3 py-1.5 rounded-xl text-[10px] font-black transition-all ${selectedAudience === a ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/20" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}
+                                        >
+                                            {a}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
 
                         <button
@@ -108,10 +125,10 @@ export default function SpeechAI() {
                                     Generated Speech
                                 </h3>
                                 <div className="flex gap-2">
-                                    <button className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 rounded-xl text-[10px] font-black hover:bg-white/20 transition-all">
+                                    <button onClick={() => alert('Playing generated speech audio...')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 rounded-xl text-[10px] font-black hover:bg-white/20 transition-all">
                                         <Play className="w-3 h-3" /> Play
                                     </button>
-                                    <button className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 rounded-xl text-[10px] font-black hover:bg-blue-700 transition-all">
+                                    <button onClick={() => alert('Exporting speech as MP3 file...')} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 rounded-xl text-[10px] font-black hover:bg-blue-700 transition-all">
                                         <Download className="w-3 h-3" /> Export
                                     </button>
                                 </div>
@@ -123,6 +140,7 @@ export default function SpeechAI() {
                                 <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Est. 2m 40s</span>
                                 <span className="flex items-center gap-1"><Languages className="w-3 h-3" /> {selectedLang}</span>
                                 <span>Tone: {selectedTone}</span>
+                                <span>Target: {selectedAudience}</span>
                                 <span className="flex items-center gap-1 text-emerald-400"><CheckCircle2 className="w-3 h-3" /> AI Generated</span>
                             </div>
                         </div>
@@ -150,10 +168,10 @@ export default function SpeechAI() {
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2 shrink-0">
-                                        <button className="h-8 w-8 rounded-xl bg-gray-100 hover:bg-blue-600 hover:text-white flex items-center justify-center transition-all">
+                                        <button onClick={() => alert(`Playing: ${s.title}`)} className="h-8 w-8 rounded-xl bg-gray-100 hover:bg-blue-600 hover:text-white flex items-center justify-center transition-all">
                                             <Play className="w-3.5 h-3.5" />
                                         </button>
-                                        <button className="h-8 w-8 rounded-xl bg-gray-100 hover:bg-blue-600 hover:text-white flex items-center justify-center transition-all">
+                                        <button onClick={() => alert(`Downloading: ${s.title}`)} className="h-8 w-8 rounded-xl bg-gray-100 hover:bg-blue-600 hover:text-white flex items-center justify-center transition-all">
                                             <Download className="w-3.5 h-3.5" />
                                         </button>
                                     </div>
@@ -168,7 +186,7 @@ export default function SpeechAI() {
                             { icon: Languages, label: "Multi-lingual Translation", desc: "Auto-translate to 20+ Indian languages", color: "text-blue-500 bg-blue-50" },
                             { icon: Mic, label: "Voice Cloning", desc: "Clone officer voice for consistency", color: "text-purple-500 bg-purple-50" },
                         ].map(f => (
-                            <div key={f.label} className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer">
+                            <div key={f.label} onClick={() => alert(`${f.label}: ${f.desc}\n\nThis feature is coming soon!`)} className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer">
                                 <div className={`p-2.5 rounded-xl ${f.color}`}>
                                     <f.icon className="w-4 h-4" />
                                 </div>

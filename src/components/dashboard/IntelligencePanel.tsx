@@ -1,5 +1,7 @@
 import { AlertTriangle, Shield, Trash2, Signal, Brain, TrendingUp, ArrowUpRight } from "lucide-react";
 import { RiskMeter } from "./PredictiveMeters";
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 const anomalies = [
     {
@@ -33,6 +35,11 @@ const aiInsights = [
 ];
 
 export function IntelligencePanel() {
+    const navigate = useNavigate();
+    const [dismissed, setDismissed] = useState<number[]>([]);
+
+    const visibleAnomalies = anomalies.filter(a => !dismissed.includes(a.id));
+
     return (
         <div className="space-y-4">
             {/* Section header */}
@@ -45,7 +52,7 @@ export function IntelligencePanel() {
                         7 Active Anomalies
                     </span>
                 </div>
-                <button className="flex items-center gap-1.5 text-[10px] font-black text-rose-600 uppercase tracking-widest hover:text-rose-800 transition-colors">
+                <button onClick={() => navigate("/ai-alerts")} className="flex items-center gap-1.5 text-[10px] font-black text-rose-600 uppercase tracking-widest hover:text-rose-800 transition-colors">
                     View All Alerts <ArrowUpRight className="w-3.5 h-3.5" />
                 </button>
             </div>
@@ -54,7 +61,7 @@ export function IntelligencePanel() {
 
                 {/* Anomaly Feed */}
                 <div className="xl:col-span-2 space-y-3">
-                    {anomalies.map((a, idx) => {
+                    {visibleAnomalies.map((a, idx) => {
                         const Icon = a.icon;
                         return (
                             <div
@@ -80,10 +87,10 @@ export function IntelligencePanel() {
                                                 <RiskMeter value={a.risk} label="Risk Score" />
                                             </div>
                                             <div className="flex gap-2 shrink-0">
-                                                <button className="px-3 py-1.5 text-[10px] font-black text-gray-600 bg-white/80 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all">
+                                                <button onClick={(e) => { e.stopPropagation(); setDismissed(prev => [...prev, a.id]); }} className="px-3 py-1.5 text-[10px] font-black text-gray-600 bg-white/80 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all">
                                                     Dismiss
                                                 </button>
-                                                <button className={`px-3 py-1.5 text-[10px] font-black text-white rounded-xl transition-all hover:opacity-90 ${a.dot === 'bg-rose-500' ? 'bg-rose-500' : a.dot === 'bg-orange-500' ? 'bg-orange-500' : 'bg-amber-500'}`}>
+                                                <button onClick={(e) => { e.stopPropagation(); navigate("/ai-alerts"); }} className={`px-3 py-1.5 text-[10px] font-black text-white rounded-xl transition-all hover:opacity-90 ${a.dot === 'bg-rose-500' ? 'bg-rose-500' : a.dot === 'bg-orange-500' ? 'bg-orange-500' : 'bg-amber-500'}`}>
                                                     Investigate →
                                                 </button>
                                             </div>

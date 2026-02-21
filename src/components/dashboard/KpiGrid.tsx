@@ -1,4 +1,4 @@
-import { useCountUp } from "@/hooks/useCountUp";
+import { useNavigate } from "react-router-dom";
 import { MessageSquare, AlertTriangle, Zap, CheckCircle2, Clock, Laugh, TrendingUp, TrendingDown, ArrowUpRight } from "lucide-react";
 import { Sparkline } from "./Sparkline";
 
@@ -90,11 +90,13 @@ const kpiData = [
 ];
 
 function KpiCard({ kpi, index }: { kpi: typeof kpiData[0]; index: number }) {
+    const navigate = useNavigate();
     const Icon = kpi.icon;
     const TrendIcon = kpi.up ? TrendingUp : TrendingDown;
 
     return (
         <div
+            onClick={() => navigate(kpi.label.includes("Alert") ? "/ai-alerts" : "/reports")}
             className="relative bg-white rounded-3xl p-6 border border-gray-100/80 hover:border-gray-200 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1.5 group overflow-hidden cursor-pointer"
             style={{ animationDelay: `${index * 80}ms` }}
         >
@@ -132,14 +134,15 @@ function KpiCard({ kpi, index }: { kpi: typeof kpiData[0]; index: number }) {
             </div>
 
             {/* Hover arrow */}
-            <button className="absolute bottom-4 right-4 w-8 h-8 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-gray-100">
-                <ArrowUpRight className="w-3.5 h-3.5 text-gray-400" />
-            </button>
+            <div className="absolute bottom-4 right-4 w-8 h-8 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 group-hover:bg-blue-600">
+                <ArrowUpRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-white" />
+            </div>
         </div>
     );
 }
 
 export function KpiGrid() {
+    const navigate = useNavigate();
     return (
         <div>
             {/* Section header */}
@@ -149,7 +152,10 @@ export function KpiGrid() {
                     <h2 className="text-base font-black text-gray-900 tracking-tight">Performance KPIs</h2>
                     <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 bg-gray-100 px-2 py-0.5 rounded-lg">Live · Updated just now</span>
                 </div>
-                <button className="flex items-center gap-1.5 text-[10px] font-black text-blue-600 uppercase tracking-widest hover:text-blue-800 transition-colors">
+                <button
+                    onClick={() => navigate("/reports")}
+                    className="flex items-center gap-1.5 text-[10px] font-black text-blue-600 uppercase tracking-widest hover:text-blue-800 transition-colors"
+                >
                     View Full Report <ArrowUpRight className="w-3.5 h-3.5" />
                 </button>
             </div>

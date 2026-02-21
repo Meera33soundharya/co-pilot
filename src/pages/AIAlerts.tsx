@@ -54,7 +54,7 @@ export default function AIAlerts() {
     const resolvedCount = alerts.filter(a => a.status === "resolved").length;
 
     return (
-        <DashboardLayout title="AI Alerts" subtitle="Anomaly detection & real-time intelligence feed">
+        <DashboardLayout title="Crisis Radar™" subtitle="AI-powered anomaly detection & real-time tactical intelligence across grievances, media, and social sentiment">
             <div className="space-y-6">
                 {/* Stats */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -106,11 +106,11 @@ export default function AIAlerts() {
 
                 {/* Alerts Feed */}
                 <div className="space-y-4">
-                    {filtered.map(alert => {
-                        const cfg = severityConfig[alert.severity];
+                    {filtered.map(alertItem => {
+                        const cfg = severityConfig[alertItem.severity];
                         const Icon = cfg.icon;
                         return (
-                            <div key={alert.id} className={`bg-white border-2 ${cfg.border} rounded-2xl p-6 shadow-sm hover:shadow-md transition-all cursor-pointer group`}>
+                            <div key={alertItem.id} className={`bg-white border-2 ${cfg.border} rounded-2xl p-6 shadow-sm hover:shadow-md transition-all cursor-pointer group`}>
                                 <div className="flex flex-col md:flex-row gap-4">
                                     <div className={`p-3 rounded-2xl ${cfg.bg} shrink-0 self-start`}>
                                         <Icon className={`w-5 h-5 ${cfg.text}`} />
@@ -118,38 +118,38 @@ export default function AIAlerts() {
 
                                     <div className="flex-1 min-w-0">
                                         <div className="flex flex-wrap items-center gap-3 mb-2">
-                                            <span className="text-xs font-black text-gray-400">{alert.id}</span>
+                                            <span className="text-xs font-black text-gray-400">{alertItem.id}</span>
                                             <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black border ${cfg.bg} ${cfg.text} ${cfg.border} flex items-center gap-1`}>
-                                                <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot} ${alert.severity === "Critical" ? "animate-pulse" : ""}`} />
-                                                {alert.severity}
+                                                <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot} ${alertItem.severity === "Critical" ? "animate-pulse" : ""}`} />
+                                                {alertItem.severity}
                                             </span>
-                                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black border ${statusStyle[alert.status]}`}>
-                                                {alert.status}
+                                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black border ${statusStyle[alertItem.status]}`}>
+                                                {alertItem.status}
                                             </span>
-                                            <span className="text-[10px] text-gray-400 font-bold">{alert.ward}</span>
-                                            <span className="text-[10px] text-gray-400 font-bold ml-auto">{alert.time}</span>
+                                            <span className="text-[10px] text-gray-400 font-bold">{alertItem.ward}</span>
+                                            <span className="text-[10px] text-gray-400 font-bold ml-auto">{alertItem.time}</span>
                                         </div>
 
-                                        <h3 className="font-black text-gray-900 text-base leading-tight group-hover:text-blue-700 transition-colors">{alert.title}</h3>
-                                        <p className="text-sm text-gray-600 mt-1.5 leading-relaxed">{alert.description}</p>
+                                        <h3 className="font-black text-gray-900 text-base leading-tight group-hover:text-blue-700 transition-colors">{alertItem.title}</h3>
+                                        <p className="text-sm text-gray-600 mt-1.5 leading-relaxed">{alertItem.description}</p>
 
                                         <div className="flex flex-wrap items-center gap-4 mt-4">
                                             <div className="flex items-center gap-2">
                                                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">AI Confidence:</span>
                                                 <div className="h-1.5 w-24 bg-gray-100 rounded-full overflow-hidden">
-                                                    <div className="h-full bg-blue-500 rounded-full" style={{ width: `${alert.aiConfidence}%` }} />
+                                                    <div className="h-full bg-blue-500 rounded-full" style={{ width: `${alertItem.aiConfidence}%` }} />
                                                 </div>
-                                                <span className="text-[10px] font-black text-blue-600">{alert.aiConfidence}%</span>
+                                                <span className="text-[10px] font-black text-blue-600">{alertItem.aiConfidence}%</span>
                                             </div>
 
                                             <div className="flex items-center gap-2 ml-auto">
-                                                <button className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-xl text-[10px] font-black text-gray-600 hover:bg-gray-200 transition-all">
+                                                <button onClick={() => window.alert(`Dismissed: ${alertItem.title}`)} className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-xl text-[10px] font-black text-gray-600 hover:bg-gray-200 transition-all">
                                                     <BellOff className="w-3 h-3" /> Dismiss
                                                 </button>
-                                                <button className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-xl text-[10px] font-black text-gray-600 hover:bg-gray-200 transition-all">
+                                                <button onClick={() => window.alert(`Acknowledged: ${alertItem.title}`)} className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-xl text-[10px] font-black text-gray-600 hover:bg-gray-200 transition-all">
                                                     <Eye className="w-3 h-3" /> Acknowledge
                                                 </button>
-                                                <button className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 rounded-xl text-[10px] font-black text-white hover:bg-blue-700 transition-all shadow-md shadow-blue-500/20">
+                                                <button onClick={() => window.alert(`Investigating ${alertItem.id}: ${alertItem.title}\n\n${alertItem.description}\n\nWard: ${alertItem.ward}\nCategory: ${alertItem.category}\nAI Confidence: ${alertItem.aiConfidence}%`)} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 rounded-xl text-[10px] font-black text-white hover:bg-blue-700 transition-all shadow-md shadow-blue-500/20">
                                                     Investigate <ArrowRight className="w-3 h-3" />
                                                 </button>
                                             </div>

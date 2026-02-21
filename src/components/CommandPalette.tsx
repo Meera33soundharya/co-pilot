@@ -2,19 +2,27 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
     Search, LayoutDashboard, FileText, FolderOpen, Mic,
-    BarChart2, AtSign, BellRing, Settings, Zap, ArrowRight
+    BarChart2, AtSign, BellRing, Settings, Zap, ArrowRight,
+    Brain, GraduationCap, Quote, Gamepad2, Activity, Cpu
 } from "lucide-react";
 
 const commands = [
     { icon: LayoutDashboard, label: "Go to Dashboard", path: "/dashboard", group: "Navigation" },
+    { icon: Zap, label: "Go to Interactive Grid", path: "/interactive-dashboard", group: "Navigation" },
+    { icon: Brain, label: "Go to BrainSpark", path: "/brainspark", group: "Navigation" },
+    { icon: Activity, label: "Go to Policy Simulator", path: "/policy-simulator", group: "Navigation" },
+    { icon: Cpu, label: "Go to Explainable AI", path: "/explainable-ai", group: "Navigation" },
+    { icon: GraduationCap, label: "Go to Study Buddy", path: "/study-buddy", group: "Navigation" },
+    { icon: Quote, label: "Go to Proverbs", path: "/proverbs", group: "Navigation" },
+    { icon: Gamepad2, label: "Go to Reword Game", path: "/reword-game", group: "Navigation" },
     { icon: FileText, label: "Go to Grievances", path: "/grievances", group: "Navigation" },
     { icon: FolderOpen, label: "Go to Documents", path: "/documents", group: "Navigation" },
     { icon: Mic, label: "Go to SpeechAI", path: "/speech-ai", group: "Navigation" },
     { icon: BarChart2, label: "Go to Analytics", path: "/analytics", group: "Navigation" },
     { icon: AtSign, label: "Go to Mentions", path: "/mentions", group: "Navigation" },
-    { icon: BellRing, label: "Go to AI Alerts", path: "/ai-alerts", group: "Navigation" },
+    { icon: BellRing, label: "Go to Crisis Radar", path: "/ai-alerts", group: "Navigation" },
     { icon: Settings, label: "Go to Settings", path: "/settings", group: "Navigation" },
-    { icon: Zap, label: "Trigger AI Audit", path: "/ai-alerts", group: "Actions" },
+    { icon: Zap, label: "Trigger Tactical Audit", path: "/ai-alerts", group: "Actions" },
 ];
 
 export default function CommandPalette() {
@@ -80,7 +88,7 @@ export default function CommandPalette() {
                     {Object.entries(grouped).map(([group, items]) => (
                         <div key={group} className="mb-2">
                             <p className="px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">{group}</p>
-                            {items.map((cmd, i) => {
+                            {items.map((cmd) => {
                                 const globalIdx = filtered.indexOf(cmd);
                                 return (
                                     <button

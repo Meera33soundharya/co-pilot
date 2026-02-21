@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { ShieldCheck, Zap, Bell, TrendingUp, Activity, Users, Clock, AlertTriangle, ChevronRight } from "lucide-react";
 
 function getTimeGreeting() {
@@ -24,16 +25,11 @@ const liveStats = [
 ];
 
 export function HeroBanner() {
+    const navigate = useNavigate();
     const [tick, setTick] = useState(0);
-    const [pulseCount, setPulseCount] = useState(0);
 
     useEffect(() => {
         const id = setInterval(() => setTick(t => (t + 1) % tickerItems.length), 3500);
-        return () => clearInterval(id);
-    }, []);
-
-    useEffect(() => {
-        const id = setInterval(() => setPulseCount(c => c + 1), 2000);
         return () => clearInterval(id);
     }, []);
 
@@ -88,7 +84,7 @@ export function HeroBanner() {
                         <h1 className="text-4xl font-black text-white leading-tight tracking-tight">
                             {getTimeGreeting()},<br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-300 to-blue-500">
-                                Arjun Kumar
+                                Administrator
                             </span>
                         </h1>
                         <p className="text-sm text-white/40 mt-3 leading-relaxed max-w-md">
@@ -112,7 +108,10 @@ export function HeroBanner() {
                             <Bell className="w-3.5 h-3.5 text-blue-400" />
                             <span className="text-[10px] font-black text-white uppercase tracking-wider">24 Social Mentions</span>
                         </div>
-                        <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 hover:bg-[#D4AF37]/20 transition-all">
+                        <button
+                            onClick={() => navigate("/ai-alerts")}
+                            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 hover:bg-[#D4AF37]/20 transition-all active:scale-95"
+                        >
                             <Zap className="w-3.5 h-3.5 text-[#D4AF37]" />
                             <span className="text-[10px] font-black text-[#D4AF37] uppercase tracking-wider">Run AI Audit</span>
                         </button>

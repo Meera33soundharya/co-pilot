@@ -130,13 +130,13 @@ export default function Reports() {
                         </button>
                         {generated && (
                             <>
-                                <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-black text-gray-700 hover:bg-gray-50 transition-all shadow-sm">
+                                <button onClick={() => alert(`Exporting "${reportType}" report for ${period} as PDF...`)} className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-black text-gray-700 hover:bg-gray-50 transition-all shadow-sm">
                                     <Download className="w-3.5 h-3.5" /> Export PDF
                                 </button>
-                                <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-black text-gray-700 hover:bg-gray-50 transition-all shadow-sm">
+                                <button onClick={() => window.print()} className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-black text-gray-700 hover:bg-gray-50 transition-all shadow-sm">
                                     <Printer className="w-3.5 h-3.5" /> Print
                                 </button>
-                                <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-black text-gray-700 hover:bg-gray-50 transition-all shadow-sm">
+                                <button onClick={() => alert(`Sharing "${reportType}" report link copied to clipboard!`)} className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-black text-gray-700 hover:bg-gray-50 transition-all shadow-sm">
                                     <Share2 className="w-3.5 h-3.5" /> Share
                                 </button>
                             </>
@@ -253,7 +253,7 @@ export default function Reports() {
                             <Calendar className="w-4.5 h-4.5 text-indigo-500" />
                             Quarterly Performance Breakdown
                         </h3>
-                        <button className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-xl text-[10px] font-black text-gray-600 hover:bg-gray-50 transition-all shadow-sm">
+                        <button onClick={() => alert('Exporting quarterly breakdown as CSV...')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-xl text-[10px] font-black text-gray-600 hover:bg-gray-50 transition-all shadow-sm">
                             <Download className="w-3.5 h-3.5" /> Export CSV
                         </button>
                     </div>

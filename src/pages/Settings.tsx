@@ -25,10 +25,10 @@ function Toggle({ defaultOn = false }: { defaultOn?: boolean }) {
 
 export default function Settings() {
     const [activeSection, setActiveSection] = useState("Profile & Account");
-    const [name, setName] = useState("Arjun Kumar");
-    const [email, setEmail] = useState("arjun.kumar@govpilot.in");
-    const [phone, setPhone] = useState("+91 98765 43210");
-    const [dept, setDept] = useState("Urban Development");
+    const [name, setName] = useState("Administrator");
+    const [email, setEmail] = useState("admin@govpilot.in");
+    const [phone, setPhone] = useState("+91 00000 00000");
+    const [dept, setDept] = useState("AI Governance");
     const [saved, setSaved] = useState(false);
 
     const handleSave = () => {
@@ -68,15 +68,15 @@ export default function Settings() {
                         {/* Avatar */}
                         <div className="flex items-center gap-5 mb-8">
                             <div className="relative">
-                                <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-black">AK</div>
-                                <button className="absolute -bottom-2 -right-2 w-8 h-8 bg-white rounded-xl border border-gray-200 shadow-md flex items-center justify-center hover:bg-gray-50 transition-all">
+                                <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-black">AD</div>
+                                <button onClick={() => alert('Opening photo picker...')} className="absolute -bottom-2 -right-2 w-8 h-8 bg-white rounded-xl border border-gray-200 shadow-md flex items-center justify-center hover:bg-gray-50 transition-all">
                                     <Camera className="w-3.5 h-3.5 text-gray-500" />
                                 </button>
                             </div>
                             <div>
                                 <p className="font-black text-gray-900">{name}</p>
                                 <p className="text-sm text-gray-400 font-medium">Executive Admin · {dept}</p>
-                                <button className="text-[10px] font-black text-blue-600 uppercase tracking-widest mt-1 hover:text-blue-800 transition-colors">Change Photo</button>
+                                <button onClick={() => alert('Opening photo picker...')} className="text-[10px] font-black text-blue-600 uppercase tracking-widest mt-1 hover:text-blue-800 transition-colors">Change Photo</button>
                             </div>
                         </div>
 
@@ -117,7 +117,7 @@ export default function Settings() {
                                 <Save className="w-4 h-4" />
                                 {saved ? "Saved!" : "Save Changes"}
                             </button>
-                            <button className="px-6 py-2.5 bg-gray-100 rounded-xl text-sm font-black text-gray-600 hover:bg-gray-200 transition-all">
+                            <button onClick={() => { setSaved(false); }} className="px-6 py-2.5 bg-gray-100 rounded-xl text-sm font-black text-gray-600 hover:bg-gray-200 transition-all">
                                 Cancel
                             </button>
                         </div>
@@ -169,7 +169,7 @@ export default function Settings() {
                                     <Toggle defaultOn={on} />
                                 </div>
                             ))}
-                            <button className="mt-2 text-sm font-black text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-1.5">
+                            <button onClick={() => alert('Change Password dialog coming soon!')} className="mt-2 text-sm font-black text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-1.5">
                                 <Key className="w-4 h-4" />
                                 Change Password
                             </button>
