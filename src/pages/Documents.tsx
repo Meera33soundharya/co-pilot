@@ -15,6 +15,7 @@ const folders = [
 ];
 
 const recentDocs = [
+    { name: "Urgent Petition - Ward 07 Water Shortage.pdf", size: "1.2 MB", date: "Mar 27, 2026", type: "PDF",  status: "pending",  access: "public" },
     { name: "Annual Budget Report FY2025-26.pdf",        size: "4.2 MB", date: "Feb 19, 2026", type: "PDF",  status: "approved", access: "public" },
     { name: "Ward 03 Infrastructure Upgrade Plan.docx",  size: "1.8 MB", date: "Feb 18, 2026", type: "DOCX", status: "draft",    access: "restricted" },
     { name: "Public Health Advisory - Q4 2025.pdf",      size: "2.1 MB", date: "Feb 17, 2026", type: "PDF",  status: "approved", access: "public" },
