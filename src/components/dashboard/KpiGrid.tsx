@@ -74,7 +74,7 @@ const kpiData = [
         sparkColor: "#8B5CF6",
     },
     {
-        label: "Sentiment Index",
+        label: "Happiness Score",
         value: 82,
         display: "82/100",
         change: "+2.4%",
@@ -97,7 +97,7 @@ function KpiCard({ kpi, index }: { kpi: typeof kpiData[0]; index: number }) {
     return (
         <div
             onClick={() => navigate(kpi.label.includes("Alert") ? "/ai-alerts" : "/reports")}
-            className="relative bg-white rounded-3xl p-6 border border-gray-100/80 hover:border-gray-200 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1.5 group overflow-hidden cursor-pointer"
+            className="relative bg-white rounded-3xl p-6 border border-gray-100 shadow-sm hover:border-blue-200/50 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group overflow-hidden cursor-pointer"
             style={{ animationDelay: `${index * 80}ms` }}
         >
             {/* Hover glow */}
@@ -111,30 +111,30 @@ function KpiCard({ kpi, index }: { kpi: typeof kpiData[0]; index: number }) {
 
             {/* Header */}
             <div className="flex items-start justify-between mb-5 relative z-10">
-                <div className={`p-3 rounded-2xl ${kpi.bg} group-hover:scale-110 transition-transform duration-200`}>
+                <div className={`p-3 rounded-2xl ${kpi.bg} group-hover:scale-110 transition-transform duration-300 border border-transparent group-hover:border-inherit`}>
                     <Icon className={`w-5 h-5 ${kpi.iconColor}`} />
                 </div>
-                <div className={`flex items-center gap-1 text-[10px] font-black px-2.5 py-1 rounded-xl ${kpi.up ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
-                    <TrendIcon className="w-3 h-3" />
+                <div className={`flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-xl shadow-sm ${kpi.up ? "bg-emerald-50 text-emerald-700 border border-emerald-100/50" : "bg-rose-50 text-rose-700 border border-rose-100/50"}`}>
+                    <TrendIcon className="w-3.5 h-3.5" />
                     {kpi.change}
                 </div>
             </div>
 
             {/* Value */}
-            <div className="space-y-1 mb-4 relative z-10">
-                <div className="text-3xl font-black text-gray-900 tracking-tight leading-none tabular-nums">
+            <div className="space-y-1 mb-5 relative z-10">
+                <div className="text-3xl font-extrabold text-[#0B1221] tracking-tight leading-none tabular-nums">
                     {kpi.display}
                 </div>
-                <div className="text-[10px] font-black uppercase tracking-[0.15em] text-gray-400">{kpi.label}</div>
+                <div className="text-xs font-bold uppercase tracking-wider text-gray-400 group-hover:text-gray-500 transition-colors">{kpi.label}</div>
             </div>
 
             {/* Sparkline */}
-            <div className="relative z-10">
+            <div className="relative z-10 opacity-80 group-hover:opacity-100 transition-opacity">
                 <Sparkline data={kpi.sparkline} color={kpi.sparkColor} />
             </div>
 
-            {/* Hover arrow */}
-            <div className="absolute bottom-4 right-4 w-8 h-8 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 group-hover:bg-blue-600">
+            {/* Hover arrow indicator */}
+            <div className="absolute bottom-4 right-4 w-7 h-7 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:bg-blue-600 group-hover:border-blue-600 scale-90 group-hover:scale-100">
                 <ArrowUpRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-white" />
             </div>
         </div>
@@ -149,14 +149,14 @@ export function KpiGrid() {
             <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
                     <div className="h-5 w-1 rounded-full bg-gradient-to-b from-blue-500 to-indigo-600" />
-                    <h2 className="text-base font-black text-gray-900 tracking-tight">Performance KPIs</h2>
-                    <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 bg-gray-100 px-2 py-0.5 rounded-lg">Live · Updated just now</span>
+                    <h2 className="text-base font-bold text-gray-950 tracking-tight">Main Stats</h2>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500 bg-white border border-gray-100 px-3 py-1 rounded-xl shadow-sm">Live Tracker</span>
                 </div>
                 <button
                     onClick={() => navigate("/reports")}
-                    className="flex items-center gap-1.5 text-[10px] font-black text-blue-600 uppercase tracking-widest hover:text-blue-800 transition-colors"
+                    className="flex items-center gap-2 text-xs font-extrabold text-[#0B1221] uppercase tracking-widest hover:text-blue-600 transition-all hover:gap-3 active:scale-95 group"
                 >
-                    View Full Report <ArrowUpRight className="w-3.5 h-3.5" />
+                    View All Reports <ArrowUpRight className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                 </button>
             </div>
 

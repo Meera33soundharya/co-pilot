@@ -1,118 +1,340 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { FileText, FolderOpen, Download, Eye, Search, Upload, Clock, CheckCircle2, Lock } from "lucide-react";
+import { useState, useRef } from "react";
+import {
+    FileText, FolderOpen, Download, Eye, Search,
+    Upload, Clock, CheckCircle2, Lock, Share2, X, AlertCircle
+} from "lucide-react";
 
 const folders = [
-    { name: "Citizen Petitions", count: 234, color: "bg-blue-50 border-blue-100 text-blue-600" },
-    { name: "Official Notices", count: 89, color: "bg-amber-50 border-amber-100 text-amber-600" },
-    { name: "Budget Reports", count: 45, color: "bg-emerald-50 border-emerald-100 text-emerald-600" },
-    { name: "Policy Drafts", count: 67, color: "bg-purple-50 border-purple-100 text-purple-600" },
-    { name: "Infrastructure Plans", count: 32, color: "bg-rose-50 border-rose-100 text-rose-600" },
-    { name: "Minutes of Meetings", count: 128, color: "bg-indigo-50 border-indigo-100 text-indigo-600" },
+    { name: "Citizen Petitions",    count: 234, icon: "🗂️", color: "#B91C1C", bg: "bg-white", border: "border-red-100" },
+    { name: "Official Notices",     count: 89,  icon: "📋", color: "#374151", bg: "bg-white", border: "border-gray-100" },
+    { name: "Budget Reports",       count: 42,  icon: "💰", color: "#B91C1C", bg: "bg-white", border: "border-red-100" },
+    { name: "Policy Drafts",        count: 67,  icon: "📝", color: "#1F2937", bg: "bg-white", border: "border-gray-100" },
+    { name: "Infrastructure Plans", count: 32,  icon: "🏗️", color: "#B91C1C", bg: "bg-white", border: "border-red-100" },
+    { name: "Minutes of Meetings",  count: 128, icon: "📅", color: "#111827", bg: "bg-white", border: "border-gray-100" },
 ];
 
 const recentDocs = [
-    { name: "Annual Budget Report FY2025-26.pdf", size: "4.2 MB", date: "Feb 19, 2026", type: "PDF", status: "approved", access: "public" },
-    { name: "Ward 03 Infrastructure Upgrade Plan.docx", size: "1.8 MB", date: "Feb 18, 2026", type: "DOCX", status: "draft", access: "restricted" },
-    { name: "Public Health Advisory - Q4 2025.pdf", size: "2.1 MB", date: "Feb 17, 2026", type: "PDF", status: "approved", access: "public" },
-    { name: "Meeting Minutes - City Council Feb 15.pdf", size: "890 KB", date: "Feb 15, 2026", type: "PDF", status: "pending", access: "internal" },
-    { name: "Water Supply Tender Document #WS-24-09.pdf", size: "6.7 MB", date: "Feb 14, 2026", type: "PDF", status: "approved", access: "public" },
-    { name: "Emergency Response Protocol 2026.docx", size: "3.4 MB", date: "Feb 12, 2026", type: "DOCX", status: "draft", access: "restricted" },
+    { name: "Annual Budget Report FY2025-26.pdf",        size: "4.2 MB", date: "Feb 19, 2026", type: "PDF",  status: "approved", access: "public" },
+    { name: "Ward 03 Infrastructure Upgrade Plan.docx",  size: "1.8 MB", date: "Feb 18, 2026", type: "DOCX", status: "draft",    access: "restricted" },
+    { name: "Public Health Advisory - Q4 2025.pdf",      size: "2.1 MB", date: "Feb 17, 2026", type: "PDF",  status: "approved", access: "public" },
+    { name: "Meeting Minutes - City Council Feb 15.pdf", size: "990 KB", date: "Feb 15, 2026", type: "PDF",  status: "pending",  access: "internal" },
+    { name: "Water Supply Tender Document #WS-24-09.pdf",size: "6.7 MB", date: "Feb 14, 2026", type: "PDF",  status: "approved", access: "public" },
+    { name: "Emergency Response Protocol 2026.docx",     size: "3.4 MB", date: "Feb 12, 2026", type: "DOCX", status: "draft",    access: "restricted" },
 ];
 
-const typeColor: Record<string, string> = {
-    "PDF": "bg-rose-50 text-rose-600 border-rose-100",
-    "DOCX": "bg-blue-50 text-blue-600 border-blue-100",
-    "XLSX": "bg-emerald-50 text-emerald-600 border-emerald-100",
+const typeStyle: Record<string, { bg: string; text: string }> = {
+    PDF:  { bg: "#FEF2F2", text: "#B91C1C" },
+    DOCX: { bg: "#F9FAFB", text: "#4B5563" },
 };
 
-const statusStyle: Record<string, string> = {
-    "approved": "bg-emerald-50 text-emerald-700",
-    "draft": "bg-gray-100 text-gray-600",
-    "pending": "bg-amber-50 text-amber-700",
+const statusStyle: Record<string, { bg: string; text: string; label: string }> = {
+    approved: { bg: "#F0FDF4", text: "#059669", label: "APPROVED" },
+    draft:    { bg: "#F9FAFB", text: "#9CA3AF", label: "DRAFT" },
+    pending:  { bg: "#FFFBEB", text: "#D97706", label: "PENDING" },
 };
+
+interface PreviewDoc {
+    name: string;
+    type: string;
+    date: string;
+    size: string;
+    status: string;
+    access: string;
+}
 
 export default function Documents() {
+    const [search, setSearch] = useState("");
+    const [previewDoc, setPreviewDoc] = useState<PreviewDoc | null>(null);
+    const [downloading, setDownloading] = useState<string | null>(null);
+    const [uploadOpen, setUploadOpen] = useState(false);
+    const [uploaded, setUploaded] = useState(false);
+
+    const filtered = recentDocs.filter(d =>
+        d.name.toLowerCase().includes(search.toLowerCase())
+    );
+
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [shareToast, setShareToast] = useState<string | null>(null);
+
+    // Actually downloads a real text file with doc info
+    const handleDownload = (doc: typeof recentDocs[0]) => {
+        setDownloading(doc.name);
+        const content = `GOVERNMENT DOCUMENT\n${'='.repeat(50)}\nName   : ${doc.name}\nType   : ${doc.type}\nSize   : ${doc.size}\nDate   : ${doc.date}\nStatus : ${doc.status.toUpperCase()}\nAccess : ${doc.access}\n${'='.repeat(50)}\n\n[This is a demonstration export generated by GovPilot.]\n[In production, this would be the actual document content.]`;
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href     = url;
+        a.download = doc.name.replace(/\.(pdf|docx)$/i, '.txt');
+        a.click();
+        URL.revokeObjectURL(url);
+        setTimeout(() => setDownloading(null), 1500);
+    };
+
+    const handleShare = (docName: string) => {
+        const text = `${window.location.origin}/documents/${encodeURIComponent(docName)}`;
+        navigator.clipboard?.writeText(text).catch(() => {});
+        setShareToast(docName);
+        setTimeout(() => setShareToast(null), 2000);
+    };
+
     return (
         <DashboardLayout title="Documents" subtitle="Centralized government document management system">
+
+            {/* Preview Modal */}
+            {previewDoc && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/40 backdrop-blur-md" onClick={() => setPreviewDoc(null)} />
+                    <div className="relative bg-[#FDFCF8] rounded-[3rem] shadow-2xl w-full max-w-lg overflow-hidden animate-slide-up border border-white/50">
+                        <div className="absolute top-0 right-0 w-48 h-48 bg-red-500/5 blur-[60px] pointer-events-none" />
+                        <div className="flex items-center justify-between px-8 py-6 border-b border-gray-100 relative z-10">
+                            <div className="flex items-center gap-4">
+                                <div className="px-3 py-1 rounded-xl text-[10px] font-black tracking-widest text-white" style={{ background: "#B91C1C" }}>
+                                    {previewDoc.type}
+                                </div>
+                                <span className="font-black text-gray-900 text-sm truncate max-w-[200px] uppercase tracking-tight">{previewDoc.name}</span>
+                            </div>
+                            <button onClick={() => setPreviewDoc(null)} className="p-2 rounded-2xl hover:bg-gray-100 text-gray-400 transition-colors">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="p-10 space-y-8 relative z-10">
+                            {/* Document preview body */}
+                            <div className="bg-gray-50 rounded-[2rem] border border-gray-100 p-6 space-y-4 shadow-inner">
+                                <div className="flex items-center gap-3 pb-3 border-b border-gray-200">
+                                    <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
+                                        <FileText className="w-5 h-5 text-[#B91C1C]" />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-black text-gray-900 leading-tight">{previewDoc.name}</p>
+                                        <p className="text-[10px] text-gray-400">{previewDoc.size} · {previewDoc.type}</p>
+                                    </div>
+                                </div>
+                                {/* Simulated content lines */}
+                                <div className="space-y-2">
+                                    {["Executive Summary", "Section 1: Background", "Section 2: Findings", "Section 3: Recommendations", "Appendix A: Data Tables"].map((s, i) => (
+                                        <div key={i} className="flex items-center gap-3 p-2.5 bg-white rounded-xl border border-gray-100">
+                                            <div className="w-5 h-5 rounded-full bg-red-50 flex items-center justify-center text-[9px] font-black text-red-600 shrink-0">{i + 1}</div>
+                                            <span className="text-xs font-bold text-gray-700">{s}</span>
+                                            <span className="ml-auto text-[10px] text-gray-400">pg {i * 4 + 1}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-100 rounded-xl">
+                                    <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                                    <p className="text-[10px] font-black text-amber-700">Preview only — Download for full content</p>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-8">
+                                <div>
+                                    <p className="text-gray-400 font-black uppercase tracking-widest text-[9px] mb-1">Upload Date</p>
+                                    <p className="font-black text-gray-900">{previewDoc.date}</p>
+                                </div>
+                                <div>
+                                    <p className="text-gray-400 font-black uppercase tracking-widest text-[9px] mb-1">Status Level</p>
+                                    <p className="font-black uppercase text-xs" style={{ color: statusStyle[previewDoc.status]?.text }}>{statusStyle[previewDoc.status]?.label}</p>
+                                </div>
+                            </div>
+                            <div className="flex gap-4">
+                                <button onClick={() => { handleDownload(previewDoc); setPreviewDoc(null); }} className="flex-1 flex items-center justify-center gap-3 py-4 rounded-2xl text-white text-[11px] font-black uppercase tracking-[0.2em] transition-all hover:bg-neutral-800 shadow-xl shadow-red-900/20 active:scale-95" style={{ backgroundColor: "#B91C1C" }}>
+                                    <Download className="w-4 h-4" /> Download
+                                </button>
+                                <button onClick={() => setPreviewDoc(null)} className="px-8 flex items-center justify-center py-4 rounded-2xl bg-gray-100 text-gray-900 text-[11px] font-black uppercase tracking-[0.2em] hover:bg-gray-200 transition-all">
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Share toast */}
+            {shareToast && (
+                <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-3 px-6 py-3 bg-gray-900 text-white rounded-2xl shadow-2xl animate-fade-in text-sm font-black">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Link copied to clipboard!
+                </div>
+            )}
+
+            {/* Upload Modal */}
+            <input ref={fileInputRef} type="file" className="hidden" accept=".pdf,.docx,.xlsx,.png,.jpg"
+                onChange={e => { if (e.target.files?.length) setTimeout(() => setUploaded(true), 800); }} />
+            {uploadOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => { setUploadOpen(false); setUploaded(false); }} />
+                    <div className="relative bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden animate-slide-up">
+                        <div className="px-8 py-6 border-b border-gray-100 flex items-center justify-between">
+                            <h2 className="font-black text-gray-900">Secure Upload</h2>
+                            <button onClick={() => { setUploadOpen(false); setUploaded(false); }} className="p-2 rounded-2xl hover:bg-gray-100 text-gray-400"><X className="w-4 h-4" /></button>
+                        </div>
+                        <div className="p-8 space-y-5">
+                            {!uploaded ? (
+                                <>
+                                    {/* Click area opens real file picker */}
+                                    <div onClick={() => fileInputRef.current?.click()}
+                                        className="border-2 border-dashed border-gray-200 rounded-2xl p-10 text-center hover:border-red-300 transition-colors cursor-pointer group">
+                                        <Upload className="w-10 h-10 text-gray-300 mx-auto mb-3 group-hover:text-red-400 transition-colors" />
+                                        <p className="text-sm font-bold text-gray-600">Click to select a file from your device</p>
+                                        <p className="text-xs text-gray-400 mt-1">PDF, DOCX, XLSX, PNG, JPG up to 50 MB</p>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Target Folder</label>
+                                        <select className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-medium text-gray-800 focus:outline-none focus:border-red-200">
+                                            {folders.map(f => <option key={f.name}>{f.name}</option>)}
+                                        </select>
+                                    </div>
+                                    <button onClick={() => fileInputRef.current?.click()}
+                                        className="btn-primary w-full !py-4">
+                                        <Upload className="w-4 h-4" /> Upload Securely
+                                    </button>
+                                </>
+                            ) : (
+                                <div className="text-center py-6 space-y-4">
+                                    <div className="w-16 h-16 rounded-2xl bg-emerald-50 flex items-center justify-center mx-auto">
+                                        <CheckCircle2 className="w-8 h-8 text-emerald-500" />
+                                    </div>
+                                    <h3 className="font-black text-gray-900 text-lg">Uploaded Successfully!</h3>
+                                    <p className="text-sm text-gray-500">File has been encrypted and stored securely in GovPilot.</p>
+                                    <button onClick={() => { setUploadOpen(false); setUploaded(false); }} className="btn-primary w-full !py-4">Done</button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="space-y-6">
                 {/* Action Bar */}
-                <div className="flex flex-col sm:flex-row gap-4">
-                    <div className="relative flex-1">
-                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <div className="flex gap-6">
+                    <div className="relative flex-1 group">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 group-focus-within:text-[#B91C1C] transition-colors" />
                         <input
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
                             type="text"
-                            placeholder="Search documents, reports, notices..."
-                            className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                            placeholder="Search strategic signals, reports, or notices..."
+                            className="w-full pl-12 pr-6 py-4 bg-white border border-gray-100 rounded-2xl text-sm text-gray-900 focus:outline-none focus:ring-4 focus:ring-red-500/5 font-bold transition-all placeholder:text-gray-300 shadow-sm"
                         />
                     </div>
-                    <button onClick={() => alert('Upload feature coming soon! This would open a file picker dialog.')} className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20">
-                        <Upload className="w-4 h-4" />
-                        Upload Document
+                    <button
+                        onClick={() => setUploadOpen(true)}
+                        className="flex items-center gap-3 px-8 py-4 bg-[#B91C1C] text-white rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] hover:bg-neutral-800 transition-all shadow-xl shadow-red-900/20 active:scale-95"
+                    >
+                        <Upload className="w-4 h-4" /> Secure Upload
                     </button>
                 </div>
 
-                {/* Folder Grid */}
+                {/* Folders */}
                 <div>
-                    <h2 className="text-sm font-black text-gray-700 uppercase tracking-widest mb-4 flex items-center gap-2">
-                        <FolderOpen className="w-4 h-4 text-amber-500" />
-                        Document Folders
+                    <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-6 flex items-center gap-3">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#B91C1C]" />
+                        Library Architecture
                     </h2>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
                         {folders.map(folder => (
-                            <div key={folder.name} onClick={() => alert(`Opening folder: ${folder.name} (${folder.count} files)`)} className={`group cursor-pointer p-5 rounded-2xl border-2 ${folder.color} hover:shadow-md transition-all hover:-translate-y-0.5`}>
-                                <FolderOpen className="w-7 h-7 mb-3 opacity-80" />
-                                <p className="text-xs font-black leading-tight mb-1">{folder.name}</p>
-                                <p className="text-[10px] opacity-60 font-bold">{folder.count} files</p>
+                            <div
+                                key={folder.name}
+                                className={`group cursor-pointer rounded-[2rem] border p-6 hover:shadow-2xl hover:-translate-y-2 transition-all active:scale-95 relative overflow-hidden ${folder.bg} ${folder.border}`}
+                                onClick={() => setSearch(folder.name.split(" ")[0])}
+                            >
+                                <div className="absolute top-0 right-0 w-16 h-16 bg-red-500/5 blur-[30px] group-hover:bg-red-500/10 transition-all" />
+                                <div className="mb-6 relative z-10">
+                                    <div className="w-10 h-10 rounded-2xl bg-red-50 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+                                        <FolderOpen className="w-5 h-5" style={{ color: "#B91C1C" }} />
+                                    </div>
+                                </div>
+                                <p className="text-xs font-black leading-tight tracking-tight text-gray-900 mb-1 group-hover:text-[#B91C1C] transition-colors">{folder.name}</p>
+                                <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">{folder.count} Signals</p>
                             </div>
                         ))}
                     </div>
                 </div>
 
-                {/* Recent Documents */}
-                <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
-                    <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-                        <h3 className="text-base font-black text-gray-900 flex items-center gap-2">
-                            <FileText className="w-5 h-5 text-blue-500" />
-                            Recent Documents
-                        </h3>
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{recentDocs.length} documents</span>
+                {/* Recent Files */}
+                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                    <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                            <FileText className="w-4 h-4 text-gray-500" />
+                            <h3 className="text-sm font-black text-gray-900">Recent Files</h3>
+                        </div>
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{recentDocs.length} Total Files</span>
                     </div>
-
                     <div className="divide-y divide-gray-50">
-                        {recentDocs.map(doc => (
-                            <div key={doc.name} className="flex items-center gap-4 px-6 py-4 hover:bg-gray-50/50 transition-colors cursor-pointer group">
-                                <div className={`px-2.5 py-0.5 rounded-lg text-[10px] font-black border ${typeColor[doc.type] || typeColor["DOCX"]} shrink-0`}>
+                        {filtered.map(doc => (
+                            <div key={doc.name} className="flex items-center gap-4 px-6 py-4 hover:bg-gray-50/60 transition-colors group">
+                                {/* Type Badge */}
+                                <div className="px-2.5 py-1 rounded-lg text-[10px] font-black shrink-0"
+                                    style={{ background: typeStyle[doc.type]?.bg ?? "#F3F4F6", color: typeStyle[doc.type]?.text ?? "#374151" }}>
                                     {doc.type}
                                 </div>
 
+                                {/* Name + Meta */}
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-bold text-gray-900 truncate group-hover:text-blue-600 transition-colors">{doc.name}</p>
+                                    <p className="text-sm font-bold text-gray-900 truncate">{doc.name}</p>
                                     <div className="flex items-center gap-3 mt-0.5">
-                                        <span className="text-[10px] text-gray-400 flex items-center gap-1">
+                                        <span className="text-[10px] text-gray-400 font-medium flex items-center gap-1">
                                             <Clock className="w-3 h-3" /> {doc.date}
                                         </span>
-                                        <span className="text-[10px] text-gray-400">{doc.size}</span>
+                                        <span className="text-[10px] text-gray-400 font-medium">{doc.size}</span>
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-3 shrink-0">
-                                    <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase ${statusStyle[doc.status]}`}>
-                                        {doc.status}
+                                {/* Status + Actions */}
+                                <div className="flex items-center gap-2 shrink-0">
+                                    <span className="text-[10px] font-black px-2.5 py-1 rounded-lg"
+                                        style={{ background: statusStyle[doc.status]?.bg, color: statusStyle[doc.status]?.text }}>
+                                        {statusStyle[doc.status]?.label}
                                     </span>
+
+                                    {/* Access icon */}
                                     {doc.access === "restricted" ? (
-                                        <Lock className="w-3.5 h-3.5 text-amber-500" />
+                                        <div className="p-1.5 rounded-lg bg-amber-50 text-amber-500" title="Restricted">
+                                            <Lock className="w-3.5 h-3.5" />
+                                        </div>
                                     ) : (
-                                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                                        <div className="p-1.5 rounded-lg bg-emerald-50 text-emerald-500" title="Public">
+                                            <CheckCircle2 className="w-3.5 h-3.5" />
+                                        </div>
                                     )}
-                                    <button onClick={() => alert(`Viewing: ${doc.name}`)} className="h-8 w-8 rounded-xl bg-gray-100 hover:bg-blue-600 hover:text-white flex items-center justify-center transition-all">
+
+                                    {/* Share */}
+                                    <button
+                                        onClick={() => handleShare(doc.name)}
+                                        className={`p-1.5 rounded-lg transition-all ${shareToast === doc.name ? "bg-emerald-50 text-emerald-600" : "bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-[#B91C1C]"}`}
+                                        title="Copy shareable link"
+                                    >
+                                        {shareToast === doc.name ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
+                                    </button>
+
+                                    {/* Preview */}
+                                    <button
+                                        onClick={() => setPreviewDoc(doc)}
+                                        className="p-1.5 rounded-lg bg-gray-50 text-gray-400 hover:bg-gray-100 transition-all"
+                                        title="Preview"
+                                    >
                                         <Eye className="w-3.5 h-3.5" />
                                     </button>
-                                    <button onClick={() => alert(`Downloading: ${doc.name} (${doc.size})`)} className="h-8 w-8 rounded-xl bg-gray-100 hover:bg-blue-600 hover:text-white flex items-center justify-center transition-all">
-                                        <Download className="w-3.5 h-3.5" />
+
+                                    {/* Download — actually downloads a file */}
+                                    <button
+                                        onClick={() => handleDownload(doc)}
+                                        className={`p-1.5 rounded-lg transition-all relative ${downloading === doc.name ? "bg-emerald-50 text-emerald-600" : "bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-[#B91C1C]"}`}
+                                        title="Download"
+                                    >
+                                        {downloading === doc.name ? (
+                                            <CheckCircle2 className="w-3.5 h-3.5" />
+                                        ) : (
+                                            <Download className="w-3.5 h-3.5" />
+                                        )}
                                     </button>
                                 </div>
                             </div>
                         ))}
+                        {filtered.length === 0 && (
+                            <div className="py-12 text-center">
+                                <FileText className="w-10 h-10 text-gray-200 mx-auto mb-2" />
+                                <p className="text-sm font-bold text-gray-400">No documents found</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

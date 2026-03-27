@@ -14,4 +14,16 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    proxy: {
+      '/geo-api': {
+        target: 'https://nominatim.openstreetmap.org',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/geo-api/, ''),
+        headers: {
+          'User-Agent': 'CoPilot-District-Gov-v1.0'
+        }
+      },
+    },
+  },
 })

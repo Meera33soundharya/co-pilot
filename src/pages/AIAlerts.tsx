@@ -1,6 +1,6 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useState } from "react";
-import { AlertTriangle, Info, Zap, Filter, BellOff, Eye, ArrowRight, Activity } from "lucide-react";
+import { AlertTriangle, Info, Zap, Filter, BellOff, Eye, ArrowRight, Activity, X, CheckCircle2 } from "lucide-react";
 
 type AlertSeverity = "Critical" | "High" | "Medium" | "Low";
 
@@ -27,14 +27,14 @@ const alerts: Alert[] = [
 ];
 
 const severityConfig: Record<AlertSeverity, { bg: string; text: string; border: string; icon: any; dot: string }> = {
-    Critical: { bg: "bg-rose-50", text: "text-rose-700", border: "border-rose-200", icon: AlertTriangle, dot: "bg-rose-500" },
+    Critical: { bg: "bg-red-50", text: "text-red-700", border: "border-red-200", icon: AlertTriangle, dot: "bg-red-600" },
     High: { bg: "bg-orange-50", text: "text-orange-700", border: "border-orange-200", icon: Zap, dot: "bg-orange-500" },
     Medium: { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200", icon: Info, dot: "bg-amber-400" },
-    Low: { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200", icon: Activity, dot: "bg-blue-400" },
+    Low: { bg: "bg-gray-50", text: "text-gray-700", border: "border-gray-200", icon: Activity, dot: "bg-gray-400" },
 };
 
 const statusStyle: Record<string, string> = {
-    "active": "bg-rose-50 text-rose-600 border-rose-100",
+    "active": "bg-red-50 text-red-600 border-red-100",
     "acknowledged": "bg-amber-50 text-amber-600 border-amber-100",
     "resolved": "bg-emerald-50 text-emerald-600 border-emerald-100",
 };
@@ -42,29 +42,65 @@ const statusStyle: Record<string, string> = {
 export default function AIAlerts() {
     const [severityFilter, setSeverityFilter] = useState<string>("All");
     const [statusFilter, setStatusFilter] = useState<string>("All");
+    const [alertStatuses, setAlertStatuses] = useState<Record<string, string>>({});
+    const [dismissed, setDismissed] = useState<string[]>([]);
+    const [detail, setDetail] = useState<Alert | null>(null);
 
-    const filtered = alerts.filter(a => {
+    const getStatus = (a: Alert) => alertStatuses[a.id] ?? a.status;
+
+    const handleDismiss = (id: string) => setDismissed(prev => [...prev, id]);
+    const handleAcknowledge = (id: string) => setAlertStatuses(prev => ({ ...prev, [id]: "acknowledged" }));
+    const handleResolve = (id: string) => setAlertStatuses(prev => ({ ...prev, [id]: "resolved" }));
+
+    const visible = alerts.filter(a => !dismissed.includes(a.id));
+    const filtered = visible.filter(a => {
         const matchSev = severityFilter === "All" || a.severity === severityFilter;
-        const matchStat = statusFilter === "All" || a.status === statusFilter;
+        const matchStat = statusFilter === "All" || getStatus(a) === statusFilter;
         return matchSev && matchStat;
     });
 
-    const critCount = alerts.filter(a => a.severity === "Critical" && a.status === "active").length;
-    const highCount = alerts.filter(a => a.severity === "High" && a.status === "active").length;
-    const resolvedCount = alerts.filter(a => a.status === "resolved").length;
+    const critCount = visible.filter(a => a.severity === "Critical" && getStatus(a) === "active").length;
+    const highCount = visible.filter(a => a.severity === "High" && getStatus(a) === "active").length;
+    const resolvedCount = visible.filter(a => getStatus(a) === "resolved").length;
 
     return (
-        <DashboardLayout title="Crisis Radar™" subtitle="AI-powered anomaly detection & real-time tactical intelligence across grievances, media, and social sentiment">
+        <DashboardLayout title="AI Alerts" subtitle="AI-powered anomaly detection & real-time intelligence across grievances and sentiment">
+            {/* Detail Panel */}
+            {detail && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setDetail(null)} />
+                    <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-slide-up">
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                            <span className="font-black text-gray-900">{detail.id}: {detail.title}</span>
+                            <button onClick={() => setDetail(null)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400"><X className="w-4 h-4" /></button>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <p className="text-sm text-gray-700 leading-relaxed">{detail.description}</p>
+                            <div className="grid grid-cols-2 gap-3 text-xs">
+                                <div><p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] mb-0.5">Ward</p><p className="font-bold text-gray-800">{detail.ward}</p></div>
+                                <div><p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] mb-0.5">Category</p><p className="font-bold text-gray-800">{detail.category}</p></div>
+                                <div><p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] mb-0.5">Severity</p><p className="font-bold" style={{ color: detail.severity === 'Critical' ? '#B91C1C' : '#D97706' }}>{detail.severity}</p></div>
+                                <div><p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] mb-0.5">AI Confidence</p><p className="font-bold text-red-600">{detail.aiConfidence}%</p></div>
+                            </div>
+                            <div className="flex gap-3 pt-2">
+                                <button onClick={() => { handleAcknowledge(detail.id); setDetail(null); }} className="flex-1 py-2.5 rounded-xl bg-amber-50 text-amber-700 text-xs font-black uppercase tracking-widest hover:bg-amber-100 transition-all">Acknowledge</button>
+                                <button onClick={() => { handleResolve(detail.id); setDetail(null); }} className="flex-1 py-2.5 rounded-xl text-white text-xs font-black uppercase tracking-widest transition-all" style={{ backgroundColor: '#B91C1C' }}>Mark Resolved</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="space-y-6">
                 {/* Stats */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     {[
-                        { label: "Total Active", value: alerts.filter(a => a.status === "active").length, bg: "bg-rose-600", text: "text-white" },
-                        { label: "Critical", value: critCount, bg: "bg-rose-50 border border-rose-200", text: "text-rose-700" },
+                        { label: "Total Active", value: visible.filter(a => getStatus(a) === "active").length, bgStyle: { backgroundColor: "#B91C1C" }, text: "text-white" },
+                        { label: "Critical", value: critCount, bg: "bg-red-50 border border-red-200", text: "text-red-700" },
                         { label: "High Priority", value: highCount, bg: "bg-orange-50 border border-orange-200", text: "text-orange-700" },
                         { label: "Resolved Today", value: resolvedCount, bg: "bg-emerald-50 border border-emerald-200", text: "text-emerald-700" },
                     ].map(s => (
-                        <div key={s.label} className={`${s.bg} ${s.text} rounded-2xl p-5`}>
+                        <div key={s.label} className={`${s.bg ?? ""} ${s.text} rounded-xl p-5`} style={s.bgStyle}>
                             <p className="text-[10px] font-black uppercase tracking-widest opacity-70">{s.label}</p>
                             <p className="text-3xl font-black mt-1">{s.value}</p>
                         </div>
@@ -80,7 +116,7 @@ export default function AIAlerts() {
                             <button
                                 key={s}
                                 onClick={() => setSeverityFilter(s)}
-                                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${severityFilter === s ? "bg-blue-600 text-white" : "text-gray-400 hover:text-gray-700"}`}
+                                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${severityFilter === s ? "bg-gray-900 text-white" : "text-gray-400 hover:text-gray-700"}`}
                             >
                                 {s}
                             </button>
@@ -92,7 +128,7 @@ export default function AIAlerts() {
                             <button
                                 key={s}
                                 onClick={() => setStatusFilter(s)}
-                                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${statusFilter === s ? "bg-blue-600 text-white" : "text-gray-400 hover:text-gray-700"}`}
+                                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${statusFilter === s ? "bg-gray-900 text-white" : "text-gray-400 hover:text-gray-700"}`}
                             >
                                 {s}
                             </button>
@@ -100,7 +136,7 @@ export default function AIAlerts() {
                     </div>
 
                     <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-auto">
-                        {filtered.length} alerts
+                        {filtered.length} of {visible.length} alerts
                     </span>
                 </div>
 
@@ -109,8 +145,9 @@ export default function AIAlerts() {
                     {filtered.map(alertItem => {
                         const cfg = severityConfig[alertItem.severity];
                         const Icon = cfg.icon;
+                        const currentStatus = getStatus(alertItem);
                         return (
-                            <div key={alertItem.id} className={`bg-white border-2 ${cfg.border} rounded-2xl p-6 shadow-sm hover:shadow-md transition-all cursor-pointer group`}>
+                            <div key={alertItem.id} className={`bg-white border-2 ${cfg.border} rounded-2xl p-6 shadow-sm hover:shadow-md transition-all group`}>
                                 <div className="flex flex-col md:flex-row gap-4">
                                     <div className={`p-3 rounded-2xl ${cfg.bg} shrink-0 self-start`}>
                                         <Icon className={`w-5 h-5 ${cfg.text}`} />
@@ -123,33 +160,53 @@ export default function AIAlerts() {
                                                 <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot} ${alertItem.severity === "Critical" ? "animate-pulse" : ""}`} />
                                                 {alertItem.severity}
                                             </span>
-                                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black border ${statusStyle[alertItem.status]}`}>
-                                                {alertItem.status}
+                                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black border ${statusStyle[currentStatus]}`}>
+                                                {currentStatus}
                                             </span>
                                             <span className="text-[10px] text-gray-400 font-bold">{alertItem.ward}</span>
                                             <span className="text-[10px] text-gray-400 font-bold ml-auto">{alertItem.time}</span>
                                         </div>
 
-                                        <h3 className="font-black text-gray-900 text-base leading-tight group-hover:text-blue-700 transition-colors">{alertItem.title}</h3>
+                                        <h3 className="font-black text-gray-900 text-base leading-tight">{alertItem.title}</h3>
                                         <p className="text-sm text-gray-600 mt-1.5 leading-relaxed">{alertItem.description}</p>
 
                                         <div className="flex flex-wrap items-center gap-4 mt-4">
                                             <div className="flex items-center gap-2">
                                                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">AI Confidence:</span>
                                                 <div className="h-1.5 w-24 bg-gray-100 rounded-full overflow-hidden">
-                                                    <div className="h-full bg-blue-500 rounded-full" style={{ width: `${alertItem.aiConfidence}%` }} />
+                                                    <div className="h-full bg-red-600 rounded-full" style={{ width: `${alertItem.aiConfidence}%` }} />
                                                 </div>
-                                                <span className="text-[10px] font-black text-blue-600">{alertItem.aiConfidence}%</span>
+                                                <span className="text-[10px] font-black text-red-600">{alertItem.aiConfidence}%</span>
                                             </div>
 
                                             <div className="flex items-center gap-2 ml-auto">
-                                                <button onClick={() => window.alert(`Dismissed: ${alertItem.title}`)} className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-xl text-[10px] font-black text-gray-600 hover:bg-gray-200 transition-all">
+                                                <button
+                                                    onClick={() => handleDismiss(alertItem.id)}
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-xl text-[10px] font-black text-gray-600 hover:bg-gray-200 transition-all"
+                                                >
                                                     <BellOff className="w-3 h-3" /> Dismiss
                                                 </button>
-                                                <button onClick={() => window.alert(`Acknowledged: ${alertItem.title}`)} className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-xl text-[10px] font-black text-gray-600 hover:bg-gray-200 transition-all">
-                                                    <Eye className="w-3 h-3" /> Acknowledge
-                                                </button>
-                                                <button onClick={() => window.alert(`Investigating ${alertItem.id}: ${alertItem.title}\n\n${alertItem.description}\n\nWard: ${alertItem.ward}\nCategory: ${alertItem.category}\nAI Confidence: ${alertItem.aiConfidence}%`)} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 rounded-xl text-[10px] font-black text-white hover:bg-blue-700 transition-all shadow-md shadow-blue-500/20">
+                                                {currentStatus !== "acknowledged" && currentStatus !== "resolved" && (
+                                                    <button
+                                                        onClick={() => handleAcknowledge(alertItem.id)}
+                                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 rounded-xl text-[10px] font-black text-amber-700 hover:bg-amber-100 transition-all"
+                                                    >
+                                                        <Eye className="w-3 h-3" /> Acknowledge
+                                                    </button>
+                                                )}
+                                                {currentStatus !== "resolved" && (
+                                                    <button
+                                                        onClick={() => handleResolve(alertItem.id)}
+                                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black text-white hover:opacity-90 transition-all shadow-md"
+                                                        style={{ backgroundColor: '#B91C1C' }}
+                                                    >
+                                                        <CheckCircle2 className="w-3 h-3" /> Resolve
+                                                    </button>
+                                                )}
+                                                <button
+                                                    onClick={() => setDetail(alertItem)}
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-900 rounded-xl text-[10px] font-black text-white hover:bg-red-700 transition-all shadow-md shadow-gray-200"
+                                                >
                                                     Investigate <ArrowRight className="w-3 h-3" />
                                                 </button>
                                             </div>

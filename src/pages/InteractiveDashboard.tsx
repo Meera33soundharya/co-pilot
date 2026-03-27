@@ -10,15 +10,19 @@ export default function InteractiveDashboard() {
     const [activeZone, setActiveZone] = useState("Central Zone");
 
     return (
-        <DashboardLayout title="War Room: Interactive Grid" subtitle="Direct tactical control & multi-layer governance intelligence">
+        <DashboardLayout 
+            title="War Room: Interactive Grid" 
+            subtitle="Direct tactical control & multi-layer governance intelligence"
+            bgImage="/images/globe_bg.png"
+        >
             <div className="space-y-6 pb-12">
 
                 {/* Tactical Header */}
                 <div className="bg-[#0B1221] text-white rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 blur-[80px]" />
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-red-600/10 blur-[80px]" />
                     <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8">
                         <div className="flex items-center gap-6">
-                            <div className="w-16 h-16 bg-blue-600 rounded-3xl flex items-center justify-center shadow-xl shadow-blue-600/20 animate-pulse">
+                            <div className="w-16 h-16 bg-[#B91C1C] rounded-3xl flex items-center justify-center shadow-xl shadow-red-900/30 animate-pulse">
                                 <Target className="w-8 h-8 text-white" />
                             </div>
                             <div>
@@ -58,7 +62,7 @@ export default function InteractiveDashboard() {
                     <div className="xl:col-span-3 bg-white border border-gray-100 rounded-[2.5rem] p-8 shadow-sm min-h-[500px] relative">
                         <div className="flex items-center justify-between mb-8">
                             <h3 className="font-black text-gray-900 flex items-center gap-3">
-                                <Map className="w-5 h-5 text-blue-500" />
+                                <Map className="w-5 h-5 text-[#B91C1C]" />
                                 Intelligence Heatmap
                             </h3>
                             <div className="flex items-center gap-3">
@@ -90,7 +94,7 @@ export default function InteractiveDashboard() {
                                 ))}
                             </div>
                             <div className="absolute top-4 right-4 flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg shadow-sm border border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <MousePointer2 className="w-3 h-3 text-blue-500" />
+                                <MousePointer2 className="w-3 h-3 text-red-600" />
                                 <span className="text-[9px] font-black uppercase text-gray-900 tracking-widest">Select Node</span>
                             </div>
                         </div>
@@ -99,7 +103,7 @@ export default function InteractiveDashboard() {
                         <div className="absolute inset-x-8 bottom-8 h-20 bg-gray-900 rounded-3xl p-5 flex items-center justify-between text-white">
                             <div className="flex items-center gap-4">
                                 <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
-                                    <Activity className="w-5 h-5 text-blue-400" />
+                                    <Activity className="w-5 h-5 text-red-400" />
                                 </div>
                                 <div>
                                     <p className="text-[9px] font-black uppercase tracking-widest text-white/30">Node 08 Detection</p>
@@ -115,7 +119,7 @@ export default function InteractiveDashboard() {
                     {/* Right Panel: Active Stats */}
                     <div className="space-y-6">
                         {[
-                            { label: "Live Residents", value: "248,391", icon: Users, color: "text-blue-500", bg: "bg-blue-50" },
+                            { label: "Live Residents", value: "248,391", icon: Users, color: "text-red-700", bg: "bg-red-50" },
                             { label: "Active Patrols", value: "12 Unit", icon: ShieldCheck, color: "text-emerald-500", bg: "bg-emerald-50" },
                             { label: "System Load", value: "42%", icon: Zap, color: "text-amber-500", bg: "bg-amber-50" },
                         ].map(stat => (
@@ -128,9 +132,9 @@ export default function InteractiveDashboard() {
                             </div>
                         ))}
 
-                        <div className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-[2.5rem] p-8 text-white shadow-xl shadow-blue-600/20">
+                        <div className="bg-gradient-to-br from-gray-900 to-red-900 rounded-[2.5rem] p-8 text-white shadow-xl shadow-red-900/20">
                             <h3 className="font-black text-sm mb-4">Tactical Summary</h3>
-                            <p className="text-xs text-white/60 leading-relaxed mb-6">Currently monitoring 4 sectors with active AI predictive modeling. All units are synced to the central grid.</p>
+                            <p className="text-xs text-white/50 leading-relaxed mb-6 font-medium">Currently monitoring 4 sectors with active AI predictive modeling. All units are synced to the central grid.</p>
                             <button className="w-full py-4 bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">
                                 Open Full Console
                             </button>

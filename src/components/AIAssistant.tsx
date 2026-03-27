@@ -66,10 +66,10 @@ export default function AIAssistant() {
             {/* Floating Button */}
             <button
                 onClick={() => setOpen(true)}
-                className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-blue-600 rounded-2xl shadow-2xl shadow-blue-600/40 flex items-center justify-center hover:bg-blue-700 hover:scale-110 transition-all group"
+                className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-gray-900 rounded-2xl shadow-2xl shadow-gray-400 flex items-center justify-center hover:bg-[#B91C1C] hover:scale-110 transition-all group"
             >
                 <BrainCircuit className="w-7 h-7 text-white group-hover:rotate-12 transition-transform" />
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 rounded-full border-2 border-white flex items-center justify-center text-[8px] font-black text-white">7</span>
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#B91C1C] rounded-full border-2 border-white flex items-center justify-center text-[8px] font-black text-white">7</span>
             </button>
 
             {/* Chat Panel */}
@@ -77,7 +77,7 @@ export default function AIAssistant() {
                 <div className="fixed bottom-24 right-6 z-50 w-[380px] max-h-[600px] flex flex-col bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden animate-slide-up">
                     {/* Header */}
                     <div className="bg-[#0B1221] px-5 py-4 flex items-center gap-3 shrink-0">
-                        <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/30">
+                        <div className="w-9 h-9 bg-[#B91C1C] rounded-xl flex items-center justify-center shadow-lg shadow-red-900/30">
                             <BrainCircuit className="w-5 h-5 text-white" />
                         </div>
                         <div className="flex-1">
@@ -101,13 +101,13 @@ export default function AIAssistant() {
                     <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/50" style={{ maxHeight: 380 }}>
                         {messages.map((msg, i) => (
                             <div key={i} className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
-                                <div className={`w-7 h-7 rounded-xl shrink-0 flex items-center justify-center text-white text-xs font-black ${msg.role === "ai" ? "bg-blue-600" : "bg-gray-700"}`}>
+                                <div className={`w-7 h-7 rounded-xl shrink-0 flex items-center justify-center text-white text-xs font-black ${msg.role === "ai" ? "bg-[#B91C1C]" : "bg-gray-700"}`}>
                                     {msg.role === "ai" ? <Bot className="w-4 h-4" /> : <User2 className="w-4 h-4" />}
                                 </div>
                                 <div className={`max-w-[80%] ${msg.role === "user" ? "items-end" : "items-start"} flex flex-col gap-1`}>
                                     <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed ${msg.role === "ai"
                                         ? "bg-white border border-gray-100 text-gray-800 shadow-sm rounded-tl-sm"
-                                        : "bg-blue-600 text-white rounded-tr-sm"
+                                        : "bg-[#B91C1C] text-white rounded-tr-sm"
                                         }`}>
                                         {msg.text}
                                     </div>
@@ -117,12 +117,12 @@ export default function AIAssistant() {
                         ))}
                         {thinking && (
                             <div className="flex gap-3">
-                                <div className="w-7 h-7 rounded-xl bg-blue-600 flex items-center justify-center">
+                                <div className="w-7 h-7 rounded-xl bg-[#B91C1C] flex items-center justify-center">
                                     <Bot className="w-4 h-4 text-white" />
                                 </div>
                                 <div className="px-4 py-3 bg-white border border-gray-100 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-1.5">
                                     {[0, 0.15, 0.3].map((d, i) => (
-                                        <div key={i} className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: `${d}s` }} />
+                                        <div key={i} className="w-1.5 h-1.5 bg-[#B91C1C] rounded-full animate-bounce" style={{ animationDelay: `${d}s` }} />
                                     ))}
                                 </div>
                             </div>
@@ -136,7 +136,7 @@ export default function AIAssistant() {
                             <button
                                 key={s}
                                 onClick={() => send(s)}
-                                className="px-3 py-1.5 bg-gray-100 hover:bg-blue-50 hover:text-blue-700 rounded-xl text-[10px] font-black text-gray-500 whitespace-nowrap transition-all border border-transparent hover:border-blue-100"
+                                className="px-3 py-1.5 bg-gray-50 hover:bg-red-50 hover:text-[#B91C1C] rounded-xl text-[10px] font-black text-gray-400 whitespace-nowrap transition-all border border-transparent hover:border-red-100"
                             >
                                 {s}
                             </button>
@@ -150,12 +150,12 @@ export default function AIAssistant() {
                             onChange={e => setInput(e.target.value)}
                             onKeyDown={e => e.key === "Enter" && send(input)}
                             placeholder="Ask about grievances, alerts, analytics..."
-                            className="flex-1 text-sm px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all font-medium text-gray-700"
+                            className="flex-1 text-sm px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-red-500/5 focus:bg-white focus:border-red-100 transition-all font-medium text-gray-700"
                         />
                         <button
                             onClick={() => send(input)}
                             disabled={!input.trim() || thinking}
-                            className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center hover:bg-blue-700 transition-all disabled:opacity-40 shadow-lg shadow-blue-500/20"
+                            className="w-10 h-10 bg-gray-900 rounded-xl flex items-center justify-center hover:bg-[#B91C1C] transition-all disabled:opacity-40 shadow-lg shadow-gray-200"
                         >
                             <Send className="w-4 h-4 text-white" />
                         </button>

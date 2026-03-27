@@ -43,18 +43,22 @@ export default function ExplainableAI() {
     ];
 
     return (
-        <DashboardLayout title="Explainable AI Dashboard" subtitle="Unlocking the 'Black Box' — Step-by-step reasoning for every AI recommendation">
+        <DashboardLayout 
+            title="Explainable AI Dashboard" 
+            subtitle="Unlocking the 'Black Box' — Step-by-step reasoning for every AI recommendation"
+            bgImage="/images/explainable_bg.png"
+        >
             <div className="space-y-8 pb-12">
 
                 {/* Active Analysis Banner */}
-                <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-[2.5rem] p-8 text-white flex flex-col md:flex-row items-center justify-between gap-8">
+                <div className="bg-gradient-to-r from-red-600 to-gray-900 rounded-[2.5rem] p-8 text-white flex flex-col md:flex-row items-center justify-between gap-8 shadow-2xl">
                     <div className="flex items-center gap-6">
                         <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md animate-pulse">
                             <Network className="w-8 h-8 text-white" />
                         </div>
                         <div>
-                            <h3 className="text-xl font-black">Active Chain-of-Thought</h3>
-                            <p className="text-white/60 text-sm">Reviewing recommendation for: <span className="text-white font-black underline underline-offset-4 decoration-blue-300">Ward 03 Resource Reallocation</span></p>
+                            <h3 className="text-xl font-black tracking-tight">Active Chain-of-Thought</h3>
+                            <p className="text-white/60 text-sm">Reviewing recommendation for: <span className="text-white font-black underline underline-offset-4 decoration-red-400">Ward 03 Resource Reallocation</span></p>
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -77,20 +81,20 @@ export default function ExplainableAI() {
                                 key={step.title}
                                 onClick={() => setSelectedStep(idx)}
                                 className={`w-full text-left p-6 rounded-[2rem] border-2 transition-all group flex items-center gap-5 ${selectedStep === idx
-                                        ? "bg-white border-blue-500 shadow-xl shadow-blue-500/10 scale-[1.02]"
+                                        ? "bg-white border-[#B91C1C] shadow-xl shadow-red-500/10 scale-[1.02]"
                                         : "bg-gray-50 border-transparent hover:bg-white hover:border-gray-200"
                                     }`}
                             >
-                                <div className={`p-4 rounded-2xl shrink-0 transition-transform ${selectedStep === idx ? "bg-blue-600 text-white scale-110" : "bg-white text-gray-400 group-hover:text-blue-500"
+                                <div className={`p-4 rounded-2xl shrink-0 transition-transform ${selectedStep === idx ? "bg-[#B91C1C] text-white scale-110" : "bg-white text-gray-400 group-hover:text-red-600"
                                     }`}>
                                     <step.icon className="w-6 h-6" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <h4 className={`text-[10px] font-black uppercase tracking-widest mb-1 ${selectedStep === idx ? "text-blue-600" : "text-gray-400"
+                                    <h4 className={`text-[10px] font-black uppercase tracking-widest mb-1 ${selectedStep === idx ? "text-red-600" : "text-gray-400"
                                         }`}>Step 0{idx + 1}</h4>
                                     <p className="text-base font-black text-gray-900 truncate">{step.title}</p>
                                 </div>
-                                <ChevronRight className={`w-5 h-5 transition-transform ${selectedStep === idx ? "text-blue-500 translate-x-1" : "text-gray-200"
+                                <ChevronRight className={`w-5 h-5 transition-transform ${selectedStep === idx ? "text-red-500 translate-x-1" : "text-gray-200"
                                     }`} />
                             </button>
                         ))}
@@ -100,10 +104,10 @@ export default function ExplainableAI() {
                         <div className="bg-white border border-gray-100 rounded-[2.5rem] p-10 shadow-sm h-full flex flex-col">
                             <div className="flex items-start justify-between mb-8">
                                 <div className="flex items-center gap-4">
-                                    <div className="p-4 bg-blue-50 rounded-2xl">
+                                    <div className="p-4 bg-red-50 rounded-2xl">
                                         {(() => {
                                             const StepIcon = reasoningSteps[selectedStep].icon;
-                                            return <StepIcon className="w-8 h-8 text-blue-600" />;
+                                            return <StepIcon className="w-8 h-8 text-[#B91C1C]" />;
                                         })()}
                                     </div>
                                     <div>
@@ -117,9 +121,9 @@ export default function ExplainableAI() {
                             </div>
 
                             <div className="flex-1 space-y-8">
-                                <div className="p-8 bg-blue-50/50 rounded-3xl border border-blue-100 relative">
-                                    <Info className="absolute top-6 right-6 w-5 h-5 text-blue-300" />
-                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-blue-600 mb-4">Finding Summary</h4>
+                                <div className="p-8 bg-red-50/50 rounded-3xl border border-red-100 relative">
+                                    <Info className="absolute top-6 right-6 w-5 h-5 text-red-300" />
+                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-[#B91C1C] mb-4">Finding Summary</h4>
                                     <p className="text-lg font-bold text-gray-700 leading-relaxed">
                                         {reasoningSteps[selectedStep].desc}
                                     </p>
@@ -139,11 +143,11 @@ export default function ExplainableAI() {
                                         <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Confidence Intervals</h4>
                                         <div className="space-y-3">
                                             <div className="h-1.5 w-full bg-white rounded-full overflow-hidden">
-                                                <div className="h-full bg-blue-600 rounded-full" style={{ width: '92%' }} />
+                                                <div className="h-full bg-red-600 rounded-full" style={{ width: '92%' }} />
                                             </div>
                                             <div className="flex justify-between text-[10px] font-black text-gray-500">
                                                 <span>DATA QUALITY</span>
-                                                <span className="text-blue-600">92%</span>
+                                                <span className="text-red-700">92%</span>
                                             </div>
                                         </div>
                                     </div>
@@ -157,7 +161,7 @@ export default function ExplainableAI() {
                                             JD
                                         </div>
                                     ))}
-                                    <div className="w-10 h-10 rounded-full bg-blue-600 border-2 border-white flex items-center justify-center text-[10px] font-black text-white">
+                                    <div className="w-10 h-10 rounded-full bg-red-600 border-2 border-white flex items-center justify-center text-[10px] font-black text-white">
                                         +4
                                     </div>
                                 </div>
@@ -190,7 +194,7 @@ export default function ExplainableAI() {
                         </div>
                     </div>
                     <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm flex items-center gap-4">
-                        <div className="p-3 bg-blue-50 rounded-2xl text-blue-500">
+                        <div className="p-3 bg-red-50 rounded-2xl text-red-500">
                             <Network className="w-6 h-6" />
                         </div>
                         <div>

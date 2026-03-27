@@ -49,20 +49,20 @@ export function HeroBanner() {
             <div className="absolute -bottom-20 right-10 w-60 h-60 rounded-full bg-indigo-600/10 blur-[80px] pointer-events-none" />
 
             {/* Ticker bar */}
-            <div className="relative z-10 border-b border-white/5 px-8 py-2.5 flex items-center gap-4 bg-white/[0.03]">
-                <div className="flex items-center gap-2 shrink-0">
-                    <span className="h-1.5 w-1.5 rounded-full bg-rose-400 animate-pulse" />
-                    <span className="text-[9px] font-black uppercase tracking-[0.25em] text-white/30">Live Feed</span>
+            <div className="relative z-10 border-b border-white/5 px-8 py-3 flex items-center gap-4 bg-white/[0.03] backdrop-blur-sm">
+                <div className="flex items-center gap-2.5 shrink-0">
+                    <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.5)]" />
+                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40">Live Updates</span>
                 </div>
                 <div className="flex-1 overflow-hidden">
                     <div key={tick} className="animate-fade-in flex items-center gap-3">
-                        <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-white/5 border border-white/10 ${tickerItems[tick].color}`}>
+                        <span className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-lg bg-white/5 border border-white/10 ${tickerItems[tick].color} shadow-sm`}>
                             {tickerItems[tick].status}
                         </span>
-                        <span className="text-xs font-bold text-white/50">{tickerItems[tick].label}</span>
+                        <span className="text-sm font-medium text-white/50 tracking-tight">{tickerItems[tick].label}</span>
                     </div>
                 </div>
-                <div className="text-[9px] font-black text-white/20 uppercase tracking-widest shrink-0 hidden md:block">
+                <div className="text-[10px] font-bold text-white/20 uppercase tracking-widest shrink-0 hidden md:block tabular-nums">
                     {new Date().toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                 </div>
             </div>
@@ -73,47 +73,47 @@ export function HeroBanner() {
                 <div className="flex-1 min-w-0 space-y-5">
                     {/* Label */}
                     <div className="flex items-center gap-3">
-                        <div className="h-px w-10 bg-gradient-to-r from-[#D4AF37] to-transparent" />
-                        <span className="text-[9px] font-black uppercase tracking-[0.3em] text-[#D4AF37]">
-                            AI-Powered Governance Intelligence · GovCo-Pilot v2.0
+                        <div className="h-px w-12 bg-gradient-to-r from-[#D4AF37] to-transparent" />
+                        <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#D4AF37] opacity-90">
+                            Main Overview
                         </span>
                     </div>
 
                     {/* Greeting */}
                     <div>
-                        <h1 className="text-4xl font-black text-white leading-tight tracking-tight">
+                        <h1 className="text-4xl font-extrabold text-white leading-tight tracking-tight">
                             {getTimeGreeting()},<br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-300 to-blue-500">
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-300 to-blue-500 font-black">
                                 Administrator
                             </span>
                         </h1>
-                        <p className="text-sm text-white/40 mt-3 leading-relaxed max-w-md">
-                            Your governance intelligence system has processed <span className="text-white font-bold">2,847 citizen reports</span> this month.
-                            Resolution rate is at <span className="text-emerald-400 font-bold">78.3%</span> and trending upward.
+                        <p className="text-base text-white/50 mt-4 leading-relaxed max-w-lg font-medium">
+                            Your dashboard has processed <span className="text-white font-bold decoration-[#D4AF37] decoration-2 underline-offset-4">2,847 reports</span> today.
+                            Problem solving rate is at <span className="text-emerald-400 font-bold">78.3%</span>.
                         </p>
                     </div>
 
                     {/* Status chips */}
-                    <div className="flex flex-wrap gap-2.5">
-                        <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-500/10 border border-rose-500/20">
-                            <AlertTriangle className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
-                            <span className="text-[10px] font-black text-white uppercase tracking-wider">7 Critical Anomalies</span>
-                            <ChevronRight className="w-3 h-3 text-rose-400/50" />
+                    <div className="flex flex-wrap gap-3 mt-2">
+                        <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 shadow-lg shadow-rose-900/10">
+                            <AlertTriangle className="w-4 h-4 text-rose-400 animate-pulse" />
+                            <span className="text-[11px] font-bold text-white uppercase tracking-widest">7 Bad Issues</span>
+                            <ChevronRight className="w-3.5 h-3.5 text-rose-400/50" />
                         </div>
-                        <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                            <span className="text-[10px] font-black text-white uppercase tracking-wider">System Integrity Optimal</span>
+                        <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                            <span className="text-[11px] font-bold text-white uppercase tracking-widest">Integrity Optimal</span>
                         </div>
-                        <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-500/10 border border-blue-500/20">
-                            <Bell className="w-3.5 h-3.5 text-blue-400" />
-                            <span className="text-[10px] font-black text-white uppercase tracking-wider">24 Social Mentions</span>
+                        <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                            <Bell className="w-4 h-4 text-blue-400" />
+                            <span className="text-[11px] font-bold text-white uppercase tracking-widest">24 Mentions</span>
                         </div>
                         <button
                             onClick={() => navigate("/ai-alerts")}
-                            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 hover:bg-[#D4AF37]/20 transition-all active:scale-95"
+                            className="flex items-center gap-2.5 px-6 py-2.5 rounded-xl bg-[#D4AF37] text-[#0B1221] font-extrabold hover:bg-white transition-all active:scale-95 shadow-lg shadow-[#D4AF37]/20 group"
                         >
-                            <Zap className="w-3.5 h-3.5 text-[#D4AF37]" />
-                            <span className="text-[10px] font-black text-[#D4AF37] uppercase tracking-wider">Run AI Audit</span>
+                            <Zap className="w-4 h-4 group-hover:scale-125 transition-transform" />
+                            <span className="text-[11px] uppercase tracking-widest">Ask AI</span>
                         </button>
                     </div>
                 </div>
@@ -128,27 +128,27 @@ export function HeroBanner() {
                         >
                             {/* Icon bg glow */}
                             <div className={`absolute -top-4 -right-4 w-16 h-16 rounded-full bg-gradient-to-br ${stat.color} blur-[20px]`} />
-                            <stat.icon className={`w-4 h-4 ${stat.iconColor} mb-3 relative z-10`} />
-                            <p className="text-2xl font-black text-white leading-none relative z-10">{stat.value}</p>
-                            <p className="text-[9px] font-black uppercase tracking-widest text-white/30 mt-1.5 relative z-10">{stat.label}</p>
+                            <stat.icon className={`w-5 h-5 ${stat.iconColor} mb-4 relative z-10`} />
+                            <p className="text-3xl font-extrabold text-white leading-none relative z-10 tabular-nums">{stat.value}</p>
+                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 mt-2 relative z-10">{stat.label}</p>
                         </div>
                     ))}
                 </div>
             </div>
 
             {/* Mission status bar */}
-            <div className="relative z-10 border-t border-white/5 px-8 py-3 flex items-center gap-6 bg-white/[0.02]">
+            <div className="relative z-10 border-t border-white/5 px-8 py-4 flex items-center gap-8 bg-white/[0.02]">
                 {[
-                    { label: "Critical Response SLA", value: 94, color: "#EF4444" },
-                    { label: "AI Model Uptime", value: 99.8, color: "#10B981" },
-                    { label: "Data Freshness", value: 100, color: "#3B82F6" },
+                    { label: "SLA Response", value: 94, color: "#EF4444" },
+                    { label: "Model Uptime", value: 99.8, color: "#10B981" },
+                    { label: "Data Integrity", value: 100, color: "#3B82F6" },
                 ].map(s => (
-                    <div key={s.label} className="flex items-center gap-3 flex-1">
-                        <span className="text-[9px] font-black uppercase tracking-widest text-white/30 whitespace-nowrap hidden sm:block">{s.label}</span>
-                        <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
-                            <div className="h-full rounded-full" style={{ width: `${s.value}%`, backgroundColor: s.color, boxShadow: `0 0 8px ${s.color}80` }} />
+                    <div key={s.label} className="flex items-center gap-4 flex-1">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-white/20 whitespace-nowrap hidden sm:block">{s.label}</span>
+                        <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                            <div className="h-full rounded-full transition-all duration-1000 shadow-[0_0_8px_rgba(255,255,255,0.1)]" style={{ width: `${s.value}%`, backgroundColor: s.color, boxShadow: `0 0 10px ${s.color}60` }} />
                         </div>
-                        <span className="text-[9px] font-black text-white/50" style={{ color: s.color }}>{s.value}%</span>
+                        <span className="text-[11px] font-extrabold tabular-nums" style={{ color: s.color }}>{s.value}%</span>
                     </div>
                 ))}
             </div>

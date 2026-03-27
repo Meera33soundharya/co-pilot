@@ -53,15 +53,19 @@ const radarData = [
 const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
         return (
-            <div className="bg-[#0B1221] border border-white/10 rounded-2xl p-4 shadow-2xl">
-                <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">{label}</p>
-                {payload.map((p: any) => (
-                    <div key={p.dataKey} className="flex items-center gap-2 text-xs font-bold text-white">
-                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color }} />
-                        <span className="capitalize">{p.dataKey}:</span>
-                        <span>{p.value}</span>
-                    </div>
-                ))}
+            <div className="bg-[#0B1221] border border-white/10 rounded-2xl p-4 shadow-2xl backdrop-blur-md">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-white/40 mb-3 border-b border-white/5 pb-2">{label}</p>
+                <div className="space-y-2">
+                    {payload.map((p: any) => (
+                        <div key={p.dataKey} className="flex items-center justify-between gap-4 text-xs font-bold text-white">
+                            <div className="flex items-center gap-2">
+                                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: p.color }} />
+                                <span className="capitalize text-white/70">{p.dataKey}</span>
+                            </div>
+                            <span className="tabular-nums">{p.value}</span>
+                        </div>
+                    ))}
+                </div>
             </div>
         );
     }
@@ -79,14 +83,14 @@ export function AnalyticsSuite() {
     return (
         <div className="space-y-4">
             {/* Section header */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3">
                     <div className="h-5 w-1 rounded-full bg-gradient-to-b from-indigo-500 to-purple-600" />
-                    <h2 className="text-base font-black text-gray-900 tracking-tight">Analytics Intelligence</h2>
-                    <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 bg-gray-100 px-2 py-0.5 rounded-lg">Multi-dimensional</span>
+                    <h2 className="text-base font-bold text-gray-950 tracking-tight">Analytics Intelligence</h2>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-700 bg-indigo-50 border border-indigo-100 px-3 py-1 rounded-xl shadow-sm">AI-Powered</span>
                 </div>
-                <button onClick={() => navigate("/analytics")} className="flex items-center gap-1.5 text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:text-indigo-800 transition-colors">
-                    Deep Analytics <ArrowUpRight className="w-3.5 h-3.5" />
+                <button onClick={() => navigate("/analytics")} className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 uppercase tracking-widest hover:text-indigo-800 transition-all hover:gap-2">
+                    Deep Analytics <ArrowUpRight className="w-4 h-4" />
                 </button>
             </div>
 
@@ -98,20 +102,20 @@ export function AnalyticsSuite() {
                     {/* Top gradient line */}
                     <div className="absolute top-0 left-8 right-8 h-[2px] rounded-b-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 opacity-60" />
 
-                    <div className="flex items-start justify-between mb-6">
+                    <div className="flex items-start justify-between mb-8">
                         <div>
-                            <div className="flex items-center gap-2 mb-1">
-                                <TrendingUp className="w-4 h-4 text-blue-500" />
-                                <h3 className="text-sm font-black text-gray-900">Complaint Trend & Resolution Forecast</h3>
+                            <div className="flex items-center gap-2 mb-1.5">
+                                <TrendingUp className="w-5 h-5 text-blue-500" />
+                                <h3 className="text-sm font-bold text-gray-900">Complaint Trend & Resolution Forecast</h3>
                             </div>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">AI-driven monthly analysis</p>
+                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Predictive monthly grid analysis</p>
                         </div>
-                        <div className="flex items-center gap-1.5 bg-gray-50 rounded-xl p-1 border border-gray-100">
+                        <div className="flex items-center gap-1 bg-gray-50/50 rounded-xl p-1 border border-gray-100">
                             {timeframes.map(tf => (
                                 <button
                                     key={tf}
                                     onClick={() => setTimeframe(tf)}
-                                    className={`px-3 py-1.5 text-[10px] font-black rounded-lg transition-all ${timeframe === tf ? "bg-blue-600 text-white shadow-sm" : "text-gray-500 hover:text-gray-800"}`}
+                                    className={`px-4 py-2 text-[11px] font-bold rounded-lg transition-all ${timeframe === tf ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20" : "text-gray-500 hover:text-gray-800 hover:bg-white"}`}
                                 >
                                     {tf}
                                 </button>
@@ -157,16 +161,15 @@ export function AnalyticsSuite() {
                         </ResponsiveContainer>
                     </div>
 
-                    {/* Summary stats */}
-                    <div className="mt-4 pt-4 border-t border-gray-50 grid grid-cols-3 gap-4">
+                    <div className="mt-6 pt-6 border-t border-gray-100 grid grid-cols-3 gap-6">
                         {[
-                            { label: "Peak Month", val: "Jan", color: "text-blue-600" },
-                            { label: "Best Resolution", val: "82.3%", color: "text-emerald-600" },
-                            { label: "AI Forecast ▶ Mar", val: "+20%", color: "text-amber-600" },
+                            { label: "Peak Activity", val: "January", color: "text-blue-600" },
+                            { label: "Critical Success", val: "82.3%", color: "text-emerald-600" },
+                            { label: "AI March Goal", val: "+20%", color: "text-amber-600" },
                         ].map(s => (
-                            <div key={s.label} className="text-center">
-                                <p className={`text-sm font-black ${s.color}`}>{s.val}</p>
-                                <p className="text-[9px] font-black uppercase tracking-widest text-gray-400 mt-0.5">{s.label}</p>
+                            <div key={s.label} className="text-center group/stat">
+                                <p className={`text-base font-extrabold ${s.color}`}>{s.val}</p>
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mt-1 transition-colors group-hover/stat:text-gray-600">{s.label}</p>
                             </div>
                         ))}
                     </div>
@@ -184,36 +187,36 @@ export function AnalyticsSuite() {
                         </div>
                         <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-5">Classification across sectors</p>
 
-                        <div className="flex justify-center mb-5">
+                        <div className="flex justify-center mb-8">
                             <div className="relative">
-                                <div className="h-44 w-44">
+                                <div className="h-52 w-52">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <PieChart>
-                                            <Pie data={categoryData} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={4} dataKey="value" strokeWidth={0}>
+                                            <Pie data={categoryData} cx="50%" cy="50%" innerRadius={65} outerRadius={95} paddingAngle={6} dataKey="value" strokeWidth={0}>
                                                 {categoryData.map((entry, i) => (
-                                                    <Cell key={i} fill={entry.color} opacity={0.9} />
+                                                    <Cell key={i} fill={entry.color} />
                                                 ))}
                                             </Pie>
                                         </PieChart>
                                     </ResponsiveContainer>
                                 </div>
                                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                    <span className="text-2xl font-black text-white">2.8k</span>
-                                    <span className="text-[8px] font-black uppercase tracking-widest text-white/30">Total Cases</span>
+                                    <span className="text-3xl font-extrabold text-white">2.8k</span>
+                                    <span className="text-[10px] font-bold uppercase tracking-widest text-white/40">Total Signals</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="space-y-2.5">
+                        <div className="space-y-3.5">
                             {categoryData.map(c => (
-                                <div key={c.name} className="flex items-center gap-2.5">
-                                    <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: c.color }} />
-                                    <span className="text-[11px] font-bold text-white/60 flex-1 truncate">{c.name}</span>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-16 h-1 bg-white/10 rounded-full overflow-hidden">
-                                            <div className="h-full rounded-full" style={{ width: `${c.value * 3.5}%`, backgroundColor: c.color }} />
+                                <div key={c.name} className="flex items-center gap-3">
+                                    <span className="w-2.5 h-2.5 rounded-full shrink-0 shadow-[0_0_8px_rgba(255,255,255,0.1)]" style={{ backgroundColor: c.color }} />
+                                    <span className="text-xs font-semibold text-white/70 flex-1 truncate">{c.name}</span>
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-20 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                                            <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${c.value * 3.5}%`, backgroundColor: c.color }} />
                                         </div>
-                                        <span className="text-[10px] font-black text-white/50 w-8 text-right">{c.value}%</span>
+                                        <span className="text-xs font-extrabold text-white/40 w-10 text-right tabular-nums">{c.value}%</span>
                                     </div>
                                 </div>
                             ))}
@@ -229,18 +232,18 @@ export function AnalyticsSuite() {
                 <div className="lg:col-span-2 bg-white rounded-3xl border border-gray-100 p-7 shadow-sm hover:shadow-lg transition-all relative overflow-hidden">
                     <div className="absolute top-0 left-8 right-8 h-[2px] rounded-b-full bg-gradient-to-r from-rose-500 to-amber-500 opacity-40" />
 
-                    <div className="flex items-start justify-between mb-6">
+                    <div className="flex items-start justify-between mb-8">
                         <div>
-                            <div className="flex items-center gap-2 mb-1">
-                                <Flame className="w-4 h-4 text-rose-500" />
-                                <h3 className="text-sm font-black text-gray-900">Ward Density Heatmap</h3>
+                            <div className="flex items-center gap-2 mb-1.5">
+                                <Flame className="w-5 h-5 text-rose-500" />
+                                <h3 className="text-sm font-bold text-gray-900">Ward Density Heatmap</h3>
                             </div>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Geographic complaint concentration · 12 wards</p>
+                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Geographic signal concentration · 12 Nodes</p>
                         </div>
-                        <div className="flex items-center gap-3 text-[9px] font-black uppercase tracking-widest">
-                            {[["#10B981", "Low"], ["#F59E0B", "Medium"], ["#EF4444", "Critical"]].map(([c, l]) => (
-                                <div key={l} className="flex items-center gap-1">
-                                    <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: c }} />
+                        <div className="flex items-center gap-5 text-[10px] font-bold uppercase tracking-widest">
+                            {[["#10B981", "Stable"], ["#F59E0B", "Elevated"], ["#EF4444", "Critical"]].map(([c, l]) => (
+                                <div key={l} className="flex items-center gap-2">
+                                    <span className="w-3 h-3 rounded-md shadow-sm" style={{ backgroundColor: c }} />
                                     <span className="text-gray-400">{l}</span>
                                 </div>
                             ))}
@@ -267,13 +270,12 @@ export function AnalyticsSuite() {
                         </ResponsiveContainer>
                     </div>
 
-                    {/* Top 3 risk wards */}
-                    <div className="mt-4 pt-4 border-t border-gray-50 flex items-center gap-4">
-                        <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Top Risk:</span>
+                    <div className="mt-6 pt-6 border-t border-gray-100 flex items-center gap-6">
+                        <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Active Risk Nodes:</span>
                         {wardData.filter(w => w.volume >= 70).map(w => (
-                            <span key={w.ward} className="px-3 py-1 bg-rose-50 border border-rose-100 rounded-xl text-[10px] font-black text-rose-700 flex items-center gap-1.5">
-                                <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-                                {w.ward} — {w.volume}%
+                            <span key={w.ward} className="px-4 py-1.5 bg-rose-50 border border-rose-100 rounded-xl text-[11px] font-bold text-rose-700 flex items-center gap-2 shadow-sm transition-transform hover:scale-105">
+                                <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                                {w.ward} <span className="text-rose-400 font-medium">|</span> {w.volume}%
                             </span>
                         ))}
                     </div>
@@ -281,11 +283,11 @@ export function AnalyticsSuite() {
 
                 {/* ── Governance Radar ── */}
                 <div className="rounded-3xl border border-indigo-100/50 bg-gradient-to-br from-indigo-50/50 to-purple-50/30 p-7 shadow-sm hover:shadow-lg transition-all">
-                    <div className="flex items-center gap-2 mb-1">
-                        <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-                        <h3 className="text-sm font-black text-gray-900">Governance Scorecard</h3>
+                    <div className="flex items-center gap-2 mb-1.5">
+                        <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
+                        <h3 className="text-sm font-bold text-gray-900">Governance Scorecard</h3>
                     </div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4">Multi-axis performance radar</p>
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-6">Multi-axis performance radar</p>
 
                     <div className="h-52">
                         <ResponsiveContainer width="100%" height="100%">
@@ -298,13 +300,13 @@ export function AnalyticsSuite() {
                         </ResponsiveContainer>
                     </div>
 
-                    <div className="mt-2 flex items-center justify-between p-3 bg-white rounded-2xl border border-indigo-100/50 shadow-sm">
+                    <div className="mt-4 flex items-center justify-between p-4 bg-white rounded-2xl border border-indigo-100 shadow-sm transition-all hover:shadow-md">
                         <div>
-                            <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">Overall Score</p>
-                            <p className="text-xl font-black text-gray-900 mt-0.5">86.0 <span className="text-sm font-bold text-indigo-500">/ 100</span></p>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Aggregated Score</p>
+                            <p className="text-2xl font-extrabold text-[#0B1221] mt-1 tabular-nums">86.0 <span className="text-sm font-bold text-indigo-500">/ 100</span></p>
                         </div>
-                        <div className="px-3 py-1.5 bg-indigo-50 border border-indigo-100 rounded-xl text-[10px] font-black text-indigo-700">
-                            A Grade
+                        <div className="px-4 py-2 bg-indigo-50 border border-indigo-100 rounded-xl text-xs font-bold text-indigo-700 shadow-sm">
+                            Grade A+
                         </div>
                     </div>
                 </div>

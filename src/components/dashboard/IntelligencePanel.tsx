@@ -43,17 +43,17 @@ export function IntelligencePanel() {
     return (
         <div className="space-y-4">
             {/* Section header */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
-                    <div className="h-5 w-1 rounded-full bg-gradient-to-b from-rose-500 to-orange-600" />
-                    <h2 className="text-base font-black text-gray-900 tracking-tight">Crisis Intelligence</h2>
-                    <span className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-rose-600 bg-rose-50 border border-rose-100 px-2 py-0.5 rounded-lg">
-                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                        7 Active Anomalies
+                    <div className="h-5 w-1 rounded-full bg-gradient-to-b from-rose-500 to-orange-600 shadow-sm" />
+                    <h2 className="text-base font-bold text-gray-950 tracking-tight">Critical Issues</h2>
+                    <span className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-rose-600 bg-rose-50 border border-rose-100 px-3 py-1 rounded-xl shadow-sm">
+                        <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.4)]" />
+                        7 Issues Found
                     </span>
                 </div>
-                <button onClick={() => navigate("/ai-alerts")} className="flex items-center gap-1.5 text-[10px] font-black text-rose-600 uppercase tracking-widest hover:text-rose-800 transition-colors">
-                    View All Alerts <ArrowUpRight className="w-3.5 h-3.5" />
+                <button onClick={() => navigate("/ai-alerts")} className="flex items-center gap-1.5 text-xs font-bold text-rose-600 uppercase tracking-widest hover:text-rose-800 transition-all hover:gap-2">
+                    View All Alerts <ArrowUpRight className="w-4 h-4" />
                 </button>
             </div>
 
@@ -74,10 +74,10 @@ export function IntelligencePanel() {
                                         <Icon className={`w-5 h-5 ${a.iconColor}`} />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2.5 flex-wrap mb-2">
-                                            <span className="text-sm font-black text-gray-900">{a.ward}</span>
-                                            <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 px-2 py-0.5 bg-gray-100/70 rounded-lg">{a.dept}</span>
-                                            <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-lg ${a.severityStyle}`}>
+                                        <div className="flex items-center gap-2.5 flex-wrap mb-2.5">
+                                            <span className="text-sm font-extrabold text-[#0B1221] tracking-tight">{a.ward}</span>
+                                            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 px-2.5 py-0.5 bg-gray-100 border border-gray-200/50 rounded-lg">{a.dept}</span>
+                                            <span className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-lg shadow-sm ${a.severityStyle}`}>
                                                 {a.severity}
                                             </span>
                                         </div>
@@ -87,11 +87,11 @@ export function IntelligencePanel() {
                                                 <RiskMeter value={a.risk} label="Risk Score" />
                                             </div>
                                             <div className="flex gap-2 shrink-0">
-                                                <button onClick={(e) => { e.stopPropagation(); setDismissed(prev => [...prev, a.id]); }} className="px-3 py-1.5 text-[10px] font-black text-gray-600 bg-white/80 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all">
-                                                    Dismiss
+                                                <button onClick={(e) => { e.stopPropagation(); setDismissed(prev => [...prev, a.id]); }} className="px-4 py-2 text-[11px] font-bold text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95 shadow-sm group">
+                                                    Ignore
                                                 </button>
-                                                <button onClick={(e) => { e.stopPropagation(); navigate("/ai-alerts"); }} className={`px-3 py-1.5 text-[10px] font-black text-white rounded-xl transition-all hover:opacity-90 ${a.dot === 'bg-rose-500' ? 'bg-rose-500' : a.dot === 'bg-orange-500' ? 'bg-orange-500' : 'bg-amber-500'}`}>
-                                                    Investigate →
+                                                <button onClick={(e) => { e.stopPropagation(); navigate("/ai-alerts"); }} className={`px-5 py-2 text-[11px] font-bold text-white rounded-xl transition-all hover:scale-[1.05] active:scale-95 shadow-lg group ${a.dot === 'bg-rose-500' ? 'bg-rose-600 shadow-rose-500/30' : a.dot === 'bg-orange-500' ? 'bg-orange-600 shadow-orange-500/30' : 'bg-amber-600 shadow-amber-500/30'}`}>
+                                                    Done →
                                                 </button>
                                             </div>
                                         </div>
@@ -107,14 +107,14 @@ export function IntelligencePanel() {
                     {/* Predictive dashboard */}
                     <div className="rounded-2xl p-6 relative overflow-hidden" style={{ background: 'linear-gradient(145deg, #0B1221, #0f1f3d)' }}>
                         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#D4AF37]/40 to-transparent" />
-                        <div className="flex items-center gap-2 mb-5">
-                            <Brain className="w-4 h-4 text-[#D4AF37]" />
-                            <span className="text-xs font-black text-white">Predictive Pulse</span>
-                            <span className="ml-auto text-[9px] font-black text-white/30 uppercase tracking-widest">AI Live</span>
+                        <div className="flex items-center gap-3 mb-6">
+                            <Brain className="w-5 h-5 text-[#D4AF37] shadow-[0_0_10px_rgba(212,175,55,0.3)]" />
+                            <span className="text-sm font-bold text-white tracking-tight">AI Ideas</span>
+                            <span className="ml-auto text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Online</span>
                         </div>
 
-                        <div className="text-5xl font-black text-white text-center mb-1">82</div>
-                        <p className="text-[9px] font-black text-white/30 uppercase tracking-widest text-center mb-5">Public Sentiment Score</p>
+                        <div className="text-5xl font-extrabold text-white text-center mb-1 tabular-nums tracking-tighter shadow-sm">82</div>
+                        <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] text-center mb-6">Public Confidence Index</p>
 
                         <div className="space-y-4">
                             <RiskMeter value={14} label="System Failure Probability" />
@@ -124,21 +124,23 @@ export function IntelligencePanel() {
                     </div>
 
                     {/* AI Generated Insights */}
-                    <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-                        <div className="flex items-center gap-2 mb-4">
-                            <Brain className="w-3.5 h-3.5 text-violet-500" />
-                            <span className="text-xs font-black text-gray-900">Generated Insights</span>
-                            <span className="ml-auto w-2 h-2 rounded-full bg-violet-400 animate-pulse" />
+                    <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm hover:shadow-lg transition-all">
+                        <div className="flex items-center gap-3 mb-5">
+                            <div className="p-2 rounded-lg bg-violet-50 border border-violet-100 shadow-sm">
+                                <Brain className="w-4 h-4 text-violet-600" />
+                            </div>
+                            <span className="text-sm font-bold text-[#0B1221] tracking-tight">AI Notes</span>
+                            <span className="ml-auto w-2 h-2 rounded-full bg-violet-500 animate-pulse shadow-[0_0_8px_rgba(139,92,246,0.4)]" />
                         </div>
                         <div className="space-y-2.5">
                             {aiInsights.map(ins => (
-                                <div key={ins.type} className="flex items-start gap-3 p-3 rounded-xl bg-gray-50/70 hover:bg-gray-100/50 transition-colors cursor-pointer">
-                                    <div className={`p-1.5 rounded-lg shrink-0 ${ins.color}`}>
-                                        <ins.icon className="w-3.5 h-3.5" />
+                                <div key={ins.type} className="flex items-start gap-4 p-4 rounded-2xl bg-gray-50/50 hover:bg-white hover:shadow-md border border-transparent hover:border-gray-100 transition-all cursor-pointer group/insight">
+                                    <div className={`p-2 rounded-xl shrink-0 ${ins.color} transition-transform group-hover/insight:scale-110 shadow-sm`}>
+                                        <ins.icon className="w-4 h-4" />
                                     </div>
-                                    <div>
-                                        <p className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-0.5">{ins.type}</p>
-                                        <p className="text-[11px] text-gray-700 leading-snug">{ins.text}</p>
+                                    <div className="min-w-0">
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">{ins.type}</p>
+                                        <p className="text-sm text-gray-700 leading-relaxed font-medium">{ins.text}</p>
                                     </div>
                                 </div>
                             ))}

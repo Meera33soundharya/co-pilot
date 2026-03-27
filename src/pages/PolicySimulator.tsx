@@ -36,10 +36,10 @@ export default function PolicySimulator() {
 
                 {/* Simulation Input Area */}
                 <div className="bg-[#0B1221] rounded-[2.5rem] p-10 shadow-2xl relative overflow-hidden text-white">
-                    <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/10 blur-[100px]" />
+                    <div className="absolute top-0 right-0 w-96 h-96 bg-red-600/10 blur-[100px]" />
 
                     <div className="relative z-10 max-w-3xl mx-auto text-center">
-                        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-blue-500/10 text-blue-400 rounded-full text-[10px] font-black uppercase tracking-widest mb-8 border border-blue-500/20">
+                        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-red-500/10 text-red-400 rounded-full text-[10px] font-black uppercase tracking-widest mb-8 border border-red-500/20">
                             <Zap className="w-3 h-3" /> Predictive Model Engine v2.4
                         </div>
 
@@ -49,12 +49,12 @@ export default function PolicySimulator() {
                                 value={policyTitle}
                                 onChange={(e) => setPolicyTitle(e.target.value)}
                                 placeholder="e.g. 'Implement 24/7 solar-powered street lighting in Ward 12' or 'Dynamic waste collection routing system'..."
-                                className="w-full h-32 p-6 bg-white/5 border-2 border-white/10 rounded-3xl text-lg font-bold focus:outline-none focus:border-blue-500 focus:bg-white/10 transition-all text-white placeholder-white/20 resize-none"
+                                className="w-full h-32 p-6 bg-white/5 border-2 border-white/10 rounded-3xl text-lg font-bold focus:outline-none focus:border-red-500 focus:bg-white/10 transition-all text-white placeholder-white/20 resize-none"
                             />
                             <button
                                 onClick={handleSimulate}
                                 disabled={isSimulating || !policyTitle.trim()}
-                                className="absolute bottom-4 right-4 px-8 py-4 bg-blue-600 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-600/20 active:scale-95 disabled:opacity-50 flex items-center gap-3"
+                                className="absolute bottom-4 right-4 px-8 py-4 bg-[#B91C1C] rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-neutral-800 transition-all shadow-xl shadow-red-900/40 active:scale-95 disabled:opacity-50 flex items-center gap-3"
                             >
                                 {isSimulating ? (
                                     <>
@@ -76,9 +76,9 @@ export default function PolicySimulator() {
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                             {[
                                 { label: "Public Sentiment", value: "+22%", icon: Users, color: "text-emerald-400", bg: "bg-emerald-500/10" },
-                                { label: "Operational Efficiency", value: "+34%", icon: Activity, color: "text-blue-400", bg: "bg-blue-500/10" },
+                                { label: "Operational Efficiency", value: "+34%", icon: Activity, color: "text-red-400", bg: "bg-red-500/10" },
                                 { label: "Est. Implementation Cost", value: "₹4.2 Cr", icon: DollarSign, color: "text-amber-400", bg: "bg-amber-500/10" },
-                                { label: "Risk Factor", value: "Low", icon: ShieldCheck, color: "text-cyan-400", bg: "bg-cyan-500/10" },
+                                { label: "Risk Factor", value: "Low", icon: ShieldCheck, color: "text-gray-400", bg: "bg-gray-500/10" },
                             ].map(s => (
                                 <div key={s.label} className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
                                     <div className={`p-3 rounded-2xl ${s.bg} inline-block mb-4`}>
@@ -96,15 +96,15 @@ export default function PolicySimulator() {
                             <div className="lg:col-span-2 bg-white border border-gray-100 rounded-[2.5rem] p-8 shadow-sm">
                                 <div className="flex items-center justify-between mb-8">
                                     <h3 className="font-black text-gray-900 flex items-center gap-3">
-                                        <BarChart className="w-5 h-5 text-blue-500" />
+                                        <BarChart className="w-5 h-5 text-[#B91C1C]" />
                                         6-Month Impact Forecast
                                     </h3>
                                     <div className="flex items-center gap-4">
                                         <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-500">
                                             <span className="w-2 h-2 rounded-full bg-emerald-500" /> Sentiment
                                         </span>
-                                        <span className="flex items-center gap-1.5 text-[10px] font-bold text-blue-500">
-                                            <span className="w-2 h-2 rounded-full bg-blue-500" /> Efficiency
+                                        <span className="flex items-center gap-1.5 text-[10px] font-bold text-red-500">
+                                            <span className="w-2 h-2 rounded-full bg-[#B91C1C]" /> Efficiency
                                         </span>
                                     </div>
                                 </div>
@@ -117,8 +117,8 @@ export default function PolicySimulator() {
                                                     <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
                                                 </linearGradient>
                                                 <linearGradient id="colorEfficiency" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.1} />
-                                                    <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
+                                                    <stop offset="5%" stopColor="#B91C1C" stopOpacity={0.1} />
+                                                    <stop offset="95%" stopColor="#B91C1C" stopOpacity={0} />
                                                 </linearGradient>
                                             </defs>
                                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
@@ -126,7 +126,7 @@ export default function PolicySimulator() {
                                             <YAxis hide />
                                             <Tooltip />
                                             <Area type="monotone" dataKey="sentiment" stroke="#10B981" fillOpacity={1} fill="url(#colorSentiment)" strokeWidth={3} />
-                                            <Area type="monotone" dataKey="efficiency" stroke="#3B82F6" fillOpacity={1} fill="url(#colorEfficiency)" strokeWidth={3} />
+                                            <Area type="monotone" dataKey="efficiency" stroke="#B91C1C" fillOpacity={1} fill="url(#colorEfficiency)" strokeWidth={3} />
                                         </AreaChart>
                                     </ResponsiveContainer>
                                 </div>

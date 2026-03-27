@@ -15,8 +15,8 @@ const mentions = [
 
 const sentimentData = [
     { label: "Positive", value: 62, color: "#10B981" },
-    { label: "Neutral", value: 23, color: "#3B82F6" },
-    { label: "Negative", value: 15, color: "#EF4444" },
+    { label: "Neutral", value: 23, color: "#4B5563" },
+    { label: "Negative", value: 15, color: "#B91C1C" },
 ];
 
 const engagementHistory = [
@@ -31,18 +31,24 @@ const engagementHistory = [
 
 const sentimentIcon: Record<string, React.ReactElement> = {
     positive: <ThumbsUp className="w-3.5 h-3.5 text-emerald-500" />,
-    negative: <ThumbsDown className="w-3.5 h-3.5 text-rose-500" />,
-    neutral: <Minus className="w-3.5 h-3.5 text-blue-400" />,
+    negative: <ThumbsDown className="w-3.5 h-3.5 text-[#B91C1C]" />,
+    neutral: <Minus className="w-3.5 h-3.5 text-gray-400" />,
 };
 
 const sentimentBadge: Record<string, string> = {
     positive: "bg-emerald-50 text-emerald-700 border-emerald-100",
-    negative: "bg-rose-50 text-rose-700 border-rose-100",
-    neutral: "bg-blue-50 text-blue-700 border-blue-100",
+    negative: "bg-red-50 text-red-700 border-red-100",
+    neutral: "bg-gray-50 text-gray-700 border-gray-100",
 };
 
 export default function Mentions() {
     const [filter, setFilter] = useState("All");
+    const [action, setAction] = useState<string | null>(null);
+
+    const handleAction = (type: string) => {
+        setAction(type);
+        setTimeout(() => setAction(null), 1500);
+    };
 
     const filtered = filter === "All" ? mentions : mentions.filter(m => m.sentiment === filter.toLowerCase());
 
@@ -57,12 +63,14 @@ export default function Mentions() {
                         { label: "Negative Mentions", value: "192", change: "-12%", icon: ThumbsDown, positive: true },
                         { label: "Avg Engagement", value: "1,663", change: "+8.4%", icon: TrendingDown, positive: false },
                     ].map(s => (
-                        <div key={s.label} className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+                        <div key={s.label} className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-all group">
                             <div className="flex items-center justify-between mb-3">
-                                <div className="p-2 rounded-xl bg-gray-50"><s.icon className="w-4 h-4 text-gray-400" /></div>
-                                <span className={`text-[10px] font-black px-2 py-0.5 rounded-lg ${s.positive ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>{s.change}</span>
+                                <div className="p-2 rounded-xl bg-gray-50 group-hover:bg-red-50 transition-colors">
+                                    <s.icon className="w-4 h-4 text-gray-400 group-hover:text-[#B91C1C] transition-colors" />
+                                </div>
+                                <span className={`text-[10px] font-black px-2 py-0.5 rounded-lg ${s.positive ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>{s.change}</span>
                             </div>
-                            <p className="text-2xl font-black text-gray-900">{s.value}</p>
+                            <p className="text-2xl font-black text-gray-900 leading-tight">{s.value}</p>
                             <p className="text-[10px] uppercase tracking-widest text-gray-400 font-black mt-1">{s.label}</p>
                         </div>
                     ))}
@@ -77,27 +85,27 @@ export default function Mentions() {
                                     <button
                                         key={f}
                                         onClick={() => setFilter(f)}
-                                        className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${filter === f ? "bg-blue-600 text-white shadow-md shadow-blue-500/20" : "text-gray-400 hover:text-gray-700"}`}
+                                        className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${filter === f ? "bg-gray-900 text-white shadow-md shadow-gray-200" : "text-gray-400 hover:text-gray-700"}`}
                                     >
                                         {f}
                                     </button>
                                 ))}
                             </div>
-                            <button onClick={() => window.alert('Refreshing social media feed...')} className="flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-xl text-[10px] font-black text-gray-500 hover:bg-gray-50 transition-all">
-                                <RefreshCw className="w-3.5 h-3.5" />
-                                Refresh
+                            <button onClick={() => handleAction("refresh")} className="flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-xl text-[10px] font-black text-gray-500 hover:bg-gray-50 transition-all shadow-sm">
+                                <RefreshCw className={`w-3.5 h-3.5 ${action === "refresh" ? "animate-spin text-red-600" : ""}`} />
+                                {action === "refresh" ? "Syncing..." : "Refresh Feed"}
                             </button>
                         </div>
 
                         <div className="space-y-3">
                             {filtered.map((m, i) => (
-                                <div key={i} onClick={() => window.alert(`Mention Detail:\n\nHandle: ${m.handle}\nPlatform: ${m.platform}\nSentiment: ${m.sentiment}\nReach: ${m.reach}\n\n"${m.text}"`)} className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all cursor-pointer group text-left">
+                                <div key={i} className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all group text-left">
                                     <div className="flex items-start gap-4">
-                                        <div className={`p-2.5 rounded-xl shrink-0 ${m.platform === "Twitter" ? "bg-sky-50" : "bg-blue-50"}`}>
+                                        <div className={`p-2.5 rounded-xl shrink-0 ${m.platform === "Twitter" ? "bg-gray-50 text-gray-900" : "bg-red-50 text-[#B91C1C]"}`}>
                                             {m.platform === "Twitter" ? (
-                                                <Twitter className="w-4 h-4 text-sky-500" />
+                                                <Twitter className="w-4 h-4" />
                                             ) : (
-                                                <Facebook className="w-4 h-4 text-blue-600" />
+                                                <Facebook className="w-4 h-4" />
                                             )}
                                         </div>
                                         <div className="flex-1 min-w-0">
@@ -113,8 +121,8 @@ export default function Mentions() {
                                             <div className="flex items-center gap-4 mt-3 text-[10px] text-gray-400 font-bold">
                                                 <span>👍 {m.engagement.toLocaleString()}</span>
                                                 <span>📡 {m.reach} reach</span>
-                                                <button onClick={(e) => { e.stopPropagation(); window.alert(`Opening source post from ${m.handle} on ${m.platform}...`); }} className="flex items-center gap-1 ml-auto text-blue-500 hover:text-blue-700 transition-colors">
-                                                    <ExternalLink className="w-3 h-3" /> View
+                                                <button onClick={() => handleAction(`view-${i}`)} className="flex items-center gap-1 ml-auto text-red-600 hover:opacity-70 transition-colors">
+                                                    <ExternalLink className="w-3 h-3" /> {action === `view-${i}` ? "Opening Source..." : "View Post"}
                                                 </button>
                                             </div>
                                         </div>
@@ -153,8 +161,8 @@ export default function Mentions() {
                                         <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fontWeight: 700, fill: '#94A3B8' }} />
                                         <Tooltip />
                                         <Bar dataKey="positive" fill="#10B981" radius={[4, 4, 0, 0]} stackId="a" />
-                                        <Bar dataKey="neutral" fill="#3B82F6" stackId="a" />
-                                        <Bar dataKey="negative" fill="#EF4444" stackId="a" radius={[0, 0, 0, 0]} />
+                                        <Bar dataKey="neutral" fill="#9CA3AF" stackId="a" />
+                                        <Bar dataKey="negative" fill="#B91C1C" stackId="a" radius={[0, 0, 0, 0]} />
                                     </BarChart>
                                 </ResponsiveContainer>
                             </div>
