@@ -9,7 +9,7 @@ import {
     CheckCircle2, AlertTriangle, PlayCircle, ShieldAlert,
     XCircle, ChevronRight, Phone, FileText, ExternalLink, Bell,
     Tag, ArrowRight, Filter, Layers, ChevronDown,
-    Sparkles, Lightbulb, ThumbsUp, Timer, Wrench
+    Sparkles, Lightbulb, ThumbsUp, Timer, Wrench, Activity, Paperclip, Video
 } from "lucide-react";
 
 // ── AI Suggestions per category ──────────────────────────────────────────────
@@ -429,6 +429,59 @@ export default function Grievances() {
                                     ))}
                                 </div>
                             </div>
+
+                            {/* ── Citizen Evidence Assets ── */}
+                            {detail.evidence && detail.evidence.length > 0 && (
+                                <div className="px-6 py-5 border-b border-gray-100">
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4">Evidence & Tactical Media</p>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {detail.evidence.map((rawUrl, idx) => {
+                                            const [url, meta] = rawUrl.split('#');
+                                            const metaParsed = new URLSearchParams(meta || "");
+                                            const name = metaParsed.get("name") || `Asset_${idx + 1}`;
+                                            const type = metaParsed.get("type") || "";
+
+                                            const isAudio = type.includes('audio') || url.endsWith('.mp3') || url.endsWith('.wav') || url.startsWith('blob:audio');
+                                            const isVideo = type.includes('video') || url.endsWith('.mp4');
+                                            const isImage = type.includes('image') || url.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+                                            const isDoc = type.includes('pdf') || type.includes('word') || type.includes('sheet') || url.match(/\.(pdf|docx|xlsx)$/i);
+
+                                            return (
+                                                <div key={idx} className="bg-gray-50 border border-gray-100 rounded-2xl overflow-hidden group relative aspect-video shadow-sm transition-all hover:shadow-md">
+                                                    {isImage ? (
+                                                        <img src={url} alt="Evidence" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                                    ) : isAudio ? (
+                                                        <div className="w-full h-full flex flex-col items-center justify-center p-3 text-amber-600 bg-amber-50">
+                                                            <Activity className="w-5 h-5 mb-2 animate-pulse" />
+                                                            <audio src={url} controls className="w-full h-6 scale-90" />
+                                                        </div>
+                                                    ) : isVideo ? (
+                                                        <div className="w-full h-full flex flex-col items-center justify-center p-3 text-indigo-600 bg-indigo-50">
+                                                            <Video className="w-5 h-5 mb-1 animate-pulse" />
+                                                            <span className="text-[8px] font-black uppercase text-center">Video Signal</span>
+                                                        </div>
+                                                    ) : isDoc ? (
+                                                        <div className="w-full h-full flex flex-col items-center justify-center p-3 text-blue-500 bg-blue-50/50">
+                                                            <FileText className="w-6 h-6 mb-1.5" />
+                                                            <span className="text-[8px] font-black uppercase truncate w-full text-center px-1 leading-tight">{name}</span>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="w-full h-full flex flex-col items-center justify-center p-3 text-gray-400 bg-gray-100">
+                                                            <Paperclip className="w-5 h-5 mb-1" />
+                                                            <span className="text-[8px] font-black uppercase">Secure Asset</span>
+                                                        </div>
+                                                    )}
+                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                        <a href={url} target="_blank" rel="noopener noreferrer" className="p-2.5 bg-white rounded-xl text-gray-900 shadow-xl transform scale-90 group-hover:scale-100 transition-transform">
+                                                            <Search className="w-4 h-4" />
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
 
                             {/* ── AI Suggestion Panel ── */}
                             {(isAdmin || isOfficer) && (

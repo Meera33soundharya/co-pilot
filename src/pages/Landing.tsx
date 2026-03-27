@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { 
     User, Building2, 
     BrainCircuit, Sparkles, 
-    ArrowRight, CheckCircle2, Zap, LayoutDashboard
+    ArrowRight, CheckCircle2, Zap, LayoutDashboard, Shield
 } from "lucide-react";
 
 export default function Landing() {
@@ -177,6 +177,74 @@ export default function Landing() {
                                     <p className="text-[10px] font-black uppercase tracking-[0.5em] text-gray-300">Live Infrastructure</p>
                                 </div>
                              </div>
+                        </div>
+                    </div>
+                </div>
+                {/* Platform Strategic Manual: Master Edition */}
+                <div className="mt-40 bg-white border border-gray-100 rounded-[4rem] p-20 shadow-sm relative overflow-hidden group/manual">
+                    <div className="absolute top-0 right-0 w-[50rem] h-[50rem] bg-[#B91C1C]/5 blur-[180px] pointer-events-none group-hover/manual:bg-[#B91C1C]/10 transition-all duration-1000" />
+                    
+                    <div className="max-w-5xl mx-auto">
+                        <div className="flex flex-col items-center text-center mb-20 space-y-6">
+                            <div className="inline-flex items-center gap-3 px-6 py-2 bg-red-50 text-[#B91C1C] rounded-full text-[11px] font-black uppercase tracking-[0.4em] border border-red-100 shadow-sm">
+                                <Shield className="w-4 h-4" /> System Standard v2.4
+                            </div>
+                            <h2 className="text-5xl font-black text-gray-900 tracking-tighter italic uppercase">GovPilot Strategic Manual</h2>
+                            <p className="text-sm text-gray-400 font-black uppercase tracking-[0.3em] max-w-lg">Master Protocol for Triple-Tier Governance Infrastructure</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-16 relative z-10">
+                            {[
+                                { 
+                                    tier: "Tier 01", 
+                                    title: "Citizen Deployment", 
+                                    desc: "Grievances are logged via secure geofenced portals. AI auto-triages issues into the Governance Core in <2 seconds.",
+                                    icon: User
+                                },
+                                { 
+                                    tier: "Tier 02", 
+                                    title: "Officer Execution", 
+                                    desc: "Field units receive high-priority alerts on mobile grids. Site evidence must be uploaded to confirm resolution integrity.",
+                                    icon: Building2
+                                },
+                                { 
+                                    tier: "Tier 03", 
+                                    title: "Admin Oversight", 
+                                    desc: "Administrators use 'War Room' telemetry to monitor district health scores and simulate policy impacts in real-time.",
+                                    icon: LayoutDashboard
+                                },
+                            ].map((s, i) => {
+                                const Icon = s.icon;
+                                return (
+                                    <div key={i} className="space-y-8 group/step text-center">
+                                        <div className="flex flex-col items-center gap-6">
+                                            <div className="text-5xl font-black text-gray-900/5 italic tracking-tighter group-hover/step:text-[#B91C1C]/10 transition-colors uppercase leading-none">{s.tier}</div>
+                                            <div className="w-16 h-16 rounded-[2rem] bg-gray-50 flex items-center justify-center border border-gray-100 group-hover/step:bg-[#B91C1C] transition-all duration-500 shadow-sm">
+                                                <Icon className="w-8 h-8 text-gray-300 group-hover/step:text-white transition-colors" />
+                                            </div>
+                                        </div>
+                                        <div className="space-y-4">
+                                            <h4 className="text-lg font-black text-gray-900 uppercase tracking-tighter group-hover/step:text-[#B91C1C] transition-colors italic leading-tight">{s.title}</h4>
+                                            <p className="text-xs text-gray-400 font-bold leading-relaxed tracking-tight group-hover/step:text-gray-500 transition-colors">{s.desc}</p>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <div className="mt-28 pt-20 border-t border-gray-50 flex flex-col md:flex-row items-center justify-between gap-12">
+                            <div className="flex items-center gap-8">
+                                <div className="w-24 h-24 bg-gray-900 rounded-[3rem] flex items-center justify-center border-[6px] border-white shadow-2xl group-hover/manual:rotate-[15deg] transition-transform duration-700">
+                                    <BrainCircuit className="w-12 h-12 text-red-500" />
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-[11px] font-black uppercase text-gray-400 tracking-[0.3em] italic">System Integrity</p>
+                                    <p className="text-lg font-black text-gray-900 uppercase tracking-tight">Predictive Core Synchronized</p>
+                                </div>
+                            </div>
+                            <button onClick={() => navigate("/login")} className="px-12 py-6 bg-gray-900 text-white rounded-[2rem] text-[11px] font-black uppercase tracking-[0.4em] hover:bg-[#B91C1C] transition-all shadow-2xl shadow-gray-950/20 active:scale-95 group/btn">
+                                Access Full Command Hub <ArrowRight className="w-4 h-4 ml-3 inline group-hover:translate-x-2 transition-transform" />
+                            </button>
                         </div>
                     </div>
                 </div>

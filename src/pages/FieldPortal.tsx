@@ -5,7 +5,7 @@ import {
     CheckCircle2, Clock, MapPin, Phone, 
     Camera, Sparkles, Navigation,
     Search, Loader2, Play, Activity,
-    AlertCircle, X
+    AlertCircle, X, FileText, Paperclip, Video
 } from "lucide-react";
 import type { Complaint, Status } from "@/store/complaintsStore";
 
@@ -227,6 +227,57 @@ export default function FieldPortal() {
                                 </div>
 
                                 <div className="p-8 space-y-8">
+                                    {/* 📎 Citizen Evidence Section */}
+                                    {selectedTask.evidence && selectedTask.evidence.length > 0 && (
+                                        <div className="space-y-4">
+                                            <div className="flex items-center justify-between">
+                                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Citizen Evidence Assets</p>
+                                                <span className="text-[8px] font-black bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg border border-blue-100 uppercase tracking-widest">Secure Signal</span>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                {selectedTask.evidence.map((rawUrl, idx) => {
+                                                    const [url, meta] = rawUrl.split('#');
+                                                    const metaParsed = new URLSearchParams(meta || "");
+                                                    const name = metaParsed.get("name") || `Evidence_${idx + 1}`;
+                                                    const type = metaParsed.get("type") || "";
+                                                    
+                                                    const isAudio = type.includes('audio') || url.endsWith('.mp3') || url.endsWith('.wav') || url.startsWith('blob:audio');
+                                                    const isVideo = type.includes('video') || url.endsWith('.mp4');
+                                                    const isImage = type.includes('image') || url.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+                                                    const isDoc   = type.includes('pdf') || type.includes('word') || type.includes('sheet') || url.match(/\.(pdf|docx|xlsx)$/i);
+
+                                                    return (
+                                                        <div key={idx} className="bg-gray-50 border border-gray-100 rounded-2xl overflow-hidden group relative aspect-video">
+                                                            {isImage ? (
+                                                                <img src={url} alt="Evidence" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                                            ) : isAudio ? (
+                                                                <div className="w-full h-full flex flex-col items-center justify-center p-3 text-amber-600">
+                                                                    <Activity className="w-5 h-5 mb-2 animate-pulse" />
+                                                                    <audio src={url} controls className="w-full h-6 scale-90" />
+                                                                </div>
+                                                            ) : isDoc ? (
+                                                                <div className="w-full h-full flex flex-col items-center justify-center p-3 text-blue-500">
+                                                                    <FileText className="w-5 h-5 mb-1" />
+                                                                    <span className="text-[8px] font-black uppercase truncate w-full text-center px-1">{name}</span>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="w-full h-full flex flex-col items-center justify-center p-3 text-gray-400">
+                                                                    <Paperclip className="w-5 h-5 mb-1" />
+                                                                    <span className="text-[8px] font-black uppercase">Unknown Node</span>
+                                                                </div>
+                                                            )}
+                                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                                <a href={url} target="_blank" rel="noopener noreferrer" className="p-2 bg-white rounded-xl text-gray-900 shadow-xl transform scale-90 group-hover:scale-100 transition-transform">
+                                                                    <Search className="w-4 h-4" />
+                                                                </a>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {/* AI Insight */}
                                     <div className="bg-amber-50 border border-amber-100 rounded-3xl p-5 flex gap-4">
                                         <div className="w-10 h-10 rounded-2xl bg-amber-100 flex items-center justify-center shrink-0">

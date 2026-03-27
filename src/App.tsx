@@ -24,6 +24,7 @@ import CitizenModule from "./pages/CitizenModule";
 import Profile from "./pages/Profile";
 import Announcements from "./pages/Announcements";
 import CitizenModuleGuide from "./pages/CitizenModuleGuide";
+import ScheduleOperationGuide from "./pages/ScheduleOperationGuide";
 import Heatmap from "./pages/Heatmap";
 import PeopleManagement from "./pages/PeopleManagement";
 import FieldPortal from "./pages/FieldPortal";
@@ -83,6 +84,7 @@ function App() {
           <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
           <Route path="/citizen-guide" element={<ProtectedRoute><CitizenModuleGuide /></ProtectedRoute>} />
           <Route path="/schedule" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />
+          <Route path="/schedule-guide" element={<ProtectedRoute><ScheduleOperationGuide /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/heatmap" element={<ProtectedRoute><Heatmap /></ProtectedRoute>} />
           <Route path="/people" element={<ProtectedRoute><PeopleManagement /></ProtectedRoute>} />

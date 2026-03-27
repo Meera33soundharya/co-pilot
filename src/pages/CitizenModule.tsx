@@ -421,6 +421,81 @@ export default function CitizenModule() {
                         </button>
                     </div>
                 </div>
+                {/* Citizen Strategic Manual HUD */}
+                <div className="bg-white border border-gray-100 rounded-[3.5rem] p-16 shadow-sm relative overflow-hidden group/manual mt-12">
+                    <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-emerald-500/5 blur-[150px] pointer-events-none group-hover/manual:bg-[#B91C1C]/10 transition-all duration-1000" />
+                    
+                    <div className="max-w-5xl mx-auto">
+                        <div className="flex flex-col items-center text-center mb-16 space-y-4">
+                            <div className="inline-flex items-center gap-3 px-6 py-2 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-[0.4em] border border-emerald-100 shadow-sm">
+                                <Shield className="w-3.5 h-3.5" /> Citizen Engagement Protocol v1.0
+                            </div>
+                            <h2 className="text-4xl font-black text-gray-900 tracking-tighter italic uppercase">Citizen Strategic Manual</h2>
+                            <p className="text-xs text-gray-400 font-black uppercase tracking-[0.3em] max-w-sm">Official Guidelines for Ward-Level Governance Interaction</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 relative z-10">
+                            {[
+                                { 
+                                    step: "01", 
+                                    title: "Grievance Draft", 
+                                    desc: "Initiate reporting via the 'Raise Complaint' console. Ensure high-resolution evidence is attached.",
+                                    icon: PlusCircle
+                                },
+                                { 
+                                    step: "02", 
+                                    title: "Neural Triage", 
+                                    desc: "GovPilot AI auto-routes your request to the relevant department (Water, Waste, Roads, etc.)",
+                                    icon: Zap
+                                },
+                                { 
+                                    step: "03", 
+                                    title: "Field Deployment", 
+                                    desc: "Monitor the 'Live Tracking' bar. A blue pulse indicates a Field Officer has been dispatched.",
+                                    icon: MapPin
+                                },
+                                { 
+                                    step: "04", 
+                                    title: "Verification", 
+                                    desc: "Once resolved, verify the 'Resolution Proof' and provide feedback to finalize the governance cycle.",
+                                    icon: CheckCircle2
+                                },
+                            ].map((s, i) => {
+                                const Icon = s.icon;
+                                return (
+                                    <div key={i} className="space-y-6 group/step">
+                                        <div className="flex items-center gap-4">
+                                            <div className="text-4xl font-black text-gray-900/5 italic tracking-tighter group-hover/step:text-emerald-500/10 transition-colors uppercase">{s.step}</div>
+                                            <div className="h-px bg-gray-100 flex-1" />
+                                            <div className="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center border border-gray-100 group-hover/step:bg-emerald-500/5 group-hover/step:border-emerald-500/20 transition-all">
+                                                <Icon className="w-5 h-5 text-gray-300 group-hover/step:text-emerald-600" />
+                                            </div>
+                                        </div>
+                                        <div className="space-y-3">
+                                            <h4 className="text-sm font-black text-gray-900 uppercase tracking-tighter group-hover/step:text-emerald-600 transition-colors italic">{s.title}</h4>
+                                            <p className="text-[11px] text-gray-400 font-bold leading-relaxed tracking-tight group-hover/step:text-gray-500 transition-colors">{s.desc}</p>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <div className="mt-20 pt-16 border-t border-gray-50 flex flex-col md:flex-row items-center justify-between gap-10">
+                            <div className="flex items-center gap-6">
+                                <div className="w-20 h-20 bg-gray-900 rounded-[2.5rem] flex items-center justify-center border-4 border-gray-100 shadow-2xl group-hover/manual:rotate-12 transition-transform duration-700">
+                                    <Shield className="w-10 h-10 text-emerald-500" />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1 italic">Submission Status</p>
+                                    <p className="text-sm font-black text-gray-900 uppercase tracking-tight">Gov-Protocol Synchronized</p>
+                                </div>
+                            </div>
+                            <button className="px-10 py-5 bg-gray-900 text-white rounded-3xl text-[10px] font-black uppercase tracking-[0.4em] hover:bg-emerald-600 transition-all shadow-2xl shadow-gray-950/20 active:scale-95">
+                                Print Operation Manifest
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </DashboardLayout>
     );

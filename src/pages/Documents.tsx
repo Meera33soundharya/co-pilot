@@ -1,5 +1,6 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
     FileText, FolderOpen, Download, Eye, Search,
     Upload, Clock, CheckCircle2, Lock, Share2, X, AlertCircle
@@ -15,21 +16,17 @@ const folders = [
 ];
 
 const recentDocs = [
-    { name: "Citizen Module - Technical User Guide.pdf", size: "2.4 MB", date: "Mar 27, 2026", type: "PDF",  status: "approved", access: "public" },
-    { name: "Citizen Petition - Ward 07 Water Shortage.pdf", size: "1.2 MB", date: "Mar 27, 2026", type: "PDF",  status: "pending",  access: "public" },
-    { name: "Annual Budget Report FY2025-26.pdf",        size: "4.2 MB", date: "Feb 19, 2026", type: "PDF",  status: "approved", access: "public" },
-    { name: "Ward 03 Infrastructure Upgrade Plan.docx",  size: "1.8 MB", date: "Feb 18, 2026", type: "DOCX", status: "draft",    access: "restricted" },
-    { name: "Public Health Advisory - Q4 2025.pdf",      size: "2.1 MB", date: "Feb 17, 2026", type: "PDF",  status: "approved", access: "public" },
-    { name: "Meeting Minutes - City Council Feb 15.pdf", size: "990 KB", date: "Feb 15, 2026", type: "PDF",  status: "pending",  access: "internal" },
-    { name: "Water Supply Tender Document #WS-24-09.pdf",size: "6.7 MB", date: "Feb 14, 2026", type: "PDF",  status: "approved", access: "public" },
-    { name: "Emergency Response Protocol 2026.docx",     size: "3.4 MB", date: "Feb 12, 2026", type: "DOCX", status: "draft",    access: "restricted" },
+    { name: "Citizen Module - Technical User Guide.pdf", size: "2.4 MB", date: "Mar 27, 2026", type: "PDF",  status: "approved", access: "public", assetId: "GP-QA-99-A", dept: "District IT", summary: "Complete technical schematic and user onboarding protocols for the GovPilot citizen engagement suite. Includes API documentation and UI component library references." },
+    { name: "Citizen Petition - Ward 07 Water Shortage.pdf", size: "1.2 MB", date: "Mar 27, 2026", type: "PDF",  status: "pending",  access: "public", assetId: "CIV-PET-07-2", dept: "Public Health", summary: "Formal collective grievance signed by 214 residents of Ward 07 regarding the intermittent water supply interruption. Urgent infrastructure review suggested.", aiScore: 88 },
+    { name: "Annual Budget Report FY2025-26.pdf",        size: "4.2 MB", date: "Feb 19, 2026", type: "PDF",  status: "approved", access: "public", assetId: "FIN-ANN-2025", dept: "Finance Bureau", summary: "Strategic financial overview for the upcoming fiscal year. Identifies key growth nodes in infrastructure spending and AI-driven administrative efficiency benchmarks." },
+    { name: "Ward 03 Infrastructure Upgrade Plan.docx",  size: "1.8 MB", date: "Feb 18, 2026", type: "DOCX", status: "draft",    access: "restricted", assetId: "INF-URB-03-9", dept: "Infrastructure", summary: "Preliminary blueprint for road expansion and smart-lighting deployment in the central commercial district of Ward 03." },
+    { name: "Public Health Advisory - Q4 2025.pdf",      size: "2.1 MB", date: "Feb 17, 2026", type: "PDF",  status: "approved", access: "public", assetId: "PH-ADV-2025-Q4", dept: "Public Health", summary: "Seasonal health intelligence report. Noted successful mitigation of viral vectors in high-density wards through targeted sanitation protocols." },
+    { name: "Meeting Minutes - City Council Feb 15.pdf", size: "990 KB", date: "Feb 15, 2026", type: "PDF",  status: "pending",  access: "internal", assetId: "COU-MIN-214", dept: "Executive Council", summary: "Transcribed discussion on regional development grants and the approval of the centralized Governance Portal deployment timeline.", aiScore: 92 },
+    { name: "Water Supply Tender Document #WS-24-09.pdf",size: "6.7 MB", date: "Feb 14, 2026", type: "PDF",  status: "approved", access: "public", assetId: "TEN-WTR-24-09", dept: "Public Works", summary: "Legal and technical specifications for the next-generation water filtration plant. All bids must comply with the 2024 Integrity Protocol." },
+    { name: "Emergency Response Protocol 2026.docx",     size: "3.4 MB", date: "Feb 12, 2026", type: "DOCX", status: "draft",    access: "restricted", assetId: "EMER-SEC-ZERO", dept: "Global Defense", summary: "Classified tactical response framework for district-scale emergencies. Standardized roles for field units, communication nodes, and citizen safe-zones." },
 ];
 
-const typeStyle: Record<string, { bg: string; text: string }> = {
-    PDF:  { bg: "#FEF2F2", text: "#B91C1C" },
-    DOCX: { bg: "#F9FAFB", text: "#4B5563" },
-};
-
+// type style mapping removed as it was unused in final UI
 const statusStyle: Record<string, { bg: string; text: string; label: string }> = {
     approved: { bg: "#F0FDF4", text: "#059669", label: "APPROVED" },
     draft:    { bg: "#F9FAFB", text: "#9CA3AF", label: "DRAFT" },
@@ -43,21 +40,51 @@ interface PreviewDoc {
     size: string;
     status: string;
     access: string;
+    assetId: string;
+    dept: string;
+    summary: string;
+    aiScore?: number;
 }
 
 export default function Documents() {
+    const [localDocs, setLocalDocs] = useState(recentDocs);
     const [search, setSearch] = useState("");
+    const [searchParams] = useSearchParams();
     const [previewDoc, setPreviewDoc] = useState<PreviewDoc | null>(null);
     const [downloading, setDownloading] = useState<string | null>(null);
     const [uploadOpen, setUploadOpen] = useState(false);
     const [uploaded, setUploaded] = useState(false);
 
-    const filtered = recentDocs.filter(d =>
+    const filtered = localDocs.filter(d =>
         d.name.toLowerCase().includes(search.toLowerCase())
     );
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [shareToast, setShareToast] = useState<string | null>(null);
+
+    // Simulate reactive document registration
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const newDoc: PreviewDoc = {
+            name: file.name,
+            size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
+            date: new Date().toLocaleDateString("en-IN", { day: 'numeric', month: 'short', year: 'numeric' }),
+            type: file.name.split('.').pop()?.toUpperCase() || "FILE",
+            status: "pending",
+            access: "restricted",
+            assetId: `GP-R-${Math.floor(100 + Math.random() * 900)}`,
+            dept: "Unassigned",
+            summary: "Newly uploaded governance asset pending administrative classification and AI security sweep.",
+            aiScore: 0
+        };
+
+        setUploaded(true);
+        setTimeout(() => {
+            setLocalDocs(prev => [newDoc, ...prev]);
+        }, 800);
+    };
 
     // Actually downloads a real text file with doc info
     const handleDownload = (doc: typeof recentDocs[0]) => {
@@ -74,76 +101,121 @@ export default function Documents() {
     };
 
     const handleShare = (docName: string) => {
-        const text = `${window.location.origin}/documents/${encodeURIComponent(docName)}`;
+        const text = `${window.location.origin}/documents?file=${encodeURIComponent(docName)}`;
         navigator.clipboard?.writeText(text).catch(() => {});
         setShareToast(docName);
         setTimeout(() => setShareToast(null), 2000);
     };
 
+    // 🔗 Deep-linking: auto-open preview if file is in URL
+    useEffect(() => {
+        const fileName = searchParams.get("file");
+        if (fileName) {
+            const doc = recentDocs.find(d => d.name === fileName);
+            if (doc) setPreviewDoc(doc);
+        }
+    }, [searchParams]);
+
     return (
         <DashboardLayout title="Documents" subtitle="Centralized government document management system">
 
-            {/* Preview Modal */}
+            {/* High-Fidelity Detailed Preview Modal */}
             {previewDoc && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-black/40 backdrop-blur-md" onClick={() => setPreviewDoc(null)} />
-                    <div className="relative bg-[#FDFCF8] rounded-[3rem] shadow-2xl w-full max-w-lg overflow-hidden animate-slide-up border border-white/50">
-                        <div className="absolute top-0 right-0 w-48 h-48 bg-red-500/5 blur-[60px] pointer-events-none" />
-                        <div className="flex items-center justify-between px-8 py-6 border-b border-gray-100 relative z-10">
-                            <div className="flex items-center gap-4">
-                                <div className="px-3 py-1 rounded-xl text-[10px] font-black tracking-widest text-white" style={{ background: "#B91C1C" }}>
-                                    {previewDoc.type}
-                                </div>
-                                <span className="font-black text-gray-900 text-sm truncate max-w-[200px] uppercase tracking-tight">{previewDoc.name}</span>
-                            </div>
-                            <button onClick={() => setPreviewDoc(null)} className="p-2 rounded-2xl hover:bg-gray-100 text-gray-400 transition-colors">
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-                        <div className="p-10 space-y-8 relative z-10">
-                            {/* Document preview body */}
-                            <div className="bg-gray-50 rounded-[2rem] border border-gray-100 p-6 space-y-4 shadow-inner">
-                                <div className="flex items-center gap-3 pb-3 border-b border-gray-200">
-                                    <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
-                                        <FileText className="w-5 h-5 text-[#B91C1C]" />
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-xl" onClick={() => setPreviewDoc(null)} />
+                    <div className="relative bg-white rounded-[4rem] shadow-2xl w-full max-w-4xl overflow-hidden animate-slide-up border border-white/20">
+                        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-red-600/5 blur-[120px] pointer-events-none" />
+                        
+                        <div className="flex flex-col lg:flex-row h-full lg:h-[700px]">
+                            {/* Inner Left: Visual Cover / Meta */}
+                            <div className="lg:w-[320px] bg-gray-900 p-12 text-white flex flex-col justify-between relative">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-red-600/20 blur-[60px] pointer-events-none" />
+                                <div className="space-y-10 relative z-10">
+                                    <div className="w-20 h-20 rounded-[2rem] bg-white/5 border border-white/10 flex items-center justify-center shadow-2xl">
+                                        <FileText className="w-10 h-10 text-red-500" />
                                     </div>
                                     <div>
-                                        <p className="text-xs font-black text-gray-900 leading-tight">{previewDoc.name}</p>
-                                        <p className="text-[10px] text-gray-400">{previewDoc.size} · {previewDoc.type}</p>
+                                        <h2 className="text-3xl font-black italic tracking-tighter leading-tight uppercase">{previewDoc.name.split(" - ")[0]}</h2>
+                                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mt-3">Governance Asset File</p>
+                                    </div>
+
+                                    <div className="space-y-6 pt-10 border-t border-white/10">
+                                        <div>
+                                            <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-1">Asset Status</p>
+                                            <span className="px-4 py-1.5 rounded-xl border text-[10px] font-black uppercase tracking-widest"
+                                                style={{ backgroundColor: `${statusStyle[previewDoc.status]?.text}20`, color: statusStyle[previewDoc.status]?.text, borderColor: `${statusStyle[previewDoc.status]?.text}30` }}>
+                                                {statusStyle[previewDoc.status]?.label}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-1">Registry Core</p>
+                                            <p className="text-sm font-black italic text-red-500">{previewDoc.assetId}</p>
+                                        </div>
                                     </div>
                                 </div>
-                                {/* Simulated content lines */}
-                                <div className="space-y-2">
-                                    {["Executive Summary", "Section 1: Background", "Section 2: Findings", "Section 3: Recommendations", "Appendix A: Data Tables"].map((s, i) => (
-                                        <div key={i} className="flex items-center gap-3 p-2.5 bg-white rounded-xl border border-gray-100">
-                                            <div className="w-5 h-5 rounded-full bg-red-50 flex items-center justify-center text-[9px] font-black text-red-600 shrink-0">{i + 1}</div>
-                                            <span className="text-xs font-bold text-gray-700">{s}</span>
-                                            <span className="ml-auto text-[10px] text-gray-400">pg {i * 4 + 1}</span>
+
+                                <div className="relative z-10 p-6 bg-white/5 rounded-3xl border border-white/5">
+                                    <p className="text-[9px] font-black text-white/40 uppercase tracking-widest mb-3">Integrity Verification</p>
+                                    <div className="flex items-center gap-3">
+                                        <Shield className="w-4 h-4 text-emerald-500" />
+                                        <span className="text-[10px] font-bold text-white/80">SHA-256 Encrypted</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Inner Right: Content Details */}
+                            <div className="flex-1 bg-white p-12 overflow-y-auto relative">
+                                <button onClick={() => setPreviewDoc(null)} className="absolute top-8 right-12 p-3 rounded-2xl hover:bg-gray-100 text-gray-300 hover:text-red-600 transition-all z-20">
+                                    <X className="w-6 h-6" />
+                                </button>
+
+                                <div className="max-w-2xl space-y-12 relative z-10">
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-3">
+                                            <span className="px-3 py-1 bg-gray-100 rounded-lg text-[9px] font-black text-gray-500 uppercase tracking-widest">Type: {previewDoc.type}</span>
+                                            <span className="px-3 py-1 bg-gray-100 rounded-lg text-[9px] font-black text-gray-500 uppercase tracking-widest">Weight: {previewDoc.size}</span>
                                         </div>
-                                    ))}
+                                        <h3 className="text-2xl font-black text-gray-900 italic tracking-tight uppercase leading-relaxed">{previewDoc.name}</h3>
+                                        <p className="text-gray-500 font-medium text-lg leading-relaxed">{previewDoc.summary}</p>
+                                    </div>
+
+                                    {/* Detailed Stats Grid */}
+                                    <div className="grid grid-cols-2 gap-10 p-10 bg-gray-50 rounded-[3rem] border border-gray-100 relative group">
+                                        <div className="absolute inset-0 bg-red-600/[0.02] opacity-0 group-hover:opacity-100 transition-opacity rounded-[3rem]" />
+                                        <div>
+                                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Division Ownership</p>
+                                            <p className="font-black text-gray-900 uppercase italic">{previewDoc.dept}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Registry Date</p>
+                                            <p className="font-black text-gray-900 uppercase italic">{previewDoc.date}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Access Protocol</p>
+                                            <p className="font-black text-gray-900 uppercase italic">{previewDoc.access === 'public' ? 'Open Access' : 'Restricted Ops'}</p>
+                                        </div>
+                                        {previewDoc.aiScore && (
+                                            <div>
+                                                <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">AI Priority Index</p>
+                                                <p className="font-black text-[#B91C1C] text-xl italic">{previewDoc.aiScore}<span className="text-[10px] ml-1">Pts</span></p>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="space-y-6">
+                                        <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Mission Actions</h4>
+                                        <div className="flex gap-4">
+                                            <button onClick={() => { handleDownload(previewDoc); setPreviewDoc(null); }} 
+                                                className="flex-1 flex items-center justify-center gap-4 py-6 bg-[#B91C1C] text-white rounded-[2rem] text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-red-900/40 hover:bg-black transition-all active:scale-95 group">
+                                                <Download className="w-5 h-5 group-hover:-translate-y-1 transition-transform" /> Download Original Asset
+                                            </button>
+                                            <button onClick={() => setPreviewDoc(null)}
+                                                className="px-10 py-6 bg-gray-100 text-gray-900 rounded-[2rem] text-[11px] font-black uppercase tracking-[0.2em] hover:bg-gray-200 transition-all active:scale-95">
+                                                Dismiss
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-100 rounded-xl">
-                                    <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                                    <p className="text-[10px] font-black text-amber-700">Preview only — Download for full content</p>
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-8">
-                                <div>
-                                    <p className="text-gray-400 font-black uppercase tracking-widest text-[9px] mb-1">Upload Date</p>
-                                    <p className="font-black text-gray-900">{previewDoc.date}</p>
-                                </div>
-                                <div>
-                                    <p className="text-gray-400 font-black uppercase tracking-widest text-[9px] mb-1">Status Level</p>
-                                    <p className="font-black uppercase text-xs" style={{ color: statusStyle[previewDoc.status]?.text }}>{statusStyle[previewDoc.status]?.label}</p>
-                                </div>
-                            </div>
-                            <div className="flex gap-4">
-                                <button onClick={() => { handleDownload(previewDoc); setPreviewDoc(null); }} className="flex-1 flex items-center justify-center gap-3 py-4 rounded-2xl text-white text-[11px] font-black uppercase tracking-[0.2em] transition-all hover:bg-neutral-800 shadow-xl shadow-red-900/20 active:scale-95" style={{ backgroundColor: "#B91C1C" }}>
-                                    <Download className="w-4 h-4" /> Download
-                                </button>
-                                <button onClick={() => setPreviewDoc(null)} className="px-8 flex items-center justify-center py-4 rounded-2xl bg-gray-100 text-gray-900 text-[11px] font-black uppercase tracking-[0.2em] hover:bg-gray-200 transition-all">
-                                    Close
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -158,8 +230,8 @@ export default function Documents() {
             )}
 
             {/* Upload Modal */}
-            <input ref={fileInputRef} type="file" className="hidden" accept=".pdf,.docx,.xlsx,.png,.jpg"
-                onChange={e => { if (e.target.files?.length) setTimeout(() => setUploaded(true), 800); }} />
+            <input ref={fileInputRef} type="file" className="hidden" accept=".pdf,.docx,.xlsx,.png,.jpg,.mp3,.wav,.ogg"
+                onChange={handleFileUpload} />
             {uploadOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => { setUploadOpen(false); setUploaded(false); }} />
@@ -252,89 +324,99 @@ export default function Documents() {
                 </div>
 
                 {/* Recent Files */}
-                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                    <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                        <div className="flex items-center gap-2.5">
-                            <FileText className="w-4 h-4 text-gray-500" />
-                            <h3 className="text-sm font-black text-gray-900">Recent Files</h3>
+                <div className="bg-white rounded-[3rem] border border-gray-100 overflow-hidden shadow-sm">
+                    <div className="px-10 py-8 border-b border-gray-100 flex items-center justify-between bg-gray-50/30">
+                        <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-2xl bg-red-50 flex items-center justify-center">
+                                <FileText className="w-5 h-5 text-[#B91C1C]" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-black text-gray-900 uppercase italic">Recent Governance Signals</h3>
+                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Active Document Stream</p>
+                            </div>
                         </div>
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{recentDocs.length} Total Files</span>
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">{recentDocs.length} TOTAL SIGNALS</span>
                     </div>
                     <div className="divide-y divide-gray-50">
                         {filtered.map(doc => (
-                            <div key={doc.name} className="flex items-center gap-4 px-6 py-4 hover:bg-gray-50/60 transition-colors group">
+                            <div key={doc.name} className="flex items-center gap-8 px-10 py-6 hover:bg-red-50/20 transition-all group">
                                 {/* Type Badge */}
-                                <div className="px-2.5 py-1 rounded-lg text-[10px] font-black shrink-0"
-                                    style={{ background: typeStyle[doc.type]?.bg ?? "#F3F4F6", color: typeStyle[doc.type]?.text ?? "#374151" }}>
-                                    {doc.type}
+                                <div className="hidden md:flex flex-col items-center justify-center w-16 h-16 rounded-[1.5rem] bg-gray-50 border border-gray-100 group-hover:bg-[#B91C1C] transition-all">
+                                    <span className="text-[10px] font-black group-hover:text-white transition-colors">{doc.type}</span>
+                                    <FileText className="w-4 h-4 mt-1 text-gray-400 group-hover:text-white transition-colors" />
                                 </div>
 
-                                {/* Name + Meta */}
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-bold text-gray-900 truncate">{doc.name}</p>
-                                    <div className="flex items-center gap-3 mt-0.5">
-                                        <span className="text-[10px] text-gray-400 font-medium flex items-center gap-1">
-                                            <Clock className="w-3 h-3" /> {doc.date}
-                                        </span>
-                                        <span className="text-[10px] text-gray-400 font-medium">{doc.size}</span>
+                                {/* Name + Meta - Actionable Link */}
+                                <div 
+                                    className="flex-1 min-w-0 cursor-pointer group/link"
+                                    onClick={() => setPreviewDoc(doc)}
+                                >
+                                    <h4 className="text-lg font-black text-gray-900 truncate group-hover/link:text-[#B91C1C] transition-colors uppercase italic">{doc.name}</h4>
+                                    <div className="flex items-center gap-6 mt-1">
+                                        <div className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                            <Clock className="w-3.5 h-3.5" /> {doc.date}
+                                        </div>
+                                        <div className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                            <FolderOpen className="w-3.5 h-3.5" /> {doc.size}
+                                        </div>
                                     </div>
                                 </div>
 
-                                {/* Status + Actions */}
-                                <div className="flex items-center gap-2 shrink-0">
-                                    <span className="text-[10px] font-black px-2.5 py-1 rounded-lg"
-                                        style={{ background: statusStyle[doc.status]?.bg, color: statusStyle[doc.status]?.text }}>
-                                        {statusStyle[doc.status]?.label}
-                                    </span>
+                                {/* Status + Access */}
+                                <div className="hidden lg:flex items-center gap-6 shrink-0">
+                                    <div className="flex flex-col items-end">
+                                        <span className="text-[10px] font-black px-4 py-1.5 rounded-xl border uppercase tracking-widest transition-all"
+                                            style={{ backgroundColor: statusStyle[doc.status]?.bg, color: statusStyle[doc.status]?.text, borderColor: `${statusStyle[doc.status]?.text}20` }}>
+                                            {statusStyle[doc.status]?.label}
+                                        </span>
+                                    </div>
 
-                                    {/* Access icon */}
                                     {doc.access === "restricted" ? (
-                                        <div className="p-1.5 rounded-lg bg-amber-50 text-amber-500" title="Restricted">
-                                            <Lock className="w-3.5 h-3.5" />
+                                        <div className="p-3 rounded-2xl bg-amber-50 border border-amber-100 text-amber-500" title="Restricted Asset">
+                                            <Lock className="w-5 h-5" />
                                         </div>
                                     ) : (
-                                        <div className="p-1.5 rounded-lg bg-emerald-50 text-emerald-500" title="Public">
-                                            <CheckCircle2 className="w-3.5 h-3.5" />
+                                        <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-500" title="Public Asset">
+                                            <CheckCircle2 className="w-5 h-5" />
                                         </div>
                                     )}
+                                </div>
 
-                                    {/* Share */}
-                                    <button
-                                        onClick={() => handleShare(doc.name)}
-                                        className={`p-1.5 rounded-lg transition-all ${shareToast === doc.name ? "bg-emerald-50 text-emerald-600" : "bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-[#B91C1C]"}`}
-                                        title="Copy shareable link"
-                                    >
-                                        {shareToast === doc.name ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
-                                    </button>
-
-                                    {/* Preview */}
+                                {/* Operational Actions */}
+                                <div className="flex items-center gap-3 shrink-0">
+                                    {/* Open Preview */}
                                     <button
                                         onClick={() => setPreviewDoc(doc)}
-                                        className="p-1.5 rounded-lg bg-gray-50 text-gray-400 hover:bg-gray-100 transition-all"
-                                        title="Preview"
+                                        className="p-4 rounded-2xl bg-gray-50 border border-gray-100 text-gray-400 hover:bg-gray-900 hover:text-white hover:border-gray-900 transition-all shadow-sm"
+                                        title="Satellite Preview"
                                     >
-                                        <Eye className="w-3.5 h-3.5" />
+                                        <Eye className="w-5 h-5" />
                                     </button>
 
-                                    {/* Download — actually downloads a file */}
+                                    {/* Operational Download */}
                                     <button
                                         onClick={() => handleDownload(doc)}
-                                        className={`p-1.5 rounded-lg transition-all relative ${downloading === doc.name ? "bg-emerald-50 text-emerald-600" : "bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-[#B91C1C]"}`}
-                                        title="Download"
+                                        className={`p-4 rounded-2xl border transition-all shadow-sm ${downloading === doc.name ? "bg-emerald-50 border-emerald-200 text-emerald-600" : "bg-gray-50 border-gray-100 text-gray-400 hover:bg-[#B91C1C] hover:text-white hover:border-[#B91C1C]"}`}
+                                        title="Download Asset"
                                     >
-                                        {downloading === doc.name ? (
-                                            <CheckCircle2 className="w-3.5 h-3.5" />
-                                        ) : (
-                                            <Download className="w-3.5 h-3.5" />
-                                        )}
+                                        {downloading === doc.name ? <CheckCircle2 className="w-5 h-5" /> : <Download className="w-5 h-5" />}
+                                    </button>
+
+                                    {/* Secure Share */}
+                                    <button
+                                        onClick={() => handleShare(doc.name)}
+                                        className={`p-4 rounded-2xl border transition-all shadow-sm ${shareToast === doc.name ? "bg-emerald-50 border-emerald-200 text-emerald-600" : "bg-gray-50 border-gray-100 text-gray-400 hover:bg-gray-900 hover:text-white hover:border-gray-900"}`}
+                                        title="Secure Mission Share"
+                                    >
+                                        {shareToast === doc.name ? <CheckCircle2 className="w-5 h-5" /> : <Share2 className="w-5 h-5" />}
                                     </button>
                                 </div>
                             </div>
                         ))}
                         {filtered.length === 0 && (
-                            <div className="py-12 text-center">
-                                <FileText className="w-10 h-10 text-gray-200 mx-auto mb-2" />
-                                <p className="text-sm font-bold text-gray-400">No documents found</p>
+                            <div className="py-24 text-center">
+                                <FileText className="w-16 h-16 text-gray-100 mx-auto mb-4" />
+                                <p className="text-lg font-black text-gray-300 uppercase italic">Signal Lost — No Assets Found</p>
                             </div>
                         )}
                     </div>

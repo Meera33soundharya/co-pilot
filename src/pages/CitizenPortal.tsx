@@ -601,40 +601,44 @@ export default function CitizenPortal() {
                                 <div className="grid grid-cols-2 gap-4">
                                     {form.evidence.map((rawUrl, idx) => {
                                         const [url, meta] = rawUrl.split('#');
-                                        const name = meta ? decodeURIComponent(meta.split('&')[0].split('=')[1]) : "Attachment";
-                                        const type = meta ? decodeURIComponent(meta.split('&')[1].split('=')[1]) : "";
+                                        const metaParsed = new URLSearchParams(meta || "");
+                                        const name = metaParsed.get("name") || "Attachment";
+                                        const type = metaParsed.get("type") || "";
                                         
-                                        const isAudio = type === 'audio' || url.endsWith('.mp3') || url.endsWith('.wav') || url.startsWith('blob:audio');
-                                        const isVideo = url.endsWith('.mp4');
-                                        const isDoc   = type.includes('pdf') || type.includes('word') || type.includes('sheet') || url.endsWith('.pdf') || url.endsWith('.docx') || url.endsWith('.xlsx');
+                                        const isAudio = type.includes('audio') || url.endsWith('.mp3') || url.endsWith('.wav') || url.startsWith('blob:audio');
+                                        const isVideo = type.includes('video') || url.endsWith('.mp4');
+                                        const isImage = type.includes('image') || url.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+                                        const isDoc   = type.includes('pdf') || type.includes('word') || type.includes('sheet') || type.includes('presentation') || url.match(/\.(pdf|docx|xlsx|pptx)$/i);
 
                                         return (
-                                            <div key={idx} className="aspect-video bg-gray-50 rounded-2xl relative group overflow-hidden border border-gray-100">
-                                                {isVideo ? (
-                                                    <div className="w-full h-full flex flex-col items-center justify-center bg-indigo-50">
-                                                        <Video className="w-6 h-6 text-indigo-400" />
-                                                        <span className="text-[9px] font-black text-indigo-400 uppercase mt-1">Video</span>
-                                                    </div>
-                                                ) : isAudio ? (
-                                                    <div className="w-full h-full flex flex-col items-center justify-center bg-amber-50 p-4">
-                                                        <Mic className="w-6 h-6 text-amber-500 mb-2" />
-                                                        <span className="text-[9px] font-black text-amber-500 uppercase mb-2">Voice Complaint</span>
-                                                        <audio src={url} controls className="w-full h-8 scale-90" />
-                                                    </div>
-                                                ) : isDoc ? (
-                                                    <div className="w-full h-full flex flex-col items-center justify-center bg-blue-50 p-4">
-                                                        <FileText className="w-6 h-6 text-blue-500 mb-1" />
-                                                        <span className="text-[9px] font-black text-blue-500 uppercase mt-1 truncate max-w-full px-2">{name}</span>
-                                                        <span className="text-[8px] font-bold text-blue-300 uppercase mt-1">Document Evidence</span>
-                                                    </div>
-                                                ) : (
+                                            <div key={idx} className="aspect-video bg-gray-50 rounded-2xl relative group overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-200">
+                                                {isImage ? (
                                                     <div className="w-full h-full relative">
                                                         <img src={url} alt="Evidence" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                                                         <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                                                     </div>
+                                                ) : isAudio ? (
+                                                    <div className="w-full h-full flex flex-col items-center justify-center bg-amber-50 p-4">
+                                                        <Mic className="w-6 h-6 text-amber-500 mb-2" />
+                                                        <span className="text-[9px] font-black text-amber-500 uppercase mb-2 truncate max-w-full px-2">{name}</span>
+                                                        <audio src={url} controls className="w-full h-8 scale-90" />
+                                                    </div>
+                                                ) : isVideo ? (
+                                                    <div className="w-full h-full flex flex-col items-center justify-center bg-indigo-50">
+                                                        <Video className="w-6 h-6 text-indigo-400" />
+                                                        <span className="text-[9px] font-black text-indigo-400 uppercase mt-1">Video Evidence</span>
+                                                    </div>
+                                                ) : (
+                                                    <div className="w-full h-full flex flex-col items-center justify-center bg-blue-50 p-4">
+                                                        <FileText className="w-6 h-6 text-blue-500 mb-1" />
+                                                        <span className="text-[9px] font-black text-blue-500 uppercase mt-1 truncate max-w-full px-2">{name}</span>
+                                                        <span className="text-[8px] font-bold text-blue-300 uppercase mt-1">
+                                                            {isDoc ? "Document Registered" : "Signal Registered"}
+                                                        </span>
+                                                    </div>
                                                 )}
-                                                <button onClick={() => removeFile(idx)} className="absolute top-2 right-2 w-6 h-6 bg-white/80 rounded-full flex items-center justify-center shadow-lg hover:bg-red-500 hover:text-white transition-all opacity-0 group-hover:opacity-100 z-10">
-                                                    <X className="w-3.5 h-3.5" />
+                                                <button onClick={(e) => { e.stopPropagation(); removeFile(idx); }} className="absolute top-2 right-2 w-8 h-8 bg-white/90 rounded-xl flex items-center justify-center shadow-lg hover:bg-red-600 hover:text-white transition-all opacity-0 group-hover:opacity-100 z-10">
+                                                    <X className="w-4 h-4" />
                                                 </button>
                                             </div>
                                         );
@@ -1060,6 +1064,33 @@ export default function CitizenPortal() {
                                 className="btn-primary w-full !py-5 shadow-2xl shadow-red-500/20 text-sm">
                                 Go to My Tracking Portal
                             </button>
+
+                            {/* Micro Strategic Manual for Success Flow */}
+                            <div className="mt-16 pt-16 border-t border-gray-100 space-y-10">
+                                <div className="flex flex-col items-center gap-3">
+                                    <div className="px-5 py-1.5 bg-gray-50 text-gray-400 rounded-full text-[9px] font-black uppercase tracking-[0.3em] border border-gray-100">
+                                        Post-Submission Protocol
+                                    </div>
+                                    <h3 className="text-xl font-black text-gray-900 tracking-tight italic uppercase">What happens next?</h3>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-8 text-left">
+                                    {[
+                                        { step: "01", title: "Dept Handoff", desc: "Automated routing to the specific district unit." },
+                                        { step: "02", title: "Field Triage", desc: "Assigned officer verifies the ticket intelligence." },
+                                        { step: "03", title: "Site Action", desc: "Units deployed to your coordinates for resolution." },
+                                        { step: "04", title: "Proofing", desc: "Officer uploads resolution proof for your verify." },
+                                    ].map((s, i) => (
+                                        <div key={i} className="flex gap-4 group/step">
+                                            <div className="text-2xl font-black text-gray-900/5 italic tracking-tighter group-hover/step:text-[#B91C1C]/10 transition-colors uppercase pt-1">{s.step}</div>
+                                            <div className="space-y-1">
+                                                <h4 className="text-[10px] font-black text-gray-900 uppercase tracking-tight group-hover/step:text-[#B91C1C] transition-colors italic">{s.title}</h4>
+                                                <p className="text-[10px] text-gray-400 font-bold leading-relaxed">{s.desc}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}

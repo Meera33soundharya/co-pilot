@@ -145,7 +145,7 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
         admin: { color: "#B91C1C", label: "Administrator", abbr: "AD" },
         officer: { color: "#2563EB", label: "Field Officer", abbr: "OF" },
         citizen: { color: "#059669", label: "Citizen", abbr: currentUser?.name?.slice(0, 2).toUpperCase() ?? "CT" },
-    }[role];
+    }[role] || { color: "#6B7280", label: "Observer", abbr: "OB" };
 
     function handleLogout() {
         logout();
@@ -161,7 +161,7 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
             )}
 
             {/* ── Sidebar ──────────────────────────────────────────── */}
-            <aside className={`fixed lg:relative inset-y-0 left-0 z-50 lg:z-auto flex flex-col w-56 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
+            <aside className={`fixed lg:relative inset-y-0 left-0 z-[120] lg:z-auto flex flex-col w-56 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
 
                 {/* Brand */}
                 <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
