@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useComplaints } from "@/context/ComplaintsContext";
-import { MapPin, TrendingUp, Flame, AlertTriangle } from "lucide-react";
+import { MapPin, TrendingUp, Flame } from "lucide-react";
 
 const WARDS = Array.from({ length: 12 }, (_, i) => `Ward ${i + 1}`);
 
@@ -33,26 +33,25 @@ const WARD_COORDS: Record<string, { lat: number; lng: number; area: string }> = 
 };
 
 function generateWardData(complaints: any[]) {
-    return WARDS.map((ward, i) => {
+    return WARDS.map((ward) => {
         const wardComplaints = complaints.filter(c => c.ward === ward);
-        const total = wardComplaints.length + Math.floor(Math.random() * 8); // Add seed data
+        const total = wardComplaints.length;
         const resolved = wardComplaints.filter(c => c.status === "Resolved").length;
-        const highPri = wardComplaints.filter(c => c.priority === "High").length + Math.floor(Math.random() * 3);
+        const highPri = wardComplaints.filter(c => c.priority === "High").length;
 
-        // Seed top issue per ward
-        const SEED_ISSUES = [
-            "Roads & Infrastructure", "Water Supply", "Electricity", "Sanitation",
-            "Drainage", "Public Health", "Roads & Infrastructure", "Water Supply",
-            "Parks & Recreation", "Enforcement", "Sanitation", "Drainage"
-        ];
-        const topIssue = wardComplaints.length > 0
-            ? (wardComplaints.reduce((acc: Record<string, number>, c) => {
-                acc[c.category] = (acc[c.category] || 0) + 1; return acc;
-            }, {}))
-            : { [SEED_ISSUES[i]]: 1 };
-        const topCat = Object.entries(topIssue).sort((a, b) => b[1] - a[1])[0]?.[0] ?? SEED_ISSUES[i];
+        // Determine top issue from actual data, or default if empty
+        const issueCounts = wardComplaints.reduce((acc: Record<string, number>, c) => {
+            acc[c.category] = (acc[c.category] || 0) + 1;
+            return acc;
+        }, {});
+        
+        const topCat = Object.entries(issueCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "General Maintenance";
 
-        const intensity = Math.min(10, total); // 0–10 heat scale
+        // Intensity scale (0-10): 0 is empty, 1-3 is low, 4-7 is moderate, 8-10 is critical
+        // We scale based on the relative volume of complaints in the district
+        const maxComplaints = Math.max(...WARDS.map(w => complaints.filter(c => c.ward === w).length), 1);
+        const intensity = total === 0 ? 0 : Math.ceil((total / maxComplaints) * 10);
+        
         return { ward, total, resolved, highPri, topCat, intensity };
     });
 }
@@ -119,25 +118,35 @@ export default function Heatmap() {
                                 <span className="text-[9px] font-black text-gray-300 uppercase">High</span>
                             </div>
                         </div>
-                        <div className="grid grid-cols-4 gap-3">
+                        <div className="grid grid-cols-6 gap-3">
+                            {/* Empty slots to shape the 'map' */}
+                            <div className="hidden lg:block h-32" /> 
+                            <div className="hidden lg:block h-32" />
+
                             {wardData.map(w => (
                                 <button
                                     key={w.ward}
                                     onClick={() => setSelected(selected === w.ward ? null : w.ward)}
-                                    className={`rounded-2xl p-4 text-left transition-all hover:scale-105 active:scale-95 ${
-                                        selected === w.ward ? "ring-4 ring-[#B91C1C] ring-offset-2" : ""
+                                    className={`rounded-2xl p-4 text-left transition-all hover:scale-110 active:scale-95 shadow-sm border border-transparent ${
+                                        selected === w.ward ? "ring-4 ring-[#B91C1C] ring-offset-4 z-10" : "hover:border-gray-200"
+                                    } ${
+                                        w.intensity > 7 ? "animate-pulse" : ""
                                     }`}
                                     style={{ backgroundColor: heatColor(w.intensity) }}
                                 >
-                                    <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${heatTextColor(w.intensity)}`}>
-                                        {w.ward}
-                                    </p>
-                                    <p className={`text-2xl font-black ${heatTextColor(w.intensity)}`}>{w.total}</p>
+                                    <div className="flex justify-between items-start mb-2">
+                                        <p className={`text-[9px] font-black uppercase tracking-widest ${heatTextColor(w.intensity)}`}>
+                                            {w.ward}
+                                        </p>
+                                        <Flame className={`w-3 h-3 ${w.intensity > 4 ? "text-white/40" : "text-red-300"}`} />
+                                    </div>
+                                    <p className={`text-3xl font-black tracking-tighter ${heatTextColor(w.intensity)}`}>{w.total}</p>
+                                    
                                     {w.highPri > 0 && (
-                                        <div className="flex items-center gap-1 mt-2">
-                                            <AlertTriangle className={`w-3 h-3 ${w.intensity > 4 ? "text-white/70" : "text-red-400"}`} />
-                                            <span className={`text-[8px] font-black ${w.intensity > 4 ? "text-white/70" : "text-red-500"}`}>
-                                                {w.highPri} urgent
+                                        <div className="flex items-center gap-1 mt-3">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-red-400 animate-ping" />
+                                            <span className={`text-[8px] font-black uppercase tracking-widest ${w.intensity > 4 ? "text-white/70" : "text-red-500"}`}>
+                                                {w.highPri} Critical
                                             </span>
                                         </div>
                                     )}
