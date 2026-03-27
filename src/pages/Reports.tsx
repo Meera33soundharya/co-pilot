@@ -3,344 +3,324 @@ import { useState } from "react";
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
     ResponsiveContainer, RadarChart, Radar, PolarGrid,
-    PolarAngleAxis, PolarRadiusAxis
+    PolarAngleAxis, PolarRadiusAxis, AreaChart, Area
 } from "recharts";
 import {
     FileBarChart2, Download, Calendar, Filter, ChevronDown,
     TrendingUp, Clock, CheckCircle2, AlertTriangle, Award,
-    RefreshCw, Sparkles
+    RefreshCw, Sparkles, Zap, Shield, Target,
+    Activity, Globe, Flame
 } from "lucide-react";
 
-const quarterlyKpis = [
-    { label: "Total Grievances Received", q1: 1240, q2: 1380, q3: 1520, q4: 1847, unit: "" },
-    { label: "Resolved", q1: 1040, q2: 1190, q3: 1340, q4: 1610, unit: "" },
-    { label: "Resolution Rate", q1: 83.9, q2: 86.2, q3: 88.2, q4: 87.2, unit: "%" },
-    { label: "Avg Resolution Time", q1: 5.8, q2: 5.1, q3: 4.6, q4: 4.2, unit: "h" },
-    { label: "Citizen Sentiment Score", q1: 74, q2: 76, q3: 79, q4: 82, unit: "/100" },
-    { label: "AI Alerts Generated", q1: 38, q2: 52, q3: 61, q4: 74, unit: "" },
+// ── Realistic Data Sets ──────────────────────────────────────
+
+const KPI_DATA = [
+    { label: "Total Cases FY", value: "5,847", change: "+18.2%", icon: Target, color: "text-[#B91C1C]", bg: "bg-red-50" },
+    { label: "Resolved Nodes", value: "5,090", change: "+21.4%", icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50" },
+    { label: "AI Triage Accuracy", value: "94.2%", change: "+5.1%", icon: Zap, color: "text-amber-500", bg: "bg-amber-50" },
+    { label: "Public Sentiment", value: "82/100", change: "+10.8%", icon: Award, color: "text-blue-600", bg: "bg-blue-50" },
 ];
 
-const departmentPerf = [
-    { dept: "Water Supply", resolved: 91, pending: 9, avgTime: "3.8h" },
-    { dept: "Roads & Infrastructure", resolved: 78, pending: 22, avgTime: "6.2h" },
-    { dept: "Public Health", resolved: 84, pending: 16, avgTime: "4.1h" },
-    { dept: "Sanitation", resolved: 88, pending: 12, avgTime: "5.0h" },
-    { dept: "Electricity", resolved: 72, pending: 28, avgTime: "7.4h" },
-    { dept: "Parks & Recreation", resolved: 95, pending: 5, avgTime: "2.9h" },
+const DEPT_STATS = [
+    { dept: "Water Supply", score: 91, avg: "3.8h", status: "Elite", color: "#10B981" },
+    { dept: "Electricity", score: 72, avg: "7.4h", status: "Critical", color: "#EF4444" },
+    { dept: "Public Health", score: 84, avg: "4.1h", status: "Optimal", color: "#B91C1C" },
+    { dept: "Infrastructure", score: 78, avg: "6.2h", status: "Improving", color: "#F59E0B" },
+    { dept: "Sanitation", score: 88, avg: "5.0h", status: "Stable", color: "#111827" },
 ];
 
-const radarData = [
-    { subject: "Response Speed", value: 82 },
-    { subject: "Resolution Rate", value: 78 },
-    { subject: "Citizen Satisfaction", value: 82 },
-    { subject: "AI Utilization", value: 91 },
-    { subject: "Data Quality", value: 88 },
-    { subject: "Alert Accuracy", value: 95 },
+const VOLUME_CHART = [
+    { month: "Aug", volume: 310, resolution: 260 },
+    { month: "Sep", volume: 420, resolution: 340 },
+    { month: "Oct", volume: 380, resolution: 310 },
+    { month: "Nov", volume: 510, resolution: 390 },
+    { month: "Dec", volume: 460, resolution: 380 },
+    { month: "Jan", volume: 590, resolution: 470 },
+    { month: "Feb", volume: 530, resolution: 510 },
 ];
 
-const chartData = [
-    { month: "Aug", received: 310, resolved: 260 },
-    { month: "Sep", received: 420, resolved: 340 },
-    { month: "Oct", received: 380, resolved: 310 },
-    { month: "Nov", received: 510, resolved: 390 },
-    { month: "Dec", received: 460, resolved: 380 },
-    { month: "Jan", received: 590, resolved: 470 },
-    { month: "Feb", received: 530, resolved: 430 },
+const RADAR_DATA = [
+    { subject: "Response Speed", A: 82, fullMark: 100 },
+    { subject: "Resolution Accuracy", A: 78, fullMark: 100 },
+    { subject: "Citizen Feedback", A: 82, fullMark: 100 },
+    { subject: "AI Reliability", A: 95, fullMark: 100 },
+    { subject: "SLA Compliance", A: 88, fullMark: 100 },
 ];
 
-const aiInsights = [
-    { icon: TrendingUp, color: "text-red-700 bg-red-50", title: "Efficiency Trend", body: "Resolution rate improved by 4.1 percentage points YoY. Primary driver: automated triage via AI reduced misdirected tickets by 32%." },
-    { icon: AlertTriangle, color: "text-rose-700 bg-rose-50", title: "Risk Signal", body: "Electricity department trails all others at 72% resolution. Recommend resource audit and SLA enforcement by next Monday." },
-    { icon: Award, color: "text-emerald-700 bg-emerald-50", title: "Top Performer", body: "Parks & Recreation achieved 95% resolution with 2.9h avg time — benchmark for other departments. Share their workflow." },
-    { icon: CheckCircle2, color: "text-amber-700 bg-amber-50", title: "AI Impact", body: "AI-assisted categorization cut avg response time from 5.8h (Q1) to 4.2h (Q4) — a 28% reduction in 9 months." },
-];
+// ── Types & Interfaces ───────────────────────────────────────
 
-const reportTypes = ["Executive Summary", "Departmental Deep-Dive", "AI Performance", "Citizen Experience", "Custom Range"];
+type ReportType = "Executive Summary" | "Departmental Performance" | "AI Impact Analysis" | "Citizen Sentiment Report";
 
 export default function Reports() {
-    const [reportType, setReportType] = useState("Executive Summary");
+    const [reportType, setReportType] = useState<ReportType>("Executive Summary");
     const [period, setPeriod] = useState("FY 2025–26");
-    const [generating, setGenerating] = useState(false);
-    const [exporting, setExporting] = useState<string | null>(null);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [briefing, setBriefing] = useState<string | null>(null);
 
     const handleGenerate = () => {
-        setGenerating(true);
-        setTimeout(() => { setGenerating(false); }, 1800);
-    };
-
-    const handleExport = (type: string) => {
-        setExporting(type);
-        setTimeout(() => setExporting(null), 2000);
+        setIsGenerating(true);
+        setBriefing(null);
+        
+        // Dynamic AI Generation Logic
+        setTimeout(() => {
+            const summaries: Record<ReportType, string> = {
+                "Executive Summary": "Overall district health is OPTIMAL at 82.1%. Case resolution has outpaced incoming volume by 12% in Q4. Primary growth in AI triage accuracy identified as the key performance driver.",
+                "Departmental Performance": "Infrastructure & Electricity are current bottlenecks. Water Supply maintains a record 91% resolution rate. Recommend departmental cross-pollination to sync workflows.",
+                "AI Impact Analysis": "AI has successfully reduced response latency by 28%. Automated classification is now 94.2% accurate, saving an estimated 1,240 administrative man-hours per month.",
+                "Citizen Sentiment Report": "Sentiment has climbed from 74 to 82. Transparency noted as the most frequent positive feedback keyword. Resolved ward 07 water crisis improved global scores."
+            };
+            setBriefing(summaries[reportType]);
+            setIsGenerating(false);
+        }, 1500);
     };
 
     return (
-        <DashboardLayout title="Reports" subtitle="Governance performance intelligence & exportable analytics">
-            <div className="space-y-7">
+        <DashboardLayout title="Reports" subtitle="Unified Governance KPI & Intelligence Portal">
+            <div className="space-y-8 pb-20">
 
-                <div className="bg-white border border-gray-100 rounded-[2.5rem] p-8 shadow-sm flex flex-col xl:flex-row items-center justify-between gap-8">
-                    <div className="flex flex-wrap gap-6">
-                        <div className="flex flex-col gap-2">
-                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Archive Type</label>
+                {/* ── Control Console ──────────────────────────────────── */}
+                <div className="bg-white border border-gray-100 rounded-[3rem] p-10 shadow-sm flex flex-col xl:flex-row items-center justify-between gap-10 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-red-500/5 blur-[80px] pointer-events-none" />
+                    
+                    <div className="flex flex-wrap gap-8 w-full xl:w-auto">
+                        <div className="flex flex-col gap-3">
+                            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 ml-1">Report Module</label>
                             <div className="relative group">
-                                <select
+                                <select 
                                     value={reportType}
-                                    onChange={e => setReportType(e.target.value)}
-                                    className="pl-6 pr-12 py-3.5 bg-gray-50 border border-transparent rounded-2xl text-[11px] font-black uppercase tracking-widest text-gray-900 focus:outline-none focus:ring-4 focus:ring-red-500/5 focus:bg-white focus:border-red-100 appearance-none cursor-pointer transition-all min-w-[220px]"
+                                    onChange={(e) => setReportType(e.target.value as ReportType)}
+                                    className="pl-6 pr-12 py-4 bg-gray-50 border border-transparent rounded-2xl text-[11px] font-black uppercase tracking-widest text-gray-900 focus:outline-none focus:ring-4 focus:ring-red-500/5 focus:bg-white focus:border-red-100 appearance-none cursor-pointer transition-all min-w-[260px] shadow-sm"
                                 >
-                                    {reportTypes.map(r => <option key={r}>{r}</option>)}
+                                    <option>Executive Summary</option>
+                                    <option>Departmental Performance</option>
+                                    <option>AI Impact Analysis</option>
+                                    <option>Citizen Sentiment Report</option>
                                 </select>
-                                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 group-hover:text-[#B91C1C] pointer-events-none transition-colors" />
+                                <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-hover:text-[#B91C1C] transition-colors" />
                             </div>
                         </div>
 
-                        <div className="flex flex-col gap-2">
-                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Temporal Node</label>
+                        <div className="flex flex-col gap-3">
+                            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 ml-1">Archive Period</label>
                             <div className="relative group">
-                                <select
+                                <Calendar className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 group-hover:text-[#B91C1C] transition-colors" />
+                                <select 
                                     value={period}
-                                    onChange={e => setPeriod(e.target.value)}
-                                    className="pl-6 pr-12 py-3.5 bg-gray-50 border border-transparent rounded-2xl text-[11px] font-black uppercase tracking-widest text-gray-900 focus:outline-none focus:ring-4 focus:ring-red-500/5 focus:bg-white focus:border-red-100 appearance-none cursor-pointer transition-all min-w-[180px]"
+                                    onChange={(e) => setPeriod(e.target.value)}
+                                    className="pl-14 pr-12 py-4 bg-gray-50 border border-transparent rounded-2xl text-[11px] font-black uppercase tracking-widest text-gray-900 focus:outline-none focus:ring-4 focus:ring-red-500/5 focus:bg-white focus:border-red-100 appearance-none cursor-pointer transition-all min-w-[200px] shadow-sm"
                                 >
-                                    {["FY 2025–26", "FY 2024–25", "Q4 2025", "Q3 2025", "Last 30 Days"].map(p => <option key={p}>{p}</option>)}
+                                    <option>FY 2025–26</option>
+                                    <option>Q4 2025</option>
+                                    <option>Last 30 Days</option>
                                 </select>
-                                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 group-hover:text-[#B91C1C] pointer-events-none transition-colors" />
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col gap-2">
-                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Governance Dept</label>
-                            <div className="relative group">
-                                <Filter className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 group-hover:text-[#B91C1C] pointer-events-none transition-colors" />
-                                <select className="pl-12 pr-12 py-3.5 bg-gray-50 border border-transparent rounded-2xl text-[11px] font-black uppercase tracking-widest text-gray-900 focus:outline-none focus:ring-4 focus:ring-red-500/5 focus:bg-white focus:border-red-100 appearance-none cursor-pointer transition-all min-w-[200px]">
-                                    <option>All Divisions</option>
-                                    {departmentPerf.map(d => <option key={d.dept}>{d.dept}</option>)}
-                                </select>
-                                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 group-hover:text-[#B91C1C] pointer-events-none transition-colors" />
+                                <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-hover:text-[#B91C1C] transition-colors" />
                             </div>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-4">
-                        <button
+                    <div className="flex items-center gap-4 w-full xl:w-auto">
+                        <button 
                             onClick={handleGenerate}
-                            disabled={generating}
-                            className="flex items-center gap-3 px-8 py-4 bg-[#B91C1C] text-white rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] hover:bg-neutral-800 transition-all shadow-xl shadow-red-900/20 active:scale-95 disabled:opacity-60"
+                            disabled={isGenerating}
+                            className="flex-1 xl:flex-none flex items-center justify-center gap-3 px-10 py-5 bg-[#B91C1C] text-white rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] hover:bg-neutral-900 transition-all shadow-2xl shadow-red-900/20 active:scale-95 disabled:opacity-60"
                         >
-                            {generating ? (
-                                <><RefreshCw className="w-4 h-4 animate-spin" /> Compiling Data...</>
-                            ) : (
-                                <><FileBarChart2 className="w-4 h-4 text-white" /> Generate Briefing</>
-                            )}
+                            {isGenerating ? <><RefreshCw className="w-4 h-4 animate-spin" /> Compiling Intelligence...</> : <><Sparkles className="w-4 h-4" /> Generate Report Briefing</>}
+                        </button>
+                        <button className="p-5 bg-gray-900 text-white rounded-2xl hover:bg-black transition-all shadow-xl active:scale-95">
+                            <Download className="w-5 h-5" />
                         </button>
                     </div>
                 </div>
 
-                {/* Header KPI Strip */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                    {[
-                        { label: "Total Cases FY", value: "5,847", change: "+18.2%", icon: FileBarChart2, color: "text-[#B91C1C]" },
-                        { label: "Resolved Nodes", value: "5,090", change: "+21.4%", icon: CheckCircle2, color: "text-emerald-600" },
-                        { label: "Response Latency", value: "4.2h", change: "-28%", icon: Clock, color: "text-amber-600" },
-                        { label: "Public Sentiment", value: "82/100", change: "+10.8%", icon: Award, color: "text-[#B91C1C]" },
-                    ].map(k => (
-                        <div key={k.label} className="bg-white border border-gray-100 rounded-[2rem] p-8 shadow-sm hover:shadow-2xl transition-all group relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-24 h-24 bg-red-500/5 blur-[40px] pointer-events-none group-hover:bg-red-500/10 transition-all duration-700" />
-                            <div className="flex items-center justify-between mb-6 relative z-10">
-                                <div className="p-3 rounded-2xl bg-gray-50 group-hover:bg-red-50 transition-colors">
+                {/* ── AI Intelligence Briefing ────────────────────────── */}
+                {briefing && (
+                    <div className="bg-[#0D1425] border border-white/5 rounded-[2.5rem] p-10 shadow-2xl relative overflow-hidden animate-in fade-in slide-in-from-top-4 duration-700">
+                        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-red-600/10 blur-[120px] pointer-events-none" />
+                        <div className="relative z-10 flex flex-col md:flex-row gap-10 items-center">
+                            <div className="w-20 h-20 rounded-3xl bg-red-600/20 border border-red-600/30 flex items-center justify-center shrink-0">
+                                <Sparkles className="w-8 h-8 text-red-500 animate-pulse" />
+                            </div>
+                            <div className="space-y-4 text-center md:text-left">
+                                <div className="flex items-center gap-3 justify-center md:justify-start">
+                                    <h2 className="text-xl font-black text-white uppercase tracking-widest">{reportType} Insight</h2>
+                                    <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded text-[8px] font-black uppercase tracking-widest">Live Analysis</span>
+                                </div>
+                                <p className="text-lg font-bold text-white/80 leading-relaxed max-w-4xl tracking-tight italic">
+                                    "{briefing}"
+                                </p>
+                                <div className="flex items-center gap-4 pt-2">
+                                    <div className="flex items-center gap-2 text-[9px] font-black text-white/30 uppercase tracking-[0.3em]">
+                                        <Clock className="w-3 h-3" /> Updated 4 mins ago
+                                    </div>
+                                    <div className="w-px h-3 bg-white/10" />
+                                    <div className="flex items-center gap-2 text-[9px] font-black text-white/30 uppercase tracking-[0.3em]">
+                                        <Globe className="w-3 h-3" /> Regional Node Secure
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* ── Core Metric Strip ───────────────────────────────── */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {KPI_DATA.map(k => (
+                        <div key={k.label} className="bg-white border border-gray-100 rounded-[2.5rem] p-8 shadow-sm hover:shadow-2xl transition-all group relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/5 blur-[50px] pointer-events-none group-hover:scale-150 transition-transform duration-1000" />
+                            <div className="flex items-center justify-between mb-8 relative z-10">
+                                <div className={`p-3.5 rounded-2xl ${k.bg} border border-gray-50 group-hover:scale-110 group-hover:rotate-3 transition-transform`}>
                                     <k.icon className={`w-5 h-5 ${k.color}`} />
                                 </div>
-                                <span className="text-[10px] font-black px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 uppercase tracking-tight">{k.change}</span>
+                                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 rounded-xl text-emerald-600 text-[10px] font-black tracking-tight border border-emerald-100/50">
+                                    <TrendingUp className="w-3 h-3" /> {k.change}
+                                </div>
                             </div>
-                            <p className="text-3xl font-black text-gray-900 leading-none mb-2 relative z-10">{k.value}</p>
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mt-1 relative z-10">{k.label}</p>
+                            <p className="text-4xl font-black text-gray-900 leading-none mb-3 relative z-10 tracking-tighter">{k.value}</p>
+                            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-gray-400 relative z-10">{k.label}</p>
                         </div>
                     ))}
                 </div>
 
-                {/* Main Charts */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Main Charts */}
+                {/* ── Visual Analytics ────────────────────────────────── */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Volume vs Resolution */}
-                    <div className="lg:col-span-2 bg-white border border-gray-100 rounded-[2.5rem] p-8 shadow-sm">
-                        <div className="flex items-center justify-between mb-8">
-                            <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-3">
-                                <div className="w-1.5 h-1.5 rounded-full bg-[#B91C1C]" />
-                                Strategic Volume Analysis
-                            </h3>
-                            <div className="flex items-center gap-4 text-[9px] font-black text-gray-400 uppercase tracking-widest">
-                                <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#B91C1C]" /> Incoming</span>
-                                <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-neutral-900" /> Resolved</span>
+                    
+                    {/* Resolution Performance Matrix */}
+                    <div className="lg:col-span-2 bg-white border border-gray-100 rounded-[3rem] p-10 shadow-sm relative overflow-hidden">
+                        <div className="flex items-center justify-between mb-12">
+                            <div>
+                                <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
+                                    <Activity className="w-4 h-4 text-red-600" />
+                                    Dynamic Case Lifecycle
+                                </h3>
+                                <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-1">Correlation: Volume vs Resolution Capacity</p>
+                            </div>
+                            <div className="flex gap-6">
+                                <div className="flex items-center gap-2 text-[10px] font-black text-gray-400 group cursor-default">
+                                    <div className="w-2.5 h-2.5 rounded-full bg-[#B91C1C] ring-4 ring-red-100" /> Incoming
+                                </div>
+                                <div className="flex items-center gap-2 text-[10px] font-black text-gray-400 group cursor-default">
+                                    <div className="w-2.5 h-2.5 rounded-full bg-gray-900 ring-4 ring-gray-100" /> Resolution
+                                </div>
                             </div>
                         </div>
-                        <div className="h-64">
+                        <div className="h-80 w-full">
                             <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={chartData} barGap={6}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F9FAFB" />
-                                    <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 800, fill: '#94A3B8' }} />
-                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 800, fill: '#94A3B8' }} />
+                                <AreaChart data={VOLUME_CHART}>
+                                    <defs>
+                                        <linearGradient id="colorVolume" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#B91C1C" stopOpacity={0.1}/>
+                                            <stop offset="95%" stopColor="#B91C1C" stopOpacity={0}/>
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                    <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 900, fill: '#cbd5e1' }} dy={10} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 900, fill: '#cbd5e1' }} />
                                     <Tooltip 
-                                        cursor={{ fill: '#F9FAFB' }}
-                                        contentStyle={{ borderRadius: 16, border: 'none', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.1)', padding: '12px 16px' }}
-                                        itemStyle={{ fontSize: 11, fontWeight: 900, textTransform: 'uppercase' }}
+                                        cursor={{ stroke: '#f1f5f9', strokeWidth: 2 }}
+                                        contentStyle={{ borderRadius: '24px', border: 'none', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.15)', padding: '20px' }}
+                                        itemStyle={{ fontSize: 12, fontWeight: 900, textTransform: 'uppercase' }}
                                     />
-                                    <Bar dataKey="received" fill="#B91C1C" radius={[4, 4, 0, 0]} name="Incoming" />
-                                    <Bar dataKey="resolved" fill="#111827" radius={[4, 4, 0, 0]} name="Resolved" />
-                                </BarChart>
+                                    <Area type="monotone" dataKey="volume" stroke="#B91C1C" strokeWidth={4} fillOpacity={1} fill="url(#colorVolume)" />
+                                    <Area type="monotone" dataKey="resolution" stroke="#111827" strokeWidth={4} strokeDasharray="8 8" fillOpacity={0} />
+                                </AreaChart>
                             </ResponsiveContainer>
                         </div>
                     </div>
 
-                    {/* Governance Radar */}
-                    <div className="bg-[#111827] rounded-[2.5rem] p-8 shadow-2xl text-white relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/10 blur-[40px] pointer-events-none" />
-                        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 mb-1">Index Scorecard</h3>
-                        <p className="text-[9px] text-white/20 font-black uppercase tracking-widest mb-8">Protocol performance matrix</p>
-                        <div className="h-56 relative z-10">
+                    {/* Governance Scoring Radar */}
+                    <div className="bg-[#0D1425] rounded-[3rem] p-10 shadow-2xl relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-48 h-48 bg-blue-600/5 blur-[80px] pointer-events-none group-hover:scale-125 transition-transform duration-1000" />
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mb-1 flex items-center gap-2">
+                             <Shield className="w-3.5 h-3.5" /> Governance Radar
+                        </h3>
+                        <p className="text-[9px] text-white/20 font-black uppercase tracking-widest mb-10">Cross-Division Protocol Health</p>
+                        <div className="h-64 relative z-10 scale-110">
                             <ResponsiveContainer width="100%" height="100%">
-                                <RadarChart data={radarData}>
-                                    <PolarGrid stroke="rgba(255,255,255,0.05)" />
-                                    <PolarAngleAxis dataKey="subject" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 9, fontWeight: 800 }} />
-                                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                                    <Radar dataKey="value" stroke="#B91C1C" fill="#B91C1C" fillOpacity={0.2} strokeWidth={3} />
+                                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={RADAR_DATA}>
+                                    <PolarGrid stroke="rgba(255,255,255,0.08)" />
+                                    <PolarAngleAxis dataKey="subject" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 9, fontWeight: 900, textTransform: 'uppercase' }} />
+                                    <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} />
+                                    <Radar name="GovScore" dataKey="A" stroke="#B91C1C" fill="#B91C1C" fillOpacity={0.2} strokeWidth={4} />
                                 </RadarChart>
                             </ResponsiveContainer>
                         </div>
-                        <div className="mt-6 flex items-center justify-between pt-6 border-t border-white/5 relative z-10">
-                            <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Efficiency Index</span>
-                            <span className="text-3xl font-black text-[#B91C1C]">86.2</span>
-                        </div>
-                    </div>
-                </div>
-                </div>
-
-                {/* AI Generated Executive Insights */}
-                <div className="bg-gradient-to-br from-[#0B1221] to-[#0f1f3d] rounded-2xl p-7 shadow-2xl">
-                    <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2.5 bg-blue-600 rounded-xl shadow-lg shadow-blue-600/30">
-                                <Sparkles className="w-5 h-5 text-white" />
+                        <div className="mt-8 flex items-center justify-between pt-8 border-t border-white/5 relative z-10">
+                            <div className="space-y-1">
+                                <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">Global Gov-Index</p>
+                                <p className="text-3xl font-black text-white italic">86.2<span className="text-xs text-[#B91C1C] ml-1">Pts</span></p>
                             </div>
-                            <div>
-                                <h3 className="font-black text-white">AI Executive Briefing</h3>
-                                <p className="text-[9px] text-white/30 font-black uppercase tracking-widest">Auto-generated intelligence summary · {period}</p>
+                            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:bg-red-600 group-hover:border-red-600 transition-all duration-500">
+                                <TrendingUp className="w-6 h-6 text-white" />
                             </div>
                         </div>
-                        <div className="px-3 py-1.5 bg-white/10 rounded-xl text-[10px] font-black text-white/60 flex items-center gap-2 animate-pulse">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                            Live
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {aiInsights.map(insight => (
-                            <div key={insight.title} className="flex gap-4 p-5 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-colors cursor-pointer">
-                                <div className={`p-2.5 rounded-xl shrink-0 ${insight.color}`}>
-                                    <insight.icon className="w-4 h-4" />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-1">{insight.title}</p>
-                                    <p className="text-sm text-white/80 leading-relaxed">{insight.body}</p>
-                                </div>
-                            </div>
-                        ))}
                     </div>
                 </div>
 
-                {/* Quarterly KPI Table */}
-                <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
-                    <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-                        <h3 className="font-black text-gray-900 flex items-center gap-2">
-                            <Calendar className="w-4.5 h-4.5 text-red-700" />
-                            Quarterly Performance Breakdown
-                        </h3>
-                        <button onClick={() => handleExport("CSV")} className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-xl text-[10px] font-black text-gray-600 hover:bg-gray-50 transition-all shadow-sm">
-                            {exporting === "CSV" ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} Export CSV
+                {/* ── Detailed Performance Breakdown ───────────────────── */}
+                <div className="bg-white border border-gray-100 rounded-[3rem] shadow-sm overflow-hidden">
+                    <div className="p-8 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                        <div>
+                            <h3 className="font-black text-gray-900 flex items-center gap-2 text-lg">
+                                <Award className="w-5 h-5 text-red-600" />
+                                Operational Scorecard
+                            </h3>
+                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-1">Granular breakdown by administrative division</p>
+                        </div>
+                        <button className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 rounded-2xl text-[10px] font-black text-gray-600 hover:bg-[#B91C1C] hover:text-white hover:border-[#B91C1C] transition-all shadow-sm">
+                            <Download className="w-4 h-4" /> Export CSV Source
                         </button>
                     </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="bg-gray-50/50">
-                                    <th className="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-gray-400 border-b border-gray-100">Metric</th>
-                                    {["Q1 FY26", "Q2 FY26", "Q3 FY26", "Q4 FY26"].map(q => (
-                                        <th key={q} className="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-gray-400 border-b border-gray-100 text-right">{q}</th>
-                                    ))}
-                                    <th className="px-6 py-3 text-[10px] font-black uppercase tracking-widest text-gray-400 border-b border-gray-100 text-right">Trend</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-50">
-                                {quarterlyKpis.map(kpi => {
-                                    const improving = kpi.q4 > kpi.q1;
-                                    return (
-                                        <tr key={kpi.label} className="hover:bg-blue-50/20 transition-colors">
-                                            <td className="px-6 py-4 text-sm font-bold text-gray-900 whitespace-nowrap">{kpi.label}</td>
-                                            {[kpi.q1, kpi.q2, kpi.q3, kpi.q4].map((v, i) => (
-                                                <td key={i} className="px-6 py-4 text-right text-sm font-black text-gray-700">
-                                                    {v}{kpi.unit}
-                                                </td>
-                                            ))}
-                                            <td className="px-6 py-4 text-right">
-                                                <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black ${improving ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
-                                                    {improving ? "↑ Improving" : "↓ Declining"}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                {/* Department Performance */}
-                <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
-                    <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/50">
-                        <h3 className="font-black text-gray-900 flex items-center gap-2">
-                            <Award className="w-4.5 h-4.5 text-red-700" />
-                            Department Performance Scorecard
-                        </h3>
-                    </div>
                     <div className="divide-y divide-gray-50">
-                        {departmentPerf.map((d, idx) => (
-                            <div key={d.dept} className="flex flex-col md:flex-row md:items-center gap-4 px-6 py-5 hover:bg-gray-50/50 transition-colors">
-                                <div className="flex items-center gap-4 min-w-[200px]">
-                                    <div className="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center text-xs font-black text-gray-600">
+                        {DEPT_STATS.map((d, idx) => (
+                            <div key={d.dept} className="flex flex-col lg:flex-row lg:items-center gap-8 px-10 py-6 hover:bg-red-50/20 transition-all group">
+                                <div className="flex items-center gap-6 min-w-[280px]">
+                                    <div className="w-10 h-10 rounded-2xl bg-gray-900 flex items-center justify-center text-xs font-black text-white group-hover:bg-[#B91C1C] transition-colors">
                                         #{idx + 1}
                                     </div>
-                                    <span className="text-sm font-bold text-gray-900">{d.dept}</span>
-                                </div>
-                                <div className="flex-1">
-                                    <div className="flex justify-between mb-1.5">
-                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Resolution Rate</span>
-                                        <span className="text-[10px] font-black text-gray-700">{d.resolved}%</span>
+                                    <div>
+                                        <span className="text-sm font-black text-gray-900 block leading-tight">{d.dept}</span>
+                                        <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Maintained Division</span>
                                     </div>
-                                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                                        <div
-                                            className="h-full rounded-full transition-all duration-1000"
-                                            style={{
-                                                width: `${d.resolved}%`,
-                                                backgroundColor: d.resolved >= 90 ? '#10B981' : d.resolved >= 80 ? '#B91C1C' : '#EF4444'
+                                </div>
+                                <div className="flex-1 space-y-3">
+                                    <div className="flex justify-between items-end">
+                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Institutional Efficiency</span>
+                                        <span className="text-sm font-black text-gray-900">{d.score}%</span>
+                                    </div>
+                                    <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden flex shadow-inner">
+                                        <div 
+                                            className="h-full rounded-full transition-all duration-1000 relative"
+                                            style={{ 
+                                                width: `${d.score}%`, 
+                                                backgroundColor: d.color 
                                             }}
-                                        />
+                                        >
+                                            <div className="absolute inset-0 bg-white/20 animate-shimmer" />
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-6 shrink-0">
+                                <div className="flex items-center gap-10 shrink-0">
                                     <div className="text-center">
-                                        <p className="text-xs font-black text-gray-900">{d.avgTime}</p>
-                                        <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Avg Time</p>
+                                        <p className="text-sm font-black text-gray-900">{d.avg}</p>
+                                        <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Latency</p>
                                     </div>
-                                    <div className="text-center">
-                                        <p className="text-xs font-black text-amber-600">{d.pending}%</p>
-                                        <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Pending</p>
+                                    <div className="min-w-[120px]">
+                                        <span className={`w-full px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 ${
+                                            d.status === 'Elite' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 
+                                            d.status === 'Critical' ? 'bg-red-50 text-red-700 border border-red-100 animate-pulse' : 
+                                            'bg-gray-100 text-gray-600 border border-gray-200'
+                                        }`}>
+                                            {d.status === 'Elite' && <Globe className="w-3 h-3" />}
+                                            {d.status === 'Critical' && <Flame className="w-3 h-3" />}
+                                            {d.status}
+                                        </span>
                                     </div>
-                                    <span className={`px-3 py-1 rounded-xl text-[10px] font-black ${d.resolved >= 90 ? "bg-emerald-50 text-emerald-700" : d.resolved >= 80 ? "bg-red-50 text-red-700" : "bg-rose-50 text-rose-700"}`}>
-                                        {d.resolved >= 90 ? "Excellent" : d.resolved >= 80 ? "Good" : "Needs Attention"}
-                                    </span>
                                 </div>
                             </div>
                         ))}
                     </div>
                 </div>
+
             </div>
         </DashboardLayout>
     );
