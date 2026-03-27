@@ -27,14 +27,6 @@ const ACCOUNTS = [
         desc: "Manage & resolve complaints",
     },
     {
-        role: "officer" as const, label: "Governance Officer", icon: Building2,
-        color: "#1D4ED8", bg: "bg-blue-50", border: "border-blue-200",
-        text: "text-blue-700", glow: "shadow-blue-500/20",
-        email: "liason@govpilot.in", password: "Officer@2026",
-        user: { id: "officer_liason", name: "Suresh Rao", role: "officer" as const, dept: "Governance & Ward Committee" },
-        desc: "Liaison for Ward Committees",
-    },
-    {
         role: "citizen" as const, label: "Citizen", icon: User,
         color: "#059669", bg: "bg-emerald-50", border: "border-emerald-200",
         text: "text-emerald-700", glow: "shadow-emerald-500/20",
