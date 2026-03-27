@@ -1,13 +1,13 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useState } from "react";
 import {
-    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+    XAxis, YAxis, CartesianGrid, Tooltip,
     ResponsiveContainer, RadarChart, Radar, PolarGrid,
     PolarAngleAxis, PolarRadiusAxis, AreaChart, Area
 } from "recharts";
 import {
-    FileBarChart2, Download, Calendar, Filter, ChevronDown,
-    TrendingUp, Clock, CheckCircle2, AlertTriangle, Award,
+    Download, Calendar, ChevronDown,
+    TrendingUp, Clock, CheckCircle2, Award,
     RefreshCw, Sparkles, Zap, Shield, Target,
     Activity, Globe, Flame
 } from "lucide-react";
@@ -61,7 +61,6 @@ export default function Reports() {
         setIsGenerating(true);
         setBriefing(null);
         
-        // Dynamic AI Generation Logic
         setTimeout(() => {
             const summaries: Record<ReportType, string> = {
                 "Executive Summary": "Overall district health is OPTIMAL at 82.1%. Case resolution has outpaced incoming volume by 12% in Q4. Primary growth in AI triage accuracy identified as the key performance driver.",
@@ -71,7 +70,12 @@ export default function Reports() {
             };
             setBriefing(summaries[reportType]);
             setIsGenerating(false);
-        }, 1500);
+            import('sonner').then(({ toast }) => {
+                toast.success("Intelligence Briefing Generated Successfully", {
+                    description: `${reportType} for ${period} compiled.`
+                });
+            });
+        }, 1200);
     };
 
     return (
@@ -109,7 +113,7 @@ export default function Reports() {
                                     onChange={(e) => setPeriod(e.target.value)}
                                     className="pl-14 pr-12 py-4 bg-gray-50 border border-transparent rounded-2xl text-[11px] font-black uppercase tracking-widest text-gray-900 focus:outline-none focus:ring-4 focus:ring-red-500/5 focus:bg-white focus:border-red-100 appearance-none cursor-pointer transition-all min-w-[200px] shadow-sm"
                                 >
-                                    <option>FY 2025–26</option>
+                                    <option>FY 2025-26</option>
                                     <option>Q4 2025</option>
                                     <option>Last 30 Days</option>
                                 </select>
@@ -218,7 +222,7 @@ export default function Reports() {
                                     <Tooltip 
                                         cursor={{ stroke: '#f1f5f9', strokeWidth: 2 }}
                                         contentStyle={{ borderRadius: '24px', border: 'none', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.15)', padding: '20px' }}
-                                        itemStyle={{ fontSize: 12, fontWeight: 900, textTransform: 'uppercase' }}
+                                        itemStyle={{ fontSize: 12, fontWeight: 900 }}
                                     />
                                     <Area type="monotone" dataKey="volume" stroke="#B91C1C" strokeWidth={4} fillOpacity={1} fill="url(#colorVolume)" />
                                     <Area type="monotone" dataKey="resolution" stroke="#111827" strokeWidth={4} strokeDasharray="8 8" fillOpacity={0} />
@@ -238,7 +242,7 @@ export default function Reports() {
                             <ResponsiveContainer width="100%" height="100%">
                                 <RadarChart cx="50%" cy="50%" outerRadius="80%" data={RADAR_DATA}>
                                     <PolarGrid stroke="rgba(255,255,255,0.08)" />
-                                    <PolarAngleAxis dataKey="subject" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 9, fontWeight: 900, textTransform: 'uppercase' }} />
+                                    <PolarAngleAxis dataKey="subject" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 9, fontWeight: 900 }} />
                                     <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} />
                                     <Radar name="GovScore" dataKey="A" stroke="#B91C1C" fill="#B91C1C" fillOpacity={0.2} strokeWidth={4} />
                                 </RadarChart>
