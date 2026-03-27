@@ -75,29 +75,30 @@ export default function FieldPortal() {
                         </div>
                         <button 
                             onClick={() => setShowAllDepts(!showAllDepts)}
-                            className={`flex items-center gap-2 px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border shrink-0 ${
+                            className={`flex items-center gap-3 px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border shrink-0 shadow-sm ${
                                 showAllDepts 
-                                    ? "bg-amber-500 text-white border-amber-400 shadow-lg shadow-amber-900/20" 
-                                    : "bg-white/5 text-white/40 border-white/10 hover:bg-white/10"
+                                    ? "bg-amber-500 text-white border-amber-400 shadow-xl shadow-amber-900/40 scale-105" 
+                                    : "bg-white/5 text-white/40 border-white/10 hover:bg-white/10 hover:border-white/20"
                             }`}
                         >
-                            <Activity className="w-3 h-3" />
-                            {showAllDepts ? "Global View ON" : "Dept View"}
+                            <Activity className={`w-3.5 h-3.5 ${showAllDepts ? "animate-pulse" : ""}`} />
+                            {showAllDepts ? "Global Intelligence" : "Dept Console"}
                         </button>
                         
-                        <div className="flex gap-2 flex-wrap">
+                        <div className="flex gap-2.5 flex-wrap">
                             {(["New", "Assigned", "In Progress", "Resolved", "All"] as const).map(s => (
                                 <button
                                     key={s}
                                     onClick={() => setFilterStatus(s)}
-                                    className={`px-5 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${
+                                    className={`px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border duration-300 ${
                                         filterStatus === s 
-                                            ? "bg-[#B91C1C] text-white shadow-lg shadow-red-900/40" 
-                                            : "bg-white/5 text-white/50 border border-white/10 hover:bg-white/10"
+                                            ? "bg-[#B91C1C] text-white border-[#B91C1C] shadow-2xl shadow-red-900/50 scale-105" 
+                                            : "bg-white/5 text-white/30 border-white/5 hover:bg-white/10 hover:text-white/60 hover:border-white/10"
                                     }`}
                                 >
-                                    {s} {s === "New" && complaints.filter(c => c.status === "New" && (currentUser?.role === "admin" || showAllDepts || c.dept === currentUser?.dept)).length > 0 && (
-                                        <span className="ml-1.5 w-2 h-2 rounded-full bg-white animate-pulse inline-block" />
+                                    {s} 
+                                    {s === "New" && complaints.filter(c => c.status === "New" && (currentUser?.role === "admin" || showAllDepts || c.dept === currentUser?.dept)).length > 0 && (
+                                        <span className="ml-2 w-1.5 h-1.5 rounded-full bg-white animate-ping inline-block" />
                                     )}
                                 </button>
                             ))}
@@ -113,54 +114,89 @@ export default function FieldPortal() {
                             </div>
                         ) : (
                             myTasks.map(task => (
-                                <div 
-                                    key={task.id}
-                                    onClick={() => setSelectedTask(task)}
-                                    className={`bg-white/5 border transition-all cursor-pointer rounded-[2rem] p-6 hover:translate-x-1 ${
-                                        selectedTask?.id === task.id 
-                                            ? "border-[#B91C1C] bg-white/10 shadow-2xl shadow-red-900/20" 
-                                            : "border-white/10 hover:bg-white/10"
-                                    }`}
-                                >
-                                    <div className="flex items-start justify-between gap-4">
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-3 mb-2 flex-wrap">
-                                                <span className="font-mono text-sm font-black text-[#B91C1C] px-2 py-0.5 bg-red-900/20 rounded-md border border-red-900/30">
-                                                    {task.id}
-                                                </span>
-                                                <span className={`text-xs font-black px-3 py-1 rounded-full uppercase tracking-widest ${
-                                                    task.status === "New" ? "bg-purple-500/20 text-purple-400 border border-purple-500/30" :
-                                                    task.status === "Assigned" ? "bg-blue-500/20 text-blue-400" :
-                                                    task.status === "In Progress" ? "bg-amber-500/20 text-amber-400" :
-                                                    "bg-emerald-500/20 text-emerald-400"
-                                                }`}>
-                                                    {task.status}
-                                                </span>
-                                                <span className="text-xs font-black px-2.5 py-1 rounded-md bg-emerald-900/40 text-emerald-400 border border-emerald-900/50 flex items-center gap-1.5">
-                                                    <Activity className="w-3 h-3" /> ONLINE
-                                                </span>
-                                                <span className={`text-xs font-black px-2.5 py-1 rounded-full uppercase tracking-widest ${
-                                                    task.priority === "High" ? "bg-red-500 text-white" :
-                                                    task.priority === "Medium" ? "bg-amber-500 text-white" : "bg-blue-500 text-white"
-                                                }`}>
-                                                    {task.priority}
-                                                </span>
-                                            </div>
-                                            <h3 className="text-xl font-black text-white mb-2">{task.issue}</h3>
-                                            <div className="flex items-center gap-4 text-white/50 text-xs font-bold">
-                                                <div className="flex items-center gap-2">
-                                                    <MapPin className="w-4 h-4 text-[#B91C1C]" /> {task.ward}
+                                    <div 
+                                        key={task.id}
+                                        className={`bg-white/5 border transition-all cursor-pointer rounded-[2.5rem] p-8 hover:translate-x-1 group/card ${
+                                            selectedTask?.id === task.id 
+                                                ? "border-[#B91C1C] bg-white/10 shadow-2xl shadow-red-900/20" 
+                                                : "border-white/10 hover:bg-white/10"
+                                        }`}
+                                    >
+                                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                                            <div className="flex-1 min-w-0" onClick={() => setSelectedTask(task)}>
+                                                <div className="flex items-center gap-3 mb-3 flex-wrap">
+                                                    <span className="font-mono text-[10px] font-black text-[#B91C1C] px-2.5 py-1 bg-red-900/30 rounded-lg border border-red-900/40 tracking-widest">
+                                                        {task.id}
+                                                    </span>
+                                                    <span className={`text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-[0.2em] ${
+                                                        task.status === "New" ? "bg-purple-500/10 text-purple-400 border border-purple-500/20" :
+                                                        task.status === "Assigned" ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" :
+                                                        task.status === "In Progress" ? "bg-amber-500/10 text-amber-500 border border-amber-500/20" :
+                                                        "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                                                    }`}>
+                                                        {task.status}
+                                                    </span>
+                                                    <div className="flex items-center gap-1.5 bg-emerald-500/5 px-2.5 py-1.5 rounded-lg border border-emerald-500/10">
+                                                        <div className="w-1 h-1 rounded-full bg-emerald-500 animate-ping" />
+                                                        <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Live</span>
+                                                    </div>
                                                 </div>
-                                                <div className="flex items-center gap-2 text-white/60">
-                                                    <Clock className="w-4 h-4" /> Filed {task.time}
+                                                <h3 className="text-2xl font-black text-white mb-3 tracking-tight group-hover/card:text-[#B91C1C] transition-colors">{task.issue}</h3>
+                                                <div className="flex items-center gap-6 text-white/40 text-[10px] font-black uppercase tracking-widest">
+                                                    <div className="flex items-center gap-2">
+                                                        <MapPin className="w-4 h-4 text-[#B91C1C]" /> {task.ward}
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <Clock className="w-4 h-4 text-white/20" /> {task.time}
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div className="shrink-0 flex items-center justify-center w-12 h-12 rounded-2xl bg-white/5 border border-white/10 group-hover:bg-[#B91C1C]/10 transition-colors">
-                                            <Navigation className="w-6 h-6 text-white/20 group-hover:text-[#B91C1C]" />
+
+                                            {/* Quick Action Side Buttons */}
+                                            <div className="flex items-center gap-3 shrink-0">
+                                                {task.status === "New" && (
+                                                    <button 
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            if (currentUser?.dept) assignComplaint(task.id, currentUser.dept, currentUser.name || "Officer");
+                                                        }}
+                                                        className="h-14 px-8 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white text-[10px] font-black uppercase tracking-widest shadow-xl shadow-purple-900/20 transition-all active:scale-95 flex items-center gap-2"
+                                                    >
+                                                        <Play className="w-4 h-4 rotate-90" /> Accept
+                                                    </button>
+                                                )}
+                                                {task.status === "Assigned" && (
+                                                    <button 
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleStatusUpdate(task.id, "In Progress", "Strategic deployment started.");
+                                                        }}
+                                                        className="h-14 px-8 rounded-2xl bg-amber-500 hover:bg-amber-400 text-white text-[10px] font-black uppercase tracking-widest shadow-xl shadow-amber-900/20 transition-all active:scale-95 flex items-center gap-2"
+                                                    >
+                                                        <Play className="w-4 h-4" /> Start
+                                                    </button>
+                                                )}
+                                                {task.status === "In Progress" && (
+                                                    <button 
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setSelectedTask(task);
+                                                            // Scrolling to proof section logic could go here
+                                                        }}
+                                                        className="h-14 px-8 rounded-2xl bg-[#B91C1C] hover:bg-red-600 text-white text-[10px] font-black uppercase tracking-widest shadow-xl shadow-red-900/30 transition-all active:scale-95 flex items-center gap-2"
+                                                    >
+                                                        <CheckCircle2 className="w-4 h-4" /> Resolve
+                                                    </button>
+                                                )}
+                                                <button 
+                                                    onClick={(e) => { e.stopPropagation(); setSelectedTask(task); }}
+                                                    className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all text-white/20 hover:text-[#B91C1C]"
+                                                >
+                                                    <Navigation className="w-6 h-6" />
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
                             ))
                         )}
                     </div>
