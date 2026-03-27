@@ -160,72 +160,100 @@ export default function Login() {
         <div className="min-h-screen flex overflow-hidden" style={{ fontFamily: "'Inter', sans-serif" }}>
             {booting && <BootOverlay onDone={handleDone} />}
 
-            {/* ── LEFT — dark brand panel ────────────────────── */}
-            <div className="hidden lg:flex lg:w-[52%] relative flex-col justify-between p-14 bg-[#0A0F1E] overflow-hidden">
+            {/* ── LEFT — Innovative Neural Panel ────────────────────── */}
+            <div className="hidden lg:flex lg:w-[52%] relative flex-col justify-between p-14 bg-[#050A18] overflow-hidden">
+                
+                {/* 1. Deep Mesh Gradient Layer */}
+                <div className="absolute inset-0 z-0">
+                    <div className="absolute top-[-10%] left-[-10%] w-[80%] h-[80%] rounded-full bg-red-600/20 blur-[140px] animate-pulse-slow" />
+                    <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-blue-600/15 blur-[120px] animate-pulse-slow" style={{ animationDelay: '2s' }} />
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-[radial-gradient(circle_at_50%_50%,rgba(13,20,40,0)_0%,rgba(5,10,24,1)_70%)] z-10" />
+                </div>
 
-                {/* Glow blobs */}
-                <div className="absolute top-[-100px] left-[-100px] w-[500px] h-[500px] rounded-full bg-[#C62828] opacity-[0.07] blur-[100px] pointer-events-none animate-blob" />
-                <div className="absolute bottom-[-80px] right-[-80px] w-[400px] h-[400px] rounded-full bg-blue-600 opacity-[0.05] blur-[80px] pointer-events-none animate-blob" style={{ animationDelay: "4s" }} />
-
-                {/* Grid */}
-                <div className="absolute inset-0 opacity-[0.03]" style={{
-                    backgroundImage: "radial-gradient(circle at 1px 1px, #fff 1px, transparent 0)",
-                    backgroundSize: "40px 40px",
+                {/* 2. Neural Grid & Circuit Pattern */}
+                <div className="absolute inset-0 z-[1] opacity-20" style={{
+                    backgroundImage: `linear-gradient(to right, #ffffff08 1px, transparent 1px), linear-gradient(to bottom, #ffffff08 1px, transparent 1px)`,
+                    backgroundSize: '30px 30px'
+                }} />
+                <div className="absolute inset-0 z-[1] opacity-10" style={{
+                    backgroundImage: `radial-gradient(circle at 2px 2px, #C62828 1px, transparent 0)`,
+                    backgroundSize: '60px 60px'
                 }} />
 
+                {/* 3. Floating Binary Nodes (Decorative) */}
+                <div className="absolute inset-0 z-[2] pointer-events-none">
+                    <div className="absolute top-[20%] left-[15%] w-1 h-1 bg-red-500 rounded-full animate-ping" />
+                    <div className="absolute top-[40%] right-[25%] w-1 h-1 bg-blue-400 rounded-full animate-ping" style={{ animationDelay: '1s' }} />
+                    <div className="absolute bottom-[30%] left-[40%] w-1 h-1 bg-white/20 rounded-full animate-ping" style={{ animationDelay: '1.5s' }} />
+                </div>
+
                 {/* Top logo */}
-                <div className="relative z-10 flex items-center gap-3">
-                    <div className="brand-logo">
+                <div className="relative z-20 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#C62828] to-[#1e1e1e] flex items-center justify-center shadow-2xl border border-white/10 group cursor-pointer hover:rotate-12 transition-transform duration-500">
                         <BrainCircuit className="w-5 h-5 text-white" />
                     </div>
                     <div>
                         <span className="font-black text-xl text-white tracking-tight">Co-Pilot</span>
-                        <span className="block text-[9px] font-bold uppercase tracking-widest text-white/30 mt-0.5">District Governance AI</span>
+                        <span className="block text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mt-0.5">District Intelligence</span>
                     </div>
                 </div>
 
                 {/* Center hero text */}
-                <div className="relative z-10 space-y-8">
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-white/40">
-                        <Sparkles className="w-3 h-3 text-[#C62828]" />
-                        AI-Powered Governance
+                <div className="relative z-20 space-y-10">
+                    <div className="group w-fit">
+                        <div className="inline-flex items-center gap-3 px-4 py-2 rounded-2xl bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-[#B91C1C] backdrop-blur-md shadow-xl">
+                            <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+                            Active Neural Governance
+                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse ml-1" />
+                        </div>
                     </div>
 
-                    <div>
-                        <h1 className="text-5xl font-black text-white leading-[1.1] tracking-tight">
-                            Smarter<br />
-                            <span style={{
-                                background: "linear-gradient(135deg, #C62828, #EF5350, #F59E0B)",
-                                WebkitBackgroundClip: "text",
-                                WebkitTextFillColor: "transparent",
-                            }}>Governance</span><br />
-                            Together.
+                    <div className="space-y-4">
+                        <h1 className="text-[5rem] font-black text-white leading-[0.9] tracking-tighter">
+                            District<br />
+                            <span className="relative inline-block">
+                                <span className="relative z-10" style={{
+                                    background: "linear-gradient(135deg, #FF3D3D 0%, #C62828 50%, #7F1D1D 100%)",
+                                    WebkitBackgroundClip: "text",
+                                    WebkitTextFillColor: "transparent",
+                                }}>Co-Pilot</span>
+                                <div className="absolute -inset-x-4 -inset-y-2 bg-red-600/10 blur-2xl -z-10 rounded-full" />
+                            </span>
                         </h1>
-                        <p className="text-white/40 text-base font-medium mt-5 leading-relaxed max-w-md">
-                            One platform for citizens, officers, and administrators — manage complaints, track progress, and serve the constituency better.
+                        <p className="text-white/40 text-lg font-medium leading-relaxed max-w-md tracking-tight">
+                            Synthesizing real-time district data into actionable governance insights for a frictionless constituency experience.
                         </p>
                     </div>
 
-                    {/* Feature pills */}
-                    {[
-                        { icon: MessageSquare, label: "Real-time complaint tracking" },
-                        { icon: Shield,        label: "Role-based secure access" },
-                        { icon: Sparkles,      label: "AI-powered categorisation" },
-                    ].map(({ icon: Icon, label }) => (
-                        <div key={label} className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/8 flex items-center justify-center shrink-0">
-                                <Icon className="w-4 h-4 text-white/40" />
+                    {/* Interactive Feature Stack */}
+                    <div className="space-y-6 pt-4">
+                        {[
+                            { icon: MessageSquare, label: "Real-time AI Sentiment Analysis", color: "text-red-400" },
+                            { icon: Shield,        label: "Secure Multi-Role Protocol (G-Auth)", color: "text-blue-400" },
+                            { icon: Sparkles,      label: "Automated Evidence Categorisation", color: "text-amber-400" },
+                        ].map(({ icon: Icon, label, color }) => (
+                            <div key={label} className="group flex items-center gap-5 cursor-default">
+                                <div className="w-11 h-11 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0 group-hover:bg-white/10 group-hover:border-white/20 transition-all duration-300 backdrop-blur-sm">
+                                    <Icon className={`w-5 h-5 ${color} opacity-60 group-hover:opacity-100 transition-opacity`} />
+                                </div>
+                                <div>
+                                    <span className="text-sm text-white/40 font-bold group-hover:text-white/80 transition-colors tracking-tight">{label}</span>
+                                    <div className="h-0.5 w-0 group-hover:w-full bg-gradient-to-r from-red-600 to-transparent transition-all duration-500 rounded-full mt-1" />
+                                </div>
                             </div>
-                            <span className="text-sm text-white/50 font-medium">{label}</span>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
 
                 {/* Bottom bar */}
-                <div className="relative z-10">
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-white/15">
-                        District Council · Complaint Management System · 2026
-                    </p>
+                <div className="relative z-20">
+                    <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.25em] text-white/20">
+                        <span>Node Status: <span className="text-emerald-500">OPTIMAL</span></span>
+                        <div className="w-1 h-1 rounded-full bg-white/10" />
+                        <span>Latency: <span className="text-blue-400">12ms</span></span>
+                        <div className="w-1 h-1 rounded-full bg-white/10" />
+                        <span>v2.0.4-LTS</span>
+                    </div>
                 </div>
             </div>
 
