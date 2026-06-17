@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { useComplaints } from "@/context/ComplaintsContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { analyzeComplaint } from "@/services/aiService";
 import {
     User, Phone, MapPin, AlertTriangle,
@@ -9,6 +10,7 @@ import {
     LogOut, FileText, Search, MicOff, Hash, Building2, Sparkles, Brain
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import LanguageToggle from '@/components/LanguageToggle';
 
 type Step = "details" | "issue" | "location" | "preview" | "submitting" | "success";
 
@@ -31,6 +33,7 @@ const LOCALITIES: Record<string, string[]> = {
 
 export default function CitizenPortal() {
     const { addComplaint, currentUser, logout } = useComplaints();
+    const { lang } = useLanguage();
     const navigate = useNavigate();
     const [step, setStep] = useState<Step>("details");
     const [ticketId, setTicketId] = useState("");
@@ -115,6 +118,7 @@ export default function CitizenPortal() {
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
     const audioInputRef = useRef<HTMLInputElement>(null);
+    const speechRecRef = useRef<any>(null);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
@@ -171,6 +175,17 @@ export default function CitizenPortal() {
         }
     };
 
+    // Helper: fetch from proxy first, fallback to direct Nominatim
+    const geoFetch = async (path: string): Promise<Response> => {
+        try {
+            const proxyRes = await fetch(`/geo-api${path}`, { headers: { "Accept-Language": "en" } });
+            if (proxyRes.ok) return proxyRes;
+        } catch { /* proxy unavailable, try direct */ }
+        return fetch(`https://nominatim.openstreetmap.org${path}`, {
+            headers: { "Accept-Language": "en", "User-Agent": "CoPilot-District-Gov-v1.0" }
+        });
+    };
+
     const handleSearchLocation = async () => {
         if (!mapQuery.trim()) return;
         setIsSearching(true);
@@ -180,7 +195,6 @@ export default function CitizenPortal() {
         // 1. Check if the query itself matches an internal ward or locality
         const { matchedWard, matchedArea, found } = findInternalMatch(mapQuery);
         if (found) {
-            // Simulated coordinates for Bangalore/District HQ areas (could be more specific per ward if needed)
             const baseCoords = { lat: 12.9716, lng: 77.5946 };
             setForm(f => ({
                 ...f,
@@ -189,24 +203,16 @@ export default function CitizenPortal() {
                 ward: matchedWard,
                 area: matchedArea
             }));
+            setMapQuery(`${matchedArea}, ${matchedWard}, Bengaluru`);
             setIsSearching(false);
             return;
         }
 
         try {
-            const res = await fetch(
-                `/geo-api/search?q=${encodeURIComponent(mapQuery)}&format=json&limit=1&countrycodes=in`,
-                { headers: { "Accept-Language": "en" } }
-            );
+            const res = await geoFetch(`/search?q=${encodeURIComponent(mapQuery)}&format=json&limit=1&countrycodes=in`);
             if (res.status === 429) {
-                // If rate limited, just use the best internal match we found
                 const { matchedWard, matchedArea } = findBestMatch(mapQuery);
-                setForm(f => ({
-                    ...f,
-                    location: mapQuery,
-                    ward: matchedWard,
-                    area: matchedArea
-                }));
+                setForm(f => ({ ...f, location: mapQuery, ward: matchedWard, area: matchedArea }));
                 return;
             }
             const data = await res.json();
@@ -225,14 +231,14 @@ export default function CitizenPortal() {
                     ward: matchedWard,
                     area: matchedArea
                 }));
+                setMapQuery(name);
             } else {
-                alert("Location not found. Please try entering a known street or landmark name.");
+                alert("Location not found. Please try a known street or landmark name.");
             }
         } catch (error) {
             console.error("Search error:", error);
-            // On error, try one last check for best match
             const { matchedWard, matchedArea } = findBestMatch(mapQuery);
-            setForm(f => ({ ...f, ward: matchedWard, area: matchedArea }));
+            setForm(f => ({ ...f, location: mapQuery, ward: matchedWard, area: matchedArea }));
         } finally {
             setIsSearching(false);
         }
@@ -263,10 +269,7 @@ export default function CitizenPortal() {
         }
 
         try {
-            const res = await fetch(
-                `/geo-api/search?q=${encodeURIComponent(q)}&format=json&limit=5&countrycodes=in`,
-                { headers: { "Accept-Language": "en" } }
-            );
+            const res = await geoFetch(`/search?q=${encodeURIComponent(q)}&format=json&limit=5&countrycodes=in`);
             const data = await res.json();
             setSuggestions(data);
             setShowSuggestions(true);
@@ -337,12 +340,17 @@ export default function CitizenPortal() {
         setIsDetecting(true);
         if ("geolocation" in navigator) {
             const reverseGeocode = async (lat: number, lon: number) => {
+                // First update the map immediately with raw coords
+                setForm(f => ({
+                    ...f,
+                    coords: { lat, lng: lon },
+                    location: `${lat.toFixed(4)}° N, ${lon.toFixed(4)}° E`
+                }));
+                setMapQuery(`${lat.toFixed(4)}, ${lon.toFixed(4)}`);
+
                 try {
-                    const res = await fetch(
-                        `/geo-api/reverse?lat=${lat}&lon=${lon}&format=json`,
-                        { headers: { 'Accept-Language': 'en' } }
-                    );
-                    if (!res.ok) throw new Error("API Limit reached");
+                    const res = await geoFetch(`/reverse?lat=${lat}&lon=${lon}&format=json`);
+                    if (!res.ok) throw new Error("API error");
                     const data = await res.json();
                     const addr = data.display_name ?? "";
                     const parts = addr.split(",");
@@ -356,24 +364,21 @@ export default function CitizenPortal() {
                         ward: matchedWard,
                         area: matchedArea
                     }));
-                    setMapQuery(shortName);
+                    setMapQuery(shortName || addr);
                 } catch {
-                    setForm(f => ({
-                        ...f,
-                        location: `${lat.toFixed(4)}° N, ${lon.toFixed(4)}° E`,
-                        coords: { lat, lng: lon }
-                    }));
+                    // Coords already set above — keep them
                 }
                 setIsDetecting(false);
             };
 
+            let timeoutId: ReturnType<typeof setTimeout>;
+            let settled = false;
+
             const fallback = () => {
-                const randoms = [
-                    { lat: 11.0168, lng: 76.9558, loc: "Coimbatore, Tamil Nadu, India", ward: "Ward 07", area: "Whitefield" },
-                    { lat: 12.9716, lng: 77.5946, loc: "MG Road, Bengaluru, Karnataka, India", ward: "Ward 05", area: "MG Road" },
-                    { lat: 12.9279, lng: 77.6271, loc: "Koramangala, Bengaluru, India", ward: "Ward 02", area: "Koramangala 1st Block" }
-                ];
-                const pick = randoms[Math.floor(Math.random() * randoms.length)];
+                if (settled) return;
+                settled = true;
+                // Use a sensible demo location so the map always shows something
+                const pick = { lat: 12.9716, lng: 77.5946, loc: "MG Road, Bengaluru, Karnataka, India", ward: "Ward 05", area: "MG Road" };
                 setForm(f => ({
                     ...f,
                     coords: { lat: pick.lat, lng: pick.lng },
@@ -387,27 +392,44 @@ export default function CitizenPortal() {
 
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
+                    settled = true;
+                    clearTimeout(timeoutId);
                     const { latitude: lat, longitude: lon } = pos.coords;
                     reverseGeocode(lat, lon);
                 },
-                () => fallback(),
-                { timeout: 5000, enableHighAccuracy: true }
+                (err) => {
+                    console.warn("Geolocation error:", err.message);
+                    clearTimeout(timeoutId);
+                    fallback();
+                },
+                { timeout: 15000, enableHighAccuracy: true, maximumAge: 60000 }
             );
-            setTimeout(() => { setIsDetecting(p => { if (p) fallback(); return false; }); }, 6000);
+            timeoutId = setTimeout(fallback, 18000);
         } else {
+            // No geolocation API available
+            setForm(f => ({
+                ...f,
+                coords: { lat: 12.9716, lng: 77.5946 },
+                location: "MG Road, Bengaluru, Karnataka, India",
+                ward: "Ward 05",
+                area: "MG Road"
+            }));
+            setMapQuery("MG Road, Bengaluru, Karnataka, India");
             setIsDetecting(false);
         }
     };
 
     const handleSpeakComplaint = () => {
         if (isListening) {
+            if (speechRecRef.current) speechRecRef.current.stop();
             setIsListening(false);
             return;
         }
         if (typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
             const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
             const recognition = new SR();
-            recognition.lang = 'en-IN';
+            speechRecRef.current = recognition;
+            recognition.lang = lang === 'ta' ? 'ta-IN' : 'en-IN';
             recognition.interimResults = false;
             setIsListening(true);
             recognition.onresult = (event: any) => {
@@ -447,18 +469,21 @@ export default function CitizenPortal() {
                             <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Citizen Submission Portal</p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <button onClick={() => navigate("/citizen")}
-                            className="flex items-center gap-2 text-xs font-bold text-gray-500 hover:text-gray-900 transition-colors bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
-                            <ArrowLeft className="w-4 h-4" /> Back to Dashboard
-                        </button>
-                        <button
-                            onClick={() => { logout(); navigate("/"); }}
-                            className="flex items-center gap-2 text-xs font-black text-red-600 hover:text-white hover:bg-red-600 transition-all bg-red-50 px-4 py-2 rounded-xl border border-red-100 uppercase tracking-widest"
-                        >
-                            <LogOut className="w-4 h-4" /> Sign Out
-                        </button>
-                    </div>
+                            <div className="flex items-center gap-3">
+                                <button onClick={() => navigate("/citizen")}
+                                    className="flex items-center gap-2 text-xs font-bold text-gray-500 hover:text-gray-900 transition-colors bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
+                                    <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+                                </button>
+                                                <div className="flex items-center gap-3">
+                                                    <LanguageToggle />
+                                                </div>
+                                <button
+                                    onClick={() => { logout(); navigate("/"); }}
+                                    className="flex items-center gap-2 text-xs font-black text-red-600 hover:text-white hover:bg-red-600 transition-all bg-red-50 px-4 py-2 rounded-xl border border-red-100 uppercase tracking-widest"
+                                >
+                                    <LogOut className="w-4 h-4" /> Sign Out
+                                </button>
+                            </div>
                 </div>
             </header>
 

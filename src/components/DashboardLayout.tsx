@@ -7,6 +7,7 @@ import {
     User, Building2, PlusCircle, Activity, ArrowRight, BarChart2, Megaphone,
     Map, Users2
 } from "lucide-react";
+import AdminSlide from "./AdminSlide";
 import { useState, useEffect } from "react";
 import { useComplaints } from "@/context/ComplaintsContext";
 
@@ -35,7 +36,6 @@ const ADMIN_NAV: NavGroup[] = [
     {
         group: "Overview", items: [
             { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-            { icon: Map, label: "Heatmap", path: "/heatmap" },
         ]
     },
     {
@@ -55,8 +55,10 @@ const ADMIN_NAV: NavGroup[] = [
         group: "Comms & AI", items: [
             { icon: Megaphone, label: "Announcements", path: "/announcements" },
             { icon: Volume2, label: "Speech AI", path: "/speech-ai" },
-            { icon: Layers, label: "War Room", path: "/interactive-dashboard" },
-            { icon: Zap, label: "Impact Sim", path: "/policy-simulator" },
+            { icon: Calendar, label: "Meetings", path: "/meetings" },
+            { icon: Volume2, label: "Speech Studio", path: "/speech-studio" },
+            { icon: Megaphone, label: "Media Queue", path: "/media-queue" },
+            { icon: Zap, label: "AI Co-Pilot", path: "/ai-copilot" },
             { icon: FolderOpen, label: "Documents", path: "/documents" },
             { icon: Calendar, label: "Schedule", path: "/schedule" },
         ]
@@ -109,6 +111,7 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
     const navigate = useNavigate();
     const { currentUser, logout, complaints, notifications, readNotification } = useComplaints();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [adminSlideOpen, setAdminSlideOpen] = useState(false);
     const [showNotifs, setShowNotifs] = useState(false);
     const [lastNotif, setLastNotif] = useState<any>(null);
     const [showToast, setShowToast] = useState(false);
@@ -279,6 +282,13 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
                             <Menu className="w-5 h-5" />
                         </button>
 
+                        {role === 'admin' && (
+                            <button title="Admin Menu" onClick={() => setAdminSlideOpen(true)} className="hidden md:inline-flex items-center gap-2 px-3 py-1 rounded-lg hover:bg-gray-50">
+                                <Layers className="w-5 h-5 text-gray-400" />
+                                <span className="text-sm text-gray-600">Admin</span>
+                            </button>
+                        )}
+
                         {role !== "citizen" ? (
                             <div className="relative hidden md:block">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -421,6 +431,9 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
                         </button>
                     </div>
                 </header>
+
+                {/* Admin left slide */}
+                <AdminSlide open={adminSlideOpen} onClose={() => setAdminSlideOpen(false)} navGroups={navGroups} />
 
                 {/* Page Content */}
                 <div className="flex-1 overflow-y-auto scroll-smooth relative bg-[#060912]">

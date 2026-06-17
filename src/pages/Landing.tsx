@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { 
     User, Building2, 
     BrainCircuit, Sparkles, 
-    ArrowRight, CheckCircle2, Zap, LayoutDashboard, Shield
+    ArrowRight, CheckCircle2, Zap, LayoutDashboard, Shield, Mic
 } from "lucide-react";
 
 export default function Landing() {
@@ -41,6 +41,17 @@ export default function Landing() {
             border: "border-red-100",
             count: "Admin Control",
             link: "/dashboard"
+        },
+        {
+            id: "voice",
+            title: "Citizen Voice",
+            desc: "Audio-first complaint registration. Simply speak to register complaints easily in Tamil & English.",
+            icon: Mic,
+            color: "text-amber-600",
+            bg: "bg-amber-50",
+            border: "border-amber-100",
+            count: "100% Voice Operated",
+            link: "/village-voice"
         }
     ];
 
@@ -102,14 +113,14 @@ export default function Landing() {
                 </div>
 
                 {/* Entry Points Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {portals.map((portal, idx) => (
                         <div key={portal.id} 
                             onClick={() => navigate(portal.link)}
                             style={{ animationDelay: `${idx * 150}ms` }}
-                            className={`group aspect-[4/5] bg-white border border-gray-100 rounded-[3rem] p-10 flex flex-col justify-between hover:shadow-2xl hover:-translate-y-2 transition-all cursor-pointer relative overflow-hidden animate-in fade-in zoom-in-95 duration-700`}
+                            className={`group bg-white border border-gray-100 rounded-[3rem] p-8 flex flex-col justify-between hover:shadow-2xl hover:-translate-y-2 transition-all cursor-pointer relative overflow-hidden animate-in fade-in zoom-in-95 duration-700`}
                         >
-                            <div className={`absolute top-0 right-0 w-48 h-48 ${portal.id === 'admin' ? 'bg-red-500/5' : portal.id === 'officer' ? 'bg-blue-500/5' : 'bg-emerald-500/5'} blur-[80px] pointer-events-none group-hover:scale-150 transition-transform duration-700`} />
+                            <div className={`absolute top-0 right-0 w-48 h-48 ${portal.id === 'admin' ? 'bg-red-500/5' : portal.id === 'officer' ? 'bg-blue-500/5' : portal.id === 'voice' ? 'bg-amber-500/5' : 'bg-emerald-500/5'} blur-[80px] pointer-events-none group-hover:scale-150 transition-transform duration-700`} />
                             
                             <div>
                                 <div className={`w-16 h-16 rounded-3xl ${portal.bg} flex items-center justify-center mb-8 border ${portal.border} shadow-sm group-hover:scale-110 group-hover:rotate-6 transition-transform`}>

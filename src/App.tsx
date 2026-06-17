@@ -29,8 +29,16 @@ import Heatmap from "./pages/Heatmap";
 import PeopleManagement from "./pages/PeopleManagement";
 import FieldPortal from "./pages/FieldPortal";
 import Landing from "./pages/Landing";
+import AdminPanel from "./pages/AdminPanel";
 import AIAssistant from "./components/AIAssistant";
 import CommandPalette from "./components/CommandPalette";
+import VoiceAssistant from "./components/VoiceAssistant";
+import Meetings from "./pages/Meetings";
+import MediaQueue from "./pages/MediaQueue";
+import Constituency from "./pages/Constituency";
+import AICoPilot from "./pages/AICoPilot";
+import SpeechStudio from "./pages/SpeechStudio";
+import VillageVoicePortal from "./pages/VillageVoicePortal";
 import { Toaster } from 'sonner';
 
 // 🔒 Route Guard - redirect to /login if not authenticated
@@ -60,13 +68,19 @@ function App() {
         <Routes>
           {/* Public pages */}
           <Route path="/" element={<Landing />} />
+          <Route path="/meetings" element={<ProtectedRoute><Meetings /></ProtectedRoute>} />
+          <Route path="/media-queue" element={<ProtectedRoute><MediaQueue /></ProtectedRoute>} />
+          <Route path="/constituency" element={<ProtectedRoute><Constituency /></ProtectedRoute>} />
+          <Route path="/ai-copilot" element={<ProtectedRoute><AICoPilot /></ProtectedRoute>} />
+          <Route path="/speech-studio" element={<ProtectedRoute><SpeechStudio /></ProtectedRoute>} />
           <Route path="/login" element={<Login />} />
           <Route path="/submit-complaint" element={<CitizenPortal />} />
+          <Route path="/village-voice" element={<VillageVoicePortal />} />
 
           {/* Protected pages */}
           <Route path="/citizen" element={<ProtectedRoute><CitizenModule /></ProtectedRoute>} />
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/field-portal" element={<ProtectedRoute><FieldPortal /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/interactive-dashboard" element={<ProtectedRoute><InteractiveDashboard /></ProtectedRoute>} />
           <Route path="/brainspark" element={<ProtectedRoute><BrainSpark /></ProtectedRoute>} />
           <Route path="/study-buddy" element={<ProtectedRoute><StudyBuddy /></ProtectedRoute>} />
@@ -88,11 +102,13 @@ function App() {
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/heatmap" element={<ProtectedRoute><Heatmap /></ProtectedRoute>} />
           <Route path="/people" element={<ProtectedRoute><PeopleManagement /></ProtectedRoute>} />
+          <Route path="/admin-panel" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
 
         {/* Global overlays */}
         <AIAssistant />
+        <VoiceAssistant />
         <CommandPalette />
       </BrowserRouter>
     </ComplaintsProvider>

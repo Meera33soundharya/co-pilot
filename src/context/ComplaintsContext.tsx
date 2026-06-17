@@ -112,7 +112,20 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
     const [currentUser, setCurrentUser] = useState<CurrentUser | null>(() => {
         try {
             const saved = sessionStorage.getItem("co_pilot_user");
-            return saved ? (JSON.parse(saved) as CurrentUser) : null;
+            if (saved) return JSON.parse(saved) as CurrentUser;
+
+            // DEV: Auto-login a demo admin when running on localhost for faster iteration
+            try {
+                const host = window.location.hostname;
+                if (host === 'localhost' || host === '127.0.0.1') {
+                    const demo: CurrentUser = { id: 'u-admin', name: 'District Admin', role: 'admin' };
+                    console.info('Dev auto-login as demo admin user');
+                    return demo;
+                }
+            } catch {
+                // ignore in non-browser environments
+            }
+            return null;
         } catch {
             return null;
         }
@@ -203,7 +216,7 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
             offAnnouncements();
             window.removeEventListener("storage", handleStorage);
         };
-    }, []);
+    }, [currentUser]);
 
     const login = useCallback((user: CurrentUser) => setCurrentUser(user), []);
     const logout = useCallback(() => setCurrentUser(null), []);
