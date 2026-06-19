@@ -12,7 +12,7 @@ export default function Landing() {
         {
             id: "citizen",
             title: "Citizen Portal",
-            desc: "அம்மா, அப்பா... Everyone can file complaints easy-aa. Instant tracking included.",
+            desc: "File public grievances and track resolution status in real time with our secure digital portal.",
             icon: User,
             color: "text-emerald-500",
             bg: "bg-emerald-50",
@@ -23,7 +23,7 @@ export default function Landing() {
         {
             id: "officer",
             title: "Field Officer",
-            desc: "Tier-1 problems priority-aa solve panna. Update site photos directly in portal.",
+            desc: "Access field assignments, report resolution progress, and upload verification photographs directly.",
             icon: Building2,
             color: "text-blue-500",
             bg: "bg-blue-50",
@@ -44,8 +44,8 @@ export default function Landing() {
         },
         {
             id: "voice",
-            title: "Citizen Voice",
-            desc: "Audio-first complaint registration. Simply speak to register complaints easily in Tamil & English.",
+            title: "Citizen Voice (Speech Portal)",
+            desc: "Simplified audio-first complaint lodging for differently-abled or illiterate citizens. Support for English & Tamil speech.",
             icon: Mic,
             color: "text-amber-600",
             bg: "bg-amber-50",

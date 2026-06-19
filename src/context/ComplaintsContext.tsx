@@ -223,9 +223,7 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
 
     // Role-based filtering
     const complaints: Complaint[] = (() => {
-        if (!currentUser || currentUser.role === "admin") return allComplaints;
-        if (currentUser.role === "officer" && currentUser.dept)
-            return allComplaints.filter(c => c.dept === currentUser.dept);
+        if (!currentUser || currentUser.role === "admin" || currentUser.role === "officer") return allComplaints;
         if (currentUser.role === "citizen") {
             // Match by citizenId OR citizen name so public-portal submissions also appear
             const cid = currentUser.citizenId;

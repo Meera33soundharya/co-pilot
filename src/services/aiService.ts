@@ -20,6 +20,40 @@ export interface AIResult {
     reasoning: string; // ✨ Explainable AI (XAI) Reasoning
 }
 
+
+const CATEGORY_MAP: Record<string, Category> = {
+    "water": "Water Supply",
+    "water supply": "Water Supply",
+    "electricity": "Electricity",
+    "roads": "Roads & Infrastructure",
+    "roads & infrastructure": "Roads & Infrastructure",
+    "sanitation": "Sanitation",
+    "waste": "Sanitation",
+    "public health": "Public Health",
+    "parks": "Parks & Recreation",
+    "parks & recreation": "Parks & Recreation",
+    "drainage": "Drainage",
+    "safety": "Enforcement",
+    "enforcement": "Enforcement",
+    "education": "Education",
+    "ward committee & governance": "Ward Committee & Governance",
+    "other": "Other"
+};
+
+function normalizeCategory(rawCat: string): Category {
+    if (!rawCat) return "Other";
+    const normalized = rawCat.toLowerCase().trim();
+    if (normalized in CATEGORY_MAP) {
+        return CATEGORY_MAP[normalized];
+    }
+    for (const [key, val] of Object.entries(CATEGORY_MAP)) {
+        if (normalized.includes(key) || key.includes(normalized)) {
+            return val;
+        }
+    }
+    return "Other";
+}
+
 export async function analyzeComplaint(issue: string, description: string): Promise<AIResult> {
     console.log(`🧠 GovPilot Intelligence: Analyzing complaint via ${MODEL_NAME}...`);
     
@@ -36,7 +70,7 @@ export async function analyzeComplaint(issue: string, description: string): Prom
                         Issue: "${issue}"
                         Description: "${description}"
 
-                        Categories: ["Roads", "Water", "Electricity", "Sanitation", "Drainage", "Waste", "Public Health", "Safety", "Parks", "Other"]
+                        Categories: ["Water Supply", "Electricity", "Roads & Infrastructure", "Sanitation", "Public Health", "Parks & Recreation", "Drainage", "Enforcement", "Education", "Ward Committee & Governance", "Other"]
                         Priorities: ["High", "Medium", "Low"]
 
                         Required JSON format:
@@ -66,7 +100,7 @@ export async function analyzeComplaint(issue: string, description: string): Prom
         const data = await response.json();
         const aiResponse = JSON.parse(data.candidates[0].content.parts[0].text);
         
-        const cat = aiResponse.category as Category;
+        const cat = normalizeCategory(aiResponse.category);
         const dept = CATEGORY_DEPT[cat] || "General Administration";
 
         return {
@@ -96,3 +130,4 @@ export async function analyzeComplaint(issue: string, description: string): Prom
         };
     }
 }
+

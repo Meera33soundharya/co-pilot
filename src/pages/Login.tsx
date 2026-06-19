@@ -4,7 +4,7 @@ import { useComplaints } from "@/context/ComplaintsContext";
 import {
     Eye, EyeOff, CheckCircle2, Lock, Mail,
     ArrowRight, Loader2, Shield, User, Building2,
-    MessageSquare, BrainCircuit, Sparkles, ChevronRight
+    MessageSquare, BrainCircuit, Sparkles, ChevronRight, Mic
 } from "lucide-react";
 import type { CurrentUser } from "@/context/ComplaintsContext";
 
@@ -387,16 +387,28 @@ export default function Login() {
                             </button>
                         </form>
 
-                        {/* Citizen public portal link */}
-                        <div className="mt-6 pt-6 border-t border-gray-100">
+                        {/* Citizen public portal options */}
+                        <div className="mt-6 pt-6 border-t border-gray-100 space-y-3">
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 text-center mb-1">Citizen Services (No Account Required)</p>
+                            
                             <a
                                 href="/submit-complaint"
                                 id="citizen-portal-link"
-                                className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-2xl border-2 border-dashed border-gray-200 text-gray-500 text-xs font-black uppercase tracking-widest hover:border-[#C62828]/40 hover:text-[#C62828] hover:bg-red-50/50 transition-all group"
+                                className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl bg-white border border-gray-200 text-gray-800 text-xs font-black uppercase tracking-widest hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm group"
                             >
-                                <MessageSquare className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                                Submit a Complaint — Public Portal
-                                <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                                <MessageSquare className="w-4 h-4 text-[#B91C1C] group-hover:scale-110 transition-transform" />
+                                Submit Complaint (Digital Portal)
+                                <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+                            </a>
+
+                            <a
+                                href="/village-voice"
+                                id="voice-portal-link"
+                                className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl bg-[#B91C1C] text-white text-xs font-black uppercase tracking-widest hover:bg-[#991717] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md group"
+                            >
+                                <Mic className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
+                                Speak to Register (Simplified Voice Portal)
+                                <ChevronRight className="w-3.5 h-3.5 text-white/70 group-hover:translate-x-0.5 transition-transform" />
                             </a>
                         </div>
                     </div>

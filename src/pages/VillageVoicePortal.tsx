@@ -97,7 +97,12 @@ export default function VillageVoicePortal() {
       if (onEnd) onEnd();
       return;
     }
-    window.speechSynthesis.cancel();
+    
+    try {
+      window.speechSynthesis.cancel();
+    } catch (e) {
+      console.warn("Speech Synthesis cancel error", e);
+    }
     
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = LANGUAGES[lang].code;
@@ -107,11 +112,31 @@ export default function VillageVoicePortal() {
     const specificVoice = voices.find(v => v.lang.startsWith(LANGUAGES[lang].code.split('-')[0]) && (v.name.includes('Google') || v.name.includes('Online')));
     if (specificVoice) utterance.voice = specificVoice;
     
-    if (onEnd) {
-      utterance.onend = onEnd;
-    }
+    let called = false;
+    const safeOnEnd = () => {
+      if (!called) {
+        called = true;
+        if (onEnd) onEnd();
+      }
+    };
+
+    utterance.onend = safeOnEnd;
+    utterance.onerror = safeOnEnd;
+
+    // Safety timeout in case the speech synthesis API hangs or gets blocked by the browser
+    const timeoutId = setTimeout(() => {
+      safeOnEnd();
+    }, 6000);
+
+    utterance.addEventListener('end', () => clearTimeout(timeoutId));
+    utterance.addEventListener('error', () => clearTimeout(timeoutId));
     
-    window.speechSynthesis.speak(utterance);
+    try {
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {
+      console.error("Speech Synthesis speak error", e);
+      safeOnEnd();
+    }
   };
 
   const startStep = (s: number) => {
@@ -222,6 +247,33 @@ export default function VillageVoicePortal() {
       // If we are idle, just start the current step over
       startStep(stepRef.current);
     }
+  };
+
+  const simulateSpeech = () => {
+    const currentStep = stepRef.current;
+    
+    // Stop active recognition
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.abort();
+      } catch (e) {}
+    }
+
+    setStatus("waiting");
+
+    const namePhrase = lang === 'TA' ? "அரவிந்த்குமார்" : "Aravindkumar";
+    const issuePhrase = lang === 'TA' ? "குடிநீர் குழாய் உடைந்து தண்ணீர் வீணாகிறது" : "Water pipe leakage";
+    const wardPhrase = lang === 'TA' ? "வார்டு 2" : "Ward 02";
+
+    let text = "";
+    if (currentStep === 0) text = namePhrase;
+    else if (currentStep === 1) text = issuePhrase;
+    else if (currentStep === 2) text = wardPhrase;
+
+    setTranscript(text);
+    transcriptRef.current = text;
+    
+    processTranscriptStep(text);
   };
 
   const TEXTS = {
@@ -385,6 +437,24 @@ export default function VillageVoicePortal() {
             </div>
           )}
         </div>
+
+        {status !== "success" && status !== "processing" && (
+          <div className="flex flex-col items-center gap-4 mt-8 animate-in fade-in duration-500">
+            <button 
+              onClick={simulateSpeech}
+              className="px-8 py-3.5 bg-white/20 hover:bg-white/40 text-[#2B4B6F] hover:text-[#1F3752] rounded-2xl font-black uppercase tracking-widest text-xs transition-all cursor-pointer shadow-sm"
+            >
+              {lang === 'TA' ? "குரலை உருவகப்படுத்து (Simulate Speech)" : "Simulate Speech (Demo)"}
+            </button>
+            
+            <button 
+              onClick={() => navigate("/submit-complaint")}
+              className="text-[#3A5D7C] hover:text-[#2B4B6F] text-xs font-black uppercase tracking-widest underline decoration-2 underline-offset-4 cursor-pointer"
+            >
+              {lang === 'TA' ? "விசைப்பலகை மூலம் எழுதவும் (Type Instead)" : "Type Complaint Instead"}
+            </button>
+          </div>
+        )}
 
       </main>
     </div>

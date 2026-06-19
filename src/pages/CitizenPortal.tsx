@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { useComplaints } from "@/context/ComplaintsContext";
-import { useLanguage } from "@/context/LanguageContext";
+
 import { analyzeComplaint } from "@/services/aiService";
 import {
     User, Phone, MapPin, AlertTriangle,
@@ -10,7 +10,7 @@ import {
     LogOut, FileText, Search, MicOff, Hash, Building2, Sparkles, Brain
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import LanguageToggle from '@/components/LanguageToggle';
+
 
 type Step = "details" | "issue" | "location" | "preview" | "submitting" | "success";
 
@@ -33,7 +33,7 @@ const LOCALITIES: Record<string, string[]> = {
 
 export default function CitizenPortal() {
     const { addComplaint, currentUser, logout } = useComplaints();
-    const { lang } = useLanguage();
+
     const navigate = useNavigate();
     const [step, setStep] = useState<Step>("details");
     const [ticketId, setTicketId] = useState("");
@@ -474,9 +474,7 @@ export default function CitizenPortal() {
                                     className="flex items-center gap-2 text-xs font-bold text-gray-500 hover:text-gray-900 transition-colors bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
                                     <ArrowLeft className="w-4 h-4" /> Back to Dashboard
                                 </button>
-                                                <div className="flex items-center gap-3">
-                                                    <LanguageToggle />
-                                                </div>
+
                                 <button
                                     onClick={() => { logout(); navigate("/"); }}
                                     className="flex items-center gap-2 text-xs font-black text-red-600 hover:text-white hover:bg-red-600 transition-all bg-red-50 px-4 py-2 rounded-xl border border-red-100 uppercase tracking-widest"

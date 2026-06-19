@@ -32,7 +32,6 @@ import Landing from "./pages/Landing";
 import AdminPanel from "./pages/AdminPanel";
 import AIAssistant from "./components/AIAssistant";
 import CommandPalette from "./components/CommandPalette";
-import VoiceAssistant from "./components/VoiceAssistant";
 import Meetings from "./pages/Meetings";
 import MediaQueue from "./pages/MediaQueue";
 import Constituency from "./pages/Constituency";
@@ -108,7 +107,6 @@ function App() {
 
         {/* Global overlays */}
         <AIAssistant />
-        <VoiceAssistant />
         <CommandPalette />
       </BrowserRouter>
     </ComplaintsProvider>

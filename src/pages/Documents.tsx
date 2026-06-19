@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
     FileText, FolderOpen, Download, Eye, Search,
-    Upload, Clock, CheckCircle2, Lock, Share2, X, AlertCircle
+    Upload, Clock, CheckCircle2, Lock, Share2, X, AlertCircle, Shield
 } from "lucide-react";
 
 const folders = [
