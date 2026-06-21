@@ -38,6 +38,7 @@ import Constituency from "./pages/Constituency";
 import AICoPilot from "./pages/AICoPilot";
 import SpeechStudio from "./pages/SpeechStudio";
 import VillageVoicePortal from "./pages/VillageVoicePortal";
+
 import { Toaster } from 'sonner';
 
 // 🔒 Route Guard - redirect to /login if not authenticated
@@ -75,6 +76,8 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/submit-complaint" element={<CitizenPortal />} />
           <Route path="/village-voice" element={<VillageVoicePortal />} />
+
+
 
           {/* Protected pages */}
           <Route path="/citizen" element={<ProtectedRoute><CitizenModule /></ProtectedRoute>} />

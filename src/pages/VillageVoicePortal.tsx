@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from "react";
-import { Mic, ArrowLeft, Loader2, CheckCircle2, AlertCircle, Globe } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { Mic, ArrowLeft, Loader2, CheckCircle2, AlertCircle, Globe, Bot, Send, Keyboard, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useComplaints } from "@/context/ComplaintsContext";
+import { analyzeComplaint } from "@/services/aiService";
 
 declare global {
   interface Window {
@@ -15,7 +16,7 @@ const LANGUAGES = {
   EN: { code: 'en-IN', name: 'English', label: 'ENG' }
 };
 
-type Status = "idle" | "listening" | "processing" | "success" | "error" | "waiting";
+type Status = "idle" | "listening" | "processing" | "success" | "error" | "waiting" | "speaking";
 
 export default function VillageVoicePortal() {
   const navigate = useNavigate();
@@ -26,11 +27,16 @@ export default function VillageVoicePortal() {
   const [transcript, setTranscript] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [step, setStep] = useState<number>(0);
+  const [messages, setMessages] = useState<{ id: number; sender: 'ai' | 'user'; text: string }[]>([]);
+  const [inputText, setInputText] = useState("");
   
   const transcriptRef = useRef("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const stepRef = useRef(0);
-  const answersRef = useRef({ name: "", issue: "", ward: "" });
+  const answersRef = useRef({ name: "", issue: "", ward: "", phone: "" });
   const recognitionRef = useRef<any>(null);
+  const isListeningExpectedRef = useRef(false);
+  const silenceTimeoutRef = useRef<any>(null);
 
   useEffect(() => {
     if (window.speechSynthesis) {
@@ -43,7 +49,7 @@ export default function VillageVoicePortal() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
       recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = false;
+      recognitionRef.current.continuous = true;
       recognitionRef.current.interimResults = true;
       
       recognitionRef.current.onstart = () => {
@@ -54,35 +60,62 @@ export default function VillageVoicePortal() {
       
       recognitionRef.current.onresult = (event: any) => {
         let currentTranscript = "";
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
+        for (let i = 0; i < event.results.length; ++i) {
           currentTranscript += event.results[i][0].transcript;
         }
         setTranscript(currentTranscript);
         transcriptRef.current = currentTranscript;
+
+        if (silenceTimeoutRef.current) clearTimeout(silenceTimeoutRef.current);
+        silenceTimeoutRef.current = setTimeout(() => {
+          if (transcriptRef.current.trim().length > 0) {
+            isListeningExpectedRef.current = false;
+            try { recognitionRef.current.stop(); } catch(e) {}
+            processTranscriptStep(transcriptRef.current.trim());
+            setTranscript("");
+            transcriptRef.current = "";
+          }
+        }, 3000);
       };
       
       recognitionRef.current.onerror = (event: any) => {
-        console.error("Speech recognition error", event.error);
-        setStatus("error");
+        if (event.error === 'no-speech' || event.error === 'aborted') return;
+        isListeningExpectedRef.current = false;
+        
         if (event.error === 'not-allowed') {
+           setStatus("error");
            setErrorMsg(lang === 'TA' ? "மைக்ரோஃபோனை அனுமதிக்கவும்." : "Please allow microphone access.");
+        } else if (event.error === 'network') {
+           console.log("Network error from Web Speech API. Retrying silently...");
+           setTimeout(() => {
+               if (isListeningExpectedRef.current && recognitionRef.current) {
+                   try { recognitionRef.current.start(); } catch(e) {}
+               }
+           }, 1000);
         } else {
+           setStatus("error");
            setErrorMsg(lang === 'TA' ? "தவறு நிகழ்ந்தது. மீண்டும் முயற்சிக்கவும்." : "Something went wrong. Please try again.");
         }
       };
       
       recognitionRef.current.onend = () => {
-        if (transcriptRef.current.trim().length > 0) {
-          processTranscriptStep(transcriptRef.current.trim());
+        if (isListeningExpectedRef.current) {
+          try { recognitionRef.current.start(); } catch(e) {}
         } else {
-          // Timed out or nothing spoken
-          setStatus("idle");
+          setStatus(prev => {
+            if (prev !== "waiting" && prev !== "processing" && prev !== "success" && prev !== "error" && prev !== "speaking") {
+              return "idle";
+            }
+            return prev;
+          });
         }
       };
     }
 
     return () => {
-      if (recognitionRef.current) recognitionRef.current.abort();
+      if (recognitionRef.current) {
+          try { recognitionRef.current.abort(); } catch(e) {}
+      }
     };
   }, [lang]);
 
@@ -92,25 +125,21 @@ export default function VillageVoicePortal() {
     }
   }, [lang]);
 
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, transcript, status]);
+
   const speak = (text: string, onEnd?: () => void) => {
     if (!window.speechSynthesis) {
       if (onEnd) onEnd();
       return;
     }
     
-    try {
-      window.speechSynthesis.cancel();
-    } catch (e) {
-      console.warn("Speech Synthesis cancel error", e);
-    }
+    try { window.speechSynthesis.cancel(); } catch (e) {}
     
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = LANGUAGES[lang].code;
-    utterance.rate = 0.85;
-    
-    const voices = window.speechSynthesis.getVoices();
-    const specificVoice = voices.find(v => v.lang.startsWith(LANGUAGES[lang].code.split('-')[0]) && (v.name.includes('Google') || v.name.includes('Online')));
-    if (specificVoice) utterance.voice = specificVoice;
+    utterance.rate = 0.9;
     
     let called = false;
     const safeOnEnd = () => {
@@ -123,18 +152,13 @@ export default function VillageVoicePortal() {
     utterance.onend = safeOnEnd;
     utterance.onerror = safeOnEnd;
 
-    // Safety timeout in case the speech synthesis API hangs or gets blocked by the browser
-    const timeoutId = setTimeout(() => {
-      safeOnEnd();
-    }, 6000);
-
+    const timeoutId = setTimeout(() => { safeOnEnd(); }, 8000);
     utterance.addEventListener('end', () => clearTimeout(timeoutId));
     utterance.addEventListener('error', () => clearTimeout(timeoutId));
     
     try {
       window.speechSynthesis.speak(utterance);
     } catch (e) {
-      console.error("Speech Synthesis speak error", e);
       safeOnEnd();
     }
   };
@@ -142,317 +166,295 @@ export default function VillageVoicePortal() {
   const startStep = (s: number) => {
     stepRef.current = s;
     setStep(s);
-    setStatus("idle");
+    setStatus("speaking");
     setTranscript("");
     transcriptRef.current = "";
     
+    if (s === 0) {
+      answersRef.current = { name: "", issue: "", ward: "", phone: "" };
+      setMessages([]);
+    }
+    
+    if (silenceTimeoutRef.current) clearTimeout(silenceTimeoutRef.current);
+    
     let textToSpeak = "";
-    if (s === 0) textToSpeak = lang === 'TA' ? "உங்கள் பெயர் என்ன?" : "What is your name?";
-    else if (s === 1) textToSpeak = lang === 'TA' ? "உங்கள் புகார் என்ன?" : "What is your complaint?";
-    else if (s === 2) textToSpeak = lang === 'TA' ? "எந்த பகுதி அல்லது வார்டு?" : "Which ward or area are you from?";
+    if (s === 0) {
+      textToSpeak = lang === 'TA' ? "பொது புகார் இணையதளத்திற்கு வரவேற்கிறோம். உங்கள் பெயரை சொல்லுங்கள்." : "Welcome to the Public Grievance Portal. Please tell me your name.";
+    } else if (s === 1) {
+      textToSpeak = lang === 'TA' ? "உங்கள் புகாரை விவரிக்கவும்." : "Please describe your complaint.";
+    } else if (s === 2) {
+      textToSpeak = lang === 'TA' ? "உங்கள் வார்டு எண் அல்லது பகுதி பெயரை சொல்லுங்கள்." : "Please tell me your ward number or area name.";
+    } else if (s === 3) {
+      textToSpeak = lang === 'TA' ? "உங்கள் மொபைல் எண்ணை வழங்கவும்." : "Please provide your mobile number.";
+    } else if (s === 4) {
+      const { name, issue, ward, phone } = answersRef.current;
+      textToSpeak = lang === 'TA' 
+        ? `பெயர்: ${name}. புகார்: ${issue}. வார்டு: ${ward}. மொபைல்: ${phone}. தயவுசெய்து உறுதிப்படுத்தவும். சமர்ப்பிக்க ஆம் என்றும், மீண்டும் பதிவு செய்ய இல்லை என்றும் சொல்லுங்கள்.`
+        : `Name: ${name}. Complaint: ${issue}. Ward: ${ward}. Mobile: ${phone}. Please confirm. Say YES to submit or NO to re-record.`;
+    }
+
+    setMessages(prev => [...prev, { id: Date.now(), sender: 'ai', text: textToSpeak }]);
 
     speak(textToSpeak, () => {
-      setTimeout(() => {
-        if (recognitionRef.current) {
-          try {
-            recognitionRef.current.start();
-          } catch(e) {}
+      if (recognitionRef.current) {
+        isListeningExpectedRef.current = true;
+        try {
+          recognitionRef.current.start();
+        } catch(e) {
+          console.log("Mic already listening or failed", e);
         }
-      }, 500); // Short delay after speaking before mic starts
+      } else {
+          // If no recognition support, just go to waiting to allow typing
+          setStatus("waiting");
+      }
     });
   };
 
   const processTranscriptStep = (text: string) => {
-    setStatus("waiting"); // The gap
+    setStatus("waiting"); 
+    setMessages(prev => [...prev, { id: Date.now(), sender: 'user', text }]);
     
-    // The user requested a 3 seconds gap after the person speaks before the next question
-    setTimeout(() => {
-      const currentStep = stepRef.current;
-      
-      if (currentStep === 0) {
-        answersRef.current.name = text;
-        startStep(1);
-      } else if (currentStep === 1) {
-        answersRef.current.issue = text;
-        startStep(2);
-      } else if (currentStep === 2) {
-        answersRef.current.ward = text;
-        stepRef.current = 3;
-        setStep(3);
-        submitComplaint();
-      }
-    }, 3000); 
+    if (stepRef.current === 0) {
+       answersRef.current.name = text;
+       let ackMsg = lang === 'TA' ? `நன்றி ${text}.` : `Thank you ${text}.`;
+       setStatus("speaking");
+       setMessages(prev => [...prev, { id: Date.now(), sender: 'ai', text: ackMsg }]);
+       speak(ackMsg, () => {
+           setStatus("waiting");
+           setTimeout(() => startStep(1), 1000);
+       });
+    } else if (stepRef.current === 1) {
+       answersRef.current.issue = text;
+       let ackMsg = lang === 'TA' ? `உங்கள் புகாரை பதிவு செய்துள்ளேன்.` : `I have recorded your complaint regarding ${text}.`;
+       setStatus("speaking");
+       setMessages(prev => [...prev, { id: Date.now(), sender: 'ai', text: ackMsg }]);
+       speak(ackMsg, () => {
+           setStatus("waiting");
+           setTimeout(() => startStep(2), 1000);
+       });
+    } else if (stepRef.current === 2) {
+       answersRef.current.ward = text;
+       let ackMsg = lang === 'TA' ? `நன்றி. நான் ${text} ஐ பதிவு செய்துள்ளேன்.` : `Thank you. I have recorded ${text}.`;
+       setStatus("speaking");
+       setMessages(prev => [...prev, { id: Date.now(), sender: 'ai', text: ackMsg }]);
+       speak(ackMsg, () => {
+           setStatus("waiting");
+           setTimeout(() => startStep(3), 1000);
+       });
+    } else if (stepRef.current === 3) {
+       answersRef.current.phone = text;
+       startStep(4);
+    } else if (stepRef.current === 4) {
+       const lower = text.toLowerCase();
+       if (lower.includes("yes") || lower.includes("ஆம்") || lower.includes("s") || lower.includes("யெஸ்") || lower.includes("ok") || lower.includes("சரி")) {
+           submitVoiceComplaint();
+       } else {
+           let ackMsg = lang === 'TA' ? `சரி, மீண்டும் தொடங்குவோம்.` : `Okay, let's start again.`;
+           setStatus("speaking");
+           setMessages(prev => [...prev, { id: Date.now(), sender: 'ai', text: ackMsg }]);
+           speak(ackMsg, () => startStep(0));
+       }
+    }
   };
 
-  const submitComplaint = () => {
+  const submitVoiceComplaint = async () => {
     setStatus("processing");
-    const { name, issue, ward } = answersRef.current;
+    const { name, issue, ward, phone } = answersRef.current;
     
-    setTimeout(() => {
-      let mappedIssue = lang === 'TA' ? "பொது புகார்" : "General Complaint";
-      let priority: "High" | "Medium" | "Low" = "Low";
-      
-      const lowerText = issue.toLowerCase();
-      if (lowerText.includes("தண்ணீர்") || lowerText.includes("water") || lowerText.includes("pipe")) {
-        mappedIssue = "Water Supply Issue";
-        priority = "High";
-      } else if (lowerText.includes("ரோடு") || lowerText.includes("சாலை") || lowerText.includes("road")) {
-        mappedIssue = "Road Damage";
-        priority = "Medium";
-      } else if (lowerText.includes("மின்சாரம்") || lowerText.includes("current") || lowerText.includes("light") || lowerText.includes("விளக்கு")) {
-        mappedIssue = "Electricity Issue";
-        priority = "High";
-      } else if (lowerText.includes("குப்பை") || lowerText.includes("garbage") || lowerText.includes("waste")) {
-        mappedIssue = "Sanitation & Garbage";
-        priority = "Medium";
-      }
+    try {
+      const aiResult = await analyzeComplaint(issue, issue);
+      const officerName = aiResult.dept === "Water Supply Department" ? "Rajiv Kumar" : "Field Officer";
 
       const id = addComplaint({
         citizen: name || "Village Voice User",
-        phone: "N/A",
+        phone: phone || "N/A",
         ward: ward || "Unknown",
-        issue: mappedIssue,
+        issue: issue,
         description: issue,
-        priority: priority,
-        notifPref: "None"
+        priority: aiResult.priority,
+        category: aiResult.category,
+        dept: aiResult.dept,
+        notifPref: "None",
+        source: "voice",
+        autoAssignTo: officerName
       });
 
       setStatus("success");
-      const codeId = id.split('-').pop() || id;
       const msg = lang === 'TA' 
-        ? "உங்கள் புகார் பதிவு செய்யப்பட்டது. நன்றி!" 
-        : "Your complaint is registered. Thank you!";
+        ? `உங்கள் புகார் வெற்றிகரமாக பதிவு செய்யப்பட்டது. உங்கள் புகார் எண் ${id}. புகார் சம்பந்தப்பட்ட அதிகாரிக்கு ஒதுக்கப்பட்டுள்ளது. நன்றி.` 
+        : `Your complaint has been registered successfully. Your Complaint ID is ${id}. The complaint has been assigned to the concerned officer. Thank you.`;
       
+      setMessages(prev => [...prev, { id: Date.now(), sender: 'ai', text: msg }]);
       speak(msg);
-    }, 2000);
+    } catch (err) {
+      console.error("Failed to process complaint via AI", err);
+      setStatus("error");
+      setErrorMsg(lang === 'TA' ? "தவறு நிகழ்ந்தது. மீண்டும் முயற்சிக்கவும்." : "Failed to process complaint. Please try again.");
+    }
   };
 
   const toggleListen = () => {
     if (status === "listening") {
-      recognitionRef.current?.stop();
+      isListeningExpectedRef.current = false;
+      try { recognitionRef.current?.stop(); } catch(e) {}
+      setStatus("idle");
     } else {
-      if (!recognitionRef.current) {
-        setStatus("error");
-        setErrorMsg(lang === 'TA' ? "உங்கள் உலாவி குரல் பதிவை ஆதரிக்கவில்லை." : "Your browser doesn't support speech recognition.");
-        return;
-      }
-      
-      // If we are at success/end, reset
       if (status === "success" || status === "error") {
-        answersRef.current = { name: "", issue: "", ward: "" };
+        answersRef.current = { name: "", issue: "", ward: "", phone: "" };
+        setMessages([]);
         startStep(0);
         return;
       }
-
-      // If we are idle, just start the current step over
-      startStep(stepRef.current);
+      if (stepRef.current === 0 && messages.length === 0) {
+          startStep(0);
+      } else {
+          isListeningExpectedRef.current = true;
+          try { recognitionRef.current?.start(); } catch(e) {}
+      }
     }
   };
 
-  const simulateSpeech = () => {
-    const currentStep = stepRef.current;
+  const handleManualSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputText.trim()) return;
+    const text = inputText.trim();
+    setInputText("");
     
-    // Stop active recognition
-    if (recognitionRef.current) {
-      try {
-        recognitionRef.current.abort();
-      } catch (e) {}
-    }
-
-    setStatus("waiting");
-
-    const namePhrase = lang === 'TA' ? "அரவிந்த்குமார்" : "Aravindkumar";
-    const issuePhrase = lang === 'TA' ? "குடிநீர் குழாய் உடைந்து தண்ணீர் வீணாகிறது" : "Water pipe leakage";
-    const wardPhrase = lang === 'TA' ? "வார்டு 2" : "Ward 02";
-
-    let text = "";
-    if (currentStep === 0) text = namePhrase;
-    else if (currentStep === 1) text = issuePhrase;
-    else if (currentStep === 2) text = wardPhrase;
-
-    setTranscript(text);
-    transcriptRef.current = text;
+    isListeningExpectedRef.current = false;
+    if (silenceTimeoutRef.current) clearTimeout(silenceTimeoutRef.current);
+    try { recognitionRef.current?.stop(); } catch(e) {}
     
+    setTranscript("");
+    transcriptRef.current = "";
     processTranscriptStep(text);
   };
 
   const TEXTS = {
-    TA: {
-      title: "உங்களுக்கு எப்படி உதவலாம்?",
-      subtitle: "மைக்ரோஃபோனை அழுத்தி உங்கள் புகாரை சொல்லுங்கள்.",
-      idle: "பேசத்தொடங்க மைக் பட்டனை அழுத்தவும்",
-      listening: "பேசுங்கள்...",
-      waiting: "காத்திருங்கள்...",
-      processing: "உங்கள் புகார் பதிவு செய்யப்படுகிறது...",
-      success: "புகார் வெற்றிகரமாக பதிவானது!",
-      retry: "மீண்டும் புகார் அளிக்க"
-    },
-    EN: {
-      title: "How can we help you?",
-      subtitle: "Tap the microphone below and speak your complaint.",
-      idle: "Tap to start speaking",
-      listening: "Listening...",
-      waiting: "Please wait...",
-      processing: "Processing your complaint...",
-      success: "Complaint Registered Successfully!",
-      retry: "Register Another"
-    }
+    TA: { title: "வாய்மொழி போர்ட்டல்" },
+    EN: { title: "Voice Portal" }
   };
 
-  const t = TEXTS[lang];
-
   return (
-    <div className="min-h-screen bg-[#A8CDE2] flex flex-col font-sans selection:bg-blue-200">
-      <header className="h-20 flex items-center justify-between px-6 shrink-0 relative z-10">
-        <button onClick={() => navigate("/")} className="px-6 py-2 bg-white/20 hover:bg-white/40 text-[#2B4B6F] rounded-full font-black tracking-widest uppercase text-xs transition-colors backdrop-blur-sm shadow-sm">
-          Back
-        </button>
-        
-        <div className="flex bg-white/20 backdrop-blur-sm rounded-full p-1 shadow-sm">
-          {(Object.keys(LANGUAGES) as Array<keyof typeof LANGUAGES>).map((k) => (
-            <button
-              key={k}
-              onClick={() => { 
-                setLang(k); 
-                setStatus("idle"); 
-                setTranscript(""); 
-                transcriptRef.current=""; 
-                stepRef.current = 0;
-                setStep(0);
-                answersRef.current = { name: "", issue: "", ward: "" };
-              }}
-              className={`px-6 py-2 rounded-full text-xs font-black tracking-widest uppercase transition-all flex items-center gap-2 ${lang === k ? "bg-white text-[#2B4B6F] shadow-md" : "text-[#2B4B6F]/60 hover:text-[#2B4B6F]"}`}
-            >
-              {lang === k && <Globe className="w-3.5 h-3.5" />}
-              {LANGUAGES[k].label}
-            </button>
-          ))}
-        </div>
+    <div className="min-h-screen bg-[#A8CDE2] flex flex-col font-sans">
+      <header className="h-16 flex items-center justify-between px-6 shrink-0 relative z-10 bg-white/30 backdrop-blur-md border-b border-white/20">
+        <button onClick={() => navigate("/")} className="px-5 py-1.5 bg-white/40 hover:bg-white/60 text-[#2B4B6F] rounded-full font-black text-[10px] tracking-widest uppercase shadow-sm transition-all">Back</button>
+        <span className="font-black text-[#2B4B6F] uppercase tracking-widest">{TEXTS[lang].title}</span>
+
       </header>
 
-      <main className="flex-1 flex flex-col items-center justify-center p-6 text-center w-full max-w-2xl mx-auto -mt-10">
-        
-        <div className="space-y-4 mb-16 animate-in fade-in slide-in-from-top-8 duration-700">
-          <h1 className="text-5xl sm:text-[4.5rem] font-black text-[#3A5D7C] tracking-tight leading-[1.1] pb-2 drop-shadow-sm" style={{ fontFamily: "'Nunito', 'Outfit', sans-serif" }}>
-            {t.title}
-          </h1>
-          <p className="text-xl sm:text-2xl font-bold text-[#5B88A8]">
-            {t.subtitle}
-          </p>
+      <main className="flex-1 flex flex-col w-full max-w-3xl mx-auto overflow-hidden relative pb-28">
+        <div className="flex-1 w-full overflow-y-auto px-4 pt-6 space-y-6 scroll-smooth">
           
-          {/* Display progress indicators for the questions */}
-          <div className="flex items-center justify-center gap-4 mt-8">
-             <div className={`w-3 h-3 rounded-full transition-colors ${step >= 0 ? "bg-[#3A5D7C]" : "bg-white/40"}`} />
-             <div className={`w-12 h-1 rounded-full transition-colors ${step >= 1 ? "bg-[#3A5D7C]" : "bg-white/40"}`} />
-             <div className={`w-3 h-3 rounded-full transition-colors ${step >= 1 ? "bg-[#3A5D7C]" : "bg-white/40"}`} />
-             <div className={`w-12 h-1 rounded-full transition-colors ${step >= 2 ? "bg-[#3A5D7C]" : "bg-white/40"}`} />
-             <div className={`w-3 h-3 rounded-full transition-colors ${step >= 2 ? "bg-[#3A5D7C]" : "bg-white/40"}`} />
-          </div>
-        </div>
-
-        {/* Central Interaction Area */}
-        <div className="relative w-full max-w-sm aspect-square flex items-center justify-center mb-10">
-          
-          {/* Background pulses for listening state */}
-          {status === "listening" && (
-            <>
-              <div className="absolute inset-0 bg-[#50A7B1]/30 rounded-full animate-ping" style={{ animationDuration: '3s' }} />
-              <div className="absolute -inset-4 bg-[#50A7B1]/20 rounded-full animate-ping" style={{ animationDuration: '2s' }} />
-            </>
+          {messages.length === 0 && status !== "success" && status !== "error" && (
+            <div className="flex flex-col items-center justify-center py-20 opacity-80 animate-in fade-in duration-700">
+               <Bot className="w-24 h-24 text-[#3A5D7C] mb-6 drop-shadow-md" />
+               <h1 className="text-3xl font-black text-[#3A5D7C] mb-2 text-center" style={{ fontFamily: "'Nunito', 'Outfit', sans-serif" }}>
+                 {lang === 'TA' ? "உங்களுக்கு எப்படி உதவலாம்?" : "How can we help you?"}
+               </h1>
+               <p className="text-lg font-bold text-[#5B88A8] text-center max-w-md">
+                 {lang === 'TA' ? "கீழே உள்ள மைக் பட்டனை அழுத்தி பேசத்தொடங்கவும் அல்லது தட்டச்சு செய்யவும்." : "Tap the microphone below to start speaking or type your request."}
+               </p>
+               <button 
+                  onClick={() => startStep(0)}
+                  className="mt-8 px-10 py-4 bg-[#50A7B1] hover:bg-[#3D8F9A] text-white rounded-full font-black tracking-widest uppercase text-sm shadow-xl transition-all hover:scale-105 active:scale-95 flex items-center gap-3"
+               >
+                 <Mic className="w-5 h-5" />
+                 {lang === 'TA' ? "தொடங்க" : "Start"}
+               </button>
+            </div>
           )}
 
-          <button 
-            onClick={toggleListen}
-            disabled={status === "processing" || status === "waiting" || status === "success"}
-            className={`relative z-10 w-64 h-64 sm:w-[22rem] sm:h-[22rem] rounded-full flex flex-col items-center justify-center gap-4 transition-all duration-500 shadow-2xl ${
-              status === "listening" 
-                ? "bg-[#3D8F9A] scale-105 shadow-[#3D8F9A]/40" 
-                : status === "processing" || status === "waiting"
-                ? "bg-amber-400"
-                : status === "success"
-                ? "bg-emerald-400"
-                : status === "error"
-                ? "bg-red-400"
-                : "bg-[#50A7B1] hover:bg-[#439CA6] hover:scale-105 cursor-pointer"
-            }`}
-          >
-            {status === "listening" ? (
-              <Mic className="w-24 h-24 sm:w-32 sm:h-32 text-white/90 animate-bounce" />
-            ) : status === "processing" || status === "waiting" ? (
-              <Loader2 className="w-24 h-24 sm:w-32 sm:h-32 text-white/90 animate-spin" />
-            ) : status === "success" ? (
-              <CheckCircle2 className="w-24 h-24 sm:w-32 sm:h-32 text-white/90" />
-            ) : status === "error" ? (
-              <AlertCircle className="w-24 h-24 sm:w-32 sm:h-32 text-white/90" />
-            ) : (
-              <Mic className="w-24 h-24 sm:w-32 sm:h-32 text-white/80" strokeWidth={2.5} />
-            )}
-          </button>
-        </div>
-
-        {/* Status Text & Transcript */}
-        <div className="w-full animate-in fade-in slide-in-from-bottom-8 duration-700 h-32 flex flex-col items-center">
-          
-          {(transcript || status === "success") ? (
-            <div className="bg-white/80 backdrop-blur-md rounded-[2rem] p-6 shadow-xl border border-white/40 text-center max-w-xl mx-auto w-full">
-              {status === "success" ? (
-                <div className="text-center space-y-4">
-                  <p className="text-[#3A5D7C] font-black text-xl">{t.success}</p>
-                  <button 
-                    onClick={() => {
-                      setStatus("idle");
-                      setTranscript("");
-                      transcriptRef.current = "";
-                      stepRef.current = 0;
-                      setStep(0);
-                      answersRef.current = { name: "", issue: "", ward: "" };
-                    }}
-                    className="px-8 py-3 bg-[#50A7B1] hover:bg-[#3D8F9A] text-white rounded-xl font-black uppercase tracking-widest text-sm transition-colors cursor-pointer shadow-md"
-                  >
-                    {t.retry}
-                  </button>
+          {messages.map((msg, idx) => (
+              <div key={msg.id} className={`flex w-full ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} animate-in slide-in-from-bottom-2 fade-in duration-300`}>
+                {msg.sender === 'ai' && <Bot className="w-8 h-8 text-[#3A5D7C] mr-3 shrink-0 mt-1" />}
+                <div className={`max-w-[80%] rounded-[1.5rem] p-4 shadow-md text-left text-[15px] ${
+                  msg.sender === 'user' 
+                    ? 'bg-[#3A5D7C] text-white rounded-br-sm' 
+                    : 'bg-white text-[#2B4B6F] border border-[#3A5D7C]/10 rounded-bl-sm font-bold'
+                }`}>
+                  <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>
                 </div>
-              ) : (
-                <p className="text-2xl font-bold text-[#3A5D7C] leading-relaxed italic">
-                  "{transcript}"
-                </p>
-              )}
-            </div>
-          ) : (
-            <div className={`flex items-center justify-center gap-3 text-xl font-black ${
-              status === "error" ? "text-red-500" : "text-[#5B88A8]"
-            }`}>
-              {status === "idle" && (
-                <>
-                  <svg className="w-6 h-6 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9m-2.828 9.9a9 9 0 010-12.728m-2.828 12.728a13 13 0 010-18.384m-2.828 18.384L5.636 18.364a1 1 0 01-.293-.707V6.343a1 1 0 01.293-.707l2.828-2.828a1 1 0 011.414 0l8.485 8.485a1 1 0 010 1.414L9.88 21.192a1 1 0 01-1.414 0z" />
-                  </svg>
-                  <span>{step === 0 ? t.idle : "Tap to continue"}</span>
-                </>
-              )}
-              {status === "listening" && <span className="animate-pulse">{t.listening}</span>}
-              {status === "waiting" && <span className="animate-pulse">{t.waiting}</span>}
-              {status === "processing" && <span className="animate-pulse">{t.processing}</span>}
-              {status === "error" && <span>{errorMsg}</span>}
+                {msg.sender === 'user' && <User className="w-8 h-8 text-[#3A5D7C] ml-3 shrink-0 mt-1" />}
+              </div>
+          ))}
+
+          {/* Live Transcript Bubble */}
+          {transcript && status !== "success" && (
+            <div className="flex w-full justify-end animate-in fade-in duration-200">
+              <div className="max-w-[80%] bg-[#5B88A8] text-white border border-[#5B88A8] rounded-[1.5rem] rounded-br-sm p-4 shadow-md text-left text-[15px]">
+                <p className="font-medium italic">{transcript}<span className="animate-pulse">...</span></p>
+              </div>
+              <User className="w-8 h-8 text-[#3A5D7C] ml-3 shrink-0 mt-1 opacity-50" />
             </div>
           )}
+          
+          {/* Status Indicators for AI */}
+          {status === "processing" && (
+            <div className="flex w-full justify-start animate-in fade-in">
+              <Bot className="w-8 h-8 text-[#3A5D7C] mr-3 shrink-0 mt-1" />
+              <div className="bg-white rounded-[1.5rem] p-4 shadow-sm rounded-bl-sm flex items-center gap-3">
+                <Loader2 className="w-5 h-5 animate-spin text-[#50A7B1]" />
+                <span className="text-[#3A5D7C] font-bold text-sm uppercase tracking-widest">
+                  {lang === 'TA' ? "பதிவாகிறது..." : "Processing..."}
+                </span>
+              </div>
+            </div>
+          )}
+          {status === "speaking" && (
+            <div className="flex w-full justify-start animate-in fade-in">
+              <Bot className="w-8 h-8 text-[#3A5D7C] mr-3 shrink-0 mt-1 animate-pulse" />
+              <div className="bg-white rounded-[1.5rem] px-5 py-4 shadow-sm rounded-bl-sm flex items-center gap-2">
+                 <div className="w-2 h-2 rounded-full bg-[#50A7B1] animate-bounce" style={{ animationDelay: "0ms" }} />
+                 <div className="w-2 h-2 rounded-full bg-[#50A7B1] animate-bounce" style={{ animationDelay: "150ms" }} />
+                 <div className="w-2 h-2 rounded-full bg-[#50A7B1] animate-bounce" style={{ animationDelay: "300ms" }} />
+              </div>
+            </div>
+          )}
+          
+          <div ref={messagesEndRef} className="h-4" />
         </div>
 
-        {status !== "success" && status !== "processing" && (
-          <div className="flex flex-col items-center gap-4 mt-8 animate-in fade-in duration-500">
-            <button 
-              onClick={simulateSpeech}
-              className="px-8 py-3.5 bg-white/20 hover:bg-white/40 text-[#2B4B6F] hover:text-[#1F3752] rounded-2xl font-black uppercase tracking-widest text-xs transition-all cursor-pointer shadow-sm"
-            >
-              {lang === 'TA' ? "குரலை உருவகப்படுத்து (Simulate Speech)" : "Simulate Speech (Demo)"}
-            </button>
-            
-            <button 
-              onClick={() => navigate("/submit-complaint")}
-              className="text-[#3A5D7C] hover:text-[#2B4B6F] text-xs font-black uppercase tracking-widest underline decoration-2 underline-offset-4 cursor-pointer"
-            >
-              {lang === 'TA' ? "விசைப்பலகை மூலம் எழுதவும் (Type Instead)" : "Type Complaint Instead"}
-            </button>
+        {/* Input Area */}
+        {messages.length > 0 && (
+          <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[#8EBCD8] via-[#8EBCD8]/95 to-transparent flex justify-center pb-6 sm:pb-8">
+            <div className="w-full max-w-3xl bg-white/95 backdrop-blur-xl rounded-[2.5rem] p-2.5 shadow-2xl border border-white flex items-center gap-3 transition-all">
+              
+              <button 
+                onClick={toggleListen}
+                disabled={status === "speaking" || status === "processing" || status === "success"}
+                className={`w-12 h-12 shrink-0 rounded-full flex items-center justify-center transition-all shadow-md ${
+                  status === "listening" 
+                    ? "bg-red-500 hover:bg-red-600 shadow-red-500/40 animate-pulse" 
+                    : "bg-[#3A5D7C] hover:bg-[#2B4B6F] disabled:bg-gray-300 hover:scale-105"
+                }`}
+              >
+                <Mic className={`w-5 h-5 text-white ${status === "listening" ? "animate-bounce" : ""}`} />
+              </button>
+
+              <form onSubmit={handleManualSubmit} className="flex-1 flex items-center bg-gray-100 rounded-full border border-gray-200 px-5 py-3 focus-within:border-[#50A7B1] focus-within:ring-4 focus-within:ring-[#50A7B1]/20 transition-all">
+                <Keyboard className="w-5 h-5 text-gray-400 mr-3 shrink-0" />
+                <input 
+                  type="text" 
+                  value={inputText}
+                  onChange={(e) => setInputText(e.target.value)}
+                  disabled={status === "processing" || status === "success"}
+                  placeholder={
+                    status === "listening" 
+                      ? (lang === 'TA' ? "பேசுங்கள்..." : "Listening...")
+                      : (lang === 'TA' ? "இங்கே தட்டச்சு செய்யவும்..." : "Type your message...")
+                  }
+                  className="flex-1 bg-transparent border-none focus:outline-none text-[#2B4B6F] font-bold placeholder:font-medium placeholder:text-gray-400 disabled:opacity-50"
+                />
+                <button 
+                  type="submit"
+                  disabled={!inputText.trim() || status === "processing" || status === "success"}
+                  className="ml-2 p-2.5 rounded-full bg-[#50A7B1] text-white disabled:opacity-40 disabled:bg-gray-400 hover:bg-[#3D8F9A] transition-colors hover:scale-105 active:scale-95"
+                >
+                  <Send className="w-4 h-4 ml-0.5" />
+                </button>
+              </form>
+              
+            </div>
           </div>
         )}
 

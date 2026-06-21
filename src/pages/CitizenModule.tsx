@@ -8,8 +8,9 @@ import {
     Star, RefreshCw, MessageCircle, ImageIcon,
     X, Zap, Mail, Phone, Info, Megaphone, Bell
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import type { Status, Priority } from "@/store/complaintsStore";
+import { useEffect } from "react";
 
 const STATUS_CFG: Record<Status, { color: string; bg: string; icon: any; step: number }> = {
     "New": { color: "text-gray-500", bg: "bg-gray-50", icon: Clock, step: 1 },
@@ -72,12 +73,24 @@ function ComplaintTimeline({ status }: { status: Status }) {
 export default function CitizenModule() {
     const { complaints, currentUser, rateComplaint, reopenComplaint, announcements } = useComplaints();
     const navigate = useNavigate();
+    const location = useLocation();
 
     // UI Local State
     const [filter, setFilter] = useState<Status | "All">("All");
     const [search, setSearch] = useState("");
     const [selectedC, setSelectedC] = useState<string | null>(null);
     const [dismissedAnns, setDismissedAnns] = useState<string[]>([]);
+
+    useEffect(() => {
+        if (location.hash === "#track-complaint") {
+            const el = document.getElementById("track-complaint");
+            if (el) {
+                setTimeout(() => {
+                    el.scrollIntoView({ behavior: "smooth", block: "start" });
+                }, 100);
+            }
+        }
+    }, [location.hash]);
 
     // Filtered List
     const filtered = complaints
@@ -201,7 +214,7 @@ export default function CitizenModule() {
                 </div>
 
                 {/* ── Main Tracking Section ──────────────────────────── */}
-                <div className="space-y-4">
+                <div id="track-complaint" className="space-y-4 pt-4">
                     {/* Filter Bar */}
                     <div className="flex flex-col md:flex-row items-center justify-between gap-4 px-2">
                         <h3 className="text-xl font-black text-white flex items-center gap-2">

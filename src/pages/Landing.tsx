@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { 
     User, Building2, 
     BrainCircuit, Sparkles, 
-    ArrowRight, CheckCircle2, Zap, LayoutDashboard, Shield, Mic
+    ArrowRight, CheckCircle2, Zap, LayoutDashboard, Shield, Mic, Camera
 } from "lucide-react";
 
 export default function Landing() {
@@ -113,7 +113,7 @@ export default function Landing() {
                 </div>
 
                 {/* Entry Points Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
                     {portals.map((portal, idx) => (
                         <div key={portal.id} 
                             onClick={() => navigate(portal.link)}

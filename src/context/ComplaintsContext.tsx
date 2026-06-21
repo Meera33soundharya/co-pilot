@@ -71,6 +71,8 @@ interface ComplaintsCtx {
         location?: string;
         evidence?: string[]; coords?: { lat: number; lng: number };
         notifPref?: "SMS" | "Email" | "None";
+        autoAssignTo?: string;
+        source?: "voice" | "web";
     }) => string;
     updateStatus: (id: string, newStatus: Status, actorNote?: string, proofImg?: string) => void;
     assignComplaint: (id: string, dept: string, assignedTo: string) => void;
@@ -305,6 +307,8 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
         location?: string;
         evidence?: string[]; coords?: { lat: number; lng: number };
         notifPref?: "SMS" | "Email" | "None";
+        autoAssignTo?: string;
+        source?: "voice" | "web";
     }): string {
         const id = generateId();
         const ts = Date.now();
@@ -323,8 +327,9 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
             issue: data.issue,
             description: data.description,
             priority: data.priority,
-            status: "New",
-            assignedTo: "",
+            source: data.source || "web",
+            status: data.autoAssignTo ? "Assigned" : "New",
+            assignedTo: data.autoAssignTo || "",
             dept,
             time: "Just now",
             timestamp: ts,
@@ -336,6 +341,7 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
             audit: [
                 makeAudit("Citizen", "Complaint submitted online"),
                 makeAudit("System", `Auto-categorized as ${cat}`),
+                ...(data.autoAssignTo ? [makeAudit("System", `Auto-assigned to ${data.autoAssignTo} (${dept})`)] : [])
             ],
         };
         setAll(prev => [newC, ...prev]);

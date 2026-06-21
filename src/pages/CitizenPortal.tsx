@@ -14,7 +14,7 @@ import { useNavigate } from "react-router-dom";
 
 type Step = "details" | "issue" | "location" | "preview" | "submitting" | "success";
 
-const WARDS = ["Ward 01", "Ward 02", "Ward 03", "Ward 04", "Ward 05", "Ward 06", "Ward 07", "Ward 08", "Ward 09", "Ward 10", "Ward 11", "Ward 12"];
+const WARDS = Array.from({ length: 100 }, (_, i) => `Ward ${(i + 1).toString().padStart(2, '0')}`);
 
 const LOCALITIES: Record<string, string[]> = {
     "Ward 01": ["Richmond Town", "Langford Town", "Austin Town"],
@@ -28,8 +28,19 @@ const LOCALITIES: Record<string, string[]> = {
     "Ward 09": ["Hebbal", "Manyata Tech Park", "Sahakar Nagar"],
     "Ward 10": ["Bannerghatta Road", "Bilekahalli", "Arakere"],
     "Ward 11": ["Electronic City Phase 1", "Phase 2", "Velankani Drive"],
-    "Ward 12": ["Vijayanagar", "Govindraj Nagar", "RPC Layout"]
+    "Ward 12": ["Vijayanagar", "Govindraj Nagar", "RPC Layout"],
 };
+
+// Fill missing localities for all other wards up to 100 to prevent errors
+WARDS.forEach(w => {
+    if (!LOCALITIES[w]) {
+        if (w === "Ward 28") {
+            LOCALITIES[w] = ["Saravanampatti", "KGISL Campus", "CHIL SEZ"];
+        } else {
+            LOCALITIES[w] = ["General Area", "Main Road", "Residential Layout"];
+        }
+    }
+});
 
 export default function CitizenPortal() {
     const { addComplaint, currentUser, logout } = useComplaints();
@@ -108,6 +119,53 @@ export default function CitizenPortal() {
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isSearching, setIsSearching] = useState(false);
+    const [showCamera, setShowCamera] = useState(false);
+    const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const [audioPreview, setAudioPreview] = useState<{url: string, name: string} | null>(null);
+
+    const startCamera = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: "environment" }
+            });
+            setCameraStream(stream);
+            setShowCamera(true);
+        } catch (err) {
+            console.error("Camera access error:", err);
+            alert("Could not access camera. Please check permissions.");
+        }
+    };
+
+    const stopCamera = () => {
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(track => track.stop());
+            setCameraStream(null);
+        }
+        setShowCamera(false);
+    };
+
+    const capturePhoto = () => {
+        if (videoRef.current) {
+            const video = videoRef.current;
+            const canvas = document.createElement("canvas");
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+            const ctx = canvas.getContext("2d");
+            if (ctx) {
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                canvas.toBlob((blob) => {
+                    if (blob) {
+                        const url = URL.createObjectURL(blob);
+                        const metaUrl = `${url}#name=Camera_Capture_${Date.now()}.png&type=image/png`;
+                        set("evidence", [...form.evidence, metaUrl]);
+                        stopCamera();
+                    }
+                }, "image/png");
+            }
+        }
+    };
+
     const [isDetecting, setIsDetecting] = useState(false);
     const [isListening, setIsListening] = useState(false);
     const [mapQuery, setMapQuery] = useState("");
@@ -155,7 +213,8 @@ export default function CitizenPortal() {
             recorder.onstop = () => {
                 const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
                 const url = URL.createObjectURL(blob);
-                set("evidence", [...form.evidence, url]);
+                const name = `Live_Voice_Record_${Date.now()}.webm`;
+                setAudioPreview({ url, name });
                 setIsRecording(false);
                 // Stop all tracks to release the microphone
                 stream.getTracks().forEach(track => track.stop());
@@ -233,7 +292,8 @@ export default function CitizenPortal() {
                 }));
                 setMapQuery(name);
             } else {
-                alert("Location not found. Please try a known street or landmark name.");
+                const { matchedWard, matchedArea } = findBestMatch(mapQuery);
+                setForm(f => ({ ...f, location: mapQuery, ward: matchedWard, area: matchedArea }));
             }
         } catch (error) {
             console.error("Search error:", error);
@@ -338,56 +398,74 @@ export default function CitizenPortal() {
 
     const detectLocation = () => {
         setIsDetecting(true);
-        if ("geolocation" in navigator) {
-            const reverseGeocode = async (lat: number, lon: number) => {
-                // First update the map immediately with raw coords
+
+        const reverseGeocode = async (lat: number, lon: number) => {
+            // First update the map immediately with raw coords
+            setForm(f => ({
+                ...f,
+                coords: { lat, lng: lon },
+                location: `${lat.toFixed(4)}° N, ${lon.toFixed(4)}° E`
+            }));
+            setMapQuery(`${lat.toFixed(4)}, ${lon.toFixed(4)}`);
+
+            try {
+                const res = await geoFetch(`/reverse?lat=${lat}&lon=${lon}&format=json`);
+                if (!res.ok) throw new Error("API error");
+                const data = await res.json();
+                const addr = data.display_name ?? "";
+                const parts = addr.split(",");
+                const shortName = parts.slice(0, 3).join(", ").trim();
+                const { matchedWard, matchedArea } = findBestMatch(addr);
+
                 setForm(f => ({
                     ...f,
+                    location: shortName || `${lat.toFixed(4)}° N, ${lon.toFixed(4)}° E`,
                     coords: { lat, lng: lon },
-                    location: `${lat.toFixed(4)}° N, ${lon.toFixed(4)}° E`
+                    ward: matchedWard,
+                    area: matchedArea
                 }));
-                setMapQuery(`${lat.toFixed(4)}, ${lon.toFixed(4)}`);
+                setMapQuery(shortName || addr);
+            } catch {
+                // Coords already set above — keep them
+            }
+            setIsDetecting(false);
+        };
 
-                try {
-                    const res = await geoFetch(`/reverse?lat=${lat}&lon=${lon}&format=json`);
-                    if (!res.ok) throw new Error("API error");
+        const fallback = async () => {
+            try {
+                const res = await fetch("https://ipapi.co/json/");
+                if (res.ok) {
                     const data = await res.json();
-                    const addr = data.display_name ?? "";
-                    const parts = addr.split(",");
-                    const shortName = parts.slice(0, 3).join(", ").trim();
-                    const { matchedWard, matchedArea } = findBestMatch(addr);
-
-                    setForm(f => ({
-                        ...f,
-                        location: shortName || `${lat.toFixed(4)}° N, ${lon.toFixed(4)}° E`,
-                        coords: { lat, lng: lon },
-                        ward: matchedWard,
-                        area: matchedArea
-                    }));
-                    setMapQuery(shortName || addr);
-                } catch {
-                    // Coords already set above — keep them
+                    if (data.latitude && data.longitude) {
+                        reverseGeocode(data.latitude, data.longitude);
+                        return;
+                    }
                 }
-                setIsDetecting(false);
-            };
+            } catch (e) {
+                console.warn("IP Geolocation fallback failed", e);
+            }
+            
+            // Use a sensible demo location so the map always shows something
+            const pick = { lat: 12.9716, lng: 77.5946, loc: "MG Road, Bengaluru, Karnataka, India", ward: "Ward 05", area: "MG Road" };
+            setForm(f => ({
+                ...f,
+                coords: { lat: pick.lat, lng: pick.lng },
+                location: pick.loc,
+                ward: pick.ward,
+                area: pick.area
+            }));
+            setMapQuery(pick.loc);
+            setIsDetecting(false);
+        };
 
+        if ("geolocation" in navigator) {
             let timeoutId: ReturnType<typeof setTimeout>;
             let settled = false;
 
-            const fallback = () => {
+            const handleFallback = () => {
                 if (settled) return;
                 settled = true;
-                // Use a sensible demo location so the map always shows something
-                const pick = { lat: 12.9716, lng: 77.5946, loc: "MG Road, Bengaluru, Karnataka, India", ward: "Ward 05", area: "MG Road" };
-                setForm(f => ({
-                    ...f,
-                    coords: { lat: pick.lat, lng: pick.lng },
-                    location: pick.loc,
-                    ward: pick.ward,
-                    area: pick.area
-                }));
-                setMapQuery(pick.loc);
-                setIsDetecting(false);
+                fallback();
             };
 
             navigator.geolocation.getCurrentPosition(
@@ -400,22 +478,13 @@ export default function CitizenPortal() {
                 (err) => {
                     console.warn("Geolocation error:", err.message);
                     clearTimeout(timeoutId);
-                    fallback();
+                    handleFallback();
                 },
                 { timeout: 15000, enableHighAccuracy: true, maximumAge: 60000 }
             );
-            timeoutId = setTimeout(fallback, 18000);
+            timeoutId = setTimeout(handleFallback, 18000);
         } else {
-            // No geolocation API available
-            setForm(f => ({
-                ...f,
-                coords: { lat: 12.9716, lng: 77.5946 },
-                location: "MG Road, Bengaluru, Karnataka, India",
-                ward: "Ward 05",
-                area: "MG Road"
-            }));
-            setMapQuery("MG Road, Bengaluru, Karnataka, India");
-            setIsDetecting(false);
+            fallback();
         }
     };
 
@@ -429,7 +498,7 @@ export default function CitizenPortal() {
             const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
             const recognition = new SR();
             speechRecRef.current = recognition;
-            recognition.lang = lang === 'ta' ? 'ta-IN' : 'en-IN';
+            recognition.lang = 'en-IN';
             recognition.interimResults = false;
             setIsListening(true);
             recognition.onresult = (event: any) => {
@@ -565,24 +634,7 @@ export default function CitizenPortal() {
                             <p className="text-gray-500 text-sm">Tell us what needs fixing and provide any supporting media or documents.</p>
                         </div>
                         <div className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-xl space-y-6">
-                            {/* Speak Your Complaint button */}
-                            <button
-                                type="button"
-                                onClick={handleSpeakComplaint}
-                                className={`w-full flex items-center justify-center gap-3 py-4 rounded-2xl text-sm font-black transition-all ${isListening
-                                    ? "bg-red-600 text-white animate-pulse shadow-lg shadow-red-300"
-                                    : "bg-[#B91C1C] hover:bg-red-800 text-white shadow-lg shadow-red-100"
-                                    }`}
-                            >
-                                {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-                                {isListening ? "Listening… Tap to stop" : "Speak Your Complaint"}
-                            </button>
 
-                            <div className="flex items-center gap-3">
-                                <div className="flex-1 h-px bg-gray-100" />
-                                <span className="text-xs font-black text-gray-400 uppercase tracking-widest">or type below</span>
-                                <div className="flex-1 h-px bg-gray-100" />
-                            </div>
 
                             <div className="space-y-2">
                                 <label className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">Problem Title *</label>
@@ -707,7 +759,13 @@ export default function CitizenPortal() {
                                             <Paperclip className="w-4 h-4" /> Upload Audio
                                         </button>
                                         <div className="w-px h-4 bg-gray-200" />
-                                        <button className="flex items-center gap-2 text-[10px] font-black text-gray-400 hover:text-emerald-600 transition-colors"><Camera className="w-4 h-4" /> Camera</button>
+                                        <button 
+                                            type="button"
+                                            onClick={startCamera}
+                                            className="flex items-center gap-2 text-[10px] font-black text-emerald-600 hover:bg-emerald-50 transition-colors px-4 py-2 rounded-xl"
+                                        >
+                                            <Camera className="w-4 h-4" /> Camera
+                                        </button>
                                     </div>
                                 </div>
                                 <input
@@ -972,8 +1030,9 @@ export default function CitizenPortal() {
                                         ) : (
                                             form.evidence.map((rawUrl, i) => {
                                                 const [url, meta] = rawUrl.split('#');
-                                                const type = meta ? decodeURIComponent(meta.split('&')[1].split('=')[1]) : "";
-                                                const isAudio = type === 'audio' || url.startsWith('blob:audio');
+                                                const metaParsed = new URLSearchParams(meta || "");
+                                                const type = metaParsed.get("type") || "";
+                                                const isAudio = type.includes('audio') || url.startsWith('blob:audio');
                                                 const isDoc   = type.includes('pdf') || type.includes('word') || type.includes('sheet');
 
                                                 return (
@@ -1126,6 +1185,99 @@ export default function CitizenPortal() {
             <style>{`
                 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
             `}</style>
+            {/* Live Camera Modal */}
+            {showCamera && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+                    <div className="w-full max-w-xl bg-white rounded-[2rem] overflow-hidden shadow-2xl border border-gray-100 flex flex-col">
+                        <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50">
+                            <div className="flex items-center gap-2">
+                                <Camera className="w-5 h-5 text-emerald-500" />
+                                <h3 className="text-xs font-black text-gray-900 uppercase tracking-widest">Live Camera Capture</h3>
+                            </div>
+                            <button 
+                                onClick={stopCamera} 
+                                className="p-2 rounded-xl hover:bg-gray-200 text-gray-400 hover:text-gray-900 transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden">
+                            <video 
+                                ref={(node) => {
+                                    if (videoRef) {
+                                        (videoRef as React.MutableRefObject<HTMLVideoElement | null>).current = node;
+                                    }
+                                    if (node && cameraStream && node.srcObject !== cameraStream) {
+                                        node.srcObject = cameraStream;
+                                    }
+                                }}
+                                autoPlay 
+                                playsInline 
+                                className="w-full h-full object-cover"
+                            />
+                        </div>
+
+                        <div className="p-6 bg-gray-50 flex items-center justify-between gap-4">
+                            <button 
+                                onClick={stopCamera} 
+                                className="btn-secondary !py-3 !px-6 text-[10px] font-black uppercase tracking-widest !rounded-xl"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={capturePhoto} 
+                                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg active:scale-95"
+                            >
+                                <Camera className="w-4 h-4" /> Capture Photo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Audio Preview Modal */}
+            {audioPreview && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+                    <div className="w-full max-w-xl bg-white rounded-[2rem] overflow-hidden shadow-2xl border border-gray-100 flex flex-col">
+                        <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50">
+                            <div className="flex items-center gap-2">
+                                <Mic className="w-5 h-5 text-amber-500" />
+                                <h3 className="text-xs font-black text-gray-900 uppercase tracking-widest">Voice Recording Preview</h3>
+                            </div>
+                            <button 
+                                onClick={() => setAudioPreview(null)} 
+                                className="p-2 rounded-xl hover:bg-gray-200 text-gray-400 hover:text-gray-900 transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <div className="p-12 flex flex-col items-center justify-center bg-white">
+                            <audio src={audioPreview.url} controls className="w-full max-w-md" />
+                        </div>
+
+                        <div className="p-6 bg-gray-50 flex items-center justify-between gap-4 border-t border-gray-100">
+                            <button 
+                                onClick={() => setAudioPreview(null)} 
+                                className="btn-secondary !py-3 !px-6 text-[10px] font-black uppercase tracking-widest !rounded-xl"
+                            >
+                                Discard
+                            </button>
+                            <button 
+                                onClick={() => {
+                                    const metaUrl = `${audioPreview.url}#name=${audioPreview.name}&type=audio/webm`;
+                                    set("evidence", [...form.evidence, metaUrl]);
+                                    setAudioPreview(null);
+                                }} 
+                                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg active:scale-95"
+                            >
+                                <Check className="w-4 h-4" /> Attach Recording
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

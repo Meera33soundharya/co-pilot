@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import {
     LayoutDashboard, MessageSquare, Settings,
     Calendar, X, Menu, Search, Bell, LogOut,
@@ -100,7 +100,7 @@ const CITIZEN_NAV: NavGroup[] = [
         group: "My Account", items: [
             { icon: LayoutDashboard, label: "Dashboard", path: "/citizen" },
             { icon: PlusCircle, label: "Submit Complaint", path: "/submit-complaint" },
-            { icon: MessageSquare, label: "Track Complaint", path: "/citizen" },
+            { icon: MessageSquare, label: "Track Complaint", path: "/citizen#track-complaint" },
             { icon: Megaphone, label: "Announcements", path: "/announcements" },
             { icon: User, label: "My Profile", path: "/profile" },
         ]
@@ -109,6 +109,7 @@ const CITIZEN_NAV: NavGroup[] = [
 
 export function DashboardLayout({ children, title, subtitle, bgImage, actions }: DashboardLayoutProps) {
     const navigate = useNavigate();
+    const location = useLocation();
     const { currentUser, logout, complaints, notifications, readNotification } = useComplaints();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [adminSlideOpen, setAdminSlideOpen] = useState(false);
@@ -142,7 +143,8 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
     const role = currentUser?.role ?? "admin";
     const navGroups = role === "citizen" ? CITIZEN_NAV : role === "officer" ? OFFICER_NAV : ADMIN_NAV;
     const unreadCount = notifications.filter(n => !n.read).length;
-    const newCount = complaints.filter(c => c.status === "New").length;
+    const newCount = complaints.filter(c => c.status === "New" && c.source !== "voice").length;
+    const assignedCount = complaints.filter(c => c.status === "Assigned" && (role === "admin" || c.dept === currentUser?.dept)).length;
 
     const roleCfg = {
         admin: { color: "#B91C1C", label: "Administrator", abbr: "AD" },
@@ -200,7 +202,7 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
                 {/* Live new complaints banner */}
                 {(role === "admin" || role === "officer") && newCount > 0 && (
                     <button
-                        onClick={() => navigate("/grievances?status=New")}
+                        onClick={() => navigate(role === "officer" ? "/field-portal?status=New" : "/grievances?status=New")}
                         className="mx-3 mt-2 flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-black uppercase tracking-wide text-red-700 bg-red-50 border border-red-100 hover:bg-red-100 transition-colors group"
                     >
                         <span className="live-dot w-2.5 h-2.5 shrink-0" />
@@ -216,28 +218,38 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
                             <p className="px-3 mb-2 text-xs font-black uppercase tracking-[0.2em] text-gray-400">{group}</p>
                             <div className="space-y-0.5">
                                 {items.map(({ icon: Icon, label, path, badge }) => {
-                                    const liveCnt = badge === "live" ? newCount : 0;
+                                    const isAssignedComplaints = label === "Assigned Complaints";
+                                    const isComplaints = label === "Complaints";
+                                    const liveCnt = badge === "new" ? newCount : isAssignedComplaints ? assignedCount : badge === "live" ? newCount : 0;
+                                    // "Assigned Complaints" always navigates to the Assigned (voice-only) tab
+                                    const navTo = isAssignedComplaints
+                                        ? `${path}?status=Assigned`
+                                        : isComplaints && newCount > 0 ? `${path}?status=New` : path;
+                                    // Custom active: "Assigned Complaints" only active when ?status=Assigned
+                                    const isActiveCustom = isAssignedComplaints
+                                        ? location.pathname === path && location.search.includes("status=Assigned")
+                                        : location.pathname === path || (isComplaints && location.pathname === "/grievances");
                                     return (
                                         <NavLink
-                                            key={path}
-                                            to={label === "Complaints" && liveCnt > 0 ? `${path}?status=New` : path}
+                                            key={label}
+                                            to={navTo}
                                             onClick={() => setSidebarOpen(false)}
-                                            className={({ isActive }) =>
-                                                `flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-150 group text-base font-medium ${isActive
+                                            className={() =>
+                                                `flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-150 group text-base font-medium ${isActiveCustom
                                                     ? "text-white shadow-lg shadow-red-900/20"
                                                     : "text-gray-600 hover:bg-red-50 hover:text-[#B91C1C]"
                                                 }`
                                             }
-                                            style={({ isActive }) => isActive ? { backgroundColor: "#B91C1C" } : {}}
+                                            style={() => isActiveCustom ? { backgroundColor: "#B91C1C" } : {}}
                                         >
-                                            {({ isActive }) => (
+                                            {() => (
                                                 <>
                                                     <div className="flex items-center gap-3">
-                                                        <Icon className={`w-4 h-4 ${isActive ? "text-white" : "text-gray-400 group-hover:text-[#B91C1C]"}`} />
+                                                        <Icon className={`w-4 h-4 ${isActiveCustom ? "text-white" : "text-gray-400 group-hover:text-[#B91C1C]"}`} />
                                                         <span className="font-bold">{label}</span>
                                                     </div>
                                                     {liveCnt > 0 && (
-                                                        <span className={`text-xs font-black px-2 py-0.5 rounded-md ${isActive ? "bg-white/20 text-white" : "bg-red-50 text-[#B91C1C]"}`}>
+                                                        <span className={`text-xs font-black px-2 py-0.5 rounded-md ${isActiveCustom ? "bg-white/20 text-white" : isAssignedComplaints ? "bg-blue-50 text-blue-700" : "bg-red-50 text-[#B91C1C]"}`}>
                                                             {liveCnt}
                                                         </span>
                                                     )}

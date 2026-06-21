@@ -294,6 +294,10 @@ export default function Grievances() {
         const matchS = statusFilter === "All" || c.status === statusFilter;
         const matchP = priFilter === "All" || c.priority === priFilter;
         const matchC = catFilter === "All" || c.category === catFilter;
+        
+        // Requirement: Voice Assistant complaints strictly in Assigned tab only
+        if (c.source === "voice" && statusFilter !== "Assigned" && statusFilter !== "All") return false;
+
         // Citizens only see their own
         if (isCitizen && currentUser) return matchQ && matchS && matchP && matchC && c.citizenId === currentUser.citizenId;
         return matchQ && matchS && matchP && matchC;
@@ -332,8 +336,12 @@ export default function Grievances() {
         toast_("Citizen notified via SMS ✓");
     }
 
-    const counts: Record<string, number> = { All: complaints.length };
-    WORKFLOW_STEPS.forEach(s => { counts[s] = complaints.filter(c => c.status === s).length; });
+    const counts: Record<string, number> = { 
+        All: complaints.length 
+    };
+    WORKFLOW_STEPS.forEach(s => { 
+        counts[s] = complaints.filter(c => c.status === s).length;
+    });
 
     return (
         <DashboardLayout title="Complaints" subtitle={

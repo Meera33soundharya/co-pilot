@@ -57,6 +57,13 @@ function normalizeCategory(rawCat: string): Category {
 export async function analyzeComplaint(issue: string, description: string): Promise<AIResult> {
     console.log(`🧠 GovPilot Intelligence: Analyzing complaint via ${MODEL_NAME}...`);
     
+    // If the API key is the default leaked/blocked one, skip the network request entirely 
+    // to prevent red 404/403 errors in the browser console, and jump straight to the smart local fallback.
+    if (GEMINI_API_KEY === "AIzaSyBimmkZi2w1zCVth4xPrHuqha9zDlRbviY") {
+        console.log("Using Offline/Local AI Classification (API Key is placeholder/blocked)");
+        return fallbackClassification(issue, description);
+    }
+    
     try {
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${GEMINI_API_KEY}`, {
             method: 'POST',
@@ -94,40 +101,135 @@ export async function analyzeComplaint(issue: string, description: string): Prom
         });
 
         if (!response.ok) {
-            throw new Error(`Gemini API Error: ${response.statusText}`);
+            console.warn(`Gemini API Error: ${response.status} - Falling back to local classification.`);
+            return fallbackClassification(issue, description);
         }
 
         const data = await response.json();
-        const aiResponse = JSON.parse(data.candidates[0].content.parts[0].text);
+        let textResponse = data.candidates[0].content.parts[0].text;
         
-        const cat = normalizeCategory(aiResponse.category);
-        const dept = CATEGORY_DEPT[cat] || "General Administration";
+        // Strip markdown backticks if present
+        if (textResponse.startsWith("```json")) {
+            textResponse = textResponse.replace(/^```json\n/, "").replace(/\n```$/, "");
+        } else if (textResponse.startsWith("```")) {
+            textResponse = textResponse.replace(/^```\n/, "").replace(/\n```$/, "");
+        }
 
+        const parsed = JSON.parse(textResponse);
+        
         return {
-            category: cat,
-            priority: aiResponse.priority as any,
-            dept: dept,
-            summary: aiResponse.summary,
-            actionPlan: aiResponse.actionPlan,
-            reasoning: aiResponse.reasoning
+            category: parsed.category || "Other",
+            priority: parsed.priority || "Medium",
+            dept: CATEGORY_DEPT[parsed.category as Category] || "General Administration",
+            summary: parsed.summary || issue,
+            actionPlan: parsed.actionPlan || ["Investigate issue", "Assign to relevant team"],
+            reasoning: parsed.reasoning || "Categorized based on keywords."
         };
-
     } catch (error) {
         console.error("AI Service Error:", error);
-        
-        // Fallback to local heuristic if API fails
-        const text = (`${issue} ${description}`).toLowerCase();
-        const cat = autoCategory(text);
-        const dept = CATEGORY_DEPT[cat];
-        
-        return {
-            category: cat,
-            priority: text.includes("danger") || text.includes("urgent") ? "High" : "Medium",
-            dept: dept,
-            summary: "AI fallback (Offline Mode): Auto-categorized based on departmental keywords.",
-            actionPlan: [`Forward to ${dept} Unit`, "Initial assessment by field team"],
-            reasoning: `AI encountered an issue communicating with the core models, but locally identified this as ${cat} based on district protocols.`
-        };
+        return fallbackClassification(issue, description);
     }
 }
 
+// ─────────────────────────────────────────────────────────
+// Fallback Classification (Used when offline or API limit reached)
+// ─────────────────────────────────────────────────────────
+function fallbackClassification(issue: string, description: string): AIResult {
+    const text = (issue + " " + description).toLowerCase();
+    let priority: "High" | "Medium" | "Low" = "Medium";
+    
+    if (text.includes("urgent") || text.includes("leak") || text.includes("fire") || text.includes("danger") || text.includes("accident")) {
+        priority = "High";
+    }
+
+    const cat = autoCategory(text);
+
+    return {
+        category: cat,
+        priority,
+        dept: CATEGORY_DEPT[cat] || "General Administration",
+        summary: issue,
+        actionPlan: ["Acknowledge complaint", "Dispatch field officer for inspection", "Resolve and update status"],
+        reasoning: "Local offline classification applied due to AI service unavailability."
+    };
+}
+
+export interface ExtractedEntities {
+    name: string;
+    issue: string;
+    ward: string;
+    phone: string;
+    confidence: {
+        name: number;
+        issue: number;
+        ward: number;
+        phone: number;
+    };
+}
+
+export function extractEntities(transcript: string, rawSpeechConfidence: number): ExtractedEntities {
+    // A robust local fallback NER extraction (since API is blocked)
+    const text = transcript;
+    
+    let name = "";
+    let issue = transcript;
+    let ward = "";
+    let phone = "";
+    
+    // Confidence baseline based on speech-to-text accuracy (API returns 0 to 1)
+    let baseConf = rawSpeechConfidence > 0 ? Math.floor(rawSpeechConfidence * 100) : 85;
+
+    // 1. Extract Phone Number (10 digits)
+    const phoneMatch = transcript.match(/(?:\+91|91)?\s*([6-9]\d{9})/);
+    if (phoneMatch) {
+        phone = phoneMatch[1];
+        issue = issue.replace(phoneMatch[0], "");
+    }
+    
+    // 2. Extract Ward
+    const wardMatch = transcript.match(/(?:ward|வார்டு|ward number|area)\s*(\d+)/i);
+    if (wardMatch) {
+        ward = "Ward " + wardMatch[1];
+        issue = issue.replace(wardMatch[0], "");
+    }
+    
+    // 3. Extract Name
+    // Common heuristics: "My name is X", "I am X", "பெயர் X"
+    const nameMatchEn = transcript.match(/(?:my name is|i am|this is)\s+([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)/i);
+    const nameMatchTa = transcript.match(/(?:என் பெயர்|பெயர்)\s+([^\s,]+)/);
+    
+    let nameConf = baseConf;
+    
+    if (nameMatchEn) {
+        name = nameMatchEn[1];
+        issue = issue.replace(nameMatchEn[0], "");
+        nameConf = Math.min(100, baseConf + 10); // Explicit pattern increases confidence
+    } else if (nameMatchTa) {
+        name = nameMatchTa[1];
+        issue = issue.replace(nameMatchTa[0], "");
+        nameConf = Math.min(100, baseConf + 10);
+    } else {
+        name = "";
+        nameConf = 0; // Requires user confirmation
+    }
+    
+    // Clean up issue text
+    issue = issue.trim().replace(/^[,.\s]+|[,.\s]+$/g, "");
+    
+    if (!issue) {
+        issue = transcript; // Fallback
+    }
+
+    return {
+        name: name.trim(),
+        issue: issue,
+        ward: ward,
+        phone: phone,
+        confidence: {
+            name: name ? nameConf : 0,
+            issue: Math.min(100, baseConf + 5),
+            ward: ward ? 95 : 0,
+            phone: phone ? 99 : 0
+        }
+    };
+}

@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useComplaints } from "@/context/ComplaintsContext";
+import { useSearchParams } from "react-router-dom";
 import { 
     CheckCircle2, Clock, MapPin, Phone, 
     Camera, Sparkles, Navigation,
@@ -11,7 +12,10 @@ import type { Complaint, Status } from "@/store/complaintsStore";
 
 export default function FieldPortal() {
     const { complaints, currentUser, updateStatus, assignComplaint } = useComplaints();
-    const [filterStatus, setFilterStatus] = useState<Status | "All">("New");
+    const [searchParams] = useSearchParams();
+    const [filterStatus, setFilterStatus] = useState<Status | "All">(
+        (searchParams.get("status") as Status) || "All"
+    );
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedTask, setSelectedTask] = useState<Complaint | null>(null);
     const [isUpdating, setIsUpdating] = useState(false);
@@ -27,9 +31,13 @@ export default function FieldPortal() {
             const matchesSearch = c.issue.toLowerCase().includes(searchQuery.toLowerCase()) || 
                                  c.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
                                  c.ward.toLowerCase().includes(searchQuery.toLowerCase());
+
+            // Voice Assistant complaints: only appear in "Assigned" tab (not in New/InProgress/etc.)
+            if (c.source === "voice" && filterStatus !== "Assigned" && filterStatus !== "All") return false;
+
             return matchesRole && matchesStatus && matchesSearch;
         });
-    }, [complaints, currentUser, filterStatus, searchQuery]);
+    }, [complaints, currentUser, filterStatus, searchQuery, showAllDepts]);
 
     const handleStatusUpdate = async (id: string, nextStatus: Status, note: string) => {
         setIsUpdating(true);

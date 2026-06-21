@@ -57,6 +57,7 @@ export interface Complaint {
     sentiment?: number;       // 0 to 100 scoring
     rating?: number;          // 1-5 stars citizen feedback
     resolutionProof?: string; // Base64 or URL of "after" photo
+    source?: "voice" | "web"; // Where the complaint originated
 
     // Workflow
     status: Status;

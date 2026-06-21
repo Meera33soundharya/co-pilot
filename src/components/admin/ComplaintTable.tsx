@@ -8,6 +8,9 @@ export default function ComplaintTable() {
 
   const filtered = useMemo(() => {
     return complaints.filter(c => {
+      // Requirements: Voice Assistant complaints should only appear in the Assigned list
+      if (c.source === "voice" && status !== "Assigned") return false;
+      
       if (status !== "All" && c.status !== status) return false;
       if (q && !(`${c.issue} ${c.description} ${c.ward}`.toLowerCase()).includes(q.toLowerCase())) return false;
       return true;
