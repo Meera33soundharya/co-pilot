@@ -1,6 +1,7 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useComplaints } from "@/context/ComplaintsContext";
 import {
     FileText, FolderOpen, Download, Eye, Search,
     Upload, Clock, CheckCircle2, Lock, Share2, X, AlertCircle, Shield
@@ -47,6 +48,7 @@ interface PreviewDoc {
 }
 
 export default function Documents() {
+    const { closedDocs } = useComplaints();
     const [localDocs, setLocalDocs] = useState(recentDocs);
     const [search, setSearch] = useState("");
     const [searchParams] = useSearchParams();
@@ -55,7 +57,23 @@ export default function Documents() {
     const [uploadOpen, setUploadOpen] = useState(false);
     const [uploaded, setUploaded] = useState(false);
 
-    const filtered = localDocs.filter(d =>
+    // Merge closed complaint docs with local docs
+    const allDocs = useMemo(() => {
+        const closedAsPreview: PreviewDoc[] = closedDocs.map(d => ({
+            name: d.name,
+            size: d.size,
+            date: d.date,
+            type: d.type,
+            status: d.status,
+            access: d.access,
+            assetId: d.assetId,
+            dept: d.dept,
+            summary: d.summary,
+        }));
+        return [...closedAsPreview, ...localDocs];
+    }, [closedDocs, localDocs]);
+
+    const filtered = allDocs.filter(d =>
         d.name.toLowerCase().includes(search.toLowerCase())
     );
 
@@ -136,20 +154,20 @@ export default function Documents() {
                                     </div>
                                     <div>
                                         <h2 className="text-3xl font-black italic tracking-tighter leading-tight uppercase">{previewDoc.name.split(" - ")[0]}</h2>
-                                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mt-3">Governance Asset File</p>
+                                        <p className="text-sm font-black uppercase tracking-[0.3em] text-white/30 mt-3">Governance Asset File</p>
                                     </div>
 
                                     <div className="space-y-6 pt-10 border-t border-white/10">
                                         <div>
                                             <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-1">Asset Status</p>
-                                            <span className="px-4 py-1.5 rounded-xl border text-[10px] font-black uppercase tracking-widest"
+                                            <span className="px-4 py-1.5 rounded-xl border text-sm font-black uppercase tracking-widest"
                                                 style={{ backgroundColor: `${statusStyle[previewDoc.status]?.text}20`, color: statusStyle[previewDoc.status]?.text, borderColor: `${statusStyle[previewDoc.status]?.text}30` }}>
                                                 {statusStyle[previewDoc.status]?.label}
                                             </span>
                                         </div>
                                         <div>
                                             <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-1">Registry Core</p>
-                                            <p className="text-sm font-black italic text-red-500">{previewDoc.assetId}</p>
+                                            <p className="text-lg font-black italic text-red-500">{previewDoc.assetId}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -158,7 +176,7 @@ export default function Documents() {
                                     <p className="text-[9px] font-black text-white/40 uppercase tracking-widest mb-3">Integrity Verification</p>
                                     <div className="flex items-center gap-3">
                                         <Shield className="w-4 h-4 text-emerald-500" />
-                                        <span className="text-[10px] font-bold text-white/80">SHA-256 Encrypted</span>
+                                        <span className="text-sm font-bold text-white/80">SHA-256 Encrypted</span>
                                     </div>
                                 </div>
                             </div>
@@ -197,20 +215,20 @@ export default function Documents() {
                                         {previewDoc.aiScore && (
                                             <div>
                                                 <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">AI Priority Index</p>
-                                                <p className="font-black text-[#B91C1C] text-xl italic">{previewDoc.aiScore}<span className="text-[10px] ml-1">Pts</span></p>
+                                                <p className="font-black text-[#B91C1C] text-xl italic">{previewDoc.aiScore}<span className="text-sm ml-1">Pts</span></p>
                                             </div>
                                         )}
                                     </div>
 
                                     <div className="space-y-6">
-                                        <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Mission Actions</h4>
+                                        <h4 className="text-sm font-black uppercase tracking-[0.3em] text-gray-400">Mission Actions</h4>
                                         <div className="flex gap-4">
                                             <button onClick={() => { handleDownload(previewDoc); setPreviewDoc(null); }} 
-                                                className="flex-1 flex items-center justify-center gap-4 py-6 bg-[#B91C1C] text-white rounded-[2rem] text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-red-900/40 hover:bg-black transition-all active:scale-95 group">
+                                                className="flex-1 flex items-center justify-center gap-4 py-6 bg-[#B91C1C] text-white rounded-[2rem] text-base font-black uppercase tracking-[0.2em] shadow-2xl shadow-red-900/40 hover:bg-black transition-all active:scale-95 group">
                                                 <Download className="w-5 h-5 group-hover:-translate-y-1 transition-transform" /> Download Original Asset
                                             </button>
                                             <button onClick={() => setPreviewDoc(null)}
-                                                className="px-10 py-6 bg-gray-100 text-gray-900 rounded-[2rem] text-[11px] font-black uppercase tracking-[0.2em] hover:bg-gray-200 transition-all active:scale-95">
+                                                className="px-10 py-6 bg-gray-100 text-gray-900 rounded-[2rem] text-base font-black uppercase tracking-[0.2em] hover:bg-gray-200 transition-all active:scale-95">
                                                 Dismiss
                                             </button>
                                         </div>
@@ -224,7 +242,7 @@ export default function Documents() {
 
             {/* Share toast */}
             {shareToast && (
-                <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-3 px-6 py-3 bg-gray-900 text-white rounded-2xl shadow-2xl animate-fade-in text-sm font-black">
+                <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-3 px-6 py-3 bg-gray-900 text-white rounded-2xl shadow-2xl animate-fade-in text-lg font-black">
                     <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Link copied to clipboard!
                 </div>
             )}
@@ -247,12 +265,12 @@ export default function Documents() {
                                     <div onClick={() => fileInputRef.current?.click()}
                                         className="border-2 border-dashed border-gray-200 rounded-2xl p-10 text-center hover:border-red-300 transition-colors cursor-pointer group">
                                         <Upload className="w-10 h-10 text-gray-300 mx-auto mb-3 group-hover:text-red-400 transition-colors" />
-                                        <p className="text-sm font-bold text-gray-600">Click to select a file from your device</p>
-                                        <p className="text-xs text-gray-400 mt-1">PDF, DOCX, XLSX, PNG, JPG up to 50 MB</p>
+                                        <p className="text-lg font-bold text-gray-600">Click to select a file from your device</p>
+                                        <p className="text-base text-gray-400 mt-1">PDF, DOCX, XLSX, PNG, JPG up to 50 MB</p>
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Target Folder</label>
-                                        <select className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-medium text-gray-800 focus:outline-none focus:border-red-200">
+                                        <label className="text-sm font-black uppercase tracking-widest text-gray-500">Target Folder</label>
+                                        <select className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-lg font-medium text-gray-800 focus:outline-none focus:border-red-200">
                                             {folders.map(f => <option key={f.name}>{f.name}</option>)}
                                         </select>
                                     </div>
@@ -267,7 +285,7 @@ export default function Documents() {
                                         <CheckCircle2 className="w-8 h-8 text-emerald-500" />
                                     </div>
                                     <h3 className="font-black text-gray-900 text-lg">Uploaded Successfully!</h3>
-                                    <p className="text-sm text-gray-500">File has been encrypted and stored securely in GovPilot.</p>
+                                    <p className="text-lg text-gray-500">File has been encrypted and stored securely in GovPilot.</p>
                                     <button onClick={() => { setUploadOpen(false); setUploaded(false); }} className="btn-primary w-full !py-4">Done</button>
                                 </div>
                             )}
@@ -286,12 +304,12 @@ export default function Documents() {
                             onChange={e => setSearch(e.target.value)}
                             type="text"
                             placeholder="Search strategic signals, reports, or notices..."
-                            className="w-full pl-12 pr-6 py-4 bg-white border border-gray-100 rounded-2xl text-sm text-gray-900 focus:outline-none focus:ring-4 focus:ring-red-500/5 font-bold transition-all placeholder:text-gray-300 shadow-sm"
+                            className="w-full pl-12 pr-6 py-4 bg-white border border-gray-100 rounded-2xl text-lg text-gray-900 focus:outline-none focus:ring-4 focus:ring-red-500/5 font-bold transition-all placeholder:text-gray-300 shadow-sm"
                         />
                     </div>
                     <button
                         onClick={() => setUploadOpen(true)}
-                        className="flex items-center gap-3 px-8 py-4 bg-[#B91C1C] text-white rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] hover:bg-neutral-800 transition-all shadow-xl shadow-red-900/20 active:scale-95"
+                        className="flex items-center gap-3 px-8 py-4 bg-[#B91C1C] text-white rounded-2xl text-base font-black uppercase tracking-[0.2em] hover:bg-neutral-800 transition-all shadow-xl shadow-red-900/20 active:scale-95"
                     >
                         <Upload className="w-4 h-4" /> Secure Upload
                     </button>
@@ -299,7 +317,7 @@ export default function Documents() {
 
                 {/* Folders */}
                 <div>
-                    <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-6 flex items-center gap-3">
+                    <h2 className="text-sm font-black uppercase tracking-[0.2em] text-gray-400 mb-6 flex items-center gap-3">
                         <div className="w-1.5 h-1.5 rounded-full bg-[#B91C1C]" />
                         Library Architecture
                     </h2>
@@ -316,7 +334,7 @@ export default function Documents() {
                                         <FolderOpen className="w-5 h-5" style={{ color: "#B91C1C" }} />
                                     </div>
                                 </div>
-                                <p className="text-xs font-black leading-tight tracking-tight text-gray-900 mb-1 group-hover:text-[#B91C1C] transition-colors">{folder.name}</p>
+                                <p className="text-base font-black leading-tight tracking-tight text-gray-900 mb-1 group-hover:text-[#B91C1C] transition-colors">{folder.name}</p>
                                 <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">{folder.count} Signals</p>
                             </div>
                         ))}
@@ -332,17 +350,17 @@ export default function Documents() {
                             </div>
                             <div>
                                 <h3 className="text-lg font-black text-gray-900 uppercase italic">Recent Governance Signals</h3>
-                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Active Document Stream</p>
+                                <p className="text-sm font-black text-gray-400 uppercase tracking-widest">Active Document Stream</p>
                             </div>
                         </div>
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">{recentDocs.length} TOTAL SIGNALS</span>
+                        <span className="text-sm font-black text-gray-400 uppercase tracking-[0.2em]">{recentDocs.length} TOTAL SIGNALS</span>
                     </div>
                     <div className="divide-y divide-gray-50">
                         {filtered.map(doc => (
                             <div key={doc.name} className="flex items-center gap-8 px-10 py-6 hover:bg-red-50/20 transition-all group">
                                 {/* Type Badge */}
                                 <div className="hidden md:flex flex-col items-center justify-center w-16 h-16 rounded-[1.5rem] bg-gray-50 border border-gray-100 group-hover:bg-[#B91C1C] transition-all">
-                                    <span className="text-[10px] font-black group-hover:text-white transition-colors">{doc.type}</span>
+                                    <span className="text-sm font-black group-hover:text-white transition-colors">{doc.type}</span>
                                     <FileText className="w-4 h-4 mt-1 text-gray-400 group-hover:text-white transition-colors" />
                                 </div>
 
@@ -353,10 +371,10 @@ export default function Documents() {
                                 >
                                     <h4 className="text-lg font-black text-gray-900 truncate group-hover/link:text-[#B91C1C] transition-colors uppercase italic">{doc.name}</h4>
                                     <div className="flex items-center gap-6 mt-1">
-                                        <div className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                        <div className="flex items-center gap-2 text-sm font-black text-gray-400 uppercase tracking-widest">
                                             <Clock className="w-3.5 h-3.5" /> {doc.date}
                                         </div>
-                                        <div className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                        <div className="flex items-center gap-2 text-sm font-black text-gray-400 uppercase tracking-widest">
                                             <FolderOpen className="w-3.5 h-3.5" /> {doc.size}
                                         </div>
                                     </div>
@@ -365,7 +383,7 @@ export default function Documents() {
                                 {/* Status + Access */}
                                 <div className="hidden lg:flex items-center gap-6 shrink-0">
                                     <div className="flex flex-col items-end">
-                                        <span className="text-[10px] font-black px-4 py-1.5 rounded-xl border uppercase tracking-widest transition-all"
+                                        <span className="text-sm font-black px-4 py-1.5 rounded-xl border uppercase tracking-widest transition-all"
                                             style={{ backgroundColor: statusStyle[doc.status]?.bg, color: statusStyle[doc.status]?.text, borderColor: `${statusStyle[doc.status]?.text}20` }}>
                                             {statusStyle[doc.status]?.label}
                                         </span>

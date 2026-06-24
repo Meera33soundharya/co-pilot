@@ -534,19 +534,19 @@ export default function CitizenPortal() {
                             <MessageSquare className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                            <p className="text-sm font-black text-gray-900">Governance Co-Pilot</p>
-                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Citizen Submission Portal</p>
+                            <p className="text-lg font-black text-gray-900">Governance Co-Pilot</p>
+                            <p className="text-sm text-gray-400 font-bold uppercase tracking-widest">Citizen Submission Portal</p>
                         </div>
                     </div>
                             <div className="flex items-center gap-3">
                                 <button onClick={() => navigate("/citizen")}
-                                    className="flex items-center gap-2 text-xs font-bold text-gray-500 hover:text-gray-900 transition-colors bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
+                                    className="flex items-center gap-2 text-base font-bold text-gray-500 hover:text-gray-900 transition-colors bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
                                     <ArrowLeft className="w-4 h-4" /> Back to Dashboard
                                 </button>
 
                                 <button
                                     onClick={() => { logout(); navigate("/"); }}
-                                    className="flex items-center gap-2 text-xs font-black text-red-600 hover:text-white hover:bg-red-600 transition-all bg-red-50 px-4 py-2 rounded-xl border border-red-100 uppercase tracking-widest"
+                                    className="flex items-center gap-2 text-base font-black text-red-600 hover:text-white hover:bg-red-600 transition-all bg-red-50 px-4 py-2 rounded-xl border border-red-100 uppercase tracking-widest"
                                 >
                                     <LogOut className="w-4 h-4" /> Sign Out
                                 </button>
@@ -574,12 +574,12 @@ export default function CitizenPortal() {
 
                             return (
                                 <div key={s.id} className="flex items-center gap-2">
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black transition-all ${isActive ? "bg-[#B91C1C] text-white scale-110 shadow-lg shadow-red-200" :
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-base font-black transition-all ${isActive ? "bg-[#B91C1C] text-white scale-110 shadow-lg shadow-red-200" :
                                         isDone ? "bg-emerald-500 text-white" : "bg-gray-100 text-gray-400"
                                         }`}>
                                         {isDone ? <Check className="w-4 h-4" /> : i + 1}
                                     </div>
-                                    <span className={`text-[10px] font-black uppercase tracking-widest hidden sm:block ${isActive ? "text-[#B91C1C]" : "text-gray-400"}`}>
+                                    <span className={`text-sm font-black uppercase tracking-widest hidden sm:block ${isActive ? "text-[#B91C1C]" : "text-gray-400"}`}>
                                         {s.label}
                                     </span>
                                     {i < arr.length - 1 && <div className="w-8 h-px bg-gray-100 mx-2" />}
@@ -594,11 +594,11 @@ export default function CitizenPortal() {
                     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
                         <div className="text-center">
                             <h1 className="text-3xl font-black text-gray-900 mb-2">Identify Yourself</h1>
-                            <p className="text-gray-500 text-sm">We need this so officers can contact you for updates.</p>
+                            <p className="text-gray-500 text-lg">We need this so officers can contact you for updates.</p>
                         </div>
                         <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-xl space-y-6">
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Full Name *</label>
+                                <label className="text-sm font-black uppercase tracking-widest text-gray-400 ml-1">Full Name *</label>
                                 <div className="relative group">
                                     <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 group-focus-within:text-[#B91C1C] transition-colors" />
                                     <input type="text" required value={form.citizen} onChange={e => set("citizen", e.target.value)}
@@ -606,7 +606,7 @@ export default function CitizenPortal() {
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Contact Phone *</label>
+                                <label className="text-sm font-black uppercase tracking-widest text-gray-400 ml-1">Contact Phone *</label>
                                 <div className="relative group">
                                     <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 group-focus-within:text-[#B91C1C] transition-colors" />
                                     <input type="tel" required value={form.phone} onChange={e => set("phone", e.target.value)}
@@ -615,7 +615,7 @@ export default function CitizenPortal() {
                             </div>
                             <div className="p-4 bg-blue-50 border border-blue-100 rounded-2xl flex gap-3">
                                 <Shield className="w-5 h-5 text-blue-600 shrink-0" />
-                                <p className="text-[11px] text-blue-700 font-medium leading-relaxed">Your data is secured by district governance protocols. Only assigned officers can access your phone number.</p>
+                                <p className="text-base text-blue-700 font-medium leading-relaxed">Your data is secured by district governance protocols. Only assigned officers can access your phone number.</p>
                             </div>
                             <button onClick={next} disabled={!form.citizen || !form.phone}
                                 className="btn-primary w-full !py-4.5 group">
@@ -631,19 +631,19 @@ export default function CitizenPortal() {
                     <div className="space-y-8 animate-in fade-in slide-in-from-right-4">
                         <div className="text-center">
                             <h1 className="text-3xl font-black text-gray-900 mb-2">Problem & Evidence Proof</h1>
-                            <p className="text-gray-500 text-sm">Tell us what needs fixing and provide any supporting media or documents.</p>
+                            <p className="text-gray-500 text-lg">Tell us what needs fixing and provide any supporting media or documents.</p>
                         </div>
                         <div className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-xl space-y-6">
 
 
                             <div className="space-y-2">
-                                <label className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">Problem Title *</label>
+                                <label className="text-base font-black uppercase tracking-widest text-gray-500 ml-1">Problem Title *</label>
                                 <input type="text" required value={form.issue} onChange={e => set("issue", e.target.value)}
                                     placeholder="e.g. Pipe burst causing flooding" className="input-field" />
                             </div>
 
                             <div className="space-y-3">
-                                <label className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">Urgency Selector *</label>
+                                <label className="text-base font-black uppercase tracking-widest text-gray-500 ml-1">Urgency Selector *</label>
                                 <div className="grid grid-cols-3 gap-3">
                                     {(["Low", "Medium", "High"] as const).map(p => (
                                         <button key={p} onClick={() => set("priority", p)}
@@ -654,14 +654,14 @@ export default function CitizenPortal() {
                                             ) : "bg-gray-50 border-transparent grayscale italic opacity-60"
                                                 }`}>
                                             <AlertTriangle className={`w-5 h-5 ${p === "High" ? "text-red-500" : p === "Medium" ? "text-amber-500" : "text-blue-500"}`} />
-                                            <span className="text-xs font-black uppercase">{p}</span>
+                                            <span className="text-base font-black uppercase">{p}</span>
                                         </button>
                                     ))}
                                 </div>
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-xs font-black uppercase tracking-widest text-gray-500 ml-1">Full Description</label>
+                                <label className="text-base font-black uppercase tracking-widest text-gray-500 ml-1">Full Description</label>
                                 <textarea rows={4} value={form.description} onChange={e => set("description", e.target.value)}
                                     placeholder="Provide more context — how long has this been happening?" className="w-full px-5 py-5 bg-gray-50 border border-transparent rounded-2xl text-base font-bold focus:bg-white focus:border-red-200 focus:outline-none transition-all resize-none shadow-inner" />
                             </div>
@@ -669,7 +669,7 @@ export default function CitizenPortal() {
                             {/* 📸 Evidence Proof Section (Moved for visibility) */}
                             <div className="pt-6 border-t border-gray-100 space-y-6">
                                 <div className="flex items-center justify-between px-1">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Supporting Evidence (Audio / Docs / Media)</label>
+                                    <label className="text-sm font-black uppercase tracking-widest text-gray-400">Supporting Evidence (Audio / Docs / Media)</label>
                                     <span className="text-[9px] font-black text-[#B91C1C] uppercase py-1 px-2 bg-red-50 rounded-lg">High Sensitivity</span>
                                 </div>
 
@@ -723,7 +723,7 @@ export default function CitizenPortal() {
                                             <Paperclip className="w-5 h-5 text-gray-400 group-hover:text-[#B91C1C]" />
                                         </div>
                                         <div className="text-center">
-                                            <p className="text-[10px] font-black uppercase text-gray-900 leading-tight">Upload Document</p>
+                                            <p className="text-sm font-black uppercase text-gray-900 leading-tight">Upload Document</p>
                                             <p className="text-[8px] font-bold text-gray-400 uppercase tracking-tighter">PNG, JPG, PDF (Max 10MB)</p>
                                         </div>
                                     </button>
@@ -731,7 +731,7 @@ export default function CitizenPortal() {
 
                                 <div className="flex flex-col gap-4 bg-gray-50/50 p-6 rounded-3xl border border-gray-100">
                                     <div className="flex items-center justify-between">
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Audio / Voice Intelligence</p>
+                                        <p className="text-sm font-black uppercase tracking-widest text-gray-400">Audio / Voice Intelligence</p>
                                         {isRecording && (
                                             <div className="flex items-center gap-2 text-red-600 animate-pulse">
                                                 <div className="w-2 h-2 bg-red-600 rounded-full" />
@@ -742,7 +742,7 @@ export default function CitizenPortal() {
                                     <div className="flex items-center gap-4 justify-center">
                                         <button 
                                             onClick={isRecording ? stopRecording : startRecording}
-                                            className={`flex items-center gap-2 text-[10px] font-black transition-all px-4 py-2 rounded-xl border ${
+                                            className={`flex items-center gap-2 text-sm font-black transition-all px-4 py-2 rounded-xl border ${
                                                 isRecording 
                                                 ? "bg-red-600 text-white border-red-700 shadow-lg shadow-red-200" 
                                                 : "text-indigo-600 hover:bg-indigo-50 border-transparent"
@@ -754,7 +754,7 @@ export default function CitizenPortal() {
                                         <div className="w-px h-6 bg-gray-200" />
                                         <button 
                                             onClick={() => audioInputRef.current?.click()}
-                                            className="flex items-center gap-2 text-[10px] font-black text-amber-600 hover:bg-amber-50 transition-colors px-4 py-2 rounded-xl"
+                                            className="flex items-center gap-2 text-sm font-black text-amber-600 hover:bg-amber-50 transition-colors px-4 py-2 rounded-xl"
                                         >
                                             <Paperclip className="w-4 h-4" /> Upload Audio
                                         </button>
@@ -762,7 +762,7 @@ export default function CitizenPortal() {
                                         <button 
                                             type="button"
                                             onClick={startCamera}
-                                            className="flex items-center gap-2 text-[10px] font-black text-emerald-600 hover:bg-emerald-50 transition-colors px-4 py-2 rounded-xl"
+                                            className="flex items-center gap-2 text-sm font-black text-emerald-600 hover:bg-emerald-50 transition-colors px-4 py-2 rounded-xl"
                                         >
                                             <Camera className="w-4 h-4" /> Camera
                                         </button>
@@ -799,7 +799,7 @@ export default function CitizenPortal() {
                     <div className="space-y-8 animate-in fade-in slide-in-from-right-4">
                         <div className="text-center">
                             <h1 className="text-3xl font-black text-gray-900 mb-2">Confirm Location</h1>
-                            <p className="text-gray-500 text-sm">Help officers find the exact spot using GPS and interactive mapping.</p>
+                            <p className="text-gray-500 text-lg">Help officers find the exact spot using GPS and interactive mapping.</p>
                         </div>
 
                         <div className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-xl space-y-6">
@@ -819,7 +819,7 @@ export default function CitizenPortal() {
                                             onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
                                             onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                                             placeholder="Search locality, street or landmark..."
-                                            className="w-full pl-11 pr-4 py-4 bg-gray-50 border border-transparent rounded-2xl text-sm font-bold focus:bg-white focus:border-[#B91C1C]/30 focus:outline-none transition-all shadow-inner"
+                                            className="w-full pl-11 pr-4 py-4 bg-gray-50 border border-transparent rounded-2xl text-lg font-bold focus:bg-white focus:border-[#B91C1C]/30 focus:outline-none transition-all shadow-inner"
                                         />
 
                                         {/* Suggestions dropdown */}
@@ -832,7 +832,7 @@ export default function CitizenPortal() {
                                                         className="w-full text-left px-5 py-5 hover:bg-red-50 flex items-center gap-4 transition-colors border-b border-gray-50 last:border-b-0 group/item"
                                                     >
                                                         <MapPin className="w-5 h-5 text-[#B91C1C] shrink-0" />
-                                                        <span className="text-sm font-bold text-gray-700 line-clamp-1">{s.display_name}</span>
+                                                        <span className="text-lg font-bold text-gray-700 line-clamp-1">{s.display_name}</span>
                                                     </button>
                                                 ))}
                                             </div>
@@ -845,7 +845,7 @@ export default function CitizenPortal() {
                                             className="btn-primary !px-6 !py-4 flex-1 sm:flex-none !rounded-2xl active:scale-95"
                                         >
                                             {isSearching ? <Loader2 className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
-                                            <span className="text-[10px] uppercase font-black">Search</span>
+                                            <span className="text-sm uppercase font-black">Search</span>
                                         </button>
                                         <button
                                             onClick={detectLocation}
@@ -853,7 +853,7 @@ export default function CitizenPortal() {
                                             className="bg-gray-900 text-white rounded-2xl px-6 py-4 flex items-center gap-2 hover:bg-[#B91C1C] transition-all shadow-xl active:scale-95 disabled:opacity-50 flex-1 sm:flex-none"
                                         >
                                             {isDetecting ? <Loader2 className="w-5 h-5 animate-spin" /> : <MapIcon className="w-5 h-5" />}
-                                            <span className="text-[10px] uppercase font-black">GPS</span>
+                                            <span className="text-sm uppercase font-black">GPS</span>
                                         </button>
                                     </div>
                                 </div>
@@ -879,7 +879,7 @@ export default function CitizenPortal() {
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <span className="text-[9px] font-black uppercase text-emerald-400 tracking-widest block mb-1">Live Map Intelligence</span>
-                                                <p className="text-sm font-black text-white leading-tight truncate">
+                                                <p className="text-lg font-black text-white leading-tight truncate">
                                                     {form.location || "Searching for address..."}
                                                 </p>
                                                 <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -900,7 +900,7 @@ export default function CitizenPortal() {
                                                 </div>
                                                 <div className="mt-3 py-2 px-3 bg-white/5 rounded-xl border border-white/10">
                                                     <p className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">Official Area Name</p>
-                                                    <p className="text-[11px] font-black text-emerald-400 uppercase tracking-tight">{form.area}</p>
+                                                    <p className="text-base font-black text-emerald-400 uppercase tracking-tight">{form.area}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -911,7 +911,7 @@ export default function CitizenPortal() {
                             {/* Area Detail Grid */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1 block">Election Ward</label>
+                                    <label className="text-sm font-black uppercase tracking-widest text-gray-400 ml-1 block">Election Ward</label>
                                     <div className="relative group">
                                         <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 group-focus-within:text-[#B91C1C] transition-colors" />
                                         <select
@@ -920,7 +920,7 @@ export default function CitizenPortal() {
                                                 const w = e.target.value;
                                                 setForm(f => ({ ...f, ward: w, area: LOCALITIES[w][0] }));
                                             }}
-                                            className="w-full pl-11 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold focus:bg-white focus:border-[#B91C1C]/30 focus:outline-none text-gray-800 transition-all appearance-none cursor-pointer"
+                                            className="w-full pl-11 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-lg font-bold focus:bg-white focus:border-[#B91C1C]/30 focus:outline-none text-gray-800 transition-all appearance-none cursor-pointer"
                                         >
                                             {WARDS.map(w => <option key={w} value={w}>{w}</option>)}
                                         </select>
@@ -930,13 +930,13 @@ export default function CitizenPortal() {
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1 block">Specify Area / Locality</label>
+                                    <label className="text-sm font-black uppercase tracking-widest text-gray-400 ml-1 block">Specify Area / Locality</label>
                                     <div className="relative group">
                                         <MapIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 group-focus-within:text-[#B91C1C] transition-colors" />
                                         <select
                                             value={form.area}
                                             onChange={e => set("area", e.target.value)}
-                                            className="w-full pl-11 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold focus:bg-white focus:border-[#B91C1C]/30 focus:outline-none text-gray-800 transition-all appearance-none cursor-pointer"
+                                            className="w-full pl-11 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-lg font-bold focus:bg-white focus:border-[#B91C1C]/30 focus:outline-none text-gray-800 transition-all appearance-none cursor-pointer"
                                         >
                                             {LOCALITIES[form.ward]?.map(a => <option key={a} value={a}>{a}</option>)}
                                             <option value="Other">Other / Not Listed</option>
@@ -949,7 +949,7 @@ export default function CitizenPortal() {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1 block">Exact Landmark Detail</label>
+                                <label className="text-sm font-black uppercase tracking-widest text-gray-400 ml-1 block">Exact Landmark Detail</label>
                                 <div className="relative group">
                                     <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 group-focus-within:text-[#B91C1C] transition-colors" />
                                     <input
@@ -957,7 +957,7 @@ export default function CitizenPortal() {
                                         value={form.location}
                                         onChange={e => set("location", e.target.value)}
                                         placeholder="e.g. Opposite to Post Office, Near Blue Building"
-                                        className="w-full pl-11 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold focus:bg-white focus:border-[#B91C1C]/30 focus:outline-none text-gray-800 placeholder:text-gray-300 transition-all"
+                                        className="w-full pl-11 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-lg font-bold focus:bg-white focus:border-[#B91C1C]/30 focus:outline-none text-gray-800 placeholder:text-gray-300 transition-all"
                                     />
                                 </div>
                             </div>
@@ -975,18 +975,18 @@ export default function CitizenPortal() {
                     <div className="space-y-8 animate-in zoom-in-95 duration-300">
                         <div className="text-center">
                             <h1 className="text-3xl font-black text-gray-900 mb-2">Review Summary</h1>
-                            <p className="text-gray-500 text-sm">Please verify all details before final submission.</p>
+                            <p className="text-gray-500 text-lg">Please verify all details before final submission.</p>
                         </div>
 
                         <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-2xl overflow-hidden">
                             <div className="bg-gray-900 p-8 text-white">
                                 <div className="flex items-center justify-between mb-4">
-                                    <span className={`text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest ${form.priority === "High" ? "bg-red-500 text-white" :
+                                    <span className={`text-sm font-black px-3 py-1 rounded-full uppercase tracking-widest ${form.priority === "High" ? "bg-red-500 text-white" :
                                         form.priority === "Medium" ? "bg-amber-500 text-white" : "bg-blue-500 text-white"
                                         }`}>
                                         {form.priority} Priority
                                     </span>
-                                    <span className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em]">Preview Ticket</span>
+                                    <span className="text-white/40 text-sm font-black uppercase tracking-[0.2em]">Preview Ticket</span>
                                 </div>
                                 <div className="mb-6 rounded-[1.5rem] overflow-hidden border border-white/10 shadow-inner h-40 group relative">
                                     <iframe
@@ -1000,7 +1000,7 @@ export default function CitizenPortal() {
                                     <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent pointer-events-none" />
                                 </div>
                                 <h2 className="text-2xl font-black leading-tight drop-shadow-md mb-2">{form.issue}</h2>
-                                <div className="flex items-center gap-2 text-white/50 text-xs font-bold">
+                                <div className="flex items-center gap-2 text-white/50 text-base font-bold">
                                     <MapPin className="w-4 h-4" />
                                     {form.location || "Co-ordinates Only"}
                                 </div>
@@ -1009,24 +1009,24 @@ export default function CitizenPortal() {
                             <div className="p-8 space-y-6">
                                 <div className="grid grid-cols-2 gap-8">
                                     <div>
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Citizen Name</p>
-                                        <p className="text-sm font-black text-gray-900">{form.citizen}</p>
+                                        <p className="text-sm font-black uppercase tracking-widest text-gray-400 mb-1">Citizen Name</p>
+                                        <p className="text-lg font-black text-gray-900">{form.citizen}</p>
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Contact Phone</p>
-                                        <p className="text-sm font-black text-gray-900">{form.phone}</p>
+                                        <p className="text-sm font-black uppercase tracking-widest text-gray-400 mb-1">Contact Phone</p>
+                                        <p className="text-lg font-black text-gray-900">{form.phone}</p>
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Ward & Area</p>
-                                        <p className="text-sm font-black text-gray-900">{form.ward} · {form.area}</p>
+                                        <p className="text-sm font-black uppercase tracking-widest text-gray-400 mb-1">Ward & Area</p>
+                                        <p className="text-lg font-black text-gray-900">{form.ward} · {form.area}</p>
                                     </div>
                                 </div>
 
                                 <div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Attached Evidence</p>
+                                    <p className="text-sm font-black uppercase tracking-widest text-gray-400 mb-2">Attached Evidence</p>
                                     <div className="flex gap-2">
                                         {form.evidence.length === 0 ? (
-                                            <p className="text-xs italic text-gray-400">No media attached.</p>
+                                            <p className="text-base italic text-gray-400">No media attached.</p>
                                         ) : (
                                             form.evidence.map((rawUrl, i) => {
                                                 const [url, meta] = rawUrl.split('#');
@@ -1050,10 +1050,10 @@ export default function CitizenPortal() {
                                 </div>
 
                                 <div className="p-5 bg-emerald-50 rounded-2xl border border-emerald-100">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700 mb-2">Notification Settings</p>
+                                    <p className="text-sm font-black uppercase tracking-widest text-emerald-700 mb-2">Notification Settings</p>
                                     <div className="flex gap-4">
                                         {["SMS", "Email", "None"].map(p => (
-                                            <button key={p} onClick={() => set("notifPref", p)} className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${form.notifPref === p ? "text-emerald-700" : "text-emerald-900/30"}`}>
+                                            <button key={p} onClick={() => set("notifPref", p)} className={`flex items-center gap-2 text-sm font-black uppercase tracking-widest ${form.notifPref === p ? "text-emerald-700" : "text-emerald-900/30"}`}>
                                                 <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${form.notifPref === p ? "border-emerald-600 bg-emerald-600" : "border-emerald-200"}`}>
                                                     {form.notifPref === p && <Check className="w-3 h-3 text-white" />}
                                                 </div>
@@ -1094,7 +1094,7 @@ export default function CitizenPortal() {
                                     </>
                                 ) : "Finalizing Submission"}
                             </h2>
-                            <p className="text-xs text-gray-400 font-bold mt-1">
+                            <p className="text-base text-gray-400 font-bold mt-1">
                                 {isAnalyzing 
                                     ? "Classifying problem and locating relevant field units..." 
                                     : "Establishing secure link between ward and officers..."}
@@ -1115,7 +1115,7 @@ export default function CitizenPortal() {
                             <p className="text-gray-400 font-medium mb-10 max-w-sm mx-auto">Your report has been successfully encrypted and assigned to the relevant department.</p>
 
                             <div className="bg-gray-50 border border-gray-100 rounded-3xl p-8 mb-10 group cursor-pointer active:scale-95 transition-all">
-                                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 mb-3">Live Tracking ID</p>
+                                <p className="text-sm font-black uppercase tracking-[0.4em] text-gray-400 mb-3">Live Tracking ID</p>
                                 <p className="text-5xl font-black text-[#B91C1C] font-mono tracking-tighter group-hover:scale-110 transition-transform">{ticketId}</p>
                             </div>
 
@@ -1124,16 +1124,16 @@ export default function CitizenPortal() {
                                 <div className="bg-amber-50 border border-amber-100 rounded-3xl p-6 text-left mb-10 space-y-3">
                                     <div className="flex items-center gap-2">
                                         <Brain className="w-4 h-4 text-amber-600" />
-                                        <h4 className="text-[10px] font-black uppercase tracking-widest text-amber-700">GovPilot AI Insight</h4>
+                                        <h4 className="text-sm font-black uppercase tracking-widest text-amber-700">GovPilot AI Insight</h4>
                                     </div>
-                                    <p className="text-xs font-bold text-amber-900 leading-relaxed">
+                                    <p className="text-base font-bold text-amber-900 leading-relaxed">
                                         {aiResult.reasoning}
                                     </p>
                                     <div className="pt-3 border-t border-amber-200">
                                         <p className="text-[9px] font-black uppercase tracking-widest text-amber-600 mb-2">Automated Next Steps:</p>
                                         <ul className="space-y-1">
                                             {aiResult.actionPlan.map((step: string, i: number) => (
-                                                <li key={i} className="flex items-center gap-2 text-[10px] font-bold text-amber-800">
+                                                <li key={i} className="flex items-center gap-2 text-sm font-bold text-amber-800">
                                                     <div className="w-1 h-1 bg-amber-400 rounded-full" /> {step}
                                                 </li>
                                             ))}
@@ -1143,7 +1143,7 @@ export default function CitizenPortal() {
                             )}
 
                             <button onClick={() => navigate("/citizen")}
-                                className="btn-primary w-full !py-5 shadow-2xl shadow-red-500/20 text-sm">
+                                className="btn-primary w-full !py-5 shadow-2xl shadow-red-500/20 text-lg">
                                 Go to My Tracking Portal
                             </button>
 
@@ -1166,8 +1166,8 @@ export default function CitizenPortal() {
                                         <div key={i} className="flex gap-4 group/step">
                                             <div className="text-2xl font-black text-gray-900/5 italic tracking-tighter group-hover/step:text-[#B91C1C]/10 transition-colors uppercase pt-1">{s.step}</div>
                                             <div className="space-y-1">
-                                                <h4 className="text-[10px] font-black text-gray-900 uppercase tracking-tight group-hover/step:text-[#B91C1C] transition-colors italic">{s.title}</h4>
-                                                <p className="text-[10px] text-gray-400 font-bold leading-relaxed">{s.desc}</p>
+                                                <h4 className="text-sm font-black text-gray-900 uppercase tracking-tight group-hover/step:text-[#B91C1C] transition-colors italic">{s.title}</h4>
+                                                <p className="text-sm text-gray-400 font-bold leading-relaxed">{s.desc}</p>
                                             </div>
                                         </div>
                                     ))}
@@ -1179,7 +1179,7 @@ export default function CitizenPortal() {
             </main>
 
             <footer className="py-10 text-center border-t border-gray-100 bg-white/50">
-                <p className="text-[10px] font-black uppercase tracking-widest text-gray-300">District e-Governance Portal · 2026</p>
+                <p className="text-sm font-black uppercase tracking-widest text-gray-300">District e-Governance Portal · 2026</p>
             </footer>
 
             <style>{`
@@ -1192,7 +1192,7 @@ export default function CitizenPortal() {
                         <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50">
                             <div className="flex items-center gap-2">
                                 <Camera className="w-5 h-5 text-emerald-500" />
-                                <h3 className="text-xs font-black text-gray-900 uppercase tracking-widest">Live Camera Capture</h3>
+                                <h3 className="text-base font-black text-gray-900 uppercase tracking-widest">Live Camera Capture</h3>
                             </div>
                             <button 
                                 onClick={stopCamera} 
@@ -1221,13 +1221,13 @@ export default function CitizenPortal() {
                         <div className="p-6 bg-gray-50 flex items-center justify-between gap-4">
                             <button 
                                 onClick={stopCamera} 
-                                className="btn-secondary !py-3 !px-6 text-[10px] font-black uppercase tracking-widest !rounded-xl"
+                                className="btn-secondary !py-3 !px-6 text-sm font-black uppercase tracking-widest !rounded-xl"
                             >
                                 Cancel
                             </button>
                             <button 
                                 onClick={capturePhoto} 
-                                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg active:scale-95"
+                                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3.5 rounded-xl text-sm font-black uppercase tracking-widest transition-all shadow-lg active:scale-95"
                             >
                                 <Camera className="w-4 h-4" /> Capture Photo
                             </button>
@@ -1243,7 +1243,7 @@ export default function CitizenPortal() {
                         <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50">
                             <div className="flex items-center gap-2">
                                 <Mic className="w-5 h-5 text-amber-500" />
-                                <h3 className="text-xs font-black text-gray-900 uppercase tracking-widest">Voice Recording Preview</h3>
+                                <h3 className="text-base font-black text-gray-900 uppercase tracking-widest">Voice Recording Preview</h3>
                             </div>
                             <button 
                                 onClick={() => setAudioPreview(null)} 
@@ -1260,7 +1260,7 @@ export default function CitizenPortal() {
                         <div className="p-6 bg-gray-50 flex items-center justify-between gap-4 border-t border-gray-100">
                             <button 
                                 onClick={() => setAudioPreview(null)} 
-                                className="btn-secondary !py-3 !px-6 text-[10px] font-black uppercase tracking-widest !rounded-xl"
+                                className="btn-secondary !py-3 !px-6 text-sm font-black uppercase tracking-widest !rounded-xl"
                             >
                                 Discard
                             </button>
@@ -1270,7 +1270,7 @@ export default function CitizenPortal() {
                                     set("evidence", [...form.evidence, metaUrl]);
                                     setAudioPreview(null);
                                 }} 
-                                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg active:scale-95"
+                                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3.5 rounded-xl text-sm font-black uppercase tracking-widest transition-all shadow-lg active:scale-95"
                             >
                                 <Check className="w-4 h-4" /> Attach Recording
                             </button>

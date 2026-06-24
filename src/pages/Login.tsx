@@ -7,11 +7,12 @@ import {
     MessageSquare, BrainCircuit, Sparkles, ChevronRight, Mic
 } from "lucide-react";
 import type { CurrentUser } from "@/context/ComplaintsContext";
+import SegmentedRing from "../components/SegmentedRing";
 
 /* ── Demo accounts ───────────────────────────────────────── */
 const ACCOUNTS = [
     {
-        role: "admin" as const, label: "Administrator", icon: Shield,
+        role: "admin" as const, label: "Admin", icon: Shield,
         color: "#c62828ff", bg: "bg-red-50",  border: "border-red-200",
         text: "text-red-700", glow: "shadow-red-500/20",
         email: "admin@govpilot.in", password: "Admin@2026",
@@ -83,10 +84,10 @@ function BootOverlay({ onDone }: { onDone: () => void }) {
                 </div>
 
                 <div className="text-center space-y-2">
-                    <p className="text-white font-black text-lg tracking-tight">
+                    <p className="text-white font-medium text-lg ">
                         {step < 3 ? "Authenticating…" : "Access Granted"}
                     </p>
-                    <p className="text-white/40 text-xs font-mono">{steps[step]}</p>
+                    <p className="text-white/40 text-base font-mono">{steps[step]}</p>
                 </div>
 
                 {/* Progress bar */}
@@ -160,100 +161,38 @@ export default function Login() {
         <div className="min-h-screen flex overflow-hidden" style={{ fontFamily: "'Inter', sans-serif" }}>
             {booting && <BootOverlay onDone={handleDone} />}
 
-            {/* ── LEFT — Innovative Neural Panel ────────────────────── */}
-            <div className="hidden lg:flex lg:w-[52%] relative flex-col justify-between p-14 bg-[#050A18] overflow-hidden">
-                
-                {/* 1. Deep Mesh Gradient Layer */}
-                <div className="absolute inset-0 z-0">
-                    <div className="absolute top-[-10%] left-[-10%] w-[80%] h-[80%] rounded-full bg-red-600/20 blur-[140px] animate-pulse-slow" />
-                    <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-blue-600/15 blur-[120px] animate-pulse-slow" style={{ animationDelay: '2s' }} />
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-[radial-gradient(circle_at_50%_50%,rgba(13,20,40,0)_0%,rgba(5,10,24,1)_70%)] z-10" />
-                </div>
+            {/* ── LEFT — Live Holographic Ring Panel ─────────────── */}
+            <div className="hidden lg:flex lg:w-[52%] shrink-0 relative flex-col justify-between p-14 bg-[#030810] overflow-hidden">
 
-                {/* 2. Neural Grid & Circuit Pattern */}
-                <div className="absolute inset-0 z-[1] opacity-20" style={{
-                    backgroundImage: `linear-gradient(to right, #ffffff08 1px, transparent 1px), linear-gradient(to bottom, #ffffff08 1px, transparent 1px)`,
-                    backgroundSize: '30px 30px'
-                }} />
-                <div className="absolute inset-0 z-[1] opacity-10" style={{
-                    backgroundImage: `radial-gradient(circle at 2px 2px, #C62828 1px, transparent 0)`,
-                    backgroundSize: '60px 60px'
-                }} />
+                {/* Background Image & Related Animation */}
+                <div className="absolute inset-0 z-0 bg-black overflow-hidden">
+                    <img src="/images/energy_hands.png" alt="Energy Hands" className="w-full h-full object-cover scale-[1.35] origin-center" />
+                    
+                    {/* Pink Pulsating Orb Core (Perfectly aligned with zoomed spark) */}
+                    <div className="absolute top-[47.3%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[250px] h-[250px] bg-pink-600/30 rounded-full blur-[60px] animate-pulse mix-blend-screen pointer-events-none" />
+                    <div className="absolute top-[47.3%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100px] h-[100px] bg-fuchsia-400/40 rounded-full blur-[30px] animate-ping pointer-events-none" style={{ animationDuration: '1s' }} />
 
-                {/* 3. Floating Binary Nodes (Decorative) */}
-                <div className="absolute inset-0 z-[2] pointer-events-none">
-                    <div className="absolute top-[20%] left-[15%] w-1 h-1 bg-red-500 rounded-full animate-ping" />
-                    <div className="absolute top-[40%] right-[25%] w-1 h-1 bg-blue-400 rounded-full animate-ping" style={{ animationDelay: '1s' }} />
-                    <div className="absolute bottom-[30%] left-[40%] w-1 h-1 bg-white/20 rounded-full animate-ping" style={{ animationDelay: '1.5s' }} />
-                </div>
-
-                {/* Top logo */}
-                <div className="relative z-20 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#C62828] to-[#1e1e1e] flex items-center justify-center shadow-2xl border border-white/10 group cursor-pointer hover:rotate-12 transition-transform duration-500">
-                        <BrainCircuit className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                        <span className="font-black text-xl text-white tracking-tight">Co-Pilot</span>
-                        <span className="block text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mt-0.5">District Intelligence</span>
-                    </div>
-                </div>
-
-                {/* Center hero text */}
-                <div className="relative z-20 space-y-10">
-                    <div className="group w-fit">
-                        <div className="inline-flex items-center gap-3 px-4 py-2 rounded-2xl bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-[#B91C1C] backdrop-blur-md shadow-xl">
-                            <Sparkles className="w-3.5 h-3.5 animate-pulse" />
-                            Active Neural Governance
-                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse ml-1" />
-                        </div>
-                    </div>
-
-                    <div className="space-y-4">
-                        <h1 className="text-[5rem] font-black text-white leading-[0.9] tracking-tighter">
-                            District<br />
-                            <span className="relative inline-block">
-                                <span className="relative z-10" style={{
-                                    background: "linear-gradient(135deg, #FF3D3D 0%, #C62828 50%, #7F1D1D 100%)",
-                                    WebkitBackgroundClip: "text",
-                                    WebkitTextFillColor: "transparent",
-                                }}>Co-Pilot</span>
-                                <div className="absolute -inset-x-4 -inset-y-2 bg-red-600/10 blur-2xl -z-10 rounded-full" />
-                            </span>
-                        </h1>
-                        <p className="text-white/40 text-lg font-medium leading-relaxed max-w-md tracking-tight">
-                            Synthesizing real-time district data into actionable governance insights for a frictionless constituency experience.
-                        </p>
-                    </div>
-
-                    {/* Interactive Feature Stack */}
-                    <div className="space-y-6 pt-4">
-                        {[
-                            { icon: MessageSquare, label: "Real-time AI Sentiment Analysis", color: "text-red-400" },
-                            { icon: Shield,        label: "Secure Multi-Role Protocol (G-Auth)", color: "text-blue-400" },
-                            { icon: Sparkles,      label: "Automated Evidence Categorisation", color: "text-amber-400" },
-                        ].map(({ icon: Icon, label, color }) => (
-                            <div key={label} className="group flex items-center gap-5 cursor-default">
-                                <div className="w-11 h-11 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0 group-hover:bg-white/10 group-hover:border-white/20 transition-all duration-300 backdrop-blur-sm">
-                                    <Icon className={`w-5 h-5 ${color} opacity-60 group-hover:opacity-100 transition-opacity`} />
-                                </div>
-                                <div>
-                                    <span className="text-sm text-white/40 font-bold group-hover:text-white/80 transition-colors tracking-tight">{label}</span>
-                                    <div className="h-0.5 w-0 group-hover:w-full bg-gradient-to-r from-red-600 to-transparent transition-all duration-500 rounded-full mt-1" />
-                                </div>
-                            </div>
+                    {/* Pink Blinking Energy Sparks */}
+                    <div className="absolute inset-0 pointer-events-none">
+                        {[...Array(30)].map((_, i) => (
+                            <div
+                                key={`spark-${i}`}
+                                className="absolute bg-pink-300 rounded-full shadow-[0_0_15px_3px_rgba(236,72,153,1)]"
+                                style={{
+                                    top: `calc(48% + ${(Math.random() - 0.5) * 40}%)`,
+                                    left: `calc(50% + ${(Math.random() - 0.5) * 40}%)`,
+                                    width: `${Math.random() * 4 + 1}px`,
+                                    height: `${Math.random() * 4 + 1}px`,
+                                    animation: `status-ping ${0.1 + Math.random() * 0.4}s steps(2, end) infinite alternate`,
+                                    animationDelay: `${Math.random() * 2}s`,
+                                    opacity: Math.random() > 0.5 ? 0.9 : 0.1
+                                }}
+                            />
                         ))}
                     </div>
-                </div>
 
-                {/* Bottom bar */}
-                <div className="relative z-20">
-                    <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.25em] text-white/20">
-                        <span>Node Status: <span className="text-emerald-500">OPTIMAL</span></span>
-                        <div className="w-1 h-1 rounded-full bg-white/10" />
-                        <span>Latency: <span className="text-blue-400">12ms</span></span>
-                        <div className="w-1 h-1 rounded-full bg-white/10" />
-                        <span>v2.0.4-LTS</span>
-                    </div>
+                    {/* Subtle Pink Lightning Flash Overlay */}
+                    <div className="absolute inset-0 bg-pink-500/10 mix-blend-color-dodge animate-pulse pointer-events-none" style={{ animationDuration: '3s', animationTimingFunction: 'steps(2)' }} />
                 </div>
             </div>
 
@@ -266,23 +205,23 @@ export default function Login() {
                         <BrainCircuit className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                        <span className="font-black text-xl text-gray-900">Co-Pilot</span>
-                        <span className="block text-[9px] font-bold uppercase tracking-widest text-gray-400 mt-0.5">District Governance AI</span>
+                        <span className="font-medium text-xl text-gray-900">Co-Pilot</span>
+                        <span className="block text-base font-medium uppercase tracking-wide text-gray-500 mt-0.5">District Governance AI</span>
                     </div>
                 </div>
 
-                <div className="w-full max-w-[420px] space-y-6">
+                <div className="w-full max-w-[900px] space-y-6">
 
                     {/* Heading */}
                     <div>
-                        <h2 className="text-3xl font-black text-gray-900 tracking-tight">Welcome back</h2>
-                        <p className="text-gray-500 text-sm font-medium mt-1">Sign in to access your portal</p>
+                        <h2 className="text-5xl font-medium text-gray-900 ">Welcome back</h2>
+                        <p className="text-gray-600 text-lg font-medium mt-1">Sign in to access your portal</p>
                     </div>
 
                     {/* Quick role selector */}
                     <div>
                         <p className="section-label mb-3">Quick Access — Select Your Role</p>
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-3 gap-4">
                             {ACCOUNTS.map(acct => {
                                 const Icon = acct.icon;
                                 const isActive = activeRole === acct.role;
@@ -292,30 +231,27 @@ export default function Login() {
                                         id={`role-${acct.role}`}
                                         onClick={() => quickFill(acct)}
                                         className={`
-                                            flex flex-col items-center gap-2 p-4 rounded-2xl border-2 text-center
-                                            transition-all duration-200 hover:scale-[1.04] active:scale-95
+                                            flex flex-col items-center justify-center p-4 rounded-2xl border-2 text-center min-h-[180px]
+                                            transition-all duration-200 hover:scale-[1.02] active:scale-95
                                             ${isActive
-                                                ? `${acct.border} ${acct.bg} shadow-lg ${acct.glow}`
+                                                ? `${acct.border} ${acct.bg} shadow-md ${acct.glow}`
                                                 : "border-gray-200 bg-white hover:border-gray-300"
                                             }
                                         `}
                                     >
-                                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${isActive ? acct.bg : "bg-gray-100"} transition-colors`}>
-                                            <Icon className={`w-4 h-4 ${isActive ? acct.text : "text-gray-400"}`} />
+                                        <div className={`w-14 h-14 mb-3 shrink-0 rounded-xl flex items-center justify-center ${isActive ? acct.bg : "bg-gray-100"} transition-colors`}>
+                                            <Icon className={`w-7 h-7 ${isActive ? acct.text : "text-gray-400"}`} />
                                         </div>
-                                        <div>
-                                            <p className={`text-[10px] font-black uppercase tracking-tight leading-tight ${isActive ? acct.text : "text-gray-500"}`}>
+                                        <div className="flex flex-col items-center justify-center w-full px-1">
+                                            <p className={`text-xl font-bold uppercase leading-tight break-words hyphens-auto w-full ${isActive ? acct.text : "text-gray-900"}`}>
                                                 {acct.label}
-                                            </p>
-                                            <p className="text-[8px] text-gray-400 font-medium mt-0.5 leading-tight hidden sm:block">
-                                                {acct.desc}
                                             </p>
                                         </div>
                                     </button>
                                 );
                             })}
                         </div>
-                        <p className="text-[9px] font-medium text-gray-400 text-center mt-2">
+                        <p className="text-base font-medium text-gray-500 text-center mt-3">
                             Tap a role to auto-fill credentials, then click Sign In
                         </p>
                     </div>
@@ -328,14 +264,14 @@ export default function Login() {
                             <div className="space-y-1.5">
                                 <label className="section-label ml-0.5">Official Email</label>
                                 <div className="relative group">
-                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 group-focus-within:text-[#C62828] transition-colors pointer-events-none" />
+                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#C62828] transition-colors pointer-events-none" />
                                     <input
                                         id="login-email"
                                         type="email"
                                         value={email}
                                         onChange={e => { setEmail(e.target.value); setError(""); }}
                                         placeholder="your@email.in"
-                                        className="input-field !pl-11"
+                                        className="input-field !pl-11 text-gray-900"
                                         autoComplete="email"
                                     />
                                 </div>
@@ -345,20 +281,20 @@ export default function Login() {
                             <div className="space-y-1.5">
                                 <label className="section-label ml-0.5">Password</label>
                                 <div className="relative group">
-                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 group-focus-within:text-[#C62828] transition-colors pointer-events-none" />
+                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#C62828] transition-colors pointer-events-none" />
                                     <input
                                         id="login-password"
                                         type={showPwd ? "text" : "password"}
                                         value={password}
                                         onChange={e => { setPassword(e.target.value); setError(""); }}
                                         placeholder="••••••••"
-                                        className="input-field !pl-11 !pr-12"
+                                        className="input-field !pl-11 !pr-12 text-gray-900"
                                         autoComplete="current-password"
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowPwd(!showPwd)}
-                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 hover:text-[#C62828] transition-colors"
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#C62828] transition-colors"
                                     >
                                         {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                     </button>
@@ -369,7 +305,7 @@ export default function Login() {
                             {error && (
                                 <div className="flex items-center gap-2.5 p-3.5 bg-red-50 border border-red-100 rounded-2xl animate-fade-in">
                                     <div className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
-                                    <p className="text-xs font-bold text-red-700">{error}</p>
+                                    <p className="text-lg font-medium text-red-700">{error}</p>
                                 </div>
                             )}
 
@@ -381,39 +317,39 @@ export default function Login() {
                                 className="btn-primary w-full !py-4 mt-2"
                             >
                                 {loading
-                                    ? <Loader2 className="w-4 h-4 animate-spin" />
-                                    : <>Sign In Securely <ArrowRight className="w-4 h-4" /></>
+                                    ? <Loader2 className="w-5 h-5 animate-spin" />
+                                    : <>Sign In Securely <ArrowRight className="w-5 h-5" /></>
                                 }
                             </button>
                         </form>
 
                         {/* Citizen public portal options */}
                         <div className="mt-6 pt-6 border-t border-gray-100 space-y-3">
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 text-center mb-1">Citizen Services (No Account Required)</p>
+                            <p className="text-base font-medium uppercase tracking-wide text-gray-500 text-center mb-2">Citizen Services (No Account Required)</p>
                             
                             <a
                                 href="/submit-complaint"
                                 id="citizen-portal-link"
-                                className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl bg-white border border-gray-200 text-gray-800 text-xs font-black uppercase tracking-widest hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm group"
+                                className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl bg-white border border-gray-200 text-gray-800 text-lg font-medium uppercase tracking-wide hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm group"
                             >
-                                <MessageSquare className="w-4 h-4 text-[#B91C1C] group-hover:scale-110 transition-transform" />
-                                Submit Complaint (Digital Portal)
-                                <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+                                <MessageSquare className="w-5 h-5 text-[#B91C1C] group-hover:scale-110 transition-transform" />
+                                Submit Complaint
+                                <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
                             </a>
 
                             <a
                                 href="/village-voice"
                                 id="voice-portal-link"
-                                className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl bg-[#B91C1C] text-white text-xs font-black uppercase tracking-widest hover:bg-[#991717] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md group"
+                                className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl bg-[#B91C1C] text-white text-lg font-medium uppercase tracking-wide hover:bg-[#991717] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md group"
                             >
-                                <Mic className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
-                                Speak to Register (Simplified Voice Portal)
-                                <ChevronRight className="w-3.5 h-3.5 text-white/70 group-hover:translate-x-0.5 transition-transform" />
+                                <Mic className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
+                                Speak to Register
+                                <ChevronRight className="w-4 h-4 text-white/70 group-hover:translate-x-0.5 transition-transform" />
                             </a>
                         </div>
                     </div>
 
-                    <p className="text-center text-[9px] font-bold uppercase tracking-widest text-gray-300">
+                    <p className="text-center text-base font-medium uppercase tracking-wide text-gray-400">
                         Secured · District Council · 2026
                     </p>
                 </div>
@@ -425,3 +361,5 @@ export default function Login() {
         </div>
     );
 }
+
+

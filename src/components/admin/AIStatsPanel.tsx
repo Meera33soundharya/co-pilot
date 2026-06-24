@@ -20,7 +20,7 @@ export default function AIStatsPanel() {
             </div>
             <div>
               <h2 className="text-2xl font-black text-white tracking-tight">AI Workspace</h2>
-              <p className="text-sm font-medium text-white/60">GovPilot Intelligence Core v4.2</p>
+              <p className="text-lg font-medium text-white/60">GovPilot Intelligence Core v4.2</p>
             </div>
           </div>
 
@@ -29,13 +29,13 @@ export default function AIStatsPanel() {
           </p>
 
           <div className="flex flex-wrap gap-2">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs font-bold text-white/80">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-base font-bold text-white/80">
               <Sparkles className="w-3.5 h-3.5 text-[#C81D25]" /> Semantic Search
             </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs font-bold text-white/80">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-base font-bold text-white/80">
               <ShieldCheck className="w-3.5 h-3.5 text-[#C81D25]" /> XAI Certified
             </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs font-bold text-white/80">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-base font-bold text-white/80">
               <Activity className="w-3.5 h-3.5 text-[#C81D25]" /> Live Processing
             </div>
           </div>
@@ -50,12 +50,12 @@ export default function AIStatsPanel() {
             <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center">
               <Layers className="w-4 h-4 text-blue-400" />
             </div>
-            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 flex items-center gap-1">
+            <span className="text-sm font-black uppercase tracking-widest text-emerald-400 flex items-center gap-1">
               +12% <Zap className="w-3 h-3" />
             </span>
           </div>
           <div className="text-3xl font-black text-white tracking-tight mb-1">12,408</div>
-          <div className="text-xs font-bold text-white/40 uppercase tracking-widest">Processed</div>
+          <div className="text-base font-bold text-white/40 uppercase tracking-widest">Processed</div>
         </div>
 
         {/* Stat 2 */}
@@ -66,7 +66,7 @@ export default function AIStatsPanel() {
             </div>
           </div>
           <div className="text-3xl font-black text-white tracking-tight mb-1">99.2%</div>
-          <div className="text-xs font-bold text-white/40 uppercase tracking-widest">Accuracy</div>
+          <div className="text-base font-bold text-white/40 uppercase tracking-widest">Accuracy</div>
         </div>
 
         {/* Stat 3 */}
@@ -78,7 +78,7 @@ export default function AIStatsPanel() {
             </div>
             <div>
               <div className="text-2xl font-black text-white tracking-tight">1.2s</div>
-              <div className="text-xs font-bold text-white/40 uppercase tracking-widest">Avg Response Time</div>
+              <div className="text-base font-bold text-white/40 uppercase tracking-widest">Avg Response Time</div>
             </div>
           </div>
         </div>
@@ -91,7 +91,7 @@ export default function AIStatsPanel() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
             </div>
-            <span className="text-sm font-bold text-emerald-400">Core Systems Online</span>
+            <span className="text-lg font-bold text-emerald-400">Core Systems Online</span>
          </div>
          <Cpu className="w-4 h-4 text-emerald-400/50" />
       </div>

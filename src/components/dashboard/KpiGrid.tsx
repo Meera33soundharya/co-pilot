@@ -114,7 +114,7 @@ function KpiCard({ kpi, index }: { kpi: typeof kpiData[0]; index: number }) {
                 <div className={`p-3 rounded-2xl ${kpi.bg} group-hover:scale-110 transition-transform duration-300 border border-transparent group-hover:border-inherit`}>
                     <Icon className={`w-5 h-5 ${kpi.iconColor}`} />
                 </div>
-                <div className={`flex items-center gap-1.5 text-[11px] font-bold px-3 py-1 rounded-xl shadow-sm ${kpi.up ? "bg-emerald-50 text-emerald-700 border border-emerald-100/50" : "bg-rose-50 text-rose-700 border border-rose-100/50"}`}>
+                <div className={`flex items-center gap-1.5 text-base font-bold px-3 py-1 rounded-xl shadow-sm ${kpi.up ? "bg-emerald-50 text-emerald-700 border border-emerald-100/50" : "bg-rose-50 text-rose-700 border border-rose-100/50"}`}>
                     <TrendIcon className="w-3.5 h-3.5" />
                     {kpi.change}
                 </div>
@@ -125,7 +125,7 @@ function KpiCard({ kpi, index }: { kpi: typeof kpiData[0]; index: number }) {
                 <div className="text-3xl font-extrabold text-[#0B1221] tracking-tight leading-none tabular-nums">
                     {kpi.display}
                 </div>
-                <div className="text-xs font-bold uppercase tracking-wider text-gray-400 group-hover:text-gray-500 transition-colors">{kpi.label}</div>
+                <div className="text-base font-bold uppercase tracking-wider text-gray-400 group-hover:text-gray-500 transition-colors">{kpi.label}</div>
             </div>
 
             {/* Sparkline */}
@@ -150,11 +150,11 @@ export function KpiGrid() {
                 <div className="flex items-center gap-3">
                     <div className="h-5 w-1 rounded-full bg-gradient-to-b from-blue-500 to-indigo-600" />
                     <h2 className="text-base font-bold text-gray-950 tracking-tight">Main Stats</h2>
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500 bg-white border border-gray-100 px-3 py-1 rounded-xl shadow-sm">Live Tracker</span>
+                    <span className="text-sm font-bold uppercase tracking-widest text-gray-500 bg-white border border-gray-100 px-3 py-1 rounded-xl shadow-sm">Live Tracker</span>
                 </div>
                 <button
                     onClick={() => navigate("/reports")}
-                    className="flex items-center gap-2 text-xs font-extrabold text-[#0B1221] uppercase tracking-widest hover:text-blue-600 transition-all hover:gap-3 active:scale-95 group"
+                    className="flex items-center gap-2 text-base font-extrabold text-[#0B1221] uppercase tracking-widest hover:text-blue-600 transition-all hover:gap-3 active:scale-95 group"
                 >
                     View All Reports <ArrowUpRight className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                 </button>

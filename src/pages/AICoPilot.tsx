@@ -45,21 +45,21 @@ export default function AICoPilot() {
               value={inputContext}
               onChange={e => setInputContext(e.target.value)}
               placeholder="Paste documents, notes, or provide context here..."
-              className="flex-1 w-full bg-transparent border border-[#1E293B] rounded-xl p-4 text-sm text-gray-300 placeholder:text-gray-600 focus:outline-none focus:border-blue-500/50 resize-none mb-6 custom-scrollbar"
+              className="flex-1 w-full bg-transparent border border-[#1E293B] rounded-xl p-4 text-lg text-gray-300 placeholder:text-gray-600 focus:outline-none focus:border-blue-500/50 resize-none mb-6 custom-scrollbar"
             />
             
             <div className="flex flex-col sm:flex-row gap-3 shrink-0">
               <button 
                 onClick={() => handleAction('summarize')}
                 disabled={loading}
-                className="flex-1 flex justify-center items-center gap-2 px-4 py-3 rounded-xl border border-[#1E293B] bg-[#1E293B]/30 hover:bg-[#1E293B] text-gray-300 hover:text-white transition-colors text-sm font-medium"
+                className="flex-1 flex justify-center items-center gap-2 px-4 py-3 rounded-xl border border-[#1E293B] bg-[#1E293B]/30 hover:bg-[#1E293B] text-gray-300 hover:text-white transition-colors text-lg font-medium"
               >
                 <FileText className="w-4 h-4" /> Summarize
               </button>
               <button 
                 onClick={() => handleAction('draft')}
                 disabled={loading}
-                className="flex-1 flex justify-center items-center gap-2 px-4 py-3 rounded-xl border border-[#1E293B] bg-[#1E293B]/30 hover:bg-[#1E293B] text-gray-300 hover:text-white transition-colors text-sm font-medium"
+                className="flex-1 flex justify-center items-center gap-2 px-4 py-3 rounded-xl border border-[#1E293B] bg-[#1E293B]/30 hover:bg-[#1E293B] text-gray-300 hover:text-white transition-colors text-lg font-medium"
               >
                 <Mic className="w-4 h-4" /> Draft Speech
               </button>
@@ -76,16 +76,16 @@ export default function AICoPilot() {
               {loading ? (
                 <div className="flex flex-col items-center gap-3 text-gray-500">
                   <Sparkles className="w-8 h-8 animate-spin" />
-                  <span className="text-sm">Processing...</span>
+                  <span className="text-lg">Processing...</span>
                 </div>
               ) : output ? (
-                <div className="w-full h-full text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">
+                <div className="w-full h-full text-lg text-gray-300 whitespace-pre-wrap leading-relaxed">
                   {output}
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-3 text-gray-600">
                   <Sparkles className="w-8 h-8 opacity-50" />
-                  <span className="text-sm">Select an action to generate content</span>
+                  <span className="text-lg">Select an action to generate content</span>
                 </div>
               )}
             </div>

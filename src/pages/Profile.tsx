@@ -13,8 +13,8 @@ import {
 function Avatar({ name, size = "lg" }: { name: string; size?: "sm" | "md" | "lg" | "xl" }) {
     const initials = name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
     const sizeMap = {
-        sm: "w-9 h-9 text-xs",
-        md: "w-12 h-12 text-sm",
+        sm: "w-9 h-9 text-base",
+        md: "w-12 h-12 text-lg",
         lg: "w-20 h-20 text-xl",
         xl: "w-28 h-28 text-3xl",
     };
@@ -35,7 +35,7 @@ function RoleBadge({ role }: { role: string }) {
     const c = cfg[role] ?? cfg.citizen;
     const Icon = c.icon;
     return (
-        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-black ${c.bg} ${c.color}`}>
+        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-base font-black ${c.bg} ${c.color}`}>
             <Icon className="w-3.5 h-3.5" /> {c.label}
         </span>
     );
@@ -50,7 +50,7 @@ function StatCard({ icon: Icon, label, value, color }: { icon: any; label: strin
             </div>
             <div>
                 <p className="text-2xl font-black text-gray-900">{value}</p>
-                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">{label}</p>
+                <p className="text-sm font-black uppercase tracking-widest text-gray-400">{label}</p>
             </div>
         </div>
     );
@@ -118,7 +118,7 @@ export default function Profile() {
 
             {/* Toast */}
             {toast && (
-                <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[300] bg-gray-900 text-white px-6 py-3.5 rounded-2xl text-sm font-bold shadow-2xl flex items-center gap-2.5">
+                <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[300] bg-gray-900 text-white px-6 py-3.5 rounded-2xl text-lg font-bold shadow-2xl flex items-center gap-2.5">
                     <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
                     {toast}
                 </div>
@@ -152,17 +152,17 @@ export default function Profile() {
                             <div className="flex items-center gap-2 mb-2">
                                 {!editing ? (
                                     <button onClick={() => setEditing(true)}
-                                        className="flex items-center gap-2 px-5 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl text-xs font-black text-gray-700 hover:bg-gray-100 transition-all">
+                                        className="flex items-center gap-2 px-5 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl text-base font-black text-gray-700 hover:bg-gray-100 transition-all">
                                         <Edit3 className="w-3.5 h-3.5" /> Edit Profile
                                     </button>
                                 ) : (
                                     <>
                                         <button onClick={() => setEditing(false)}
-                                            className="flex items-center gap-2 px-4 py-2.5 border border-gray-200 rounded-2xl text-xs font-black text-gray-500 hover:bg-gray-50 transition-all">
+                                            className="flex items-center gap-2 px-4 py-2.5 border border-gray-200 rounded-2xl text-base font-black text-gray-500 hover:bg-gray-50 transition-all">
                                             <X className="w-3.5 h-3.5" /> Cancel
                                         </button>
                                         <button onClick={doSave}
-                                            className="flex items-center gap-2 px-5 py-2.5 bg-[#B91C1C] text-white rounded-2xl text-xs font-black hover:bg-red-800 transition-all shadow-lg shadow-red-200">
+                                            className="flex items-center gap-2 px-5 py-2.5 bg-[#B91C1C] text-white rounded-2xl text-base font-black hover:bg-red-800 transition-all shadow-lg shadow-red-200">
                                             <Save className="w-3.5 h-3.5" /> Save Changes
                                         </button>
                                     </>
@@ -182,14 +182,14 @@ export default function Profile() {
                                         </span>
                                     )}
                                 </div>
-                                <p className="text-sm text-gray-500 leading-relaxed max-w-xl">{form.bio}</p>
+                                <p className="text-lg text-gray-500 leading-relaxed max-w-xl">{form.bio}</p>
                                 <div className="flex flex-wrap gap-4 mt-4">
                                     {[
                                         { icon: Mail,   val: form.email },
                                         { icon: Phone,  val: form.phone },
                                         { icon: MapPin, val: form.location },
                                     ].map(({ icon: Icon, val }) => (
-                                        <div key={val} className="flex items-center gap-1.5 text-xs font-bold text-gray-500">
+                                        <div key={val} className="flex items-center gap-1.5 text-base font-bold text-gray-500">
                                             <Icon className="w-3.5 h-3.5 text-gray-400" /> {val}
                                         </div>
                                     ))}
@@ -212,7 +212,7 @@ export default function Profile() {
                                             type={type}
                                             value={form[key as keyof typeof form]}
                                             onChange={e => setForm(prev => ({ ...prev, [key]: e.target.value }))}
-                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-gray-800 focus:outline-none focus:border-[#B91C1C]/30 focus:bg-white transition-all"
+                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-lg font-bold text-gray-800 focus:outline-none focus:border-[#B91C1C]/30 focus:bg-white transition-all"
                                         />
                                     </div>
                                 ))}
@@ -222,7 +222,7 @@ export default function Profile() {
                                         value={form.bio}
                                         onChange={e => setForm(prev => ({ ...prev, bio: e.target.value }))}
                                         rows={3}
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-gray-800 focus:outline-none focus:border-[#B91C1C]/30 focus:bg-white transition-all resize-none"
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-lg font-bold text-gray-800 focus:outline-none focus:border-[#B91C1C]/30 focus:bg-white transition-all resize-none"
                                     />
                                 </div>
                             </div>
@@ -260,8 +260,8 @@ export default function Profile() {
                                             <Icon className="w-4 h-4 text-gray-500" />
                                         </div>
                                         <div>
-                                            <p className="text-sm font-black text-gray-800">{label}</p>
-                                            <p className="text-[10px] text-gray-400 font-medium">{desc}</p>
+                                            <p className="text-lg font-black text-gray-800">{label}</p>
+                                            <p className="text-sm text-gray-400 font-medium">{desc}</p>
                                         </div>
                                     </div>
                                     <button
@@ -281,12 +281,12 @@ export default function Profile() {
                         <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm space-y-3">
                             <div className="flex items-center gap-2">
                                 <Lock className="w-4 h-4 text-gray-400" />
-                                <h4 className="font-black text-gray-900 text-sm">Security</h4>
+                                <h4 className="font-black text-gray-900 text-lg">Security</h4>
                             </div>
 
                             <button onClick={() => setShowPwdPanel(!showPwdPanel)}
                                 className="w-full flex items-center justify-between p-3.5 bg-gray-50 border border-gray-100 rounded-2xl hover:bg-gray-100 transition-all">
-                                <span className="text-xs font-black text-gray-700">Change Password</span>
+                                <span className="text-base font-black text-gray-700">Change Password</span>
                                 <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform ${showPwdPanel ? "rotate-90" : ""}`} />
                             </button>
 
@@ -297,7 +297,7 @@ export default function Profile() {
                                             <label className="text-[9px] font-black uppercase text-gray-400 mb-1 block">{lbl}</label>
                                             <div className="relative">
                                                 <input type={showPwd ? "text" : "password"}
-                                                    className="w-full px-3 py-2 text-xs font-bold bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-[#B91C1C]/30" />
+                                                    className="w-full px-3 py-2 text-base font-bold bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-[#B91C1C]/30" />
                                                 <button onClick={() => setShowPwd(!showPwd)}
                                                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-600">
                                                     {showPwd ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
@@ -306,7 +306,7 @@ export default function Profile() {
                                         </div>
                                     ))}
                                     <button onClick={() => { setShowPwdPanel(false); toast_("✅ Password updated"); }}
-                                        className="w-full py-2.5 bg-[#B91C1C] text-white rounded-xl text-xs font-black hover:bg-red-800 transition-all">
+                                        className="w-full py-2.5 bg-[#B91C1C] text-white rounded-xl text-base font-black hover:bg-red-800 transition-all">
                                         Update Password
                                     </button>
                                 </div>
@@ -317,7 +317,7 @@ export default function Profile() {
                         <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm space-y-2">
                             <div className="flex items-center gap-2 mb-3">
                                 <Settings className="w-4 h-4 text-gray-400" />
-                                <h4 className="font-black text-gray-900 text-sm">Quick Links</h4>
+                                <h4 className="font-black text-gray-900 text-lg">Quick Links</h4>
                             </div>
                             {[
                                 { icon: FileText, label: "My Complaints",  path: isCitizen ? "/citizen" : "/grievances" },
@@ -328,7 +328,7 @@ export default function Profile() {
                                     className="w-full flex items-center justify-between p-3.5 bg-gray-50 border border-gray-100 rounded-2xl hover:bg-gray-100 transition-all">
                                     <div className="flex items-center gap-2.5">
                                         <Icon className="w-4 h-4 text-gray-500" />
-                                        <span className="text-xs font-black text-gray-700">{label}</span>
+                                        <span className="text-base font-black text-gray-700">{label}</span>
                                     </div>
                                     <ChevronRight className="w-4 h-4 text-gray-300" />
                                 </button>
@@ -337,7 +337,7 @@ export default function Profile() {
 
                         {/* Logout */}
                         <button onClick={doLogout}
-                            className="w-full flex items-center justify-center gap-2.5 py-4 bg-red-50 border border-red-100 text-[#B91C1C] rounded-3xl text-xs font-black uppercase tracking-widest hover:bg-[#B91C1C] hover:text-white transition-all shadow-sm">
+                            className="w-full flex items-center justify-center gap-2.5 py-4 bg-red-50 border border-red-100 text-[#B91C1C] rounded-3xl text-base font-black uppercase tracking-widest hover:bg-[#B91C1C] hover:text-white transition-all shadow-sm">
                             <LogOut className="w-4 h-4" /> Sign Out
                         </button>
                     </div>

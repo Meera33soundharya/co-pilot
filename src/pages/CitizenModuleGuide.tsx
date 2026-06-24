@@ -27,9 +27,9 @@ export default function CitizenModuleGuide() {
                                 This document serves as the primary instructional manual for district citizens to interact with the GovPilot AI Governance framework.
                             </p>
                             <div className="flex flex-wrap items-center gap-6 justify-center md:justify-start pt-4">
-                                <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-white/40"><Shield className="w-3.5 h-3.5" /> SECURE ACCESS</span>
-                                <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-white/40"><Zap className="w-3.5 h-3.5" /> AI-POWERED</span>
-                                <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-white/40"><Smartphone className="w-3.5 h-3.5" /> MOBILE ENABLED</span>
+                                <span className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.2em] text-white/40"><Shield className="w-3.5 h-3.5" /> SECURE ACCESS</span>
+                                <span className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.2em] text-white/40"><Zap className="w-3.5 h-3.5" /> AI-POWERED</span>
+                                <span className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.2em] text-white/40"><Smartphone className="w-3.5 h-3.5" /> MOBILE ENABLED</span>
                             </div>
                         </div>
                     </div>
@@ -44,7 +44,7 @@ export default function CitizenModuleGuide() {
                             <MessageSquare className="w-6 h-6 text-red-600 group-hover:text-white" />
                         </div>
                         <h3 className="text-xl font-black text-gray-900 mb-4 uppercase tracking-tight">1. Raising a Grievance</h3>
-                        <p className="text-sm text-gray-500 font-medium leading-relaxed mb-6 italic">
+                        <p className="text-lg text-gray-500 font-medium leading-relaxed mb-6 italic">
                             "Transparency starts with a single report. Use the live submission portal to flag issues in your ward."
                         </p>
                         <ul className="space-y-4">
@@ -55,8 +55,8 @@ export default function CitizenModuleGuide() {
                                 "Confirm your precise ward and locality"
                             ].map((item, i) => (
                                 <li key={i} className="flex items-start gap-3">
-                                    <div className="w-5 h-5 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">{i+1}</div>
-                                    <span className="text-xs font-bold text-gray-700">{item}</span>
+                                    <div className="w-5 h-5 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm font-black shrink-0 mt-0.5">{i+1}</div>
+                                    <span className="text-base font-bold text-gray-700">{item}</span>
                                 </li>
                             ))}
                         </ul>
@@ -68,17 +68,17 @@ export default function CitizenModuleGuide() {
                             <Search className="w-6 h-6 text-blue-600 group-hover:text-white" />
                         </div>
                         <h3 className="text-xl font-black text-gray-900 mb-4 uppercase tracking-tight">2. Neural Triage Engine</h3>
-                        <p className="text-sm text-gray-500 font-medium leading-relaxed mb-6 italic">
+                        <p className="text-lg text-gray-500 font-medium leading-relaxed mb-6 italic">
                             "Every report is analyzed by GovPilot's core intelligence to ensure rapid, departmental routing."
                         </p>
                         <div className="space-y-4">
                             <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-[#B91C1C] mb-2">Automated Categorization</p>
-                                <p className="text-xs text-gray-600 font-medium">AI identifies the department responsible (e.g., Water Supply and Drainage) based on your text and data.</p>
+                                <p className="text-sm font-black uppercase tracking-widest text-[#B91C1C] mb-2">Automated Categorization</p>
+                                <p className="text-base text-gray-600 font-medium">AI identifies the department responsible (e.g., Water Supply and Drainage) based on your text and data.</p>
                             </div>
                             <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-[#B91C1C] mb-2">Priority Ranking</p>
-                                <p className="text-xs text-gray-600 font-medium">Critical safety issues are upgraded to 'High' priority for immediate Field Officer intervention.</p>
+                                <p className="text-sm font-black uppercase tracking-widest text-[#B91C1C] mb-2">Priority Ranking</p>
+                                <p className="text-base text-gray-600 font-medium">Critical safety issues are upgraded to 'High' priority for immediate Field Officer intervention.</p>
                             </div>
                         </div>
                     </div>
@@ -93,7 +93,7 @@ export default function CitizenModuleGuide() {
                         </div>
                         <div>
                             <h3 className="text-2xl font-black text-gray-900 uppercase">Live Tracking Center</h3>
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Real-time resolution updates Protocol</p>
+                            <p className="text-sm font-black text-gray-400 uppercase tracking-widest mt-1">Real-time resolution updates Protocol</p>
                         </div>
                     </div>
 
@@ -105,12 +105,12 @@ export default function CitizenModuleGuide() {
                             { label: "Resolved", desc: "Proof uploaded & case verified", icon: CheckCircle2, status: "Final" }
                         ].map((step, i) => (
                             <div key={i} className="p-6 bg-gray-50 rounded-3xl border border-gray-100 relative group">
-                                <div className="absolute -top-3 -right-3 w-8 h-8 bg-white border border-gray-200 rounded-xl flex items-center justify-center text-xs font-black text-gray-400 group-hover:bg-[#B91C1C] group-hover:text-white transition-all">
+                                <div className="absolute -top-3 -right-3 w-8 h-8 bg-white border border-gray-200 rounded-xl flex items-center justify-center text-base font-black text-gray-400 group-hover:bg-[#B91C1C] group-hover:text-white transition-all">
                                     0{i+1}
                                 </div>
                                 <step.icon className="w-6 h-6 text-[#B91C1C] mb-4" />
-                                <h4 className="text-sm font-black text-gray-900 uppercase tracking-tight mb-2">{step.label}</h4>
-                                <p className="text-[10px] text-gray-500 font-bold leading-relaxed">{step.desc}</p>
+                                <h4 className="text-lg font-black text-gray-900 uppercase tracking-tight mb-2">{step.label}</h4>
+                                <p className="text-sm text-gray-500 font-bold leading-relaxed">{step.desc}</p>
                             </div>
                         ))}
                     </div>
@@ -119,11 +119,11 @@ export default function CitizenModuleGuide() {
                         <div className="flex items-center gap-4">
                             <div className="p-3 bg-red-600 rounded-2xl"><Shield className="w-5 h-5 text-white" /></div>
                             <div>
-                                <p className="text-sm font-black text-red-900">Need immediate assistance?</p>
-                                <p className="text-xs font-bold text-red-700/60">Contact the District Liaison Office at 1-800-GOV-PILOT</p>
+                                <p className="text-lg font-black text-red-900">Need immediate assistance?</p>
+                                <p className="text-base font-bold text-red-700/60">Contact the District Liaison Office at 1-800-GOV-PILOT</p>
                             </div>
                         </div>
-                        <button className="px-6 py-3 bg-red-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all">
+                        <button className="px-6 py-3 bg-red-600 text-white rounded-xl text-sm font-black uppercase tracking-widest hover:bg-black transition-all">
                             Open Portal <ArrowRight className="w-4 h-4 ml-2 inline" />
                         </button>
                     </div>

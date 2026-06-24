@@ -41,11 +41,11 @@ export default function PolicySimulator() {
                     </div>
                     <div className="flex-1">
                         <h3 className="text-lg font-black text-emerald-900 mb-1 italic tracking-tight uppercase">Simulation Protocol</h3>
-                        <p className="text-xs text-emerald-700/60 leading-relaxed font-bold tracking-widest uppercase">1. Draft Policy Concept → 2. Calibrate Resource Load → 3. Execute Prediction Matrix</p>
+                        <p className="text-base text-emerald-700/60 leading-relaxed font-bold tracking-widest uppercase">1. Draft Policy Concept → 2. Calibrate Resource Load → 3. Execute Prediction Matrix</p>
                     </div>
                     <div className="flex gap-4">
                         <div className="bg-white px-5 py-3 rounded-2xl border border-emerald-100/50 shadow-sm text-center">
-                            <p className="text-[10px] font-black text-emerald-800 uppercase tracking-widest">Accuracy</p>
+                            <p className="text-sm font-black text-emerald-800 uppercase tracking-widest">Accuracy</p>
                             <p className="text-xl font-black text-emerald-600 tracking-tighter">94.8%</p>
                         </div>
                     </div>
@@ -55,12 +55,12 @@ export default function PolicySimulator() {
                     {/* Parameters Console */}
                     <div className="lg:col-span-1 space-y-6">
                         <div className="bg-white border border-gray-100 rounded-[3rem] p-10 shadow-sm space-y-8">
-                            <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 mb-2">Resource Calibration</h3>
+                            <h3 className="text-sm font-black uppercase tracking-[0.4em] text-gray-400 mb-2">Resource Calibration</h3>
                             
                             <div className="space-y-4">
                                 <div className="flex justify-between items-end">
                                     <label className="text-[9px] font-black uppercase text-gray-400 tracking-widest">Budget Multiplier</label>
-                                    <span className="text-[11px] font-black text-[#B91C1C]">₹5.5M - ₹12M</span>
+                                    <span className="text-base font-black text-[#B91C1C]">₹5.5M - ₹12M</span>
                                 </div>
                                 <input type="range" className="w-full accent-[#B91C1C]" />
                             </div>
@@ -68,7 +68,7 @@ export default function PolicySimulator() {
                             <div className="space-y-4">
                                 <div className="flex justify-between items-end">
                                     <label className="text-[9px] font-black uppercase text-gray-400 tracking-widest">Duration (Months)</label>
-                                    <span className="text-[11px] font-black text-[#B91C1C]">12 Months</span>
+                                    <span className="text-base font-black text-[#B91C1C]">12 Months</span>
                                 </div>
                                 <input type="range" className="w-full accent-gray-900" />
                             </div>
@@ -76,7 +76,7 @@ export default function PolicySimulator() {
                             <div className="space-y-4">
                                 <div className="flex justify-between items-end">
                                     <label className="text-[9px] font-black uppercase text-gray-400 tracking-widest">Target Reach</label>
-                                    <span className="text-[11px] font-black text-[#B91C1C]">45,000 People</span>
+                                    <span className="text-base font-black text-[#B91C1C]">45,000 People</span>
                                 </div>
                                 <input type="range" className="w-full accent-[#B91C1C]" />
                             </div>
@@ -85,7 +85,7 @@ export default function PolicySimulator() {
                                 <h4 className="text-[9px] font-black uppercase text-gray-400 mb-4 tracking-widest">Intelligence Layer</h4>
                                 <div className="flex items-center gap-3 bg-red-50 p-4 rounded-2xl border border-red-100">
                                     <ShieldCheck className="w-5 h-5 text-red-600" />
-                                    <p className="text-[10px] font-black text-red-900 uppercase tracking-tighter">Integrity Check Active</p>
+                                    <p className="text-sm font-black text-red-900 uppercase tracking-tighter">Integrity Check Active</p>
                                 </div>
                             </div>
                         </div>
@@ -117,11 +117,11 @@ export default function PolicySimulator() {
                             </div>
 
                             <div className="mt-8 flex items-center justify-between">
-                                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20 italic">Simulation engine utilizes deep-learning spatial clusters.</p>
+                                <p className="text-sm font-black uppercase tracking-[0.3em] text-white/20 italic">Simulation engine utilizes deep-learning spatial clusters.</p>
                                 <button
                                     onClick={handleSimulate}
                                     disabled={isSimulating || !policyTitle.trim()}
-                                    className="px-10 py-5 bg-[#B91C1C] rounded-[1.5rem] text-[11px] font-black uppercase tracking-[0.4em] hover:bg-red-600 transition-all shadow-2xl shadow-red-900/50 active:scale-95 disabled:opacity-50 flex items-center gap-4"
+                                    className="px-10 py-5 bg-[#B91C1C] rounded-[1.5rem] text-base font-black uppercase tracking-[0.4em] hover:bg-red-600 transition-all shadow-2xl shadow-red-900/50 active:scale-95 disabled:opacity-50 flex items-center gap-4"
                                 >
                                     {isSimulating ? (
                                         <>
@@ -153,7 +153,7 @@ export default function PolicySimulator() {
                                         <s.icon className={`w-5 h-5 ${s.color}`} />
                                     </div>
                                     <p className="text-3xl font-black text-gray-900">{s.value}</p>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mt-1">{s.label}</p>
+                                    <p className="text-sm font-black uppercase tracking-widest text-gray-400 mt-1">{s.label}</p>
                                 </div>
                             ))}
                         </div>
@@ -168,10 +168,10 @@ export default function PolicySimulator() {
                                         6-Month Impact Forecast
                                     </h3>
                                     <div className="flex items-center gap-4">
-                                        <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-500">
+                                        <span className="flex items-center gap-1.5 text-sm font-bold text-emerald-500">
                                             <span className="w-2 h-2 rounded-full bg-emerald-500" /> Sentiment
                                         </span>
-                                        <span className="flex items-center gap-1.5 text-[10px] font-bold text-red-500">
+                                        <span className="flex items-center gap-1.5 text-sm font-bold text-red-500">
                                             <span className="w-2 h-2 rounded-full bg-[#B91C1C]" /> Efficiency
                                         </span>
                                     </div>
@@ -203,7 +203,7 @@ export default function PolicySimulator() {
                             {/* Qualitative Insights */}
                             <div className="space-y-6">
                                 <div className="bg-[#0B1221] text-white rounded-[3rem] p-10 shadow-2xl border border-white/10 group">
-                                    <h3 className="text-[10px] font-black mb-8 flex items-center gap-4 text-emerald-400 uppercase tracking-[0.3em]">
+                                    <h3 className="text-sm font-black mb-8 flex items-center gap-4 text-emerald-400 uppercase tracking-[0.3em]">
                                         <Info className="w-5 h-5 animate-pulse" />
                                         Heuristic Analysis Core
                                     </h3>
@@ -214,12 +214,12 @@ export default function PolicySimulator() {
                                             { title: "Governance Alignment", body: "Proposed policy retains 98.4% congruency with the 'Urban Integrity 2030' administrative roadmap." },
                                         ].map((item, i) => (
                                             <div key={i} className="border-l-2 border-emerald-500/20 pl-6 py-2 group-hover:border-emerald-500 transition-colors">
-                                                <h4 className="text-[10px] font-black uppercase text-emerald-400 tracking-widest mb-2">{item.title}</h4>
-                                                <p className="text-xs text-white/40 leading-relaxed font-bold">{item.body}</p>
+                                                <h4 className="text-sm font-black uppercase text-emerald-400 tracking-widest mb-2">{item.title}</h4>
+                                                <p className="text-base text-white/40 leading-relaxed font-bold">{item.body}</p>
                                             </div>
                                         ))}
                                     </div>
-                                    <button className="w-full mt-10 py-5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] transition-all">
+                                    <button className="w-full mt-10 py-5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-sm font-black uppercase tracking-[0.3em] transition-all">
                                         Decrypt Full Technical Report
                                     </button>
                                 </div>
@@ -235,12 +235,12 @@ export default function PolicySimulator() {
                                     </div>
                                     <div>
                                         <h3 className="text-xl font-black text-rose-100 tracking-tight italic uppercase">Structural Roadblocks</h3>
-                                        <p className="text-[10px] font-black text-rose-500/60 uppercase tracking-[0.3em]">Breach Probability: Moderate</p>
+                                        <p className="text-sm font-black text-rose-500/60 uppercase tracking-[0.3em]">Breach Probability: Moderate</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3">
                                     <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-                                    <span className="text-[10px] font-black text-rose-400 uppercase tracking-widest">Live Vulnerability Scan</span>
+                                    <span className="text-sm font-black text-rose-400 uppercase tracking-widest">Live Vulnerability Scan</span>
                                 </div>
                             </div>
 
@@ -255,8 +255,8 @@ export default function PolicySimulator() {
                                                 <Layers className="w-6 h-6 text-white/20 group-hover/card:text-rose-500" />
                                             </div>
                                             <div>
-                                                <h4 className="text-[11px] font-black text-white uppercase tracking-widest mb-2">{alert.title}</h4>
-                                                <p className="text-[11px] text-white/30 leading-relaxed font-bold tracking-tight">{alert.desc}</p>
+                                                <h4 className="text-base font-black text-white uppercase tracking-widest mb-2">{alert.title}</h4>
+                                                <p className="text-base text-white/30 leading-relaxed font-bold tracking-tight">{alert.desc}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -269,7 +269,7 @@ export default function PolicySimulator() {
                             <div className="absolute -top-10 -left-10 w-40 h-40 bg-emerald-500/5 blur-[50px] rounded-full group-hover:scale-150 transition-transform duration-1000" />
                             <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-red-500/5 blur-[50px] rounded-full group-hover:scale-150 transition-transform duration-1000" />
                             
-                            <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-gray-400 mb-10">Simulation Protocol v2.4 Guide</h3>
+                            <h3 className="text-sm font-black uppercase tracking-[0.5em] text-gray-400 mb-10">Simulation Protocol v2.4 Guide</h3>
                             
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative z-10">
                                 {[
@@ -279,8 +279,8 @@ export default function PolicySimulator() {
                                 ].map((step, i) => (
                                     <div key={i} className="space-y-4">
                                         <div className="text-3xl font-black text-gray-900/5 italic tracking-tighter mb-[-20px]">{step.step}</div>
-                                        <h4 className="text-sm font-black text-gray-900 uppercase tracking-tighter italic">{step.title}</h4>
-                                        <p className="text-[11px] text-gray-400 font-bold leading-relaxed">{step.desc}</p>
+                                        <h4 className="text-lg font-black text-gray-900 uppercase tracking-tighter italic">{step.title}</h4>
+                                        <p className="text-base text-gray-400 font-bold leading-relaxed">{step.desc}</p>
                                     </div>
                                 ))}
                             </div>

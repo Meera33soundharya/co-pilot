@@ -75,16 +75,16 @@ export default function AIAlerts() {
                             <button onClick={() => setDetail(null)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400"><X className="w-4 h-4" /></button>
                         </div>
                         <div className="p-6 space-y-4">
-                            <p className="text-sm text-gray-700 leading-relaxed">{detail.description}</p>
-                            <div className="grid grid-cols-2 gap-3 text-xs">
-                                <div><p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] mb-0.5">Ward</p><p className="font-bold text-gray-800">{detail.ward}</p></div>
-                                <div><p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] mb-0.5">Category</p><p className="font-bold text-gray-800">{detail.category}</p></div>
-                                <div><p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] mb-0.5">Severity</p><p className="font-bold" style={{ color: detail.severity === 'Critical' ? '#B91C1C' : '#D97706' }}>{detail.severity}</p></div>
-                                <div><p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] mb-0.5">AI Confidence</p><p className="font-bold text-red-600">{detail.aiConfidence}%</p></div>
+                            <p className="text-lg text-gray-700 leading-relaxed">{detail.description}</p>
+                            <div className="grid grid-cols-2 gap-3 text-base">
+                                <div><p className="text-gray-400 font-bold uppercase tracking-widest text-sm mb-0.5">Ward</p><p className="font-bold text-gray-800">{detail.ward}</p></div>
+                                <div><p className="text-gray-400 font-bold uppercase tracking-widest text-sm mb-0.5">Category</p><p className="font-bold text-gray-800">{detail.category}</p></div>
+                                <div><p className="text-gray-400 font-bold uppercase tracking-widest text-sm mb-0.5">Severity</p><p className="font-bold" style={{ color: detail.severity === 'Critical' ? '#B91C1C' : '#D97706' }}>{detail.severity}</p></div>
+                                <div><p className="text-gray-400 font-bold uppercase tracking-widest text-sm mb-0.5">AI Confidence</p><p className="font-bold text-red-600">{detail.aiConfidence}%</p></div>
                             </div>
                             <div className="flex gap-3 pt-2">
-                                <button onClick={() => { handleAcknowledge(detail.id); setDetail(null); }} className="flex-1 py-2.5 rounded-xl bg-amber-50 text-amber-700 text-xs font-black uppercase tracking-widest hover:bg-amber-100 transition-all">Acknowledge</button>
-                                <button onClick={() => { handleResolve(detail.id); setDetail(null); }} className="flex-1 py-2.5 rounded-xl text-white text-xs font-black uppercase tracking-widest transition-all" style={{ backgroundColor: '#B91C1C' }}>Mark Resolved</button>
+                                <button onClick={() => { handleAcknowledge(detail.id); setDetail(null); }} className="flex-1 py-2.5 rounded-xl bg-amber-50 text-amber-700 text-base font-black uppercase tracking-widest hover:bg-amber-100 transition-all">Acknowledge</button>
+                                <button onClick={() => { handleResolve(detail.id); setDetail(null); }} className="flex-1 py-2.5 rounded-xl text-white text-base font-black uppercase tracking-widest transition-all" style={{ backgroundColor: '#B91C1C' }}>Mark Resolved</button>
                             </div>
                         </div>
                     </div>
@@ -101,7 +101,7 @@ export default function AIAlerts() {
                         { label: "Resolved Today", value: resolvedCount, bg: "bg-emerald-50 border border-emerald-200", text: "text-emerald-700" },
                     ].map(s => (
                         <div key={s.label} className={`${s.bg ?? ""} ${s.text} rounded-xl p-5`} style={s.bgStyle}>
-                            <p className="text-[10px] font-black uppercase tracking-widest opacity-70">{s.label}</p>
+                            <p className="text-sm font-black uppercase tracking-widest opacity-70">{s.label}</p>
                             <p className="text-3xl font-black mt-1">{s.value}</p>
                         </div>
                     ))}
@@ -116,7 +116,7 @@ export default function AIAlerts() {
                             <button
                                 key={s}
                                 onClick={() => setSeverityFilter(s)}
-                                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${severityFilter === s ? "bg-gray-900 text-white" : "text-gray-400 hover:text-gray-700"}`}
+                                className={`px-3 py-1.5 rounded-lg text-sm font-black uppercase tracking-wider transition-all ${severityFilter === s ? "bg-gray-900 text-white" : "text-gray-400 hover:text-gray-700"}`}
                             >
                                 {s}
                             </button>
@@ -128,14 +128,14 @@ export default function AIAlerts() {
                             <button
                                 key={s}
                                 onClick={() => setStatusFilter(s)}
-                                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${statusFilter === s ? "bg-gray-900 text-white" : "text-gray-400 hover:text-gray-700"}`}
+                                className={`px-3 py-1.5 rounded-lg text-sm font-black uppercase tracking-wider transition-all ${statusFilter === s ? "bg-gray-900 text-white" : "text-gray-400 hover:text-gray-700"}`}
                             >
                                 {s}
                             </button>
                         ))}
                     </div>
 
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-auto">
+                    <span className="text-sm font-black text-gray-400 uppercase tracking-widest ml-auto">
                         {filtered.length} of {visible.length} alerts
                     </span>
                 </div>
@@ -155,41 +155,41 @@ export default function AIAlerts() {
 
                                     <div className="flex-1 min-w-0">
                                         <div className="flex flex-wrap items-center gap-3 mb-2">
-                                            <span className="text-xs font-black text-gray-400">{alertItem.id}</span>
-                                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black border ${cfg.bg} ${cfg.text} ${cfg.border} flex items-center gap-1`}>
+                                            <span className="text-base font-black text-gray-400">{alertItem.id}</span>
+                                            <span className={`px-2.5 py-0.5 rounded-full text-sm font-black border ${cfg.bg} ${cfg.text} ${cfg.border} flex items-center gap-1`}>
                                                 <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot} ${alertItem.severity === "Critical" ? "animate-pulse" : ""}`} />
                                                 {alertItem.severity}
                                             </span>
-                                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black border ${statusStyle[currentStatus]}`}>
+                                            <span className={`px-2.5 py-0.5 rounded-full text-sm font-black border ${statusStyle[currentStatus]}`}>
                                                 {currentStatus}
                                             </span>
-                                            <span className="text-[10px] text-gray-400 font-bold">{alertItem.ward}</span>
-                                            <span className="text-[10px] text-gray-400 font-bold ml-auto">{alertItem.time}</span>
+                                            <span className="text-sm text-gray-400 font-bold">{alertItem.ward}</span>
+                                            <span className="text-sm text-gray-400 font-bold ml-auto">{alertItem.time}</span>
                                         </div>
 
                                         <h3 className="font-black text-gray-900 text-base leading-tight">{alertItem.title}</h3>
-                                        <p className="text-sm text-gray-600 mt-1.5 leading-relaxed">{alertItem.description}</p>
+                                        <p className="text-lg text-gray-600 mt-1.5 leading-relaxed">{alertItem.description}</p>
 
                                         <div className="flex flex-wrap items-center gap-4 mt-4">
                                             <div className="flex items-center gap-2">
-                                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">AI Confidence:</span>
+                                                <span className="text-sm font-black text-gray-400 uppercase tracking-widest">AI Confidence:</span>
                                                 <div className="h-1.5 w-24 bg-gray-100 rounded-full overflow-hidden">
                                                     <div className="h-full bg-red-600 rounded-full" style={{ width: `${alertItem.aiConfidence}%` }} />
                                                 </div>
-                                                <span className="text-[10px] font-black text-red-600">{alertItem.aiConfidence}%</span>
+                                                <span className="text-sm font-black text-red-600">{alertItem.aiConfidence}%</span>
                                             </div>
 
                                             <div className="flex items-center gap-2 ml-auto">
                                                 <button
                                                     onClick={() => handleDismiss(alertItem.id)}
-                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-xl text-[10px] font-black text-gray-600 hover:bg-gray-200 transition-all"
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-xl text-sm font-black text-gray-600 hover:bg-gray-200 transition-all"
                                                 >
                                                     <BellOff className="w-3 h-3" /> Dismiss
                                                 </button>
                                                 {currentStatus !== "acknowledged" && currentStatus !== "resolved" && (
                                                     <button
                                                         onClick={() => handleAcknowledge(alertItem.id)}
-                                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 rounded-xl text-[10px] font-black text-amber-700 hover:bg-amber-100 transition-all"
+                                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 rounded-xl text-sm font-black text-amber-700 hover:bg-amber-100 transition-all"
                                                     >
                                                         <Eye className="w-3 h-3" /> Acknowledge
                                                     </button>
@@ -197,7 +197,7 @@ export default function AIAlerts() {
                                                 {currentStatus !== "resolved" && (
                                                     <button
                                                         onClick={() => handleResolve(alertItem.id)}
-                                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black text-white hover:opacity-90 transition-all shadow-md"
+                                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-black text-white hover:opacity-90 transition-all shadow-md"
                                                         style={{ backgroundColor: '#B91C1C' }}
                                                     >
                                                         <CheckCircle2 className="w-3 h-3" /> Resolve
@@ -205,7 +205,7 @@ export default function AIAlerts() {
                                                 )}
                                                 <button
                                                     onClick={() => setDetail(alertItem)}
-                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-900 rounded-xl text-[10px] font-black text-white hover:bg-red-700 transition-all shadow-md shadow-gray-200"
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-900 rounded-xl text-sm font-black text-white hover:bg-red-700 transition-all shadow-md shadow-gray-200"
                                                 >
                                                     Investigate <ArrowRight className="w-3 h-3" />
                                                 </button>

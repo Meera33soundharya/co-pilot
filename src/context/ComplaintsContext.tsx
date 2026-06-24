@@ -53,6 +53,20 @@ export interface AppNotification {
     announcementId?: string;
 }
 
+// ── Closed Complaint Document ─────────────────────────────────
+export interface ClosedDoc {
+    name: string;
+    size: string;
+    date: string;
+    type: string;
+    status: string;
+    access: string;
+    assetId: string;
+    dept: string;
+    summary: string;
+    complaintId: string;
+}
+
 // ── Context shape ──────────────────────────────────────────────
 interface ComplaintsCtx {
     currentUser: CurrentUser | null;
@@ -82,6 +96,8 @@ interface ComplaintsCtx {
     reopenComplaint: (id: string, note: string) => void;
     readNotification: (id: string) => void;
     postAnnouncement: (data: { title: string; body: string; type: AnnouncementType; ward: string }) => void;
+    deleteAnnouncement: (id: string) => void;
+    closedDocs: ClosedDoc[];
 }
 
 const Ctx = createContext<ComplaintsCtx | null>(null);
@@ -147,6 +163,15 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
             return saved ? (JSON.parse(saved) as Announcement[]) : INITIAL_ANNOUNCEMENTS;
         } catch {
             return INITIAL_ANNOUNCEMENTS;
+        }
+    });
+
+    const [closedDocs, setClosedDocs] = useState<ClosedDoc[]>(() => {
+        try {
+            const saved = localStorage.getItem("co_pilot_closed_docs");
+            return saved ? (JSON.parse(saved) as ClosedDoc[]) : [];
+        } catch {
+            return [];
         }
     });
 
@@ -419,6 +444,30 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
             dept: targetComplaint?.dept,
             target: "admin"
         });
+
+        // 📄 Auto-save closed/resolved complaints as documents
+        if (newStatus === "Closed" || newStatus === "Resolved") {
+            const comp = allComplaints.find(c => c.id === id);
+            if (comp) {
+                const doc: ClosedDoc = {
+                    name: `Complaint ${id} - ${comp.issue} - ${newStatus}.pdf`,
+                    size: "1.2 MB",
+                    date: new Date().toLocaleDateString("en-IN", { day: 'numeric', month: 'short', year: 'numeric' }),
+                    type: "PDF",
+                    status: "approved",
+                    access: "public",
+                    assetId: `CMP-${id.replace('GRV-', '')}`,
+                    dept: comp.dept || "Unassigned",
+                    summary: `${newStatus} complaint report: ${comp.issue}. ${comp.description}. Filed by ${comp.citizen} from ${comp.ward}. Department: ${comp.dept || 'N/A'}. Resolution: ${actorNote || 'Complaint resolved successfully.'}`,
+                    complaintId: id,
+                };
+                setClosedDocs(prev => {
+                    const updated = [doc, ...prev];
+                    localStorage.setItem("co_pilot_closed_docs", JSON.stringify(updated));
+                    return updated;
+                });
+            }
+        }
     }
 
     function assignComplaint(id: string, dept: string, assignedTo: string) {
@@ -530,14 +579,22 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
         });
     }
 
+    function deleteAnnouncement(id: string) {
+        const updated = announcements.filter(a => a.id !== id);
+        setAnnouncements(updated);
+        announcementsChannel.send(updated);
+        localStorage.setItem("co_pilot_announcements_v2", JSON.stringify(updated));
+    }
+
     return (
         <Ctx.Provider value={{
             currentUser, login, logout,
             complaints, allComplaints,
             notifications: userNotifications, readNotification,
-            announcements, postAnnouncement,
+            announcements, postAnnouncement, deleteAnnouncement,
             addComplaint, updateStatus, assignComplaint, notifyCitizen, categorize,
-            rateComplaint, reopenComplaint
+            rateComplaint, reopenComplaint,
+            closedDocs
         }}>
             {children}
         </Ctx.Provider>

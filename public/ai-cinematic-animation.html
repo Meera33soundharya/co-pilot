@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<title>AI Governance Co-Pilot — Cinematic Animation</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #000;
+    overflow: hidden;
+    width: 1920px;
+    height: 1080px;
+    font-family: 'Courier New', monospace;
+  }
+  #scene {
+    position: relative;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+  }
+  /* Background image layer */
+  #bg-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform-origin: center center;
+    animation: cinematicZoom 10s ease-in-out infinite;
+    filter: brightness(0.75) saturate(1.2);
+  }
+  @keyframes cinematicZoom {
+    0%   { transform: scale(1.0) translate(0px, 0px); }
+    50%  { transform: scale(1.12) translate(-15px, -8px); }
+    100% { transform: scale(1.0) translate(0px, 0px); }
+  }
+  /* Parallax background layer overlay */
+  #parallax-overlay {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 70% at 52% 48%, transparent 20%, rgba(0,5,30,0.55) 100%);
+    animation: parallaxShift 10s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes parallaxShift {
+    0%   { transform: translate(0,0); }
+    50%  { transform: translate(-10px, -5px); }
+    100% { transform: translate(0,0); }
+  }
+  /* Main canvas for all animated elements */
+  #main-canvas {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  /* HUD elements */
+  .hud-corner {
+    position: absolute;
+    border: 1.5px solid rgba(0,200,255,0.55);
+    pointer-events: none;
+  }
+  .hud-tl { top:18px; left:18px; width:70px; height:70px;
+    border-right:none; border-bottom:none;
+    box-shadow: -2px -2px 12px rgba(0,180,255,0.4), inset -2px -2px 8px rgba(0,180,255,0.15);
+    animation: hudPulse 3s ease-in-out infinite;
+  }
+  .hud-tr { top:18px; right:18px; width:70px; height:70px;
+    border-left:none; border-bottom:none;
+    box-shadow: 2px -2px 12px rgba(0,180,255,0.4), inset 2px -2px 8px rgba(0,180,255,0.15);
+    animation: hudPulse 3s ease-in-out infinite 0.5s;
+  }
+  .hud-bl { bottom:18px; left:18px; width:70px; height:70px;
+    border-right:none; border-top:none;
+    box-shadow: -2px 2px 12px rgba(0,180,255,0.4), inset -2px 2px 8px rgba(0,180,255,0.15);
+    animation: hudPulse 3s ease-in-out infinite 1s;
+  }
+  .hud-br { bottom:18px; right:18px; width:70px; height:70px;
+    border-left:none; border-top:none;
+    box-shadow: 2px 2px 12px rgba(0,180,255,0.4), inset 2px 2px 8px rgba(0,180,255,0.15);
+    animation: hudPulse 3s ease-in-out infinite 1.5s;
+  }
+  @keyframes hudPulse {
+    0%, 100% { opacity:0.7; }
+    50% { opacity:1; }
+  }
+  /* HUD data lines */
+  .hud-line {
+    position: absolute;
+    font-size: 10px;
+    color: rgba(0,220,255,0.75);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    pointer-events: none;
+    animation: hudTextFlicker 4s ease-in-out infinite;
+  }
+  @keyframes hudTextFlicker {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; }
+    45% { opacity: 0.3; }
+  }
+  /* Scanline overlay */
+  #scanlines {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 3px,
+      rgba(0,0,0,0.04) 3px,
+      rgba(0,0,0,0.04) 4px
+    );
+    pointer-events: none;
+    opacity: 0.5;
+  }
+  /* Vignette */
+  #vignette {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 75% 65% at 50% 50%, transparent 40%, rgba(0,0,0,0.75) 100%);
+    pointer-events: none;
+  }
+  /* Lens flare */
+  #lens-flare {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(100,180,255,0.12) 0%, rgba(80,0,200,0.08) 40%, transparent 70%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation: lensFlare 10s ease-in-out infinite;
+    pointer-events: none;
+    mix-blend-mode: screen;
+  }
+  @keyframes lensFlare {
+    0%, 100% { opacity:0.6; transform:translate(-50%,-50%) scale(1); }
+    50%       { opacity:1;   transform:translate(-53%,-52%) scale(1.08); }
+  }
+  /* Energy pulse burst at fingertip region */
+  #energy-pulse {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(100,200,255,0.7) 30%, rgba(160,80,255,0.4) 65%, transparent 100%);
+    top: 46%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation: energyPulse 2s ease-in-out infinite;
+    pointer-events: none;
+    mix-blend-mode: screen;
+    z-index: 20;
+  }
+  @keyframes energyPulse {
+    0%   { transform: translate(-50%,-50%) scale(0.85); opacity: 0.9; }
+    50%  { transform: translate(-50%,-50%) scale(1.3);  opacity: 1;   }
+    100% { transform: translate(-50%,-50%) scale(0.85); opacity: 0.9; }
+  }
+  /* Light rays from center */
+  #light-rays {
+    position: absolute;
+    width: 900px;
+    height: 900px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -52%);
+    pointer-events: none;
+    mix-blend-mode: screen;
+    animation: raysRotate 20s linear infinite;
+    z-index: 5;
+  }
+  @keyframes raysRotate {
+    from { transform: translate(-50%,-52%) rotate(0deg); }
+    to   { transform: translate(-50%,-52%) rotate(360deg); }
+  }
+  /* Bottom status bar */
+  #status-bar {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 30px;
+    align-items: center;
+    pointer-events: none;
+    animation: fadeInUp 2s ease-out forwards;
+  }
+  @keyframes fadeInUp {
+    from { opacity:0; transform:translateX(-50%) translateY(20px); }
+    to   { opacity:1; transform:translateX(-50%) translateY(0); }
+  }
+  .status-item {
+    font-size: 10px;
+    color: rgba(0,220,255,0.8);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border: 1px solid rgba(0,180,255,0.3);
+    padding: 4px 12px;
+    border-radius: 2px;
+    background: rgba(0,20,60,0.6);
+    backdrop-filter: blur(4px);
+  }
+  .status-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #00ff88;
+    margin-right: 6px;
+    animation: dotBlink 1.5s ease-in-out infinite;
+    box-shadow: 0 0 6px #00ff88;
+  }
+  @keyframes dotBlink {
+    0%, 100% { opacity:1; }
+    50% { opacity:0.2; }
+  }
+  /* Breathing glow on robotic hand area */
+  #hand-glow-left {
+    position: absolute;
+    width: 340px;
+    height: 340px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(60,120,255,0.22) 0%, transparent 70%);
+    top: 38%;
+    left: 22%;
+    pointer-events: none;
+    animation: breatheGlow 4s ease-in-out infinite;
+    mix-blend-mode: screen;
+    z-index: 4;
+  }
+  #hand-glow-right {
+    position: absolute;
+    width: 280px;
+    height: 280px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(160,80,255,0.18) 0%, transparent 70%);
+    top: 42%;
+    right: 24%;
+    pointer-events: none;
+    animation: breatheGlow 4s ease-in-out infinite 2s;
+    mix-blend-mode: screen;
+    z-index: 4;
+  }
+  @keyframes breatheGlow {
+    0%, 100% { opacity:0.6; transform:scale(1); }
+    50%       { opacity:1;   transform:scale(1.15); }
+  }
+</style>
+</head>
+<body>
+<div id="scene">
+  <!-- Base image -->
+  <img id="bg-img" src="/images/energy_hands.png" alt="Energy Hands" />
+
+  <!-- Parallax overlay depth layer -->
+  <div id="parallax-overlay"></div>
+
+  <!-- Hand atmosphere glows -->
+  <div id="hand-glow-left"></div>
+  <div id="hand-glow-right"></div>
+
+  <!-- SVG Light rays -->
+  <svg id="light-rays" viewBox="0 0 900 900" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="rayGrad" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="rgba(100,180,255,0.35)"/>
+        <stop offset="100%" stop-color="rgba(160,80,255,0)" />
+      </radialGradient>
+    </defs>
+    <g opacity="0.6">
+      <line x1="450" y1="450" x2="450" y2="0"   stroke="rgba(80,160,255,0.25)" stroke-width="2.5"/>
+      <line x1="450" y1="450" x2="900" y2="0"   stroke="rgba(120,80,255,0.2)"  stroke-width="1.5"/>
+      <line x1="450" y1="450" x2="900" y2="450" stroke="rgba(80,160,255,0.2)"  stroke-width="2"/>
+      <line x1="450" y1="450" x2="900" y2="900" stroke="rgba(100,80,255,0.15)" stroke-width="1.5"/>
+      <line x1="450" y1="450" x2="450" y2="900" stroke="rgba(80,160,255,0.25)" stroke-width="2.5"/>
+      <line x1="450" y1="450" x2="0"   y2="900" stroke="rgba(100,80,255,0.2)"  stroke-width="1.5"/>
+      <line x1="450" y1="450" x2="0"   y2="450" stroke="rgba(80,160,255,0.2)"  stroke-width="2"/>
+      <line x1="450" y1="450" x2="0"   y2="0"   stroke="rgba(120,80,255,0.18)" stroke-width="1.5"/>
+      <line x1="450" y1="450" x2="700" y2="150" stroke="rgba(60,200,255,0.18)" stroke-width="1"/>
+      <line x1="450" y1="450" x2="200" y2="150" stroke="rgba(60,200,255,0.18)" stroke-width="1"/>
+      <line x1="450" y1="450" x2="700" y2="750" stroke="rgba(60,200,255,0.15)" stroke-width="1"/>
+      <line x1="450" y1="450" x2="200" y2="750" stroke="rgba(60,200,255,0.15)" stroke-width="1"/>
+    </g>
+  </svg>
+
+  <!-- Main animated canvas -->
+  <canvas id="main-canvas" width="1920" height="1080"></canvas>
+
+  <!-- Energy pulse at fingertips -->
+  <div id="energy-pulse"></div>
+  <div id="lens-flare"></div>
+
+  <!-- HUD corners -->
+  <div class="hud-corner hud-tl"></div>
+  <div class="hud-corner hud-tr"></div>
+  <div class="hud-corner hud-bl"></div>
+  <div class="hud-corner hud-br"></div>
+
+  <!-- HUD text labels -->
+  <div class="hud-line" style="top:30px;left:100px;">AI.GOVERNANCE.COPILOT ■ v2.4.1</div>
+  <div class="hud-line" style="top:50px;left:100px;">NODE STATUS: <span style="color:#00ff88;">OPTIMAL</span></div>
+  <div class="hud-line" style="top:30px;right:100px;text-align:right;">NEURAL.SYNC: 97.4%</div>
+  <div class="hud-line" style="top:50px;right:100px;text-align:right;">LATENCY: 12ms</div>
+  <div class="hud-line" style="top:140px;left:30px;writing-mode:vertical-lr;transform:rotate(180deg);">DISTRICT INTELLIGENCE PLATFORM</div>
+  <div class="hud-line" style="top:140px;right:30px;writing-mode:vertical-lr;">SECURE ■ ENCRYPTED ■ LIVE</div>
+
+  <!-- Scanline and vignette -->
+  <div id="scanlines"></div>
+  <div id="vignette"></div>
+
+  <!-- Status bar -->
+  <div id="status-bar">
+    <div class="status-item"><span class="status-dot"></span>AI ENGINE ACTIVE</div>
+    <div class="status-item"><span class="status-dot" style="background:#00aaff;box-shadow:0 0 6px #00aaff;animation-delay:0.5s"></span>HOLOGRAPHIC RING SYNC</div>
+    <div class="status-item"><span class="status-dot" style="background:#aa44ff;box-shadow:0 0 6px #aa44ff;animation-delay:1s"></span>NEURAL HANDSHAKE</div>
+    <div class="status-item"><span class="status-dot" style="background:#ffcc00;box-shadow:0 0 6px #ffcc00;animation-delay:1.5s"></span>DATA STREAM: 1.2TB/s</div>
+  </div>
+</div>
+
+<script>
+// ─── SETUP ─────────────────────────────────────────────────────────────────
+const W = 1920, H = 1080;
+const cx = W / 2 - 10;    // ring center X (slightly toward center between hands)
+const cy = H * 0.465;     // ring center Y (at fingertip touch point)
+
+const canvas = document.getElementById('main-canvas');
+const ctx    = canvas.getContext('2d');
+
+// No fallback background drawing needed since we have the image.
+function drawBackgroundScene(t) {
+  // We just let the CSS and image tag handle the background.
+}
+
+// ─── PARTICLES ────────────────────────────────────────────────────────────
+const PARTICLE_COUNT = 70;
+const particles = [];
+for(let i=0;i<PARTICLE_COUNT;i++){
+  const orbit = 140 + Math.random()*220;
+  const speed = (Math.random()>0.5?1:-1) * (0.3+Math.random()*0.6);
+  const angle = Math.random()*Math.PI*2;
+  particles.push({
+    orbit, speed, angle,
+    size:  1.5 + Math.random()*2.5,
+    alpha: 0.4 + Math.random()*0.5,
+    color: Math.random()>0.5 ? [80,180,255] : [160,80,255],
+    yOffset: (Math.random()-0.5)*40,
+  });
+}
+
+// ─── CIRCUIT LINES ────────────────────────────────────────────────────────
+const CIRCUIT_COUNT = 16;
+const circuits = [];
+for(let i=0;i<CIRCUIT_COUNT;i++){
+  const angle = (i/CIRCUIT_COUNT)*Math.PI*2;
+  circuits.push({
+    angle,
+    length: 180 + Math.random()*280,
+    segments: Math.floor(3+Math.random()*4),
+    speed: 0.8 + Math.random()*1.5,
+    phase: Math.random()*Math.PI*2,
+    color: Math.random()>0.5 ? [0,200,255] : [120,60,255],
+  });
+}
+
+// ─── HUD ARCS ─────────────────────────────────────────────────────────────
+const hudArcs = [
+  { r:300, start:0,    span:0.8, color:[0,200,255], width:1.5, dir:1,  speed:0.2 },
+  { r:310, start:Math.PI, span:0.5, color:[160,80,255], width:1, dir:-1, speed:0.15 },
+  { r:360, start:0.5,  span:1.2, color:[0,180,255],  width:1, dir:1,  speed:0.1  },
+  { r:420, start:2,    span:0.6, color:[100,50,255], width:0.8,dir:-1, speed:0.08 },
+  { r:200, start:1,    span:1.0, color:[0,220,255],  width:1, dir:1,  speed:0.25 },
+];
+
+// ─── DATA READOUT TAGS ──────────────────────────────────────────────────
+const dataTags = [
+  { angle: 0.3,   r: 360, label: 'SYNC: 97.4%' },
+  { angle: 2.0,   r: 390, label: 'NODE: ACTIVE' },
+  { angle: Math.PI+0.5, r: 370, label: 'AI ENGINE OK' },
+  { angle: -0.8,  r: 350, label: 'LATENCY: 12ms' },
+];
+
+// ─── MAIN DRAW LOOP ───────────────────────────────────────────────────────
+let startTime = null;
+function draw(timestamp){
+  if(!startTime) startTime = timestamp;
+  const t = (timestamp - startTime) / 1000;
+
+  ctx.clearRect(0,0,W,H);
+
+  // ── 1. Draw background scene ──
+  drawBackgroundScene(t);
+
+  // ── 2. Light rays gradient from center ──
+  const rayGrad = ctx.createRadialGradient(cx,cy,0,cx,cy,350);
+  rayGrad.addColorStop(0,'rgba(120,180,255,0.18)');
+  rayGrad.addColorStop(0.5,'rgba(100,60,255,0.08)');
+  rayGrad.addColorStop(1,'transparent');
+  ctx.fillStyle = rayGrad;
+  ctx.fillRect(0,0,W,H);
+
+  // ── 3. OUTER RING (clockwise) ──────────────────────────────────────────
+  const outerR = 155;
+  drawRotatingRing(ctx, cx, cy, outerR, t, 1, 0.5, [0,190,255], 3.5, 18, 0.85);
+
+  // ── 4. INNER RING (counter-clockwise) ─────────────────────────────────
+  const innerR = 100;
+  drawRotatingRing(ctx, cx, cy, innerR, t, -1, 0.8, [160,80,255], 2.5, 12, 0.75);
+
+  // ── 5. Thin accent rings ───────────────────────────────────────────────
+  drawSimpleGlowRing(ctx, cx, cy, 190, 'rgba(0,180,255,0.25)', 1.5);
+  drawSimpleGlowRing(ctx, cx, cy, 80,  'rgba(180,80,255,0.2)', 1);
+  drawSimpleGlowRing(ctx, cx, cy, 230, 'rgba(0,150,255,0.15)', 1);
+
+  // ── 6. HUD arc segments ───────────────────────────────────────────────
+  hudArcs.forEach(arc => {
+    const currentStart = arc.start + t * arc.dir * arc.speed;
+    ctx.beginPath();
+    ctx.arc(cx, cy, arc.r, currentStart, currentStart + arc.span);
+    ctx.strokeStyle = `rgba(${arc.color.join(',')},0.6)`;
+    ctx.lineWidth = arc.width;
+    ctx.stroke();
+
+    // tick at end
+    const ex = cx + arc.r * Math.cos(currentStart + arc.span);
+    const ey = cy + arc.r * Math.sin(currentStart + arc.span);
+    ctx.fillStyle = `rgba(${arc.color.join(',')},0.9)`;
+    ctx.beginPath();
+    ctx.arc(ex, ey, arc.width*1.8, 0, Math.PI*2);
+    ctx.fill();
+  });
+
+  // ── 7. Circuit lines flowing outward ──────────────────────────────────
+  circuits.forEach(c => {
+    const progress = ((t * c.speed + c.phase) % 3) / 3; // 0..1 normalized
+    const baseAngle = c.angle;
+    const maxLen = c.length;
+    const curLen = progress * maxLen;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(baseAngle);
+
+    ctx.strokeStyle = `rgba(${c.color.join(',')},${0.5 * (1-progress)})`;
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+
+    let x = outerR, y = 0;
+    ctx.moveTo(x, y);
+
+    const segLen = curLen / c.segments;
+    for(let s=0;s<c.segments;s++){
+      const direction = (s % 2 === 0) ? 1 : -1;
+      const nextX = x + segLen * 0.7;
+      const nextY = y + direction * segLen * 0.4;
+      ctx.lineTo(nextX, nextY);
+      // corner dot
+      ctx.fillStyle = `rgba(${c.color.join(',')},0.8)`;
+      ctx.beginPath();
+      ctx.arc(nextX, nextY, 2, 0, Math.PI*2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(nextX, nextY);
+      x = nextX; y = nextY;
+    }
+    ctx.stroke();
+    ctx.restore();
+  });
+
+  // ── 8. Floating particles ─────────────────────────────────────────────
+  particles.forEach(p => {
+    p.angle += p.speed * 0.016;
+    const px = cx + p.orbit * Math.cos(p.angle);
+    const py = cy + p.orbit * Math.sin(p.angle) * 0.35 + p.yOffset;
+    const alpha = p.alpha * (0.6 + 0.4*Math.sin(t*2 + p.angle));
+
+    ctx.beginPath();
+    ctx.arc(px, py, p.size, 0, Math.PI*2);
+    const pGrad = ctx.createRadialGradient(px,py,0,px,py,p.size*2);
+    pGrad.addColorStop(0, `rgba(${p.color.join(',')},${alpha})`);
+    pGrad.addColorStop(1, `rgba(${p.color.join(',')},0)`);
+    ctx.fillStyle = pGrad;
+    ctx.fill();
+  });
+
+  // ── 9. Center energy burst ────────────────────────────────────────────
+  const pulseR = 35 + Math.sin(t*3)*12;
+  const burstGrad = ctx.createRadialGradient(cx,cy,0,cx,cy,pulseR*3);
+  burstGrad.addColorStop(0,  'rgba(255,255,255,0.95)');
+  burstGrad.addColorStop(0.2,'rgba(120,220,255,0.8)');
+  burstGrad.addColorStop(0.5,'rgba(100,60,255,0.4)');
+  burstGrad.addColorStop(1,  'transparent');
+  ctx.fillStyle = burstGrad;
+  ctx.beginPath();
+  ctx.arc(cx, cy, pulseR*3, 0, Math.PI*2);
+  ctx.fill();
+
+  // Inner bright dot
+  ctx.beginPath();
+  ctx.arc(cx, cy, pulseR * 0.3, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(255,255,255,0.98)';
+  ctx.fill();
+
+  // ── 10. Shockwave rings ───────────────────────────────────────────────
+  for(let i=0;i<3;i++){
+    const shockPhase = ((t*0.7 + i*0.33) % 1);
+    const shockR = shockPhase * 280;
+    const shockAlpha = (1-shockPhase)*0.4;
+    ctx.beginPath();
+    ctx.arc(cx, cy, shockR, 0, Math.PI*2);
+    ctx.strokeStyle = `rgba(80,180,255,${shockAlpha})`;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  // ── 11. Data tag labels around ring ───────────────────────────────────
+  dataTags.forEach(tag => {
+    const tx = cx + tag.r * Math.cos(tag.angle + t * 0.1);
+    const ty = cy + tag.r * Math.sin(tag.angle + t * 0.1) * 0.5;
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,15,40,0.75)';
+    ctx.strokeStyle = 'rgba(0,200,255,0.6)';
+    ctx.lineWidth = 1;
+    const tw = ctx.measureText(tag.label).width + 16;
+    ctx.beginPath();
+    ctx.roundRect(tx - tw/2, ty-10, tw, 20, 2);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(0,220,255,0.95)';
+    ctx.font = '10px Courier New';
+    ctx.letterSpacing = '1px';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(tag.label, tx, ty);
+    ctx.restore();
+  });
+
+  // ── 12. Connecting lines from ring to data tags ───────────────────────
+  dataTags.forEach(tag => {
+    const tx = cx + tag.r * Math.cos(tag.angle + t * 0.1);
+    const ty = cy + tag.r * Math.sin(tag.angle + t * 0.1) * 0.5;
+    const edgeX = cx + (outerR+10) * Math.cos(tag.angle + t * 0.1);
+    const edgeY = cy + (outerR+10) * Math.sin(tag.angle + t * 0.1) * 0.5;
+
+    ctx.beginPath();
+    ctx.moveTo(edgeX, edgeY);
+    ctx.lineTo(tx, ty);
+    ctx.strokeStyle = 'rgba(0,180,255,0.35)';
+    ctx.lineWidth = 0.8;
+    ctx.setLineDash([4,4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  });
+
+  // ── 13. Crosshair at center ───────────────────────────────────────────
+  const chSize = 20;
+  ctx.strokeStyle='rgba(0,220,255,0.5)';
+  ctx.lineWidth=1;
+  ctx.beginPath();
+  ctx.moveTo(cx-chSize,cy); ctx.lineTo(cx+chSize,cy);
+  ctx.moveTo(cx,cy-chSize); ctx.lineTo(cx,cy+chSize);
+  ctx.stroke();
+
+  // Diagonal cross
+  ctx.strokeStyle='rgba(0,220,255,0.25)';
+  ctx.beginPath();
+  ctx.moveTo(cx-10,cy-10); ctx.lineTo(cx+10,cy+10);
+  ctx.moveTo(cx+10,cy-10); ctx.lineTo(cx-10,cy+10);
+  ctx.stroke();
+
+  requestAnimationFrame(draw);
+}
+
+// ─── RING DRAW HELPER ─────────────────────────────────────────────────────
+function drawRotatingRing(ctx, x, y, r, t, dir, speed, color, lineW, segments, alpha) {
+  const rotAngle = t * speed * dir;
+
+  // Glow halo
+  const ringGrad = ctx.createRadialGradient(x,y,r-15,x,y,r+15);
+  ringGrad.addColorStop(0,`rgba(${color.join(',')},0)`);
+  ringGrad.addColorStop(0.5,`rgba(${color.join(',')},${alpha*0.6})`);
+  ringGrad.addColorStop(1,`rgba(${color.join(',')},0)`);
+  ctx.beginPath();
+  ctx.arc(x,y,r,0,Math.PI*2);
+  ctx.strokeStyle = ringGrad;
+  ctx.lineWidth = lineW + 10;
+  ctx.stroke();
+
+  // Main ring with dashes
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.rotate(rotAngle);
+
+  const dashLen = (2 * Math.PI * r) / (segments * 2);
+  ctx.setLineDash([dashLen * 0.65, dashLen * 0.35]);
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI*2);
+  ctx.strokeStyle = `rgba(${color.join(',')},${alpha})`;
+  ctx.lineWidth = lineW;
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Node dots at segment positions
+  for(let i=0;i<segments;i++){
+    const ang = (i/segments)*Math.PI*2;
+    const nx = r*Math.cos(ang), ny = r*Math.sin(ang);
+    const nodeGrad = ctx.createRadialGradient(nx,ny,0,nx,ny,8);
+    nodeGrad.addColorStop(0,`rgba(255,255,255,0.95)`);
+    nodeGrad.addColorStop(0.4,`rgba(${color.join(',')},0.9)`);
+    nodeGrad.addColorStop(1,'transparent');
+    ctx.beginPath();
+    ctx.arc(nx,ny,8,0,Math.PI*2);
+    ctx.fillStyle=nodeGrad;
+    ctx.fill();
+
+    // Tick lines
+    ctx.beginPath();
+    ctx.moveTo(nx*0.92, ny*0.92);
+    ctx.lineTo(nx*1.08, ny*1.08);
+    ctx.strokeStyle=`rgba(${color.join(',')},0.8)`;
+    ctx.lineWidth=1.5;
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawSimpleGlowRing(ctx, x, y, r, color, lw){
+  ctx.beginPath();
+  ctx.arc(x,y,r,0,Math.PI*2);
+  ctx.strokeStyle=color;
+  ctx.lineWidth=lw;
+  ctx.stroke();
+}
+
+// ─── START ────────────────────────────────────────────────────────────────
+requestAnimationFrame(draw);
+</script>
+</body>
+</html>

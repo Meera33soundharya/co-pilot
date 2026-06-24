@@ -20,13 +20,13 @@ export default function ComplaintTable() {
   return (
     <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm relative overflow-hidden">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 relative z-10">
-        <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-3">
+        <h3 className="text-sm font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-3">
           <div className="w-1.5 h-1.5 rounded-full bg-[#B91C1C]" />
           Complaint Assignment & Monitoring
         </h3>
         <div className="flex items-center gap-2">
-          <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search complaints" className="px-3 py-1.5 rounded-lg border text-sm" />
-          <select value={status} onChange={e => setStatus(e.target.value)} className="px-3 py-1.5 rounded-lg border text-sm">
+          <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search complaints" className="px-3 py-1.5 rounded-lg border text-lg" />
+          <select value={status} onChange={e => setStatus(e.target.value)} className="px-3 py-1.5 rounded-lg border text-lg">
             <option>All</option>
             <option>New</option>
             <option>Assigned</option>
@@ -38,8 +38,8 @@ export default function ComplaintTable() {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="text-left text-xs text-gray-500 uppercase tracking-widest">
+        <table className="w-full text-lg">
+          <thead className="text-left text-base text-gray-500 uppercase tracking-widest">
             <tr>
               <th className="p-3">ID</th>
               <th className="p-3">Title</th>

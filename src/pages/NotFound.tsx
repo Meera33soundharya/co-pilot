@@ -26,14 +26,14 @@ export default function NotFound() {
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
                     <button
                         onClick={() => navigate(-1)}
-                        className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-white border border-gray-200 rounded-2xl text-sm font-black text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm active:scale-95"
+                        className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-white border border-gray-200 rounded-2xl text-lg font-black text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm active:scale-95"
                     >
                         <ArrowLeft className="w-4 h-4" />
                         Go Back
                     </button>
                     <button
                         onClick={() => navigate("/dashboard")}
-                        className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-[#B91C1C] rounded-2xl text-sm font-black text-white hover:bg-neutral-800 transition-all shadow-lg shadow-red-700/20 active:scale-95"
+                        className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-[#B91C1C] rounded-2xl text-lg font-black text-white hover:bg-neutral-800 transition-all shadow-lg shadow-red-700/20 active:scale-95"
                     >
                         <Home className="w-4 h-4" />
                         Return to Dashboard
@@ -42,7 +42,7 @@ export default function NotFound() {
 
                 <div className="pt-8 flex items-center justify-center gap-2">
                     <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">GovPilot System Security Active</span>
+                    <span className="text-sm font-black uppercase tracking-widest text-gray-400">GovPilot System Security Active</span>
                 </div>
             </div>
         </div>

@@ -75,12 +75,12 @@ export default function Analytics() {
                                 <div className="p-3 rounded-2xl bg-gray-50 group-hover:bg-red-50 transition-colors">
                                     <k.icon className="w-5 h-5 text-gray-400 group-hover:text-[#B91C1C] transition-colors" />
                                 </div>
-                                <span className={`text-[10px] font-black px-2.5 py-1 rounded-lg ${k.positive ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"} uppercase tracking-tight`}>
+                                <span className={`text-sm font-black px-2.5 py-1 rounded-lg ${k.positive ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"} uppercase tracking-tight`}>
                                     {k.change}
                                 </span>
                             </div>
                             <p className="text-3xl font-black text-gray-900 leading-none mb-2 relative z-10">{k.value}</p>
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mt-1 relative z-10">{k.label}</p>
+                            <p className="text-sm font-black uppercase tracking-[0.2em] text-gray-400 mt-1 relative z-10">{k.label}</p>
                         </div>
                     ))}
                 </div>
@@ -92,13 +92,13 @@ export default function Analytics() {
                             <button
                                 key={t}
                                 onClick={() => setTf(t)}
-                                className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${tf === t ? "bg-[#B91C1C] text-white shadow-lg shadow-red-900/20" : "text-gray-400 hover:text-gray-900 hover:bg-gray-50"}`}
+                                className={`px-5 py-2 rounded-xl text-sm font-black uppercase tracking-widest transition-all ${tf === t ? "bg-[#B91C1C] text-white shadow-lg shadow-red-900/20" : "text-gray-400 hover:text-gray-900 hover:bg-gray-50"}`}
                             >
                                 {t}
                             </button>
                         ))}
                     </div>
-                    <button onClick={handleExport} className="flex items-center gap-3 px-6 py-3 bg-white border border-gray-100 rounded-2xl text-[11px] font-black text-gray-900 hover:bg-gray-50 transition-all shadow-sm active:scale-95 uppercase tracking-widest">
+                    <button onClick={handleExport} className="flex items-center gap-3 px-6 py-3 bg-white border border-gray-100 rounded-2xl text-base font-black text-gray-900 hover:bg-gray-50 transition-all shadow-sm active:scale-95 uppercase tracking-widest">
                         {exporting ? <Activity className="w-4 h-4 animate-spin text-[#B91C1C]" /> : <Download className="w-4 h-4 text-[#B91C1C]" />}
                         {exporting ? "Simulating..." : "Download Ledger"}
                     </button>
@@ -109,7 +109,7 @@ export default function Analytics() {
                     {/* Area Chart */}
                     <div className="lg:col-span-2 bg-white border border-gray-100 rounded-[2.5rem] p-8 shadow-sm">
                         <div className="flex items-center justify-between mb-8">
-                            <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-3">
+                            <h3 className="text-sm font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-3">
                                 <div className="w-1.5 h-1.5 rounded-full bg-[#B91C1C]" />
                                 Strategic Signal Trends
                             </h3>
@@ -141,7 +141,7 @@ export default function Analytics() {
                     {/* Donut */}
                     <div className="bg-[#111827] rounded-[2.5rem] p-8 shadow-2xl text-white relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/10 blur-[40px] pointer-events-none" />
-                        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 mb-8 relative z-10">Issue Distribution</h3>
+                        <h3 className="text-sm font-black uppercase tracking-[0.2em] text-white/40 mb-8 relative z-10">Issue Distribution</h3>
                         <div className="h-44 relative z-10">
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
@@ -171,7 +171,7 @@ export default function Analytics() {
 
                     {/* Bar Chart */}
                     <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
-                        <h3 className="font-black text-gray-900 mb-5 flex items-center gap-2 text-sm">
+                        <h3 className="font-black text-gray-900 mb-5 flex items-center gap-2 text-lg">
                             <MapPin className="w-4 h-4 text-indigo-500" />
                             Ward-wise Volume
                         </h3>
@@ -190,7 +190,7 @@ export default function Analytics() {
 
                     {/* Resolution Rate trend */}
                     <div className="lg:col-span-2 bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
-                        <h3 className="font-black text-gray-900 mb-5 text-sm flex items-center gap-2">
+                        <h3 className="font-black text-gray-900 mb-5 text-lg flex items-center gap-2">
                             <Activity className="w-4 h-4 text-emerald-500" />
                             Resolution Rate Trend
                         </h3>

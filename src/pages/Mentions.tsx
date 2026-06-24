@@ -68,10 +68,10 @@ export default function Mentions() {
                                 <div className="p-2 rounded-xl bg-gray-50 group-hover:bg-red-50 transition-colors">
                                     <s.icon className="w-4 h-4 text-gray-400 group-hover:text-[#B91C1C] transition-colors" />
                                 </div>
-                                <span className={`text-[10px] font-black px-2 py-0.5 rounded-lg ${s.positive ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>{s.change}</span>
+                                <span className={`text-sm font-black px-2 py-0.5 rounded-lg ${s.positive ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>{s.change}</span>
                             </div>
                             <p className="text-2xl font-black text-gray-900 leading-tight">{s.value}</p>
-                            <p className="text-[10px] uppercase tracking-widest text-gray-400 font-black mt-1">{s.label}</p>
+                            <p className="text-sm uppercase tracking-widest text-gray-400 font-black mt-1">{s.label}</p>
                         </div>
                     ))}
                 </div>
@@ -85,13 +85,13 @@ export default function Mentions() {
                                     <button
                                         key={f}
                                         onClick={() => setFilter(f)}
-                                        className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${filter === f ? "bg-gray-900 text-white shadow-md shadow-gray-200" : "text-gray-400 hover:text-gray-700"}`}
+                                        className={`px-4 py-1.5 rounded-lg text-sm font-black uppercase tracking-wider transition-all ${filter === f ? "bg-gray-900 text-white shadow-md shadow-gray-200" : "text-gray-400 hover:text-gray-700"}`}
                                     >
                                         {f}
                                     </button>
                                 ))}
                             </div>
-                            <button onClick={() => handleAction("refresh")} className="flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-xl text-[10px] font-black text-gray-500 hover:bg-gray-50 transition-all shadow-sm">
+                            <button onClick={() => handleAction("refresh")} className="flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm font-black text-gray-500 hover:bg-gray-50 transition-all shadow-sm">
                                 <RefreshCw className={`w-3.5 h-3.5 ${action === "refresh" ? "animate-spin text-red-600" : ""}`} />
                                 {action === "refresh" ? "Syncing..." : "Refresh Feed"}
                             </button>
@@ -110,15 +110,15 @@ export default function Mentions() {
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-3 mb-2 flex-wrap">
-                                                <span className="text-xs font-black text-gray-900">{m.handle}</span>
+                                                <span className="text-base font-black text-gray-900">{m.handle}</span>
                                                 <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase border flex items-center gap-1 ${sentimentBadge[m.sentiment]}`}>
                                                     {sentimentIcon[m.sentiment]}
                                                     {m.sentiment}
                                                 </span>
-                                                <span className="text-[10px] text-gray-400 font-bold ml-auto">{m.time}</span>
+                                                <span className="text-sm text-gray-400 font-bold ml-auto">{m.time}</span>
                                             </div>
-                                            <p className="text-sm text-gray-700 leading-relaxed">{m.text}</p>
-                                            <div className="flex items-center gap-4 mt-3 text-[10px] text-gray-400 font-bold">
+                                            <p className="text-lg text-gray-700 leading-relaxed">{m.text}</p>
+                                            <div className="flex items-center gap-4 mt-3 text-sm text-gray-400 font-bold">
                                                 <span>👍 {m.engagement.toLocaleString()}</span>
                                                 <span>📡 {m.reach} reach</span>
                                                 <button onClick={() => handleAction(`view-${i}`)} className="flex items-center gap-1 ml-auto text-red-600 hover:opacity-70 transition-colors">
@@ -135,11 +135,11 @@ export default function Mentions() {
                     {/* Sentiment Breakdown */}
                     <div className="space-y-5">
                         <div className="bg-[#0B1221] rounded-2xl p-6 text-white shadow-2xl">
-                            <h3 className="font-black text-sm mb-5">Sentiment Breakdown</h3>
+                            <h3 className="font-black text-lg mb-5">Sentiment Breakdown</h3>
                             <div className="space-y-4">
                                 {sentimentData.map(s => (
                                     <div key={s.label}>
-                                        <div className="flex justify-between mb-2 text-[10px] font-black">
+                                        <div className="flex justify-between mb-2 text-sm font-black">
                                             <span className="text-white/60">{s.label}</span>
                                             <span>{s.value}%</span>
                                         </div>
@@ -152,7 +152,7 @@ export default function Mentions() {
                         </div>
 
                         <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
-                            <h3 className="font-black text-gray-900 text-sm mb-5">7-Day Engagement</h3>
+                            <h3 className="font-black text-gray-900 text-lg mb-5">7-Day Engagement</h3>
                             <div className="h-[200px]">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <BarChart data={engagementHistory}>

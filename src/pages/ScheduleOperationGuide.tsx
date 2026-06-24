@@ -25,7 +25,7 @@ export default function ScheduleOperationGuide() {
                             <LayoutDashboard className="w-14 h-14 text-red-500" />
                         </div>
                         <div className="space-y-6 text-center md:text-left flex-1">
-                            <div className="inline-flex items-center gap-3 px-5 py-2 bg-red-600 rounded-full text-[10px] font-black uppercase tracking-[0.4em] shadow-lg shadow-red-900/40">
+                            <div className="inline-flex items-center gap-3 px-5 py-2 bg-red-600 rounded-full text-sm font-black uppercase tracking-[0.4em] shadow-lg shadow-red-900/40">
                                 Official Strategic Directive v3.2
                             </div>
                             <h2 className="text-5xl font-black tracking-tight italic uppercase leading-none">Command Center Protocol</h2>
@@ -47,11 +47,11 @@ export default function ScheduleOperationGuide() {
                                 <Plus className="w-8 h-8 text-[#B91C1C] group-hover:text-white" />
                             </div>
                             <div>
-                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Phase 01</p>
+                                <p className="text-sm font-black text-gray-400 uppercase tracking-widest">Phase 01</p>
                                 <h3 className="text-2xl font-black text-gray-900 uppercase italic leading-none">Mission Coordination</h3>
                             </div>
                         </div>
-                        <p className="text-sm text-gray-400 font-bold mb-8 leading-relaxed">
+                        <p className="text-lg text-gray-400 font-bold mb-8 leading-relaxed">
                             "Every mission begins with precise synchronization. Define the tactical parameters to ensure successful site intervention."
                         </p>
                         <div className="space-y-4 mt-auto">
@@ -61,10 +61,10 @@ export default function ScheduleOperationGuide() {
                                 { title: "Time Sequence", desc: "Set the operational window for mission start and target resolution." }
                             ].map((item, i) => (
                                 <div key={i} className="flex gap-4 p-5 bg-gray-50 rounded-2xl border border-gray-100">
-                                    <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center text-[11px] font-black text-gray-900 shadow-sm shrink-0 uppercase">{i+1}</div>
+                                    <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center text-base font-black text-gray-900 shadow-sm shrink-0 uppercase">{i+1}</div>
                                     <div className="space-y-1">
-                                        <p className="text-xs font-black text-gray-900 uppercase italic">{item.title}</p>
-                                        <p className="text-[10px] text-gray-400 font-bold leading-relaxed">{item.desc}</p>
+                                        <p className="text-base font-black text-gray-900 uppercase italic">{item.title}</p>
+                                        <p className="text-sm text-gray-400 font-bold leading-relaxed">{item.desc}</p>
                                     </div>
                                 </div>
                             ))}
@@ -78,26 +78,26 @@ export default function ScheduleOperationGuide() {
                                 <Shield className="w-8 h-8 text-amber-600 group-hover:text-white" />
                             </div>
                             <div>
-                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Phase 02</p>
+                                <p className="text-sm font-black text-gray-400 uppercase tracking-widest">Phase 02</p>
                                 <h3 className="text-2xl font-black text-gray-900 uppercase italic leading-none">Conflict Triage</h3>
                             </div>
                         </div>
-                        <p className="text-sm text-gray-400 font-bold mb-8 leading-relaxed">
+                        <p className="text-lg text-gray-400 font-bold mb-8 leading-relaxed">
                             "The GovPilot Engine automatically scans for operational friction to prevent overlapping or high-risk deployments."
                         </p>
                         <div className="grid grid-cols-1 gap-4 mt-auto">
                             <div className="p-6 bg-red-50 rounded-[2rem] border border-red-100 flex items-center gap-5">
                                 <AlertCircle className="w-10 h-10 text-red-600" />
                                 <div>
-                                    <p className="text-xs font-black text-red-900 uppercase tracking-tighter italic">Conflict Detection</p>
-                                    <p className="text-[10px] text-red-700 font-bold leading-relaxed">Identifies overlapping missions in the same ward or personnel shortages during peak hours.</p>
+                                    <p className="text-base font-black text-red-900 uppercase tracking-tighter italic">Conflict Detection</p>
+                                    <p className="text-sm text-red-700 font-bold leading-relaxed">Identifies overlapping missions in the same ward or personnel shortages during peak hours.</p>
                                 </div>
                             </div>
                             <div className="p-6 bg-emerald-50 rounded-[2rem] border border-emerald-100 flex items-center gap-5">
                                 <Zap className="w-10 h-10 text-emerald-600" />
                                 <div>
-                                    <p className="text-xs font-black text-emerald-900 uppercase tracking-tighter italic">SLA Authorization</p>
-                                    <p className="text-[10px] text-emerald-700 font-bold leading-relaxed">Auto-verifies that the mission duration meets the district governance response standards.</p>
+                                    <p className="text-base font-black text-emerald-900 uppercase tracking-tighter italic">SLA Authorization</p>
+                                    <p className="text-sm text-emerald-700 font-bold leading-relaxed">Auto-verifies that the mission duration meets the district governance response standards.</p>
                                 </div>
                             </div>
                         </div>
@@ -115,7 +115,7 @@ export default function ScheduleOperationGuide() {
                         </div>
                         <div className="text-center md:text-left">
                             <h3 className="text-3xl font-black text-white uppercase italic tracking-tight">Phase 03: Telemetry Grid</h3>
-                            <p className="text-[11px] font-black text-white/30 uppercase tracking-[0.4em] mt-2">Real-time Operational Tracking Flow</p>
+                            <p className="text-base font-black text-white/30 uppercase tracking-[0.4em] mt-2">Real-time Operational Tracking Flow</p>
                         </div>
                     </div>
 
@@ -131,9 +131,9 @@ export default function ScheduleOperationGuide() {
                                 <div className="space-y-3">
                                     <div className="flex items-center gap-3">
                                         <s.icon className={`w-5 h-5 ${s.color}`} />
-                                        <h4 className="text-sm font-black text-white uppercase italic tracking-tight">{s.label}</h4>
+                                        <h4 className="text-lg font-black text-white uppercase italic tracking-tight">{s.label}</h4>
                                     </div>
-                                    <p className="text-[10px] text-white/40 font-bold leading-relaxed">{s.desc}</p>
+                                    <p className="text-sm text-white/40 font-bold leading-relaxed">{s.desc}</p>
                                 </div>
                                 {i < 3 && <div className="hidden md:block absolute -right-5 top-1/2 -translate-y-1/2 w-px h-12 bg-white/5" />}
                             </div>
@@ -146,11 +146,11 @@ export default function ScheduleOperationGuide() {
                                 <Smartphone className="w-10 h-10 text-red-500" />
                             </div>
                             <div className="space-y-1">
-                                <p className="text-[11px] font-black uppercase text-white/30 tracking-[0.3em] italic">Authorized Hub</p>
+                                <p className="text-base font-black uppercase text-white/30 tracking-[0.3em] italic">Authorized Hub</p>
                                 <p className="text-lg font-black text-white uppercase tracking-tight italic">Mission Core v3.2 Protocol</p>
                             </div>
                         </div>
-                        <button onClick={() => navigate("/schedule")} className="px-12 py-6 bg-red-600 text-white rounded-[2rem] text-[11px] font-black uppercase tracking-[0.4em] hover:bg-white hover:text-gray-900 transition-all shadow-2xl shadow-red-950/20 active:scale-95 group">
+                        <button onClick={() => navigate("/schedule")} className="px-12 py-6 bg-red-600 text-white rounded-[2rem] text-base font-black uppercase tracking-[0.4em] hover:bg-white hover:text-gray-900 transition-all shadow-2xl shadow-red-950/20 active:scale-95 group">
                             Return to Command Hub <ArrowRight className="w-4 h-4 ml-3 inline group-hover:translate-x-2 transition-transform" />
                         </button>
                     </div>

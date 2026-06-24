@@ -6,7 +6,7 @@ export default function NotificationCenter() {
 
   return (
     <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm relative overflow-hidden">
-      <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-3">
+      <h3 className="text-sm font-black text-gray-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-3">
         <div className="w-1.5 h-1.5 rounded-full bg-[#B91C1C]" />
         Notification Center
       </h3>
@@ -15,13 +15,13 @@ export default function NotificationCenter() {
           <div key={n.id} className="p-2 rounded-lg border hover:bg-gray-50 flex items-start gap-3">
             <div className="w-9 h-9 rounded-lg bg-red-50 text-red-600 flex items-center justify-center font-black">N</div>
             <div className="flex-1">
-              <div className="text-sm font-black">{n.title}</div>
-              <div className="text-xs text-gray-500">{n.message}</div>
+              <div className="text-lg font-black">{n.title}</div>
+              <div className="text-base text-gray-500">{n.message}</div>
             </div>
-            <div className="text-xs text-gray-400">{n.time}</div>
+            <div className="text-base text-gray-400">{n.time}</div>
           </div>
         ))}
-        {notifications.length === 0 && <div className="text-xs text-gray-400">No notifications</div>}
+        {notifications.length === 0 && <div className="text-base text-gray-400">No notifications</div>}
       </div>
     </div>
   );

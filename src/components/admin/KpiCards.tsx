@@ -16,7 +16,7 @@ function Card({ title, value, delta, positive = true, icon: Icon, isPrimary = fa
           <Icon className={`w-7 h-7 ${iconColor}`} />
         </div>
         {delta && (
-          <span className={`text-[10px] font-black px-2.5 py-1 rounded-lg ${positive ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"} uppercase tracking-tight`}>
+          <span className={`text-sm font-black px-2.5 py-1 rounded-lg ${positive ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"} uppercase tracking-tight`}>
             {delta}
           </span>
         )}
@@ -24,7 +24,7 @@ function Card({ title, value, delta, positive = true, icon: Icon, isPrimary = fa
       
       <div className="relative z-10 mt-2">
         <p className="text-3xl font-black leading-none mb-1 uppercase tracking-tight italic">{value}</p>
-        <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${labelColor}`}>{title}</p>
+        <p className={`text-sm font-black uppercase tracking-[0.2em] ${labelColor}`}>{title}</p>
       </div>
     </div>
   );

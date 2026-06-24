@@ -78,9 +78,9 @@ export default function CommandPalette() {
                         value={query}
                         onChange={e => setQuery(e.target.value)}
                         placeholder="Search commands and pages..."
-                        className="flex-1 text-sm text-gray-900 font-medium placeholder:text-gray-400 focus:outline-none bg-transparent"
+                        className="flex-1 text-lg text-gray-900 font-medium placeholder:text-gray-400 focus:outline-none bg-transparent"
                     />
-                    <kbd className="px-2 py-1 bg-gray-100 rounded-lg text-[10px] font-black text-gray-400 border border-gray-200">ESC</kbd>
+                    <kbd className="px-2 py-1 bg-gray-100 rounded-lg text-sm font-black text-gray-400 border border-gray-200">ESC</kbd>
                 </div>
 
                 {/* Commands */}
@@ -100,7 +100,7 @@ export default function CommandPalette() {
                                         <div className={`p-1.5 rounded-lg ${globalIdx === selected ? "bg-blue-100" : "bg-gray-100"}`}>
                                             <cmd.icon className="w-4 h-4" />
                                         </div>
-                                        <span className="text-sm font-bold flex-1">{cmd.label}</span>
+                                        <span className="text-lg font-bold flex-1">{cmd.label}</span>
                                         <ArrowRight className={`w-4 h-4 transition-opacity ${globalIdx === selected ? "opacity-100" : "opacity-0"}`} />
                                     </button>
                                 );
@@ -108,11 +108,11 @@ export default function CommandPalette() {
                         </div>
                     ))}
                     {filtered.length === 0 && (
-                        <div className="py-8 text-center text-gray-400 text-sm font-bold">No commands found for "{query}"</div>
+                        <div className="py-8 text-center text-gray-400 text-lg font-bold">No commands found for "{query}"</div>
                     )}
                 </div>
 
-                <div className="px-5 py-2.5 border-t border-gray-100 flex items-center gap-4 text-[10px] font-black text-gray-400">
+                <div className="px-5 py-2.5 border-t border-gray-100 flex items-center gap-4 text-sm font-black text-gray-400">
                     <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 bg-gray-100 rounded border border-gray-200">↑↓</kbd> navigate</span>
                     <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 bg-gray-100 rounded border border-gray-200">↵</kbd> open</span>
                     <span className="flex items-center gap-1"><kbd className="px-1.5 py-0.5 bg-gray-100 rounded border border-gray-200">ESC</kbd> close</span>

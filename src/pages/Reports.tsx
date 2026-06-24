@@ -88,12 +88,12 @@ export default function Reports() {
                     
                     <div className="flex flex-wrap gap-8 w-full xl:w-auto">
                         <div className="flex flex-col gap-3">
-                            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 ml-1">Report Module</label>
+                            <label className="text-sm font-black uppercase tracking-[0.3em] text-gray-400 ml-1">Report Module</label>
                             <div className="relative group">
                                 <select 
                                     value={reportType}
                                     onChange={(e) => setReportType(e.target.value as ReportType)}
-                                    className="pl-6 pr-12 py-4 bg-gray-50 border border-transparent rounded-2xl text-[11px] font-black uppercase tracking-widest text-gray-900 focus:outline-none focus:ring-4 focus:ring-red-500/5 focus:bg-white focus:border-red-100 appearance-none cursor-pointer transition-all min-w-[260px] shadow-sm"
+                                    className="pl-6 pr-12 py-4 bg-gray-50 border border-transparent rounded-2xl text-base font-black uppercase tracking-widest text-gray-900 focus:outline-none focus:ring-4 focus:ring-red-500/5 focus:bg-white focus:border-red-100 appearance-none cursor-pointer transition-all min-w-[260px] shadow-sm"
                                 >
                                     <option>Executive Summary</option>
                                     <option>Departmental Performance</option>
@@ -105,13 +105,13 @@ export default function Reports() {
                         </div>
 
                         <div className="flex flex-col gap-3">
-                            <label className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 ml-1">Archive Period</label>
+                            <label className="text-sm font-black uppercase tracking-[0.3em] text-gray-400 ml-1">Archive Period</label>
                             <div className="relative group">
                                 <Calendar className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 group-hover:text-[#B91C1C] transition-colors" />
                                 <select 
                                     value={period}
                                     onChange={(e) => setPeriod(e.target.value)}
-                                    className="pl-14 pr-12 py-4 bg-gray-50 border border-transparent rounded-2xl text-[11px] font-black uppercase tracking-widest text-gray-900 focus:outline-none focus:ring-4 focus:ring-red-500/5 focus:bg-white focus:border-red-100 appearance-none cursor-pointer transition-all min-w-[200px] shadow-sm"
+                                    className="pl-14 pr-12 py-4 bg-gray-50 border border-transparent rounded-2xl text-base font-black uppercase tracking-widest text-gray-900 focus:outline-none focus:ring-4 focus:ring-red-500/5 focus:bg-white focus:border-red-100 appearance-none cursor-pointer transition-all min-w-[200px] shadow-sm"
                                 >
                                     <option>FY 2025-26</option>
                                     <option>Q4 2025</option>
@@ -126,7 +126,7 @@ export default function Reports() {
                         <button 
                             onClick={handleGenerate}
                             disabled={isGenerating}
-                            className="flex-1 xl:flex-none flex items-center justify-center gap-3 px-10 py-5 bg-[#B91C1C] text-white rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] hover:bg-neutral-900 transition-all shadow-2xl shadow-red-900/20 active:scale-95 disabled:opacity-60"
+                            className="flex-1 xl:flex-none flex items-center justify-center gap-3 px-10 py-5 bg-[#B91C1C] text-white rounded-2xl text-base font-black uppercase tracking-[0.2em] hover:bg-neutral-900 transition-all shadow-2xl shadow-red-900/20 active:scale-95 disabled:opacity-60"
                         >
                             {isGenerating ? <><RefreshCw className="w-4 h-4 animate-spin" /> Compiling Intelligence...</> : <><Sparkles className="w-4 h-4" /> Generate Report Briefing</>}
                         </button>
@@ -175,12 +175,12 @@ export default function Reports() {
                                 <div className={`p-3.5 rounded-2xl ${k.bg} border border-gray-50 group-hover:scale-110 group-hover:rotate-3 transition-transform`}>
                                     <k.icon className={`w-5 h-5 ${k.color}`} />
                                 </div>
-                                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 rounded-xl text-emerald-600 text-[10px] font-black tracking-tight border border-emerald-100/50">
+                                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 rounded-xl text-emerald-600 text-sm font-black tracking-tight border border-emerald-100/50">
                                     <TrendingUp className="w-3 h-3" /> {k.change}
                                 </div>
                             </div>
                             <p className="text-4xl font-black text-gray-900 leading-none mb-3 relative z-10 tracking-tighter">{k.value}</p>
-                            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-gray-400 relative z-10">{k.label}</p>
+                            <p className="text-sm font-black uppercase tracking-[0.25em] text-gray-400 relative z-10">{k.label}</p>
                         </div>
                     ))}
                 </div>
@@ -192,17 +192,17 @@ export default function Reports() {
                     <div className="lg:col-span-2 bg-white border border-gray-100 rounded-[3rem] p-10 shadow-sm relative overflow-hidden">
                         <div className="flex items-center justify-between mb-12">
                             <div>
-                                <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
+                                <h3 className="text-lg font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
                                     <Activity className="w-4 h-4 text-red-600" />
                                     Dynamic Case Lifecycle
                                 </h3>
                                 <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-1">Correlation: Volume vs Resolution Capacity</p>
                             </div>
                             <div className="flex gap-6">
-                                <div className="flex items-center gap-2 text-[10px] font-black text-gray-400 group cursor-default">
+                                <div className="flex items-center gap-2 text-sm font-black text-gray-400 group cursor-default">
                                     <div className="w-2.5 h-2.5 rounded-full bg-[#B91C1C] ring-4 ring-red-100" /> Incoming
                                 </div>
-                                <div className="flex items-center gap-2 text-[10px] font-black text-gray-400 group cursor-default">
+                                <div className="flex items-center gap-2 text-sm font-black text-gray-400 group cursor-default">
                                     <div className="w-2.5 h-2.5 rounded-full bg-gray-900 ring-4 ring-gray-100" /> Resolution
                                 </div>
                             </div>
@@ -234,7 +234,7 @@ export default function Reports() {
                     {/* Governance Scoring Radar */}
                     <div className="bg-[#0D1425] rounded-[3rem] p-10 shadow-2xl relative overflow-hidden group">
                         <div className="absolute top-0 right-0 w-48 h-48 bg-blue-600/5 blur-[80px] pointer-events-none group-hover:scale-125 transition-transform duration-1000" />
-                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mb-1 flex items-center gap-2">
+                        <h3 className="text-sm font-black uppercase tracking-[0.3em] text-white/30 mb-1 flex items-center gap-2">
                              <Shield className="w-3.5 h-3.5" /> Governance Radar
                         </h3>
                         <p className="text-[9px] text-white/20 font-black uppercase tracking-widest mb-10">Cross-Division Protocol Health</p>
@@ -250,8 +250,8 @@ export default function Reports() {
                         </div>
                         <div className="mt-8 flex items-center justify-between pt-8 border-t border-white/5 relative z-10">
                             <div className="space-y-1">
-                                <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">Global Gov-Index</p>
-                                <p className="text-3xl font-black text-white italic">86.2<span className="text-xs text-[#B91C1C] ml-1">Pts</span></p>
+                                <p className="text-sm font-black text-white/30 uppercase tracking-widest">Global Gov-Index</p>
+                                <p className="text-3xl font-black text-white italic">86.2<span className="text-base text-[#B91C1C] ml-1">Pts</span></p>
                             </div>
                             <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:bg-red-600 group-hover:border-red-600 transition-all duration-500">
                                 <TrendingUp className="w-6 h-6 text-white" />
@@ -270,7 +270,7 @@ export default function Reports() {
                             </h3>
                             <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-1">Granular breakdown by administrative division</p>
                         </div>
-                        <button className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 rounded-2xl text-[10px] font-black text-gray-600 hover:bg-[#B91C1C] hover:text-white hover:border-[#B91C1C] transition-all shadow-sm">
+                        <button className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 rounded-2xl text-sm font-black text-gray-600 hover:bg-[#B91C1C] hover:text-white hover:border-[#B91C1C] transition-all shadow-sm">
                             <Download className="w-4 h-4" /> Export CSV Source
                         </button>
                     </div>
@@ -278,18 +278,18 @@ export default function Reports() {
                         {DEPT_STATS.map((d, idx) => (
                             <div key={d.dept} className="flex flex-col lg:flex-row lg:items-center gap-8 px-10 py-6 hover:bg-red-50/20 transition-all group">
                                 <div className="flex items-center gap-6 min-w-[280px]">
-                                    <div className="w-10 h-10 rounded-2xl bg-gray-900 flex items-center justify-center text-xs font-black text-white group-hover:bg-[#B91C1C] transition-colors">
+                                    <div className="w-10 h-10 rounded-2xl bg-gray-900 flex items-center justify-center text-base font-black text-white group-hover:bg-[#B91C1C] transition-colors">
                                         #{idx + 1}
                                     </div>
                                     <div>
-                                        <span className="text-sm font-black text-gray-900 block leading-tight">{d.dept}</span>
+                                        <span className="text-lg font-black text-gray-900 block leading-tight">{d.dept}</span>
                                         <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Maintained Division</span>
                                     </div>
                                 </div>
                                 <div className="flex-1 space-y-3">
                                     <div className="flex justify-between items-end">
-                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Institutional Efficiency</span>
-                                        <span className="text-sm font-black text-gray-900">{d.score}%</span>
+                                        <span className="text-sm font-black text-gray-400 uppercase tracking-[0.2em]">Institutional Efficiency</span>
+                                        <span className="text-lg font-black text-gray-900">{d.score}%</span>
                                     </div>
                                     <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden flex shadow-inner">
                                         <div 
@@ -305,11 +305,11 @@ export default function Reports() {
                                 </div>
                                 <div className="flex items-center gap-10 shrink-0">
                                     <div className="text-center">
-                                        <p className="text-sm font-black text-gray-900">{d.avg}</p>
+                                        <p className="text-lg font-black text-gray-900">{d.avg}</p>
                                         <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Latency</p>
                                     </div>
                                     <div className="min-w-[120px]">
-                                        <span className={`w-full px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 ${
+                                        <span className={`w-full px-4 py-2.5 rounded-2xl text-sm font-black uppercase tracking-widest flex items-center justify-center gap-2 ${
                                             d.status === 'Elite' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 
                                             d.status === 'Critical' ? 'bg-red-50 text-red-700 border border-red-100 animate-pulse' : 
                                             'bg-gray-100 text-gray-600 border border-gray-200'

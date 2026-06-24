@@ -56,7 +56,7 @@ function ComplaintTimeline({ status }: { status: Status }) {
                                 {done && <div className="w-2 h-2 rounded-full bg-white" />}
                                 {active && <div className="w-2 h-2 rounded-full bg-[#B91C1C]" />}
                             </div>
-                            <span className={`mt-1.5 text-[8px] font-black uppercase tracking-widest whitespace-nowrap ${active ? "text-[#B91C1C]" : done ? "text-gray-400" : "text-gray-200"
+                            <span className={`mt-1.5 text-base font-black uppercase tracking-widest whitespace-nowrap ${active ? "text-[#B91C1C]" : done ? "text-gray-400" : "text-gray-200"
                                 }`}>{label}</span>
                         </div>
                         {i < TIMELINE_STEPS.length - 1 && (
@@ -120,22 +120,22 @@ export default function CitizenModule() {
             title="Citizen Portal"
             subtitle={`Welcome, ${currentUser?.name || 'Citizen'}. Managing your local governance interaction.`}
         >
-            <div className="space-y-8 pb-10">
+            <div className="space-y-6 pb-10">
 
                 {/* ── ANNOUNCEMENT NOTIFICATIONS ───────────────────────── */}
                 {visibleAnns.length > 0 && (
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                         <div className="flex items-center justify-between px-1">
-                            <div className="flex items-center gap-2">
-                                <Bell className="w-4 h-4 text-[#B91C1C]" />
-                                <span className="text-xs font-black uppercase tracking-widest text-white">Official Announcements</span>
-                                <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-[#B91C1C] text-white">{visibleAnns.length}</span>
+                            <div className="flex items-center gap-3">
+                                <Bell className="w-6 h-6 text-[#B91C1C]" />
+                                <span className="text-lg font-black uppercase tracking-widest text-white">Official Announcements</span>
+                                <span className="text-xl font-black px-3 py-1 rounded-full bg-[#B91C1C] text-white">{visibleAnns.length}</span>
                             </div>
                             <button
                                 onClick={() => navigate("/announcements")}
-                                className="text-[10px] font-black text-white/50 hover:text-white flex items-center gap-1 transition-colors uppercase tracking-widest"
+                                className="text-xl font-black text-white/50 hover:text-white flex items-center gap-2 transition-colors uppercase tracking-widest"
                             >
-                                View All <ArrowRight className="w-3 h-3" />
+                                View All <ArrowRight className="w-5 h-5" />
                             </button>
                         </div>
                         {visibleAnns.map(ann => {
@@ -143,7 +143,7 @@ export default function CitizenModule() {
                             return (
                                 <div key={ann.id}
                                     onClick={() => navigate(`/announcements?id=${ann.id}`)}
-                                    className={`rounded-2xl border p-4 flex items-start gap-3 cursor-pointer hover:shadow-md transition-all ${style.bar} ${ann.type === "Alert" ? "animate-pulse-slow" : ""}`}
+                                    className={`rounded-2xl border p-5 flex items-start gap-4 cursor-pointer hover:shadow-md transition-all ${style.bar} ${ann.type === "Alert" ? "animate-pulse-slow" : ""}`}
                                 >
                                     <div className={`mt-0.5 shrink-0`}>
                                         {ann.type === "Alert" ? <AlertTriangle className={`w-4 h-4 ${style.icon}`} /> :
@@ -152,13 +152,13 @@ export default function CitizenModule() {
                                                     <Megaphone className={`w-4 h-4 ${style.icon}`} />}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                            <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${style.badge}`}>{ann.type}</span>
-                                            <span className="text-[9px] text-gray-500 font-bold flex items-center gap-1"><MapPin className="w-2.5 h-2.5" />{ann.ward}</span>
-                                            <span className="text-[9px] text-gray-400 font-bold">{ann.date}</span>
+                                        <div className="flex items-center gap-4 mb-2 flex-wrap">
+                                            <span className={`text-xl font-black uppercase tracking-widest px-4 py-1.5 rounded-full ${style.badge}`}>{ann.type}</span>
+                                            <span className="text-xl text-gray-500 font-bold flex items-center gap-2"><MapPin className="w-4 h-4" />{ann.ward}</span>
+                                            <span className="text-xl text-gray-400 font-bold">{ann.date}</span>
                                         </div>
-                                        <p className="text-sm font-black text-gray-900 leading-snug">{ann.title}</p>
-                                        <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{ann.body}</p>
+                                        <p className="text-xl font-black text-gray-900 leading-snug">{ann.title}</p>
+                                        <p className="text-lg text-gray-500 mt-2 line-clamp-1">{ann.body}</p>
                                     </div>
                                     <button
                                         onClick={(e) => { e.stopPropagation(); setDismissedAnns(p => [...p, ann.id]); }}
@@ -178,10 +178,10 @@ export default function CitizenModule() {
                     <div onClick={() => navigate("/submit-complaint")}
                         className="lg:col-span-2 bg-gradient-to-br from-emerald-600 to-teal-700 rounded-[2.5rem] p-8 text-white shadow-2xl flex items-center justify-between group cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all">
                         <div>
-                            <h2 className="text-2xl font-black mb-1">Got a Problem?</h2>
-                            <p className="text-emerald-50 text-sm font-medium opacity-80">Tap to report issues in your ward.</p>
-                            <div className="mt-4 flex items-center gap-2 text-xs font-black uppercase tracking-widest bg-white/20 w-fit px-3 py-1.5 rounded-full">
-                                <PlusCircle className="w-4 h-4" /> Raise Complaint
+                            <h2 className="text-4xl font-black mb-3">Got a Problem?</h2>
+                            <p className="text-emerald-50 text-xl font-medium opacity-80">Tap to report issues in your ward.</p>
+                            <div className="mt-8 flex items-center gap-2 text-base font-black uppercase tracking-widest bg-white/20 w-fit px-5 py-3 rounded-full">
+                                <PlusCircle className="w-6 h-6" /> Raise Complaint
                             </div>
                         </div>
                         <div className="w-20 h-20 bg-white/10 rounded-[2rem] flex items-center justify-center p-5 group-hover:scale-110 transition-transform">
@@ -190,47 +190,47 @@ export default function CitizenModule() {
                     </div>
 
                     {/* Stats */}
-                    <div className="bg-white rounded-[2.5rem] p-7 border border-gray-100 shadow-sm flex flex-col justify-between">
-                        <div className="flex justify-between items-start mb-2">
-                            <div className="p-3 bg-blue-50 rounded-2xl"><MessageSquare className="w-5 h-5 text-blue-600" /></div>
-                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Reports</span>
+                    <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm flex flex-col justify-between">
+                        <div className="flex justify-between items-start mb-4">
+                            <div className="p-4 bg-blue-50 rounded-2xl"><MessageSquare className="w-8 h-8 text-blue-600" /></div>
+                            <span className="text-xl font-black text-gray-400 uppercase tracking-widest">Reports</span>
                         </div>
                         <div>
-                            <p className="text-3xl font-black text-gray-900">{stats.total}</p>
-                            <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Total Submitted</p>
+                            <p className="text-5xl font-black text-gray-900">{stats.total}</p>
+                            <p className="text-xl font-black uppercase text-gray-400 tracking-widest mt-2">Total Submitted</p>
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-[2.5rem] p-7 border border-gray-100 shadow-sm flex flex-col justify-between">
-                        <div className="flex justify-between items-start mb-2">
-                            <div className="p-3 bg-amber-50 rounded-2xl"><Clock className="w-5 h-5 text-amber-600" /></div>
-                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Live</span>
+                    <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm flex flex-col justify-between">
+                        <div className="flex justify-between items-start mb-4">
+                            <div className="p-4 bg-amber-50 rounded-2xl"><Clock className="w-8 h-8 text-amber-600" /></div>
+                            <span className="text-xl font-black text-gray-400 uppercase tracking-widest">Live</span>
                         </div>
                         <div>
-                            <p className="text-3xl font-black text-gray-900">{stats.pending}</p>
-                            <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Currently Pending</p>
+                            <p className="text-5xl font-black text-gray-900">{stats.pending}</p>
+                            <p className="text-xl font-black uppercase text-gray-400 tracking-widest mt-2">Currently Pending</p>
                         </div>
                     </div>
                 </div>
 
                 {/* ── Main Tracking Section ──────────────────────────── */}
-                <div id="track-complaint" className="space-y-4 pt-4">
+                <div id="track-complaint" className="space-y-6 pt-6">
                     {/* Filter Bar */}
                     <div className="flex flex-col md:flex-row items-center justify-between gap-4 px-2">
-                        <h3 className="text-xl font-black text-white flex items-center gap-2">
-                            <Zap className="w-5 h-5 text-amber-400" />
+                        <h3 className="text-3xl font-black text-white flex items-center gap-3">
+                            <Zap className="w-8 h-8 text-amber-400" />
                             Live Tracking Center
                         </h3>
 
-                        <div className="flex items-center gap-2 bg-white/5 p-1.5 rounded-2xl border border-white/10">
+                        <div className="flex items-center gap-3 bg-white/5 p-3 rounded-2xl border border-white/10">
                             <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
                                 <input type="text" placeholder="Search by ID or Issue..." value={search} onChange={e => setSearch(e.target.value)}
-                                    className="pl-9 pr-4 py-2 bg-transparent text-xs font-bold text-white focus:outline-none w-48" />
+                                    className="pl-12 pr-6 py-3 bg-transparent text-base font-bold text-white focus:outline-none w-64" />
                             </div>
-                            <div className="w-px h-6 bg-white/10" />
+                            <div className="w-px h-8 bg-white/10" />
                             <select value={filter} onChange={e => setFilter(e.target.value as any)}
-                                className="bg-transparent text-white/70 text-xs font-black uppercase tracking-widest px-3 focus:outline-none">
+                                className="bg-transparent text-white/70 text-base font-black uppercase tracking-widest px-6 focus:outline-none">
                                 <option value="All" className="bg-gray-900 text-white">All Status</option>
                                 <option value="New" className="bg-gray-900 text-white">New</option>
                                 <option value="Assigned" className="bg-gray-900 text-white">In Queue</option>
@@ -244,7 +244,7 @@ export default function CitizenModule() {
                     {filtered.length === 0 ? (
                         <div className="bg-white/5 border border-white/10 rounded-[3rem] p-20 text-center">
                             <Shield className="w-16 h-16 text-white/10 mx-auto mb-6" />
-                            <h4 className="text-xl font-black text-white/40 uppercase tracking-widest">No matching records</h4>
+                            <h4 className="text-3xl font-black text-white/40 uppercase tracking-widest">No matching records</h4>
                         </div>
                     ) : (
                         <div className="space-y-4">
@@ -265,25 +265,25 @@ export default function CitizenModule() {
 
                                                 {/* Body */}
                                                 <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-3 mb-2 flex-wrap">
-                                                        <span className="font-mono text-[10px] font-black text-[#B91C1C] bg-red-50 px-2 py-0.5 rounded-lg uppercase border border-red-100">{c.id}</span>
-                                                        <span className={`text-[9px] font-black px-2 py-0.5 rounded-lg border uppercase ${PRIORITY_COLOR[c.priority]}`}>{c.priority}</span>
-                                                        <span className="text-[10px] font-bold text-gray-400 flex items-center gap-1"><MapPin className="w-3 h-3" /> {c.ward}</span>
-                                                        <span className="text-[10px] font-bold text-gray-400 flex items-center gap-1"><Calendar className="w-3 h-3" /> {c.time}</span>
+                                                    <div className="flex items-center gap-3 mb-4 flex-wrap">
+                                                        <span className="font-mono text-xl font-black text-[#B91C1C] bg-red-50 px-4 py-1.5 rounded-lg uppercase border border-red-100">{c.id}</span>
+                                                        <span className={`text-xl font-black px-4 py-1.5 rounded-lg border uppercase ${PRIORITY_COLOR[c.priority]}`}>{c.priority}</span>
+                                                        <span className="text-xl font-bold text-gray-400 flex items-center gap-2"><MapPin className="w-5 h-5" /> {c.ward}</span>
+                                                        <span className="text-xl font-bold text-gray-400 flex items-center gap-2"><Calendar className="w-5 h-5" /> {c.time}</span>
                                                     </div>
-                                                    <h4 className="text-xl font-black text-gray-900 group-hover:text-[#B91C1C] transition-colors truncate">{c.issue}</h4>
+                                                    <h4 className="text-3xl font-black text-gray-900 group-hover:text-[#B91C1C] transition-colors truncate">{c.issue}</h4>
 
                                                     <ComplaintTimeline status={c.status} />
                                                 </div>
 
                                                 {/* Sentiment / Community Urgency */}
-                                                <div className="hidden lg:block w-32 border-l border-gray-50 pl-6 shrink-0">
-                                                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Community Pull</p>
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="h-2 flex-1 bg-gray-50 rounded-full overflow-hidden">
+                                                <div className="hidden lg:block w-40 border-l border-gray-50 pl-8 shrink-0">
+                                                    <p className="text-xl font-black text-gray-400 uppercase tracking-widest mb-3">Community Pull</p>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="h-3 flex-1 bg-gray-50 rounded-full overflow-hidden">
                                                             <div className="h-full bg-emerald-400" style={{ width: `${sentimentLvl}%` }} />
                                                         </div>
-                                                        <span className="text-[10px] font-black text-emerald-600">{sentimentLvl}%</span>
+                                                        <span className="text-xl font-black text-emerald-600">{sentimentLvl}%</span>
                                                     </div>
                                                 </div>
 
@@ -301,15 +301,15 @@ export default function CitizenModule() {
                                                     <div className="space-y-6">
                                                         <div className="flex items-center gap-2 mb-4">
                                                             <MessageCircle className="w-4 h-4 text-blue-500" />
-                                                            <h5 className="text-xs font-black uppercase tracking-widest text-gray-900">Live Timeline & Updates</h5>
+                                                            <h5 className="text-base font-black uppercase tracking-widest text-gray-900">Live Timeline & Updates</h5>
                                                         </div>
                                                         <div className="space-y-4 relative ml-3 border-l border-gray-100 pl-6">
                                                             {c.audit.map((a, i) => (
                                                                 <div key={i} className="relative">
                                                                     <div className="absolute -left-[31px] top-0 w-3 h-3 rounded-full bg-white border-2 border-gray-200" />
-                                                                    <p className="text-[9px] font-black text-gray-400 uppercase mb-0.5">{a.time} · {a.actor}</p>
-                                                                    <p className="text-[11px] font-black text-gray-700">{a.action}</p>
-                                                                    {a.note && <div className="mt-2 p-3 bg-gray-50 rounded-xl text-[10px] italic text-gray-500 font-medium">"{a.note}"</div>}
+                                                                    <p className="text-base font-black text-gray-400 uppercase mb-0.5">{a.time} · {a.actor}</p>
+                                                                    <p className="text-base font-black text-gray-700">{a.action}</p>
+                                                                    {a.note && <div className="mt-2 p-3 bg-gray-50 rounded-xl text-xl italic text-gray-500 font-medium">"{a.note}"</div>}
                                                                     {a.image && (
                                                                         <div className="mt-2 w-28 aspect-video bg-gray-200 rounded-lg overflow-hidden border border-gray-100 cursor-pointer hover:opacity-80 transition-opacity">
                                                                             <img src={a.image} className="w-full h-full object-cover" alt="Proof" />
@@ -325,7 +325,7 @@ export default function CitizenModule() {
                                                         {/* Citizen Feedback (If Resolved) */}
                                                         {c.status === "Resolved" && (
                                                             <div className="bg-emerald-50 p-6 rounded-3xl border border-emerald-100">
-                                                                <h5 className="text-[10px] font-black uppercase tracking-widest text-emerald-700 mb-4 text-center">Rate the Resolution</h5>
+                                                                <h5 className="text-xl font-black uppercase tracking-widest text-emerald-700 mb-4 text-center">Rate the Resolution</h5>
                                                                 <div className="flex items-center justify-center gap-3">
                                                                     {[1, 2, 3, 4, 5].map(star => (
                                                                         <button key={star} onClick={() => rateComplaint(c.id, star)}
@@ -334,25 +334,25 @@ export default function CitizenModule() {
                                                                         </button>
                                                                     ))}
                                                                 </div>
-                                                                <p className="text-[10px] text-center text-emerald-600 font-bold mt-4 uppercase">Your feedback helps us improve governance</p>
+                                                                <p className="text-xl text-center text-emerald-600 font-bold mt-4 uppercase">Your feedback helps us improve governance</p>
                                                             </div>
                                                         )}
 
                                                         {/* Evidence / Resolution Proof */}
                                                         <div>
-                                                            <h5 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4 border-b border-gray-50 pb-2">Evidence & Verification</h5>
+                                                            <h5 className="text-xl font-black uppercase tracking-widest text-gray-400 mb-4 border-b border-gray-50 pb-2">Evidence & Verification</h5>
                                                             <div className="grid grid-cols-2 gap-4">
                                                                 {/* Submit Evidence */}
                                                                 <div className="p-4 bg-gray-50 rounded-2xl flex flex-col gap-2">
-                                                                    <p className="text-[9px] font-black text-gray-400 uppercase">My Submission</p>
-                                                                    <div className="aspect-square bg-white rounded-xl flex items-center justify-center italic text-[10px] text-gray-300">
+                                                                    <p className="text-base font-black text-gray-400 uppercase">My Submission</p>
+                                                                    <div className="aspect-square bg-white rounded-xl flex items-center justify-center italic text-xl text-gray-300">
                                                                         {c.evidence && c.evidence.length > 0 ? <ImageIcon className="w-6 h-6" /> : "No Media"}
                                                                     </div>
                                                                 </div>
                                                                 {/* Officer Proof */}
                                                                 <div className="p-4 bg-emerald-50 rounded-2xl flex flex-col gap-2">
-                                                                    <p className="text-[9px] font-black text-emerald-600 uppercase">Resolution Proof</p>
-                                                                    <div className="aspect-square bg-white rounded-xl flex items-center justify-center italic text-[10px] text-gray-300 font-bold overflow-hidden">
+                                                                    <p className="text-base font-black text-emerald-600 uppercase">Resolution Proof</p>
+                                                                    <div className="aspect-square bg-white rounded-xl flex items-center justify-center italic text-xl text-gray-300 font-bold overflow-hidden">
                                                                         {c.resolutionProof ? <img src={c.resolutionProof} className="w-full h-full object-cover" /> : "Awaiting Verification"}
                                                                     </div>
                                                                 </div>
@@ -362,9 +362,9 @@ export default function CitizenModule() {
                                                         {/* REOPEN ACTION */}
                                                         {c.status === "Resolved" || c.status === "Closed" ? (
                                                             <div className="p-6 border-2 border-dashed border-red-100 rounded-[2rem] flex flex-col gap-4 text-center">
-                                                                <p className="text-[10px] font-black text-red-700 uppercase tracking-widest">Still have a problem?</p>
+                                                                <p className="text-xl font-black text-red-700 uppercase tracking-widest">Still have a problem?</p>
                                                                 <button onClick={() => reopenComplaint(c.id, "Citizen reopened: Issue persists")}
-                                                                    className="w-full py-4 bg-red-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-red-100 flex items-center justify-center gap-2 group active:scale-95 transition-all">
+                                                                    className="w-full py-4 bg-red-600 text-white rounded-2xl text-xl font-black uppercase tracking-[0.2em] shadow-xl shadow-red-100 flex items-center justify-center gap-2 group active:scale-95 transition-all">
                                                                     <RefreshCw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
                                                                     Reopen Case
                                                                 </button>
@@ -372,7 +372,7 @@ export default function CitizenModule() {
                                                         ) : (
                                                             <div className="p-6 bg-gray-50 rounded-[2rem] flex items-center gap-4 border border-gray-100">
                                                                 <Info className="w-6 h-6 text-blue-500" />
-                                                                <p className="text-[10px] text-gray-500 font-bold leading-relaxed uppercase">Assigning an regular officer will expedite the resolution process.</p>
+                                                                <p className="text-xl text-gray-500 font-bold leading-relaxed uppercase">Assigning an regular officer will expedite the resolution process.</p>
                                                             </div>
                                                         )}
                                                     </div>
@@ -393,15 +393,15 @@ export default function CitizenModule() {
                         <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/10 blur-[60px]" />
                         <div className="relative z-10">
                             <h3 className="text-xl font-black mb-1">Live Notifications</h3>
-                            <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-6">Secured G-SMS Protocol</p>
+                            <p className="text-white/40 text-xl font-black uppercase tracking-widest mb-6">Secured G-SMS Protocol</p>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="p-5 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-between">
                                     <div className="flex items-center gap-4">
                                         <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 flex items-center justify-center"><Phone className="w-4 h-4 text-emerald-400" /></div>
                                         <div>
-                                            <p className="text-xs font-black">SMS Alerts</p>
-                                            <p className="text-[9px] text-white/40">Immediate action pings</p>
+                                            <p className="text-base font-black">SMS Alerts</p>
+                                            <p className="text-base text-white/40">Immediate action pings</p>
                                         </div>
                                     </div>
                                     <div className="w-12 h-6 bg-emerald-500 rounded-full flex items-center justify-end px-1 cursor-pointer">
@@ -412,8 +412,8 @@ export default function CitizenModule() {
                                     <div className="flex items-center gap-4">
                                         <div className="w-10 h-10 rounded-2xl bg-blue-500/20 flex items-center justify-center"><Mail className="w-4 h-4 text-blue-400" /></div>
                                         <div>
-                                            <p className="text-xs font-black">Email Updates</p>
-                                            <p className="text-[9px] text-white/40">Weekly summary reports</p>
+                                            <p className="text-base font-black">Email Updates</p>
+                                            <p className="text-base text-white/40">Weekly summary reports</p>
                                         </div>
                                     </div>
                                     <div className="w-12 h-6 bg-gray-700/50 rounded-full flex items-center justify-start px-1 cursor-pointer">
@@ -427,9 +427,9 @@ export default function CitizenModule() {
                     {/* Support Card */}
                     <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm flex flex-col">
                         <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center mb-6"><Shield className="w-6 h-6 text-gray-900" /></div>
-                        <h4 className="text-sm font-black uppercase tracking-widest text-gray-900 mb-2">Citizen Support</h4>
-                        <p className="text-xs text-gray-500 font-medium leading-relaxed mb-6">Need help with your report? Our artificial intelligence is available 24/7 to assist with your queries.</p>
-                        <button className="mt-auto flex items-center justify-center gap-2 py-4 bg-gray-900 rounded-2xl text-xs font-black uppercase tracking-widest text-white hover:bg-[#B91C1C] transition-all">
+                        <h4 className="text-xl font-black uppercase tracking-widest text-gray-900 mb-2">Citizen Support</h4>
+                        <p className="text-base text-gray-500 font-medium leading-relaxed mb-6">Need help with your report? Our artificial intelligence is available 24/7 to assist with your queries.</p>
+                        <button className="mt-auto flex items-center justify-center gap-2 py-4 bg-gray-900 rounded-2xl text-base font-black uppercase tracking-widest text-white hover:bg-[#B91C1C] transition-all">
                             Ask AI Assistant <ArrowRight className="w-4 h-4" />
                         </button>
                     </div>
@@ -440,11 +440,11 @@ export default function CitizenModule() {
                     
                     <div className="max-w-5xl mx-auto">
                         <div className="flex flex-col items-center text-center mb-16 space-y-4">
-                            <div className="inline-flex items-center gap-3 px-6 py-2 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-[0.4em] border border-emerald-100 shadow-sm">
+                            <div className="inline-flex items-center gap-3 px-6 py-2 bg-emerald-50 text-emerald-600 rounded-full text-xl font-black uppercase tracking-[0.4em] border border-emerald-100 shadow-sm">
                                 <Shield className="w-3.5 h-3.5" /> Citizen Engagement Protocol v1.0
                             </div>
                             <h2 className="text-4xl font-black text-gray-900 tracking-tighter italic uppercase">Citizen Strategic Manual</h2>
-                            <p className="text-xs text-gray-400 font-black uppercase tracking-[0.3em] max-w-sm">Official Guidelines for Ward-Level Governance Interaction</p>
+                            <p className="text-base text-gray-400 font-black uppercase tracking-[0.3em] max-w-sm">Official Guidelines for Ward-Level Governance Interaction</p>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 relative z-10">
@@ -485,8 +485,8 @@ export default function CitizenModule() {
                                             </div>
                                         </div>
                                         <div className="space-y-3">
-                                            <h4 className="text-sm font-black text-gray-900 uppercase tracking-tighter group-hover/step:text-emerald-600 transition-colors italic">{s.title}</h4>
-                                            <p className="text-[11px] text-gray-400 font-bold leading-relaxed tracking-tight group-hover/step:text-gray-500 transition-colors">{s.desc}</p>
+                                            <h4 className="text-xl font-black text-gray-900 uppercase tracking-tighter group-hover/step:text-emerald-600 transition-colors italic">{s.title}</h4>
+                                            <p className="text-base text-gray-400 font-bold leading-relaxed tracking-tight group-hover/step:text-gray-500 transition-colors">{s.desc}</p>
                                         </div>
                                     </div>
                                 );
@@ -499,11 +499,11 @@ export default function CitizenModule() {
                                     <Shield className="w-10 h-10 text-emerald-500" />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1 italic">Submission Status</p>
-                                    <p className="text-sm font-black text-gray-900 uppercase tracking-tight">Gov-Protocol Synchronized</p>
+                                    <p className="text-xl font-black uppercase text-gray-400 tracking-widest mb-1 italic">Submission Status</p>
+                                    <p className="text-xl font-black text-gray-900 uppercase tracking-tight">Gov-Protocol Synchronized</p>
                                 </div>
                             </div>
-                            <button className="px-10 py-5 bg-gray-900 text-white rounded-3xl text-[10px] font-black uppercase tracking-[0.4em] hover:bg-emerald-600 transition-all shadow-2xl shadow-gray-950/20 active:scale-95">
+                            <button className="px-10 py-5 bg-gray-900 text-white rounded-3xl text-xl font-black uppercase tracking-[0.4em] hover:bg-emerald-600 transition-all shadow-2xl shadow-gray-950/20 active:scale-95">
                                 Print Operation Manifest
                             </button>
                         </div>

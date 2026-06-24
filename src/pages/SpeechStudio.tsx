@@ -8,7 +8,7 @@ export default function SpeechStudio() {
       title="Speech Studio" 
       subtitle="Draft, review, and manage all speeches."
       actions={
-        <button className="flex items-center gap-3 bg-[#B91C1C] hover:bg-gray-900 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl">
+        <button className="flex items-center gap-3 bg-[#B91C1C] hover:bg-gray-900 text-white px-6 py-3 rounded-2xl text-sm font-black uppercase tracking-widest transition-all shadow-xl">
           <Plus className="w-4 h-4" /> New Speech
         </button>
       }
@@ -22,11 +22,11 @@ export default function SpeechStudio() {
             <div className="p-8 bg-gray-50 rounded-[2.5rem] border border-gray-100 hover:border-red-200 hover:bg-red-50/30 transition-all cursor-pointer group shadow-sm">
               <div className="flex items-center gap-3 mb-4">
                 <h3 className="text-gray-900 font-black text-2xl italic uppercase tracking-tight">Healthcare Reform Address</h3>
-                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 text-[10px] font-black px-3 py-1 rounded-xl uppercase tracking-widest ml-auto">Final</span>
+                <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 text-sm font-black px-3 py-1 rounded-xl uppercase tracking-widest ml-auto">Final</span>
               </div>
               <p className="text-gray-500 font-medium mb-6">Health Ministry Annual Conference</p>
               
-              <div className="flex flex-wrap items-center gap-x-8 gap-y-4 text-xs font-bold text-gray-400 uppercase tracking-widest">
+              <div className="flex flex-wrap items-center gap-x-8 gap-y-4 text-base font-bold text-gray-400 uppercase tracking-widest">
                 <div className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
                   Health Professionals, Policy Makers
@@ -49,11 +49,11 @@ export default function SpeechStudio() {
             <div className="p-8 bg-gray-50 rounded-[2.5rem] border border-gray-100 hover:border-red-200 hover:bg-red-50/30 transition-all cursor-pointer group shadow-sm mt-4">
               <div className="flex items-center gap-3 mb-4">
                 <h3 className="text-gray-900 font-black text-2xl italic uppercase tracking-tight">Independence Day Keynote</h3>
-                <span className="bg-amber-50 text-amber-700 border border-amber-100 text-[10px] font-black px-3 py-1 rounded-xl uppercase tracking-widest ml-auto">Draft</span>
+                <span className="bg-amber-50 text-amber-700 border border-amber-100 text-sm font-black px-3 py-1 rounded-xl uppercase tracking-widest ml-auto">Draft</span>
               </div>
               <p className="text-gray-500 font-medium mb-6">National Independence Day Celebrations</p>
               
-              <div className="flex flex-wrap items-center gap-x-8 gap-y-4 text-xs font-bold text-gray-400 uppercase tracking-widest">
+              <div className="flex flex-wrap items-center gap-x-8 gap-y-4 text-base font-bold text-gray-400 uppercase tracking-widest">
                 <div className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
                   General Public, National Media
@@ -76,11 +76,11 @@ export default function SpeechStudio() {
             <div className="p-8 bg-gray-50 rounded-[2.5rem] border border-gray-100 hover:border-red-200 hover:bg-red-50/30 transition-all cursor-pointer group shadow-sm mt-4">
               <div className="flex items-center gap-3 mb-4">
                 <h3 className="text-gray-900 font-black text-2xl italic uppercase tracking-tight">National Budget Day Address</h3>
-                <span className="bg-blue-50 text-blue-700 border border-blue-100 text-[10px] font-black px-3 py-1 rounded-xl uppercase tracking-widest ml-auto">Reviewed</span>
+                <span className="bg-blue-50 text-blue-700 border border-blue-100 text-sm font-black px-3 py-1 rounded-xl uppercase tracking-widest ml-auto">Reviewed</span>
               </div>
               <p className="text-gray-500 font-medium mb-6">Annual Budget Presentation</p>
               
-              <div className="flex flex-wrap items-center gap-x-8 gap-y-4 text-xs font-bold text-gray-400 uppercase tracking-widest">
+              <div className="flex flex-wrap items-center gap-x-8 gap-y-4 text-base font-bold text-gray-400 uppercase tracking-widest">
                 <div className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
                   Parliament and National Media

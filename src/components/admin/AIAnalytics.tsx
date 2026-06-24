@@ -26,7 +26,7 @@ export default function AIAnalytics() {
           </div>
           <div>
             <h3 className="text-xl font-black text-gray-900 uppercase italic leading-tight">AI Analytics</h3>
-            <p className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em]">Predictive insights & trends</p>
+            <p className="text-sm text-gray-400 font-black uppercase tracking-[0.2em]">Predictive insights & trends</p>
           </div>
         </div>
       </div>

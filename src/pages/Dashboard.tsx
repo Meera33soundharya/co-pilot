@@ -115,7 +115,7 @@ export default function Dashboard() {
                                         </div>
                                         <div>
                                             <h3 className="text-xl font-black text-gray-900 uppercase italic">Mission Detail</h3>
-                                            <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Case ID: {viewGrievance.id}</p>
+                                            <p className="text-sm text-gray-400 font-black uppercase tracking-widest">Case ID: {viewGrievance.id}</p>
                                         </div>
                                     </div>
                                     <button onClick={() => setViewGrievance(null)} className="p-3 rounded-2xl hover:bg-gray-100 text-gray-300 transition-colors">
@@ -126,10 +126,10 @@ export default function Dashboard() {
                                 <div className="space-y-6">
                                     <div className="p-8 bg-white rounded-[2.5rem] border border-gray-100 shadow-sm space-y-4">
                                         <div className="flex items-center gap-3">
-                                            <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border ${viewGrievance.priority === 'High' ? 'bg-red-50 border-red-100 text-red-600' : 'bg-gray-50 border-gray-100 text-gray-500'}`}>
+                                            <span className={`px-4 py-1.5 rounded-xl text-sm font-black uppercase tracking-widest border ${viewGrievance.priority === 'High' ? 'bg-red-50 border-red-100 text-red-600' : 'bg-gray-50 border-gray-100 text-gray-500'}`}>
                                                 {viewGrievance.priority} Priority
                                             </span>
-                                            <span className="px-4 py-1.5 rounded-xl bg-gray-50 border border-gray-100 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                                            <span className="px-4 py-1.5 rounded-xl bg-gray-50 border border-gray-100 text-sm font-black uppercase tracking-widest text-gray-400">
                                                 {viewGrievance.category}
                                             </span>
                                         </div>
@@ -156,10 +156,10 @@ export default function Dashboard() {
                                 </div>
 
                                 <div className="flex gap-4">
-                                    <button onClick={() => { navigate(`/grievances?id=${viewGrievance.id}`); setViewGrievance(null); }} className="flex-1 py-5 bg-gray-900 text-white rounded-3xl text-[11px] font-black uppercase tracking-[0.2em] hover:bg-red-600 transition-all shadow-xl active:scale-95">
+                                    <button onClick={() => { navigate(`/grievances?id=${viewGrievance.id}`); setViewGrievance(null); }} className="flex-1 py-5 bg-gray-900 text-white rounded-3xl text-base font-black uppercase tracking-[0.2em] hover:bg-red-600 transition-all shadow-xl active:scale-95">
                                         Full Mission Log
                                     </button>
-                                    <button onClick={() => setViewGrievance(null)} className="px-10 py-5 bg-gray-200 text-gray-900 rounded-3xl text-[11px] font-black uppercase tracking-[0.2em] hover:bg-gray-300 transition-all active:scale-95">
+                                    <button onClick={() => setViewGrievance(null)} className="px-10 py-5 bg-gray-200 text-gray-900 rounded-3xl text-base font-black uppercase tracking-[0.2em] hover:bg-gray-300 transition-all active:scale-95">
                                         Dismiss
                                     </button>
                                 </div>
@@ -185,14 +185,14 @@ export default function Dashboard() {
                                     <card.icon className={`w-7 h-7 ${card.isPrimary ? "text-white" : "text-[#B91C1C]"}`} />
                                 </div>
                                 {card.delta && (
-                                    <span className={`text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-tight ${
+                                    <span className={`text-sm font-black px-2.5 py-1 rounded-lg uppercase tracking-tight ${
                                         card.isPrimary ? "bg-white/20 text-white" : card.positive ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
                                     }`}>{card.delta}</span>
                                 )}
                             </div>
                             <div className="relative z-10 mt-2">
                                 <p className="text-3xl font-black leading-none mb-1 uppercase tracking-tight italic">{card.value}</p>
-                                <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${card.isPrimary ? "text-white/60" : "text-gray-400"}`}>{card.label}</p>
+                                <p className={`text-sm font-black uppercase tracking-[0.2em] ${card.isPrimary ? "text-white/60" : "text-gray-400"}`}>{card.label}</p>
                             </div>
                         </div>
                     ))}
@@ -213,7 +213,7 @@ export default function Dashboard() {
                             </div>
                             <div>
                                 <h3 className="text-xl font-black uppercase tracking-tight italic">{btn.label}</h3>
-                                <p className={`text-[10px] font-black uppercase tracking-widest ${btn.color.includes('bg-white') ? 'text-gray-400' : 'text-white/60'}`}>{btn.desc}</p>
+                                <p className={`text-sm font-black uppercase tracking-widest ${btn.color.includes('bg-white') ? 'text-gray-400' : 'text-white/60'}`}>{btn.desc}</p>
                             </div>
                         </button>
                     ))}
@@ -233,13 +233,13 @@ export default function Dashboard() {
                                     </div>
                                     <div>
                                         <h3 className="text-xl font-black text-gray-900 uppercase italic">AI Executive Briefing</h3>
-                                        <p className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em]">Automated Strategic Summary</p>
+                                        <p className="text-sm text-gray-400 font-black uppercase tracking-[0.2em]">Automated Strategic Summary</p>
                                     </div>
                                 </div>
                                 <button
                                     onClick={generateBriefing}
                                     disabled={generatingBrief}
-                                    className="flex items-center gap-3 px-8 py-4 bg-gray-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-[#B91C1C] transition-all shadow-2xl disabled:opacity-60"
+                                    className="flex items-center gap-3 px-8 py-4 bg-gray-900 text-white rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-[#B91C1C] transition-all shadow-2xl disabled:opacity-60"
                                 >
                                     {generatingBrief
                                         ? <><Loader2 className="w-4 h-4 animate-spin" /> Analyzing...</>
@@ -250,7 +250,7 @@ export default function Dashboard() {
 
                             {briefing ? (
                                 <div className="bg-gray-50 border border-gray-100 rounded-[2rem] p-8 relative">
-                                    <pre className="text-xs font-bold text-gray-700 whitespace-pre-wrap leading-relaxed font-sans">{briefing}</pre>
+                                    <pre className="text-base font-bold text-gray-700 whitespace-pre-wrap leading-relaxed font-sans">{briefing}</pre>
                                     <div className="flex items-center gap-3 mt-6 pt-6 border-t border-gray-200/50">
                                         <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                                         <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Live Decision Support Core Active</span>
@@ -259,7 +259,7 @@ export default function Dashboard() {
                             ) : (
                                 <div className="bg-gray-50 border border-dashed border-gray-200 rounded-[2.5rem] p-20 text-center">
                                     <Sparkles className="w-16 h-16 text-gray-200 mx-auto mb-6" />
-                                    <p className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">Request AI intelligence sweep to begin</p>
+                                    <p className="text-base font-black text-gray-400 uppercase tracking-[0.2em]">Request AI intelligence sweep to begin</p>
                                 </div>
                             )}
                         </div>
@@ -273,7 +273,7 @@ export default function Dashboard() {
                         <div className="relative z-10 space-y-8">
                             <div className="flex items-center gap-3">
                                 <Shield className="w-5 h-5 text-white/20" />
-                                <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-white/40 italic">Constituency Integrity</h3>
+                                <h3 className="text-base font-black uppercase tracking-[0.3em] text-white/40 italic">Constituency Integrity</h3>
                             </div>
 
                             <div className="flex justify-center py-4">
@@ -290,7 +290,7 @@ export default function Dashboard() {
                                     </svg>
                                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                                         <span className="text-5xl font-black tracking-tighter italic">{healthScore}</span>
-                                        <span className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">/ 100</span>
+                                        <span className="text-sm font-black text-white/20 uppercase tracking-[0.2em]">/ 100</span>
                                     </div>
                                 </div>
                             </div>
@@ -298,7 +298,7 @@ export default function Dashboard() {
                             <div className="space-y-2 text-center">
                                 <p className={`text-2xl font-black uppercase italic tracking-tight ${healthScore >= 70 ? "text-emerald-400" : healthScore >= 40 ? "text-amber-400" : "text-[#B91C1C]"
                                     }`}>{healthScore >= 70 ? "Stable" : healthScore >= 40 ? "Attention Required" : "Critical Alert"}</p>
-                                <p className="text-[10px] text-white/30 font-black uppercase tracking-widest">District Health Index</p>
+                                <p className="text-sm text-white/30 font-black uppercase tracking-widest">District Health Index</p>
                             </div>
                         </div>
                     </div>
@@ -312,7 +312,7 @@ export default function Dashboard() {
                             <h3 className="text-lg font-black text-gray-900 uppercase italic">Urgent Operation Queue</h3>
                         </div>
                         <button onClick={() => navigate("/grievances")}
-                            className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B91C1C] hover:text-black flex items-center gap-2 transition-colors">
+                            className="text-sm font-black uppercase tracking-[0.2em] text-[#B91C1C] hover:text-black flex items-center gap-2 transition-colors">
                             Full Log <ChevronRight className="w-4 h-4" />
                         </button>
                     </div>
@@ -323,7 +323,7 @@ export default function Dashboard() {
                                 className="flex items-center gap-8 px-10 py-6 hover:bg-red-50/20 transition-all cursor-pointer group"
                                 onClick={() => setViewGrievance(c)}>
                                 <div className="w-14 h-14 rounded-[1.5rem] bg-gray-50 border border-gray-100 flex items-center justify-center group-hover:bg-[#B91C1C] transition-all shrink-0 relative">
-                                    <span className="text-sm font-black text-gray-900 group-hover:text-white font-mono uppercase italic">{c.id.split("-")[1]}</span>
+                                    <span className="text-lg font-black text-gray-900 group-hover:text-white font-mono uppercase italic">{c.id.split("-")[1]}</span>
                                     {c.priority === "High" && (
                                         <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-600 rounded-full border-2 border-white animate-pulse" />
                                     )}
@@ -333,11 +333,11 @@ export default function Dashboard() {
                                         <h4 className="text-lg font-black text-gray-900 truncate uppercase italic">{c.issue}</h4>
                                         {c.priority === "High" && <div className="w-1.5 h-1.5 rounded-full bg-red-600 animate-ping" />}
                                     </div>
-                                    <p className="text-xs text-gray-400 font-bold uppercase tracking-tight">{c.citizen} · {c.ward} · {c.dept || "Awaiting Unit"}</p>
+                                    <p className="text-base text-gray-400 font-bold uppercase tracking-tight">{c.citizen} · {c.ward} · {c.dept || "Awaiting Unit"}</p>
                                 </div>
                                 <div className="flex items-center gap-3">
                                     <div className="hidden md:flex items-center gap-4">
-                                        <span className={`text-[10px] font-black px-4 py-2 rounded-xl border uppercase tracking-widest ${c.priority === "High" ? "bg-red-50 border-red-100 text-[#B91C1C]" : "bg-gray-50 border-gray-100 text-gray-500"}`}>{c.priority}</span>
+                                        <span className={`text-sm font-black px-4 py-2 rounded-xl border uppercase tracking-widest ${c.priority === "High" ? "bg-red-50 border-red-100 text-[#B91C1C]" : "bg-gray-50 border-gray-100 text-gray-500"}`}>{c.priority}</span>
                                     </div>
                                     <button
                                         onClick={(e) => { e.stopPropagation(); setViewGrievance(c); }}
@@ -369,12 +369,12 @@ export default function Dashboard() {
                                 </div>
                                 <div>
                                     <h3 className="text-xl font-black text-gray-900 uppercase italic leading-tight">Complaint Monitor</h3>
-                                    <p className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em]">Assignment & Tracking</p>
+                                    <p className="text-sm text-gray-400 font-black uppercase tracking-[0.2em]">Assignment & Tracking</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">
-                                <input value={tableQ} onChange={e => setTableQ(e.target.value)} placeholder="Search..." className="px-4 py-2.5 rounded-xl border border-gray-200 text-sm bg-gray-50 focus:outline-none focus:border-red-300 focus:ring-2 focus:ring-red-50 transition-all" />
-                                <select value={tableStatus} onChange={e => setTableStatus(e.target.value)} className="px-4 py-2.5 rounded-xl border border-gray-200 text-sm bg-gray-50 focus:outline-none focus:border-red-300">
+                                <input value={tableQ} onChange={e => setTableQ(e.target.value)} placeholder="Search..." className="px-4 py-2.5 rounded-xl border border-gray-200 text-lg bg-gray-50 focus:outline-none focus:border-red-300 focus:ring-2 focus:ring-red-50 transition-all" />
+                                <select value={tableStatus} onChange={e => setTableStatus(e.target.value)} className="px-4 py-2.5 rounded-xl border border-gray-200 text-lg bg-gray-50 focus:outline-none focus:border-red-300">
                                     <option>All</option>
                                     <option>New</option>
                                     <option>Assigned</option>
@@ -386,8 +386,8 @@ export default function Dashboard() {
                         </div>
 
                         <div className="overflow-x-auto relative z-10">
-                            <table className="w-full text-sm">
-                                <thead className="text-left text-[10px] text-gray-400 uppercase tracking-widest font-black">
+                            <table className="w-full text-lg">
+                                <thead className="text-left text-sm text-gray-400 uppercase tracking-widest font-black">
                                     <tr>
                                         <th className="p-3">ID</th>
                                         <th className="p-3">Issue</th>
@@ -403,7 +403,7 @@ export default function Dashboard() {
                                             <td className="p-3 font-bold text-gray-700 truncate max-w-[200px]">{c.issue}</td>
                                             <td className="p-3 text-gray-500">{c.ward}</td>
                                             <td className="p-3">
-                                                <span className={`text-[10px] font-black px-3 py-1 rounded-lg uppercase tracking-widest ${
+                                                <span className={`text-sm font-black px-3 py-1 rounded-lg uppercase tracking-widest ${
                                                     c.status === "New" ? "bg-red-50 text-red-600" :
                                                     c.status === "Resolved" ? "bg-emerald-50 text-emerald-600" :
                                                     c.status === "In Progress" ? "bg-amber-50 text-amber-600" :
@@ -411,7 +411,7 @@ export default function Dashboard() {
                                                 }`}>{c.status}</span>
                                             </td>
                                             <td className="p-3">
-                                                <span className={`text-[10px] font-black px-3 py-1 rounded-lg uppercase tracking-widest ${
+                                                <span className={`text-sm font-black px-3 py-1 rounded-lg uppercase tracking-widest ${
                                                     c.priority === "High" ? "bg-red-50 text-[#B91C1C]" : "bg-gray-50 text-gray-500"
                                                 }`}>{c.priority ?? "Normal"}</span>
                                             </td>
@@ -422,7 +422,7 @@ export default function Dashboard() {
                         </div>
 
                         <div className="mt-6 pt-4 border-t border-gray-100 text-center relative z-10">
-                            <button onClick={() => navigate("/grievances")} className="text-[10px] font-black text-[#B91C1C] uppercase tracking-widest hover:text-gray-900 flex items-center gap-2 mx-auto transition-colors">
+                            <button onClick={() => navigate("/grievances")} className="text-sm font-black text-[#B91C1C] uppercase tracking-widest hover:text-gray-900 flex items-center gap-2 mx-auto transition-colors">
                                 View All Complaints <ChevronRight className="w-3.5 h-3.5" />
                             </button>
                         </div>
@@ -436,7 +436,7 @@ export default function Dashboard() {
                             </div>
                             <div>
                                 <h3 className="text-xl font-black text-gray-900 uppercase italic leading-tight">Notifications</h3>
-                                <p className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em]">Recent alerts</p>
+                                <p className="text-sm text-gray-400 font-black uppercase tracking-[0.2em]">Recent alerts</p>
                             </div>
                         </div>
 
@@ -444,7 +444,7 @@ export default function Dashboard() {
                             {recentNotifs.length === 0 ? (
                                 <div className="text-center py-12">
                                     <Bell className="w-10 h-10 text-gray-200 mx-auto mb-3" />
-                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">No notifications yet</p>
+                                    <p className="text-sm font-black text-gray-400 uppercase tracking-widest">No notifications yet</p>
                                 </div>
                             ) : (
                                 recentNotifs.map(n => (
@@ -452,9 +452,9 @@ export default function Dashboard() {
                                         <div className="flex items-start gap-3">
                                             <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${!n.read ? "bg-[#B91C1C]" : "bg-gray-300"}`} />
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-xs font-black text-gray-900 uppercase tracking-tight mb-1 truncate">{n.title}</p>
-                                                <p className="text-[11px] text-gray-500 line-clamp-2 leading-relaxed">{n.message}</p>
-                                                <p className="text-[10px] font-black text-gray-400 uppercase mt-2">{n.time}</p>
+                                                <p className="text-base font-black text-gray-900 uppercase tracking-tight mb-1 truncate">{n.title}</p>
+                                                <p className="text-base text-gray-500 line-clamp-2 leading-relaxed">{n.message}</p>
+                                                <p className="text-sm font-black text-gray-400 uppercase mt-2">{n.time}</p>
                                             </div>
                                         </div>
                                     </div>

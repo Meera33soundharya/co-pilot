@@ -72,7 +72,7 @@ export default function MediaQueue() {
       actions={
         <button 
           onClick={() => setShowAddForm(true)} 
-          className="flex items-center gap-3 bg-[#B91C1C] hover:bg-[#991717] text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl active:scale-95 cursor-pointer"
+          className="flex items-center gap-3 bg-[#B91C1C] hover:bg-[#991717] text-white px-6 py-3 rounded-2xl text-sm font-black uppercase tracking-widest transition-all shadow-xl active:scale-95 cursor-pointer"
         >
           <Plus className="w-4 h-4" /> New Response
         </button>
@@ -95,36 +95,36 @@ export default function MediaQueue() {
 
               <form onSubmit={handleAddItem} className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Response Topic *</label>
+                  <label className="text-sm font-black uppercase tracking-widest text-gray-400">Response Topic *</label>
                   <input 
                     type="text" 
                     required 
                     value={newTitle} 
                     onChange={e => setNewTitle(e.target.value)}
                     placeholder="e.g. Youth Employment Scheme" 
-                    className="w-full px-5 py-4 bg-gray-50 border border-transparent rounded-2xl text-sm font-bold focus:bg-white focus:border-red-200 outline-none transition-all shadow-inner"
+                    className="w-full px-5 py-4 bg-gray-50 border border-transparent rounded-2xl text-lg font-bold focus:bg-white focus:border-red-200 outline-none transition-all shadow-inner"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">News Outlet / Source *</label>
+                  <label className="text-sm font-black uppercase tracking-widest text-gray-400">News Outlet / Source *</label>
                   <input 
                     type="text" 
                     required 
                     value={newSource} 
                     onChange={e => setNewSource(e.target.value)}
                     placeholder="e.g. Reuters, BBC" 
-                    className="w-full px-5 py-4 bg-gray-50 border border-transparent rounded-2xl text-sm font-bold focus:bg-white focus:border-red-200 outline-none transition-all shadow-inner"
+                    className="w-full px-5 py-4 bg-gray-50 border border-transparent rounded-2xl text-lg font-bold focus:bg-white focus:border-red-200 outline-none transition-all shadow-inner"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Initial Status</label>
+                    <label className="text-sm font-black uppercase tracking-widest text-gray-400">Initial Status</label>
                     <select 
                       value={newStatus} 
                       onChange={e => setNewStatus(e.target.value as any)}
-                      className="w-full px-4 py-3 bg-gray-50 border border-transparent rounded-2xl text-sm font-bold focus:bg-white focus:border-red-200 outline-none transition-all"
+                      className="w-full px-4 py-3 bg-gray-50 border border-transparent rounded-2xl text-lg font-bold focus:bg-white focus:border-red-200 outline-none transition-all"
                     >
                       <option value="DRAFT">Draft</option>
                       <option value="APPROVED">Approved</option>
@@ -133,20 +133,20 @@ export default function MediaQueue() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Due Date (Optional)</label>
+                    <label className="text-sm font-black uppercase tracking-widest text-gray-400">Due Date (Optional)</label>
                     <input 
                       type="text" 
                       value={newDueDate} 
                       onChange={e => setNewDueDate(e.target.value)}
                       placeholder="e.g. Jun 17" 
-                      className="w-full px-5 py-4 bg-gray-50 border border-transparent rounded-2xl text-sm font-bold focus:bg-white focus:border-red-200 outline-none transition-all shadow-inner"
+                      className="w-full px-5 py-4 bg-gray-50 border border-transparent rounded-2xl text-lg font-bold focus:bg-white focus:border-red-200 outline-none transition-all shadow-inner"
                     />
                   </div>
                 </div>
 
                 <button 
                   type="submit" 
-                  className="w-full py-4 bg-[#B91C1C] hover:bg-[#991717] text-white text-xs font-black uppercase tracking-widest transition-all rounded-2xl shadow-lg active:scale-95"
+                  className="w-full py-4 bg-[#B91C1C] hover:bg-[#991717] text-white text-base font-black uppercase tracking-widest transition-all rounded-2xl shadow-lg active:scale-95"
                 >
                   Create Press Response
                 </button>
@@ -160,21 +160,21 @@ export default function MediaQueue() {
           {/* Draft Column */}
           <div className="bg-white border border-gray-100 rounded-[2.5rem] p-6 flex flex-col shadow-xl">
             <div className="flex items-center justify-between mb-6 px-2">
-              <h3 className="text-gray-400 font-black text-[10px] tracking-widest uppercase">DRAFT</h3>
-              <span className="text-gray-900 bg-gray-100 rounded-full px-3 py-1 font-black text-xs">{drafts.length}</span>
+              <h3 className="text-gray-400 font-black text-sm tracking-widest uppercase">DRAFT</h3>
+              <span className="text-gray-900 bg-gray-100 rounded-full px-3 py-1 font-black text-base">{drafts.length}</span>
             </div>
             
             <div className="space-y-4 flex-1">
               {drafts.map(item => (
                 <div key={item.id} className="bg-gray-50 border border-gray-100 p-6 rounded-[2rem] hover:border-red-200 hover:bg-red-50/30 transition-all shadow-sm group relative">
                   <h4 className="text-gray-900 font-black text-lg italic tracking-tight mb-4 group-hover:text-red-700">{item.title}</h4>
-                  <div className="text-gray-500 text-xs font-bold uppercase tracking-widest flex items-center gap-2 mb-3">
-                    <span className="w-4 h-4 bg-gray-200 rounded-md inline-flex items-center justify-center text-[10px]">📄</span>
+                  <div className="text-gray-500 text-base font-bold uppercase tracking-widest flex items-center gap-2 mb-3">
+                    <span className="w-4 h-4 bg-gray-200 rounded-md inline-flex items-center justify-center text-sm">📄</span>
                     {item.source}
                   </div>
                   {item.dueDate && (
-                    <div className="text-red-600 bg-red-50 w-fit px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest flex items-center gap-2">
-                      <span className="w-4 h-4 bg-white rounded-full inline-flex items-center justify-center text-[10px] shadow-sm">🕒</span>
+                    <div className="text-red-600 bg-red-50 w-fit px-3 py-1.5 rounded-lg text-base font-bold uppercase tracking-widest flex items-center gap-2">
+                      <span className="w-4 h-4 bg-white rounded-full inline-flex items-center justify-center text-sm shadow-sm">🕒</span>
                       {item.dueDate}
                     </div>
                   )}
@@ -202,16 +202,16 @@ export default function MediaQueue() {
           {/* Approved Column */}
           <div className="bg-white border border-gray-100 rounded-[2.5rem] p-6 flex flex-col shadow-xl">
             <div className="flex items-center justify-between mb-6 px-2">
-              <h3 className="text-gray-400 font-black text-[10px] tracking-widest uppercase">APPROVED</h3>
-              <span className="text-gray-900 bg-gray-100 rounded-full px-3 py-1 font-black text-xs">{approved.length}</span>
+              <h3 className="text-gray-400 font-black text-sm tracking-widest uppercase">APPROVED</h3>
+              <span className="text-gray-900 bg-gray-100 rounded-full px-3 py-1 font-black text-base">{approved.length}</span>
             </div>
             
             <div className="space-y-4 flex-1">
               {approved.map(item => (
                 <div key={item.id} className="bg-gray-50 border border-gray-100 p-6 rounded-[2rem] hover:border-blue-200 hover:bg-blue-50/30 transition-all shadow-sm group relative">
                   <h4 className="text-gray-900 font-black text-lg italic tracking-tight mb-4 group-hover:text-blue-700">{item.title}</h4>
-                  <div className="text-gray-500 text-xs font-bold uppercase tracking-widest flex items-center gap-2">
-                    <span className="w-4 h-4 bg-gray-200 rounded-md inline-flex items-center justify-center text-[10px]">📄</span>
+                  <div className="text-gray-500 text-base font-bold uppercase tracking-widest flex items-center gap-2">
+                    <span className="w-4 h-4 bg-gray-200 rounded-md inline-flex items-center justify-center text-sm">📄</span>
                     {item.source}
                   </div>
 
@@ -244,16 +244,16 @@ export default function MediaQueue() {
           {/* Published Column */}
           <div className="bg-white border border-gray-100 rounded-[2.5rem] p-6 flex flex-col shadow-xl">
             <div className="flex items-center justify-between mb-6 px-2">
-              <h3 className="text-gray-400 font-black text-[10px] tracking-widest uppercase">PUBLISHED</h3>
-              <span className="text-gray-900 bg-gray-100 rounded-full px-3 py-1 font-black text-xs">{published.length}</span>
+              <h3 className="text-gray-400 font-black text-sm tracking-widest uppercase">PUBLISHED</h3>
+              <span className="text-gray-900 bg-gray-100 rounded-full px-3 py-1 font-black text-base">{published.length}</span>
             </div>
             
             <div className="space-y-4 flex-1">
               {published.map(item => (
                 <div key={item.id} className="bg-gray-50 border border-gray-100 p-6 rounded-[2rem] hover:border-emerald-200 hover:bg-emerald-50/30 transition-all shadow-sm group relative">
                   <h4 className="text-gray-900 font-black text-lg italic tracking-tight mb-4 group-hover:text-emerald-700">{item.title}</h4>
-                  <div className="text-gray-500 text-xs font-bold uppercase tracking-widest flex items-center gap-2">
-                    <span className="w-4 h-4 bg-gray-200 rounded-md inline-flex items-center justify-center text-[10px]">📄</span>
+                  <div className="text-gray-500 text-base font-bold uppercase tracking-widest flex items-center gap-2">
+                    <span className="w-4 h-4 bg-gray-200 rounded-md inline-flex items-center justify-center text-sm">📄</span>
                     {item.source}
                   </div>
 

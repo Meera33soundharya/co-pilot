@@ -101,60 +101,90 @@ export default function SpeechAI() {
   const activeLang = LANGUAGES.find(l => l.id === selectedLangId)!;
   const activeTone = TONES.find(t => t.id === selectedToneId)!;
 
-  // Load voices on mount
+  // Load voices on mount (kept for fallback if needed, but we use Google TTS now)
   useEffect(() => {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.getVoices();
-      window.speechSynthesis.onvoiceschanged = () => {
-        window.speechSynthesis.getVoices();
-      };
     }
   }, []);
 
   function handlePlay(text: string, langLabel: string, broadcastId: number, e: React.MouseEvent) {
     e.stopPropagation();
     
-    if (!('speechSynthesis' in window)) {
-      alert("Text-to-speech is not supported in your browser. Please use Google Chrome.");
-      return;
-    }
-
     // If already speaking this broadcast, stop it
     if (isSpeaking && speakingId === broadcastId) {
-      window.speechSynthesis.cancel();
+      if ((window as any).currentGoogleAudio) {
+        (window as any).currentGoogleAudio.pause();
+        (window as any).currentGoogleAudio = null;
+      }
       setIsSpeaking(false);
       setSpeakingId(null);
       return;
     }
 
-    window.speechSynthesis.cancel();
+    // Stop any existing audio
+    if ((window as any).currentGoogleAudio) {
+      (window as any).currentGoogleAudio.pause();
+      (window as any).currentGoogleAudio = null;
+    }
     
     // Find the matching language config by label
     const langConfig = LANGUAGES.find(l => l.label === langLabel);
-    const bcp = langConfig?.bcp || 'en-IN';
+    const tl = langConfig?.bcp.split('-')[0] || 'en';
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = bcp;
-    utterance.rate = 0.85;  // Slower for clarity
-    utterance.pitch = 1.0;
+    // Break text into chunks under 200 chars (Google TTS limit)
+    const chunks = text.match(/.{1,190}(?:\s|$)/g) || [text];
+    let currentChunkIdx = 0;
 
-    // Find best voice for this language
-    const voices = window.speechSynthesis.getVoices();
-    const langVoices = voices.filter(v => v.lang === bcp || v.lang.startsWith(bcp.split('-')[0]));
+    setIsSpeaking(true);
+    setSpeakingId(broadcastId);
+
+    const playNextChunk = () => {
+      if (currentChunkIdx >= chunks.length) {
+        setIsSpeaking(false);
+        setSpeakingId(null);
+        return;
+      }
+      
+      const chunk = chunks[currentChunkIdx];
+      const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(chunk)}&tl=${tl}&client=tw-ob`;
+      
+      const audio = new Audio(url);
+      (window as any).currentGoogleAudio = audio;
+      
+      audio.onended = () => {
+        currentChunkIdx++;
+        playNextChunk();
+      };
+      
+      audio.onerror = () => {
+        console.warn("Audio chunk failed to load:", url);
+        currentChunkIdx++;
+        playNextChunk();
+      };
+      
+      audio.play().catch(e => {
+        console.warn("Audio playback prevented:", e);
+        currentChunkIdx++;
+        playNextChunk();
+      });
+    };
+
+    playNextChunk();
+  }
+
+  function handleDownload(text: string, langLabel: string, title: string, e: React.MouseEvent) {
+    e.stopPropagation();
+    const langConfig = LANGUAGES.find(l => l.label === langLabel);
+    const tl = langConfig?.bcp.split('-')[0] || 'en';
     
-    if (langVoices.length > 0) {
-      // Prefer: Google > Microsoft > Remote > any
-      const googleVoice = langVoices.find(v => v.name.toLowerCase().includes('google'));
-      const msVoice = langVoices.find(v => v.name.toLowerCase().includes('microsoft'));
-      const remoteVoice = langVoices.find(v => !v.localService);
-      utterance.voice = googleVoice || msVoice || remoteVoice || langVoices[0];
-    }
-
-    utterance.onstart = () => { setIsSpeaking(true); setSpeakingId(broadcastId); };
-    utterance.onend = () => { setIsSpeaking(false); setSpeakingId(null); };
-    utterance.onerror = () => { setIsSpeaking(false); setSpeakingId(null); };
+    // For simplicity, download the first chunk if text is very long
+    const chunk = text.match(/.{1,190}(?:\s|$)/g)?.[0] || text; 
+    const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(chunk)}&tl=${tl}&client=tw-ob`;
     
-    window.speechSynthesis.speak(utterance);
+    // Google TTS does not support CORS for fetch(). 
+    // Opening in a new tab allows the browser to play/download the file natively.
+    window.open(url, '_blank');
   }
 
   /* ── Native-language input translations ─────────────────── */
@@ -185,7 +215,7 @@ export default function SpeechAI() {
     },
   };
 
-  function handleGenerate() {
+  async function handleGenerate() {
     const text = inputText.trim();
     if (!text || isGenerating) return;
 
@@ -196,36 +226,44 @@ export default function SpeechAI() {
     const toneId = selectedToneId;
     const langObj = LANGUAGES.find(l => l.id === langId)!;
 
-    setTimeout(() => {
-      let result: string;
+    let translatedInput = text;
 
-      if (langId === "english") {
-        // English: just apply English tone wrapper
-        const wrapper = TONE_WRAPPERS.english[toneId];
-        result = wrapper ? wrapper(text) : text;
-      } else {
-        // Non-English: translate input first, then wrap in native tone
-        const translatedInput = NATIVE_INPUT[langId]?.[text] || text;
-        const wrapper = TONE_WRAPPERS[langId]?.[toneId];
-        result = wrapper ? wrapper(translatedInput) : translatedInput;
+    if (langId !== "english") {
+      try {
+        const tl = langObj.bcp.split('-')[0]; // "hi", "ta", "te", "bn", "mr", "ml"
+        const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`);
+        const data = await res.json();
+        translatedInput = data[0].map((item: any) => item[0]).join('');
+      } catch (err) {
+        console.error("Translation failed:", err);
+        translatedInput = NATIVE_INPUT[langId]?.[text] || text;
       }
+    }
 
-      const titleSnippet = text.length > 45 ? text.substring(0, 45) + "..." : text;
+    let result: string;
+    if (langId === "english") {
+      const wrapper = TONE_WRAPPERS.english[toneId];
+      result = wrapper ? wrapper(text) : text;
+    } else {
+      const wrapper = TONE_WRAPPERS[langId]?.[toneId];
+      result = wrapper ? wrapper(translatedInput) : translatedInput;
+    }
 
-      const newBroadcast = {
-        id:       Date.now(),
-        title:    titleSnippet,
-        fullText: result,
-        date:     new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }).toUpperCase(),
-        duration: "0:45",
-        lang:     langObj.label,
-      };
+    const titleSnippet = text.length > 45 ? text.substring(0, 45) + "..." : text;
 
-      setBroadcasts(prev => [newBroadcast, ...prev]);
-      setExpandedId(newBroadcast.id);
-      setIsGenerating(false);
-      setJustGenerated(true);
-    }, 1800);
+    const newBroadcast = {
+      id:       Date.now(),
+      title:    titleSnippet,
+      fullText: result,
+      date:     new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }).toUpperCase(),
+      duration: "0:45",
+      lang:     langObj.label,
+    };
+
+    setBroadcasts(prev => [newBroadcast, ...prev]);
+    setExpandedId(newBroadcast.id);
+    setIsGenerating(false);
+    setJustGenerated(true);
   }
 
   return (
@@ -241,12 +279,12 @@ export default function SpeechAI() {
           {/* Header */}
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-[#C81D25]" />
-            <h2 className="text-xs font-black text-gray-500 tracking-widest uppercase">Create New Announcement</h2>
+            <h2 className="text-base font-black text-gray-500 tracking-widest uppercase">Create New Announcement</h2>
           </div>
 
           {/* Language Selection */}
           <div>
-            <h3 className="text-[10px] font-black text-gray-400 tracking-widest uppercase mb-3 flex items-center gap-2">
+            <h3 className="text-sm font-black text-gray-400 tracking-widest uppercase mb-3 flex items-center gap-2">
               <Settings className="w-3 h-3" /> Select Language
             </h3>
             <div className="flex flex-wrap gap-2 mb-3">
@@ -254,18 +292,18 @@ export default function SpeechAI() {
                 <button
                   key={lang.id}
                   onClick={() => setSelectedLangId(lang.id)}
-                  className={`px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-2 ${
+                  className={`px-4 py-2 rounded-full text-base font-bold transition-all flex items-center gap-2 ${
                     selectedLangId === lang.id
                       ? "bg-[#C81D25] text-white shadow-md"
                       : "bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200"
                   }`}
                 >
                   {lang.label}
-                  <span className={`text-[10px] ${selectedLangId === lang.id ? "text-red-200" : "text-gray-400"}`}>{lang.code}</span>
+                  <span className={`text-sm ${selectedLangId === lang.id ? "text-red-200" : "text-gray-400"}`}>{lang.code}</span>
                 </button>
               ))}
             </div>
-            <div className="bg-blue-50 text-blue-700 text-xs font-bold px-4 py-2.5 rounded-lg border border-blue-100 flex items-center gap-2">
+            <div className="bg-blue-50 text-blue-700 text-base font-bold px-4 py-2.5 rounded-lg border border-blue-100 flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-blue-500 shrink-0" />
               Selected {activeLang.label} ({activeLang.code}) — announcement will be fully spoken in {activeLang.label.toLowerCase()}
             </div>
@@ -273,7 +311,7 @@ export default function SpeechAI() {
 
           {/* Text Area */}
           <div>
-            <h3 className="text-[10px] font-black text-gray-400 tracking-widest uppercase mb-3 flex items-center gap-2">
+            <h3 className="text-sm font-black text-gray-400 tracking-widest uppercase mb-3 flex items-center gap-2">
               <Volume2 className="w-3 h-3" /> Write Your Announcement
             </h3>
             <textarea
@@ -281,14 +319,14 @@ export default function SpeechAI() {
               onChange={e => setInputText(e.target.value)}
               placeholder={activeLang.placeholder}
               rows={5}
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-red-300 focus:ring-4 focus:ring-red-50 transition-all resize-none"
+              className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 text-lg text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-red-300 focus:ring-4 focus:ring-red-50 transition-all resize-none"
             />
-            <div className="mt-1.5 text-right text-[10px] text-gray-400 font-bold">{inputText.length} characters</div>
+            <div className="mt-1.5 text-right text-sm text-gray-400 font-bold">{inputText.length} characters</div>
           </div>
 
           {/* Tone Selection */}
           <div>
-            <h3 className="text-[10px] font-black text-gray-400 tracking-widest uppercase mb-3 flex items-center gap-2">
+            <h3 className="text-sm font-black text-gray-400 tracking-widest uppercase mb-3 flex items-center gap-2">
               <Settings className="w-3 h-3" /> Select Tone of Voice
             </h3>
             <div className="grid grid-cols-2 gap-2 mb-3">
@@ -299,7 +337,7 @@ export default function SpeechAI() {
                   <button
                     key={tone.id}
                     onClick={() => setSelectedToneId(tone.id)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all border ${
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base font-bold transition-all border ${
                       active
                         ? "bg-gray-100 border-gray-300 text-gray-900 shadow-sm"
                         : "bg-gray-50 border-gray-100 text-gray-500 hover:bg-gray-100"
@@ -311,7 +349,7 @@ export default function SpeechAI() {
                 );
               })}
             </div>
-            <div className="bg-gray-100 text-gray-700 text-xs font-bold px-4 py-2.5 rounded-lg border border-gray-200 flex items-center gap-2 uppercase tracking-wide">
+            <div className="bg-gray-100 text-gray-700 text-base font-bold px-4 py-2.5 rounded-lg border border-gray-200 flex items-center gap-2 uppercase tracking-wide">
               <activeTone.Icon className="w-4 h-4 text-gray-500 shrink-0" />
               {activeTone.label} : {activeTone.desc}
             </div>
@@ -322,7 +360,7 @@ export default function SpeechAI() {
             type="button"
             onClick={handleGenerate}
             disabled={isGenerating || inputText.trim().length === 0}
-            className={`w-full py-4 rounded-xl font-black tracking-widest text-sm flex items-center justify-center gap-3 transition-all shadow-lg ${
+            className={`w-full py-4 rounded-xl font-black tracking-widest text-lg flex items-center justify-center gap-3 transition-all shadow-lg ${
               inputText.trim().length > 0 && !isGenerating
                 ? "bg-[#C81D25] hover:bg-[#a01520] text-white shadow-red-900/30 cursor-pointer"
                 : "bg-gray-200 text-gray-400 cursor-not-allowed"
@@ -342,8 +380,8 @@ export default function SpeechAI() {
         <div className="lg:col-span-5 bg-white rounded-3xl p-8 shadow-xl flex flex-col border border-gray-100">
           <div className="flex items-center gap-2 mb-6">
             <Clock className="w-4 h-4 text-gray-400" />
-            <h2 className="text-xs font-black text-gray-500 tracking-widest uppercase">Recent Broadcasts</h2>
-            <span className="ml-auto text-[10px] font-black text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{broadcasts.length}</span>
+            <h2 className="text-base font-black text-gray-500 tracking-widest uppercase">Recent Broadcasts</h2>
+            <span className="ml-auto text-sm font-black text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{broadcasts.length}</span>
           </div>
 
           <div className="flex-1 overflow-y-auto space-y-4 pr-1" style={{ maxHeight: "calc(100vh - 280px)" }}>
@@ -356,14 +394,14 @@ export default function SpeechAI() {
                   onClick={() => setExpandedId(expandedId === broadcast.id ? null : broadcast.id)}
                 >
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-gray-900 text-sm leading-tight mb-1.5 hover:text-[#C81D25] transition-colors line-clamp-2">
+                    <h3 className="font-bold text-gray-900 text-lg leading-tight mb-1.5 hover:text-[#C81D25] transition-colors line-clamp-2">
                       {broadcast.title}
                     </h3>
-                    <div className="flex items-center gap-3 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
+                    <div className="flex items-center gap-3 text-sm font-black text-gray-400 uppercase tracking-widest mb-2">
                       <span>{broadcast.date}</span>
                       <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{broadcast.duration}</span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-[10px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded w-fit">
+                    <div className="flex items-center gap-1.5 text-sm font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded w-fit">
                       <Sparkles className="w-3 h-3 text-blue-500" />{broadcast.lang}
                     </div>
                   </div>
@@ -384,7 +422,8 @@ export default function SpeechAI() {
                       }
                     </button>
                     <button
-                      onClick={e => e.stopPropagation()}
+                      onClick={e => handleDownload(broadcast.fullText, broadcast.lang, broadcast.title, e)}
+                      title="Download MP3"
                       className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:border-[#C81D25] hover:text-[#C81D25] hover:bg-red-50 transition-all"
                     >
                       <Download className="w-3.5 h-3.5" />
@@ -395,7 +434,7 @@ export default function SpeechAI() {
                 {/* Expanded Full Text */}
                 {expandedId === broadcast.id && (
                   <div className="border-t border-gray-100 bg-gray-50 p-4">
-                    <p className="text-sm text-gray-700 leading-relaxed font-medium whitespace-pre-wrap">
+                    <p className="text-lg text-gray-700 leading-relaxed font-medium whitespace-pre-wrap">
                       {broadcast.fullText}
                     </p>
                   </div>

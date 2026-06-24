@@ -337,7 +337,7 @@ export default function VillageVoicePortal() {
   return (
     <div className="min-h-screen bg-[#A8CDE2] flex flex-col font-sans">
       <header className="h-16 flex items-center justify-between px-6 shrink-0 relative z-10 bg-white/30 backdrop-blur-md border-b border-white/20">
-        <button onClick={() => navigate("/")} className="px-5 py-1.5 bg-white/40 hover:bg-white/60 text-[#2B4B6F] rounded-full font-black text-[10px] tracking-widest uppercase shadow-sm transition-all">Back</button>
+        <button onClick={() => navigate("/")} className="px-5 py-1.5 bg-white/40 hover:bg-white/60 text-[#2B4B6F] rounded-full font-black text-sm tracking-widest uppercase shadow-sm transition-all">Back</button>
         <span className="font-black text-[#2B4B6F] uppercase tracking-widest">{TEXTS[lang].title}</span>
 
       </header>
@@ -356,7 +356,7 @@ export default function VillageVoicePortal() {
                </p>
                <button 
                   onClick={() => startStep(0)}
-                  className="mt-8 px-10 py-4 bg-[#50A7B1] hover:bg-[#3D8F9A] text-white rounded-full font-black tracking-widest uppercase text-sm shadow-xl transition-all hover:scale-105 active:scale-95 flex items-center gap-3"
+                  className="mt-8 px-10 py-4 bg-[#50A7B1] hover:bg-[#3D8F9A] text-white rounded-full font-black tracking-widest uppercase text-lg shadow-xl transition-all hover:scale-105 active:scale-95 flex items-center gap-3"
                >
                  <Mic className="w-5 h-5" />
                  {lang === 'TA' ? "தொடங்க" : "Start"}
@@ -394,7 +394,7 @@ export default function VillageVoicePortal() {
               <Bot className="w-8 h-8 text-[#3A5D7C] mr-3 shrink-0 mt-1" />
               <div className="bg-white rounded-[1.5rem] p-4 shadow-sm rounded-bl-sm flex items-center gap-3">
                 <Loader2 className="w-5 h-5 animate-spin text-[#50A7B1]" />
-                <span className="text-[#3A5D7C] font-bold text-sm uppercase tracking-widest">
+                <span className="text-[#3A5D7C] font-bold text-lg uppercase tracking-widest">
                   {lang === 'TA' ? "பதிவாகிறது..." : "Processing..."}
                 </span>
               </div>

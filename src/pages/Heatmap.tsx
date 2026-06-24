@@ -98,7 +98,7 @@ export default function Heatmap() {
                             </div>
                             <p className={`text-3xl font-black ${k.color} mb-1`}>{k.value}</p>
                             <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">{k.label}</p>
-                            <p className="text-[10px] text-gray-400 mt-0.5">{k.sub}</p>
+                            <p className="text-sm text-gray-400 mt-0.5">{k.sub}</p>
                         </div>
                     ))}
                 </div>
@@ -107,7 +107,7 @@ export default function Heatmap() {
                     {/* Heatmap Grid */}
                     <div className="lg:col-span-2 bg-white rounded-3xl border border-gray-100 p-7 shadow-sm">
                         <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400">Ward Complaint Density</h3>
+                            <h3 className="text-sm font-black uppercase tracking-widest text-gray-400">Ward Complaint Density</h3>
                             <div className="flex items-center gap-2">
                                 <span className="text-[9px] font-black text-gray-300 uppercase">Low</span>
                                 <div className="flex gap-1">
@@ -188,8 +188,8 @@ export default function Heatmap() {
                                             <MapPin className="w-4 h-4 text-[#B91C1C]" />
                                         </div>
                                         <div>
-                                            <h3 className="text-sm font-black text-gray-900">{selectedWard.ward}</h3>
-                                            <p className="text-[10px] text-gray-400 font-medium">{WARD_COORDS[selectedWard.ward]?.area}</p>
+                                            <h3 className="text-lg font-black text-gray-900">{selectedWard.ward}</h3>
+                                            <p className="text-sm text-gray-400 font-medium">{WARD_COORDS[selectedWard.ward]?.area}</p>
                                         </div>
                                     </div>
                                     <div className="space-y-3 flex-1">
@@ -199,15 +199,15 @@ export default function Heatmap() {
                                             { label: "High Priority",    value: selectedWard.highPri,  color: "text-red-600" },
                                         ].map(item => (
                                             <div key={item.label} className="flex items-center justify-between py-2.5 border-b border-gray-50">
-                                                <span className="text-xs font-bold text-gray-500">{item.label}</span>
+                                                <span className="text-base font-bold text-gray-500">{item.label}</span>
                                                 <span className={`text-lg font-black ${item.color}`}>{item.value}</span>
                                             </div>
                                         ))}
                                         <div className="py-2.5 border-b border-gray-50">
-                                            <p className="text-xs font-bold text-gray-500 mb-1.5">Top Issue</p>
+                                            <p className="text-base font-bold text-gray-500 mb-1.5">Top Issue</p>
                                             <div className="flex items-center gap-2">
                                                 <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: CATEGORY_COLORS[selectedWard.topCat] ?? "#9CA3AF" }} />
-                                                <span className="text-xs font-black text-gray-900">{selectedWard.topCat}</span>
+                                                <span className="text-base font-black text-gray-900">{selectedWard.topCat}</span>
                                             </div>
                                         </div>
                                         <div className="pt-1">
@@ -224,8 +224,8 @@ export default function Heatmap() {
                                 <div className="p-4 bg-gray-50 rounded-3xl mb-4">
                                     <MapPin className="w-8 h-8 text-gray-200" />
                                 </div>
-                                <p className="text-sm font-black text-gray-400 mb-2">Select a Ward</p>
-                                <p className="text-xs text-gray-300">Click any ward cell to see its map and stats</p>
+                                <p className="text-lg font-black text-gray-400 mb-2">Select a Ward</p>
+                                <p className="text-base text-gray-300">Click any ward cell to see its map and stats</p>
                             </div>
                         )}
                     </div>
@@ -233,7 +233,7 @@ export default function Heatmap() {
 
                 {/* Category Legend */}
                 <div className="bg-white rounded-3xl border border-gray-100 p-7 shadow-sm">
-                    <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-5">Issue Categories Across Wards</h3>
+                    <h3 className="text-sm font-black uppercase tracking-widest text-gray-400 mb-5">Issue Categories Across Wards</h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {Object.entries(CATEGORY_COLORS).map(([cat, color]) => {
                             const count = complaints.filter(c => c.category === cat).length;
@@ -241,8 +241,8 @@ export default function Heatmap() {
                                 <div key={cat} className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl">
                                     <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: color }} />
                                     <div className="min-w-0">
-                                        <p className="text-xs font-black text-gray-900 truncate">{cat}</p>
-                                        <p className="text-[10px] text-gray-400">{count} complaints</p>
+                                        <p className="text-base font-black text-gray-900 truncate">{cat}</p>
+                                        <p className="text-sm text-gray-400">{count} complaints</p>
                                     </div>
                                 </div>
                             );
@@ -254,22 +254,22 @@ export default function Heatmap() {
                 <div className="bg-white rounded-3xl border border-gray-100 p-7 shadow-sm">
                     <div className="flex items-center gap-2 mb-5">
                         <TrendingUp className="w-4 h-4 text-[#B91C1C]" />
-                        <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400">Top 5 Problem Wards</h3>
+                        <h3 className="text-sm font-black uppercase tracking-widest text-gray-400">Top 5 Problem Wards</h3>
                     </div>
                     <div className="space-y-3">
                         {[...wardData].sort((a, b) => b.total - a.total).slice(0, 5).map((w, i) => {
                             const pct = Math.round((w.total / (wardData[0]?.total || 1)) * 100);
                             return (
                                 <div key={w.ward} className="flex items-center gap-4">
-                                    <span className="text-[10px] font-black text-gray-400 w-4">{i + 1}</span>
-                                    <span className="text-xs font-black text-gray-900 w-16">{w.ward}</span>
+                                    <span className="text-sm font-black text-gray-400 w-4">{i + 1}</span>
+                                    <span className="text-base font-black text-gray-900 w-16">{w.ward}</span>
                                     <div className="flex-1 h-3 bg-gray-50 rounded-full overflow-hidden">
                                         <div
                                             className="h-full rounded-full transition-all duration-700"
                                             style={{ width: `${pct}%`, backgroundColor: heatColor(w.intensity) }}
                                         />
                                     </div>
-                                    <span className="text-xs font-black text-gray-700 w-6 text-right">{w.total}</span>
+                                    <span className="text-base font-black text-gray-700 w-6 text-right">{w.total}</span>
                                     <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: CATEGORY_COLORS[w.topCat] ?? "#9CA3AF" }} />
                                 </div>
                             );
