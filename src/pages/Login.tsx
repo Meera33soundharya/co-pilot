@@ -205,8 +205,8 @@ export default function Login() {
                         <BrainCircuit className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                        <span className="font-medium text-xl text-gray-900">Co-Pilot</span>
-                        <span className="block text-base font-medium uppercase tracking-wide text-gray-500 mt-0.5">District Governance AI</span>
+                        <span className="font-medium text-2xl text-gray-900">Co-Pilot</span>
+                        <span className="block text-lg font-medium uppercase tracking-wide text-gray-500 mt-0.5">District Governance AI</span>
                     </div>
                 </div>
 
@@ -214,14 +214,13 @@ export default function Login() {
 
                     {/* Heading */}
                     <div>
-                        <h2 className="text-5xl font-medium text-gray-900 ">Welcome back</h2>
-                        <p className="text-gray-600 text-lg font-medium mt-1">Sign in to access your portal</p>
+                        <h2 className="text-6xl font-medium text-gray-900 ">Welcome back</h2>
+                        <p className="text-gray-600 text-xl font-medium mt-1">Sign in to access your portal</p>
                     </div>
 
                     {/* Quick role selector */}
                     <div>
-                        <p className="section-label mb-3">Quick Access — Select Your Role</p>
-                        <div className="grid grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             {ACCOUNTS.map(acct => {
                                 const Icon = acct.icon;
                                 const isActive = activeRole === acct.role;
@@ -231,19 +230,19 @@ export default function Login() {
                                         id={`role-${acct.role}`}
                                         onClick={() => quickFill(acct)}
                                         className={`
-                                            flex flex-col items-center justify-center p-4 rounded-2xl border-2 text-center min-h-[180px]
-                                            transition-all duration-200 hover:scale-[1.02] active:scale-95
+                                            flex sm:flex-col items-center sm:justify-center p-4 rounded-2xl border-2 sm:text-center min-h-[80px] sm:min-h-[160px]
+                                            transition-all duration-200 hover:scale-[1.02] active:scale-95 text-left gap-4 sm:gap-0
                                             ${isActive
                                                 ? `${acct.border} ${acct.bg} shadow-md ${acct.glow}`
                                                 : "border-gray-200 bg-white hover:border-gray-300"
                                             }
                                         `}
                                     >
-                                        <div className={`w-14 h-14 mb-3 shrink-0 rounded-xl flex items-center justify-center ${isActive ? acct.bg : "bg-gray-100"} transition-colors`}>
-                                            <Icon className={`w-7 h-7 ${isActive ? acct.text : "text-gray-400"}`} />
+                                        <div className={`w-12 h-12 sm:w-14 sm:h-14 sm:mb-3 shrink-0 rounded-xl flex items-center justify-center ${isActive ? acct.bg : "bg-gray-100"} transition-colors`}>
+                                            <Icon className={`w-6 h-6 sm:w-7 sm:h-7 ${isActive ? acct.text : "text-gray-400"}`} />
                                         </div>
-                                        <div className="flex flex-col items-center justify-center w-full px-1">
-                                            <p className={`text-xl font-bold uppercase leading-tight break-words hyphens-auto w-full ${isActive ? acct.text : "text-gray-900"}`}>
+                                        <div className="flex flex-col sm:items-center justify-center w-full px-1">
+                                            <p className={`text-lg sm:text-xl font-bold uppercase leading-tight w-full ${isActive ? acct.text : "text-gray-900"}`}>
                                                 {acct.label}
                                             </p>
                                         </div>
@@ -251,27 +250,27 @@ export default function Login() {
                                 );
                             })}
                         </div>
-                        <p className="text-base font-medium text-gray-500 text-center mt-3">
+                        <p className="text-lg font-medium text-gray-500 text-center mt-3">
                             Tap a role to auto-fill credentials, then click Sign In
                         </p>
                     </div>
 
                     {/* Form */}
                     <div className="bg-white rounded-3xl border border-gray-200 p-8 shadow-sm">
-                        <form onSubmit={handleLogin} className="space-y-4" noValidate>
+                        <form onSubmit={handleLogin} className="space-y-5" noValidate>
 
                             {/* Email */}
                             <div className="space-y-1.5">
                                 <label className="section-label ml-0.5">Official Email</label>
                                 <div className="relative group">
-                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#C62828] transition-colors pointer-events-none" />
+                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-[#C62828] transition-colors pointer-events-none" />
                                     <input
                                         id="login-email"
                                         type="email"
                                         value={email}
                                         onChange={e => { setEmail(e.target.value); setError(""); }}
                                         placeholder="your@email.in"
-                                        className="input-field !pl-11 text-gray-900"
+                                        className="input-field !pl-12 !text-lg text-gray-900"
                                         autoComplete="email"
                                     />
                                 </div>
@@ -281,14 +280,14 @@ export default function Login() {
                             <div className="space-y-1.5">
                                 <label className="section-label ml-0.5">Password</label>
                                 <div className="relative group">
-                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#C62828] transition-colors pointer-events-none" />
+                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-[#C62828] transition-colors pointer-events-none" />
                                     <input
                                         id="login-password"
                                         type={showPwd ? "text" : "password"}
                                         value={password}
                                         onChange={e => { setPassword(e.target.value); setError(""); }}
                                         placeholder="••••••••"
-                                        className="input-field !pl-11 !pr-12 text-gray-900"
+                                        className="input-field !pl-12 !pr-12 !text-lg text-gray-900"
                                         autoComplete="current-password"
                                     />
                                     <button
@@ -296,7 +295,7 @@ export default function Login() {
                                         onClick={() => setShowPwd(!showPwd)}
                                         className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#C62828] transition-colors"
                                     >
-                                        {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                        {showPwd ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                     </button>
                                 </div>
                             </div>
@@ -305,7 +304,7 @@ export default function Login() {
                             {error && (
                                 <div className="flex items-center gap-2.5 p-3.5 bg-red-50 border border-red-100 rounded-2xl animate-fade-in">
                                     <div className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
-                                    <p className="text-lg font-medium text-red-700">{error}</p>
+                                    <p className="text-xl font-medium text-red-700">{error}</p>
                                 </div>
                             )}
 
@@ -314,7 +313,7 @@ export default function Login() {
                                 id="login-submit"
                                 type="submit"
                                 disabled={loading}
-                                className="btn-primary w-full !py-4 mt-2"
+                                className="btn-primary w-full !py-4 !text-lg mt-2"
                             >
                                 {loading
                                     ? <Loader2 className="w-5 h-5 animate-spin" />
@@ -325,12 +324,12 @@ export default function Login() {
 
                         {/* Citizen public portal options */}
                         <div className="mt-6 pt-6 border-t border-gray-100 space-y-3">
-                            <p className="text-base font-medium uppercase tracking-wide text-gray-500 text-center mb-2">Citizen Services (No Account Required)</p>
+                            <p className="text-lg font-medium uppercase tracking-wide text-gray-500 text-center mb-2">Citizen Services (No Account Required)</p>
                             
                             <a
                                 href="/submit-complaint"
                                 id="citizen-portal-link"
-                                className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl bg-white border border-gray-200 text-gray-800 text-lg font-medium uppercase tracking-wide hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm group"
+                                className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl bg-white border border-gray-200 text-gray-800 text-xl font-medium uppercase tracking-wide hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm group"
                             >
                                 <MessageSquare className="w-5 h-5 text-[#B91C1C] group-hover:scale-110 transition-transform" />
                                 Submit Complaint
@@ -340,7 +339,7 @@ export default function Login() {
                             <a
                                 href="/village-voice"
                                 id="voice-portal-link"
-                                className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl bg-[#B91C1C] text-white text-lg font-medium uppercase tracking-wide hover:bg-[#991717] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md group"
+                                className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl bg-[#B91C1C] text-white text-xl font-medium uppercase tracking-wide hover:bg-[#991717] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md group"
                             >
                                 <Mic className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
                                 Speak to Register
@@ -349,7 +348,7 @@ export default function Login() {
                         </div>
                     </div>
 
-                    <p className="text-center text-base font-medium uppercase tracking-wide text-gray-400">
+                    <p className="text-center text-lg font-medium uppercase tracking-wide text-gray-400">
                         Secured · District Council · 2026
                     </p>
                 </div>

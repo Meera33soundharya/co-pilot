@@ -6,9 +6,11 @@ import {
 } from "lucide-react";
 import HolographicRing from "../components/HolographicRing";
 import SegmentedRing from "../components/SegmentedRing";
+import { useComplaints } from "@/context/ComplaintsContext";
 
 export default function Landing() {
     const navigate = useNavigate();
+    const { currentUser, logout } = useComplaints();
 
     const portals = [
         {
@@ -84,65 +86,66 @@ export default function Landing() {
                 <div className="flex items-center gap-4">
                     <button onClick={() => navigate("/login")} 
                         className="px-6 py-2.5 bg-gray-900 text-white rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl active:scale-95">
-                        System Login
+                        Login
                     </button>
                 </div>
             </header>
 
             {/* Hero Section */}
             <main className="pt-40 pb-20 px-6 lg:px-20 max-w-7xl mx-auto">
-                <div className="text-center space-y-8 max-w-3xl mx-auto mb-20 animate-in fade-in slide-in-from-top-4 duration-700">
+                <div className="text-left space-y-10 max-w-4xl mb-24 animate-in fade-in slide-in-from-top-4 duration-700">
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#B91C1C]/5 border border-[#B91C1C]/10 text-sm font-bold uppercase tracking-widest text-[#B91C1C]">
                         <Sparkles className="w-3.5 h-3.5" /> Smarter Governance for a Better District
                     </div>
-                    <h1 className="text-6xl lg:text-7xl font-black text-gray-900 leading-[1] tracking-tight">
+                    <h1 className="text-7xl lg:text-[7.5rem] font-black text-gray-900 leading-[1.05] tracking-tight">
                         One Platform.<br />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#B91C1C] via-[#D97706] to-[#B91C1C] bg-[length:200%_auto] animate-gradient">Total Accountability.</span>
                     </h1>
-                    <p className="text-gray-500 text-lg font-medium leading-relaxed">
+                    <p className="text-gray-500 text-xl lg:text-2xl font-medium leading-relaxed max-w-2xl">
                         GovPilot bridges the gap between citizens, officers, and admins using predictive AI 
                         to solve local problems before they become crises.
                     </p>
-                    <div className="flex items-center justify-center gap-6 pt-4">
-                        <div className="flex -space-x-3">
-                            {Array.from({ length: 4 }).map((_, i) => (
-                                <div key={i} className="w-10 h-10 rounded-full border-2 border-white bg-gray-200" />
-                            ))}
-                            <div className="w-10 h-10 rounded-full border-2 border-white bg-[#B91C1C] flex items-center justify-center text-sm font-black text-white">+5k</div>
-                        </div>
+                    <div className="flex items-center gap-6 pt-4">
+                        <button onClick={() => navigate("/login")} className="px-8 py-4 bg-gray-900 text-white rounded-[2rem] text-sm font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl flex items-center gap-3">
+                            Get Started <ArrowRight className="w-5 h-5" />
+                        </button>
                         <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">Joined by 5,000+ residents this month</p>
                     </div>
                 </div>
 
                 {/* Entry Points Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {portals.map((portal, idx) => (
                         <div key={portal.id} 
                             onClick={() => navigate(portal.link)}
                             style={{ animationDelay: `${idx * 150}ms` }}
-                            className={`group bg-white border border-gray-100 rounded-[3rem] p-8 flex flex-col justify-between hover:shadow-2xl hover:-translate-y-2 transition-all cursor-pointer relative overflow-hidden animate-in fade-in zoom-in-95 duration-700`}
+                            className={`group bg-white border border-gray-100 rounded-[3.5rem] p-8 flex flex-col justify-between h-full hover:shadow-2xl hover:-translate-y-2 transition-all cursor-pointer relative overflow-hidden animate-in fade-in zoom-in-95 duration-700`}
                         >
-                            <div className={`absolute top-0 right-0 w-48 h-48 ${portal.id === 'admin' ? 'bg-red-500/5' : portal.id === 'officer' ? 'bg-blue-500/5' : portal.id === 'voice' ? 'bg-amber-500/5' : 'bg-emerald-500/5'} blur-[80px] pointer-events-none group-hover:scale-150 transition-transform duration-700`} />
+                            <div className={`absolute top-0 right-0 w-64 h-64 ${portal.id === 'admin' ? 'bg-red-500/5' : portal.id === 'officer' ? 'bg-blue-500/5' : portal.id === 'voice' ? 'bg-amber-500/5' : 'bg-emerald-500/5'} blur-[80px] pointer-events-none group-hover:scale-150 transition-transform duration-700`} />
                             
                             <div>
-                                <div className={`w-16 h-16 rounded-3xl ${portal.bg} flex items-center justify-center mb-8 border ${portal.border} shadow-sm group-hover:scale-110 group-hover:rotate-6 transition-transform`}>
+                                <div className={`w-16 h-16 rounded-3xl ${portal.bg} flex items-center justify-center mb-6 border ${portal.border} shadow-sm group-hover:scale-110 group-hover:rotate-6 transition-transform`}>
                                     <portal.icon className={`w-8 h-8 ${portal.color}`} />
                                 </div>
-                                <h3 className="text-2xl font-black text-gray-900 mb-4">{portal.title}</h3>
-                                <p className="text-lg font-medium text-gray-400 leading-relaxed mb-6 italic">
+                                <h3 className="text-2xl lg:text-3xl font-black text-gray-900 mb-4 leading-tight tracking-tight">{portal.title}</h3>
+                                <p className="text-base lg:text-lg font-medium text-gray-500 leading-relaxed italic mb-8">
                                     {portal.desc}
                                 </p>
                             </div>
 
-                            <div className="space-y-6">
-                                <div className="flex items-center gap-3">
-                                    <span className="flex items-center gap-1.5 px-3 py-1 bg-gray-50 rounded-lg text-[9px] font-black uppercase tracking-widest text-gray-400 border border-gray-100">
-                                        <Zap className="w-2.5 h-2.5 text-amber-500" /> AI-Enhanced
+                            <div className="space-y-4 mt-auto">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <span className="flex items-center gap-1.5 px-2.5 py-1 bg-gray-50 rounded-lg text-[10px] font-black uppercase tracking-widest text-gray-400 border border-gray-100 shrink-0">
+                                        <Zap className="w-3 h-3 text-amber-500" /> AI
                                     </span>
-                                    <span className="text-sm font-black uppercase text-gray-300">{portal.count}</span>
+                                    <span className="text-xs font-black uppercase text-gray-400 max-w-[100px] leading-tight truncate">{portal.count}</span>
                                 </div>
-                                <button className="w-full py-4 bg-gray-900 group-hover:bg-[#B91C1C] text-white rounded-2xl text-sm font-black uppercase tracking-widest transition-all shadow-xl flex items-center justify-center gap-2">
-                                    Enter Portal <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                <button className="w-full py-4 px-6 bg-gray-900 group-hover:bg-[#B91C1C] text-white rounded-[1.5rem] text-sm font-black uppercase tracking-[0.2em] transition-all shadow-xl flex items-center justify-between">
+                                    <div className="text-left leading-tight">
+                                        <div>ENTER</div>
+                                        <div>PORTAL</div>
+                                    </div>
+                                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                 </button>
                             </div>
                         </div>
@@ -150,48 +153,34 @@ export default function Landing() {
                 </div>
 
                 {/* Features Section */}
-                <div className="mt-32 grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+                <div className="mt-32 max-w-4xl mx-auto">
                     <div className="space-y-10">
-                        <div className="space-y-4">
+                        <div className="space-y-4 text-center">
                             <h2 className="text-4xl font-black text-gray-900 tracking-tight leading-tight">
                                 Built for Transparency.<br />
                                 Powered by <span className="text-[#B91C1C]">Explainable AI.</span>
                             </h2>
-                            <p className="text-gray-500 font-medium leading-relaxed">
+                            <p className="text-gray-500 font-medium leading-relaxed max-w-2xl mx-auto">
                                 District governance should not be a "lost in system" experience. 
                                 GovPilot ensures every action has a reason and every voice has a trace.
                             </p>
                         </div>
-                        <div className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-10">
                             {[
                                 { title: "XAI Transparency", desc: "Know EXACTLY why AI categorized your complaint." },
                                 { title: "Predictive Health", desc: "Constituency scores based on resolution & urgency." },
                                 { title: "Direct Hubs", desc: "No manual routing. Complaints go straight to Field units." }
                             ].map((feat, i) => (
-                                <div key={i} className="flex gap-5">
-                                    <div className="w-10 h-10 rounded-2xl bg-white shadow-xl shadow-gray-100 flex items-center justify-center shrink-0">
-                                        <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                                <div key={i} className="flex flex-col items-center text-center gap-6 bg-white p-10 rounded-[2.5rem] shadow-xl hover:-translate-y-2 hover:shadow-2xl transition-all duration-300 border border-gray-100 cursor-default">
+                                    <div className="w-16 h-16 rounded-[1.5rem] bg-emerald-50 flex items-center justify-center shrink-0 border border-emerald-100">
+                                        <CheckCircle2 className="w-8 h-8 text-emerald-500" />
                                     </div>
-                                    <div>
-                                        <p className="text-lg font-black text-gray-900 mb-1 uppercase tracking-tight">{feat.title}</p>
-                                        <p className="text-base font-medium text-gray-400">{feat.desc}</p>
+                                    <div className="space-y-3">
+                                        <p className="text-2xl font-black text-gray-900 uppercase tracking-tight">{feat.title}</p>
+                                        <p className="text-lg font-medium text-gray-500 leading-relaxed">{feat.desc}</p>
                                     </div>
                                 </div>
                             ))}
-                        </div>
-                    </div>
-                    <div className="relative">
-                        <div className="absolute -inset-4 bg-gradient-to-tr from-blue-600 to-purple-700 rounded-[4rem] blur-[80px] opacity-30 animate-pulse" />
-                        <div className="relative rounded-[3rem] overflow-hidden aspect-square shadow-2xl border border-blue-900/40" style={{background:'linear-gradient(135deg,#040c28 0%,#060d30 100%)'}}>
-                            <SegmentedRing className="w-full h-full" />
-                            {/* overlay label */}
-                            <div className="absolute bottom-5 inset-x-0 flex flex-col items-center gap-1 pointer-events-none">
-                                <p className="text-[9px] font-black uppercase tracking-[0.4em] text-blue-300/70">Neural Sync Active</p>
-                                <div className="flex items-center gap-2">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_6px_#4ade80]" />
-                                    <span className="text-[8px] font-bold text-emerald-300/80 uppercase tracking-widest">Holographic Ring Online</span>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>

@@ -17,8 +17,9 @@ const STATUS_CFG: Record<Status, { color: string; bg: string; icon: any; step: n
     "Categorized": { color: "text-purple-600", bg: "bg-purple-50", icon: Filter, step: 2 },
     "Assigned": { color: "text-blue-600", bg: "bg-blue-50", icon: ArrowRight, step: 3 },
     "In Progress": { color: "text-amber-600", bg: "bg-amber-50", icon: AlertTriangle, step: 4 },
-    "Resolved": { color: "text-emerald-600", bg: "bg-emerald-50", icon: CheckCircle2, step: 5 },
-    "Closed": { color: "text-gray-400", bg: "bg-gray-100", icon: MessageSquare, step: 6 },
+    "Pending Verification": { color: "text-orange-600", bg: "bg-orange-50", icon: Shield, step: 5 },
+    "Resolved": { color: "text-emerald-600", bg: "bg-emerald-50", icon: CheckCircle2, step: 6 },
+    "Closed": { color: "text-gray-400", bg: "bg-gray-100", icon: MessageSquare, step: 7 },
 };
 
 const PRIORITY_COLOR: Record<Priority, string> = {
@@ -27,15 +28,16 @@ const PRIORITY_COLOR: Record<Priority, string> = {
     Low: "text-blue-600 bg-blue-50 border-blue-100",
 };
 
-// 4-step timeline matching reference app
-const TIMELINE_STEPS = ["Submitted", "Assigned", "In Progress", "Resolved"];
+// 5-step timeline
+const TIMELINE_STEPS = ["Submitted", "Assigned", "In Progress", "Verifying", "Resolved"];
 const STATUS_TO_STEP: Record<Status, number> = {
     "New": 1,
     "Categorized": 1,
     "Assigned": 2,
     "In Progress": 3,
-    "Resolved": 4,
-    "Closed": 4,
+    "Pending Verification": 4,
+    "Resolved": 5,
+    "Closed": 5,
 };
 
 function ComplaintTimeline({ status }: { status: Status }) {
@@ -235,6 +237,7 @@ export default function CitizenModule() {
                                 <option value="New" className="bg-gray-900 text-white">New</option>
                                 <option value="Assigned" className="bg-gray-900 text-white">In Queue</option>
                                 <option value="In Progress" className="bg-gray-900 text-white">In Progress</option>
+                                <option value="Pending Verification" className="bg-gray-900 text-white">Verifying</option>
                                 <option value="Resolved" className="bg-gray-900 text-white">Resolved</option>
                             </select>
                         </div>
@@ -352,11 +355,33 @@ export default function CitizenModule() {
                                                                 {/* Officer Proof */}
                                                                 <div className="p-4 bg-emerald-50 rounded-2xl flex flex-col gap-2">
                                                                     <p className="text-base font-black text-emerald-600 uppercase">Resolution Proof</p>
-                                                                    <div className="aspect-square bg-white rounded-xl flex items-center justify-center italic text-xl text-gray-300 font-bold overflow-hidden">
-                                                                        {c.resolutionProof ? <img src={c.resolutionProof} className="w-full h-full object-cover" /> : "Awaiting Verification"}
+                                                                    <div className="aspect-square bg-white rounded-xl flex items-center justify-center italic text-xl text-gray-300 font-bold overflow-hidden border border-emerald-100">
+                                                                        <img src={c.resolutionProof || "/after_placeholder.png"} className="w-full h-full object-cover" />
                                                                     </div>
                                                                 </div>
                                                             </div>
+                                                            {c.resolutionNotes && (
+                                                                <div className="mt-4 p-4 bg-amber-50 rounded-2xl border border-amber-100">
+                                                                    <p className="text-base font-black text-amber-700 uppercase mb-2">Resolution Notes</p>
+                                                                    <p className="text-lg text-amber-900">{c.resolutionNotes}</p>
+                                                                </div>
+                                                            )}
+                                                            {c.supportingDocs && c.supportingDocs.length > 0 && (
+                                                                <div className="mt-4 p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                                                                    <p className="text-base font-black text-blue-700 uppercase mb-2">Supporting Documents</p>
+                                                                    <div className="flex flex-wrap gap-2">
+                                                                        {c.supportingDocs.map((doc, idx) => {
+                                                                            const name = new URLSearchParams(doc.split('#')[1] || "").get("name") || `Doc_${idx+1}`;
+                                                                            return (
+                                                                                <a key={idx} href={doc.split('#')[0]} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-3 py-2 bg-white border border-blue-200 rounded-xl hover:bg-blue-100 transition-colors">
+                                                                                    <FileText className="w-4 h-4 text-blue-600" />
+                                                                                    <span className="text-sm font-bold text-blue-800">{name}</span>
+                                                                                </a>
+                                                                            );
+                                                                        })}
+                                                                    </div>
+                                                                </div>
+                                                            )}
                                                         </div>
 
                                                         {/* REOPEN ACTION */}

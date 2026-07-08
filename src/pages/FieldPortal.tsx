@@ -21,6 +21,7 @@ export default function FieldPortal() {
     const [isUpdating, setIsUpdating] = useState(false);
     const [proofNote, setProofNote] = useState("");
     const [proofImg, setProofImg] = useState<string | null>(null);
+    const [supportingDocs, setSupportingDocs] = useState<string[]>([]);
     const [showAllDepts, setShowAllDepts] = useState(false);
 
     // Filter complaints for this officer and department
@@ -43,11 +44,12 @@ export default function FieldPortal() {
         setIsUpdating(true);
         // Simulate network delay
         await new Promise(r => setTimeout(r, 1500));
-        updateStatus(id, nextStatus, note, proofImg || undefined);
+        updateStatus(id, nextStatus, note, proofImg || undefined, supportingDocs);
         setIsUpdating(false);
         setSelectedTask(null);
         setProofNote("");
         setProofImg(null);
+        setSupportingDocs([]);
     };
 
     const handleCapture = () => {
@@ -58,6 +60,13 @@ export default function FieldPortal() {
             "https://images.unsplash.com/photo-1590060417631-017606e30907?auto=format&fit=crop&q=80&w=800"
         ];
         setProofImg(demoImgs[Math.floor(Math.random() * demoImgs.length)]);
+    };
+
+    const handleUploadDoc = () => {
+        // Demo: Add a fake doc URL
+        const docNames = ["Site_Survey_Report.pdf", "Materials_Invoice.pdf", "Safety_Checklist.docx"];
+        const name = docNames[Math.floor(Math.random() * docNames.length)];
+        setSupportingDocs(prev => [...prev, `https://example.com/docs/${name}#name=${name}&type=application/pdf`]);
     };
 
     return (
@@ -195,6 +204,11 @@ export default function FieldPortal() {
                                                     >
                                                         <CheckCircle2 className="w-4 h-4" /> Resolve
                                                     </button>
+                                                )}
+                                                {task.status === "Pending Verification" && (
+                                                    <span className="h-14 px-6 rounded-2xl bg-amber-50 text-amber-600 border border-amber-100 text-sm font-black uppercase tracking-widest flex items-center gap-2">
+                                                        <Loader2 className="w-4 h-4 animate-spin" /> Pending Admin
+                                                    </span>
                                                 )}
                                                 <button 
                                                     onClick={(e) => { e.stopPropagation(); setSelectedTask(task); }}
@@ -335,6 +349,30 @@ export default function FieldPortal() {
                                             />
                                         </div>
 
+                                        <div>
+                                            <label className="text-base font-black uppercase tracking-widest text-gray-400 mb-3 block">3. Supporting Documents (Optional)</label>
+                                            <div className="flex flex-wrap gap-3 mb-3">
+                                                {supportingDocs.map((doc, idx) => {
+                                                    const name = new URLSearchParams(doc.split('#')[1] || "").get("name") || `Doc_${idx+1}`;
+                                                    return (
+                                                        <div key={idx} className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-100 rounded-xl">
+                                                            <FileText className="w-4 h-4 text-blue-500" />
+                                                            <span className="text-xs font-bold text-blue-700">{name}</span>
+                                                            <button onClick={() => setSupportingDocs(docs => docs.filter((_, i) => i !== idx))} className="ml-2 text-blue-400 hover:text-blue-700">
+                                                                <X className="w-3 h-3" />
+                                                            </button>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                            <button 
+                                                onClick={handleUploadDoc}
+                                                className="w-full py-4 border-2 border-dashed border-gray-200 rounded-2xl flex items-center justify-center gap-2 text-gray-500 hover:bg-gray-50 hover:text-blue-600 hover:border-blue-200 font-bold uppercase tracking-widest text-sm transition-all"
+                                            >
+                                                <Paperclip className="w-4 h-4" /> Attach Documents
+                                            </button>
+                                        </div>
+
                                         <div className="flex gap-4">
                                             {selectedTask.status === "New" && (
                                                 <button 
@@ -362,12 +400,12 @@ export default function FieldPortal() {
                                             )}
                                             {(selectedTask.status === "Assigned" || selectedTask.status === "In Progress") && (
                                                 <button 
-                                                    onClick={() => handleStatusUpdate(selectedTask.id, "Resolved", proofNote || "Resolved on-site by officer")}
+                                                    onClick={() => handleStatusUpdate(selectedTask.id, "Pending Verification", proofNote || "Resolved on-site by officer")}
                                                     disabled={isUpdating || !proofImg}
-                                                    className="flex-[2] flex items-center justify-center gap-3 py-4 rounded-3xl bg-emerald-600 hover:bg-emerald-700 text-white text-base font-black uppercase tracking-widest shadow-xl shadow-emerald-200 transition-all active:scale-95 disabled:opacity-50"
+                                                    className="flex-[2] flex items-center justify-center gap-3 py-4 rounded-3xl bg-[#B91C1C] hover:bg-red-700 text-white text-base font-black uppercase tracking-widest shadow-xl shadow-red-200 transition-all active:scale-95 disabled:opacity-50"
                                                 >
                                                     {isUpdating ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
-                                                    Mark Resolved
+                                                    Submit for Verification
                                                 </button>
                                             )}
                                         </div>

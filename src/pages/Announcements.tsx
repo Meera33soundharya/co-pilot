@@ -216,7 +216,7 @@ export default function Announcements() {
                                                     <Calendar className="w-3 h-3" /> {ann.date}
                                                 </span>
                                             </div>
-                                            <h4 className="text-base font-black text-gray-900 group-hover:text-[#B91C1C] transition-colors">{ann.title}</h4>
+                                            <h4 className="text-[38px] font-black text-gray-900 group-hover:text-[#B91C1C] transition-colors leading-tight">{ann.title}</h4>
                                             {!isOpen && (
                                                 <p className="text-lg text-gray-500 mt-1 line-clamp-2 leading-relaxed">{ann.body}</p>
                                             )}

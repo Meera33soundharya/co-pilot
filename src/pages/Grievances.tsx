@@ -143,11 +143,12 @@ const STATUS_CFG: Record<Status, { pill: string; dot: string; label: string; ste
     "Categorized": { pill: "bg-purple-50 text-purple-700 border border-purple-200", dot: "bg-purple-400", label: "Categorized", step: 1 },
     "Assigned": { pill: "bg-blue-50 text-blue-700 border border-blue-200", dot: "bg-blue-500", label: "Assigned", step: 2 },
     "In Progress": { pill: "bg-amber-50 text-amber-700 border border-amber-200", dot: "bg-amber-400", label: "In Progress", step: 3 },
-    "Resolved": { pill: "bg-emerald-50 text-emerald-700 border border-emerald-200", dot: "bg-emerald-500", label: "Resolved ✓", step: 4 },
-    "Closed": { pill: "bg-gray-100 text-gray-400 border border-gray-200", dot: "bg-gray-300", label: "Closed", step: 5 },
+    "Resolved": { pill: "bg-emerald-50 text-emerald-700 border border-emerald-200", dot: "bg-emerald-500", label: "Resolved ✓", step: 5 },
+    "Closed": { pill: "bg-gray-100 text-gray-400 border border-gray-200", dot: "bg-gray-300", label: "Closed", step: 6 },
+    "Pending Verification": { pill: "bg-amber-100 text-amber-800 border border-amber-300", dot: "bg-amber-600", label: "Pending Admin", step: 4 },
 };
 
-const WORKFLOW_STEPS: Status[] = ["New", "Categorized", "Assigned", "In Progress", "Resolved", "Closed"];
+const WORKFLOW_STEPS: Status[] = ["New", "Categorized", "Assigned", "In Progress", "Pending Verification", "Resolved", "Closed"];
 
 const ALL_CATEGORIES: Category[] = [
     "Water Supply", "Electricity", "Roads & Infrastructure", "Sanitation",
@@ -238,7 +239,7 @@ const FILTER_PRIORITIES: (Priority | "All")[] = ["All", "High", "Medium", "Low"]
 export default function Grievances() {
     const {
         complaints, currentUser,
-        updateStatus, assignComplaint, notifyCitizen, categorize,
+        updateStatus, verifyComplaint, assignComplaint, notifyCitizen, categorize,
     } = useComplaints();
 
     const isAdmin = currentUser?.role === "admin" || !currentUser;
@@ -538,6 +539,41 @@ export default function Grievances() {
                                 </div>
                             </div>
 
+                            {/* ── Pending Verification Details ── */}
+                            {detail.status === "Pending Verification" && (
+                                <div className="px-6 py-5 border-b border-gray-100 bg-amber-50">
+                                    <p className="text-lg font-black uppercase tracking-widest text-amber-800 mb-4">Pending Verification Evidence</p>
+                                    {detail.resolutionProof && (
+                                        <div className="mb-4">
+                                            <p className="text-base font-bold text-amber-700 mb-2">Resolution Photo</p>
+                                            <img src={detail.resolutionProof} alt="Resolution" className="w-full max-w-sm rounded-xl border border-amber-200" />
+                                        </div>
+                                    )}
+                                    {detail.resolutionNotes && (
+                                        <div className="mb-4">
+                                            <p className="text-base font-bold text-amber-700 mb-1">Resolution Notes</p>
+                                            <p className="text-lg text-amber-900 bg-white p-3 rounded-xl border border-amber-200">{detail.resolutionNotes}</p>
+                                        </div>
+                                    )}
+                                    {detail.supportingDocs && detail.supportingDocs.length > 0 && (
+                                        <div>
+                                            <p className="text-base font-bold text-amber-700 mb-2">Supporting Documents</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {detail.supportingDocs.map((doc, idx) => {
+                                                    const name = new URLSearchParams(doc.split('#')[1] || "").get("name") || `Doc_${idx+1}`;
+                                                    return (
+                                                        <a key={idx} href={doc.split('#')[0]} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-3 py-2 bg-white border border-amber-200 rounded-xl hover:bg-amber-100 transition-colors">
+                                                            <FileText className="w-4 h-4 text-amber-600" />
+                                                            <span className="text-sm font-bold text-amber-800">{name}</span>
+                                                        </a>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
                             {/* Admin panels */}
                             {isAdmin && (
                                 <div className="px-6 py-5 space-y-3">
@@ -576,11 +612,31 @@ export default function Grievances() {
                                 </button>
                             )}
                             {(isAdmin || isOfficer) && (detail.status === "In Progress" || detail.status === "Assigned") && (
-                                <button onClick={() => doStatus(detail.id, "Resolved", "Complaint resolved")}
-                                    className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-base font-black transition-all">
-                                    <CheckCircle2 className="w-4 h-4" /> Mark as Resolved
+                                <button onClick={() => doStatus(detail.id, "Pending Verification", "Work completed, sent for verification")}
+                                    className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-2xl bg-[#B91C1C] hover:bg-red-700 text-white text-base font-black transition-all">
+                                    <CheckCircle2 className="w-4 h-4" /> Submit for Verification
                                 </button>
                             )}
+                            
+                            {isAdmin && detail.status === "Pending Verification" && (
+                                <div className="space-y-2">
+                                    <button onClick={() => { verifyComplaint(detail.id, true, "Verified and Approved by Admin"); setDetail(null); }}
+                                        className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-base font-black transition-all">
+                                        <CheckCircle2 className="w-4 h-4" /> Approve & Close
+                                    </button>
+                                    <button onClick={() => {
+                                        const remarks = prompt("Enter remarks for rejection:");
+                                        if (remarks) {
+                                            verifyComplaint(detail.id, false, remarks);
+                                            setDetail(null);
+                                        }
+                                    }}
+                                        className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-2xl bg-gray-100 border border-gray-200 text-gray-600 hover:bg-gray-200 text-base font-black transition-all">
+                                        <XCircle className="w-4 h-4" /> Reject & Send Back
+                                    </button>
+                                </div>
+                            )}
+
                             {(isAdmin || isOfficer) && detail.status === "Resolved" && !detail.notified && (
                                 <button onClick={() => doNotify(detail.id)}
                                     className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-2xl bg-sky-600 hover:bg-sky-700 text-white text-base font-black transition-all">

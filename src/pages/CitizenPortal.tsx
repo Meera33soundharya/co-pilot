@@ -58,6 +58,7 @@ export default function CitizenPortal() {
         issue: "",
         description: "",
         location: "",
+        landmark: "",
         coords: { lat: 12.9716, lng: 77.5946 }, // Default
         evidence: [] as string[],
         notifPref: "SMS" as "SMS" | "Email" | "None"
@@ -254,15 +255,8 @@ export default function CitizenPortal() {
         // 1. Check if the query itself matches an internal ward or locality
         const { matchedWard, matchedArea, found } = findInternalMatch(mapQuery);
         if (found) {
-            const baseCoords = { lat: 12.9716, lng: 77.5946 };
-            setForm(f => ({
-                ...f,
-                location: `${matchedArea}, ${matchedWard}, Bengaluru`,
-                coords: baseCoords,
-                ward: matchedWard,
-                area: matchedArea
-            }));
-            setMapQuery(`${matchedArea}, ${matchedWard}, Bengaluru`);
+            setForm(f => ({ ...f, ward: matchedWard, area: matchedArea }));
+            await fetchCoordsForAddress(`${matchedArea}, ${matchedWard}, Bengaluru`);
             setIsSearching(false);
             return;
         }
@@ -307,26 +301,7 @@ export default function CitizenPortal() {
     const fetchSuggestions = async (q: string) => {
         if (q.length < 3) { setSuggestions([]); setShowSuggestions(false); return; }
         
-        // 1. Prioritize internal matches for suggestions
-        const internalResults: any[] = [];
-        const lowerQ = q.toLowerCase();
-        for (const [ward, areas] of Object.entries(LOCALITIES)) {
-            for (const area of areas) {
-                if (area.toLowerCase().includes(lowerQ)) {
-                    internalResults.push({
-                        display_name: `${area}, ${ward}, Bengaluru, India`,
-                        lat: "12.9716",
-                        lon: "77.5946"
-                    });
-                }
-            }
-        }
-
-        if (internalResults.length > 0) {
-            setSuggestions(internalResults.slice(0, 5));
-            setShowSuggestions(true);
-            return;
-        }
+        // Just rely on the actual geocoding API for suggestions to get real coordinates
 
         try {
             const res = await geoFetch(`/search?q=${encodeURIComponent(q)}&format=json&limit=5&countrycodes=in`);
@@ -335,6 +310,27 @@ export default function CitizenPortal() {
             setShowSuggestions(true);
         } catch {
             setSuggestions([]);
+        }
+    };
+
+    const fetchCoordsForAddress = async (address: string) => {
+        setIsSearching(true);
+        try {
+            const res = await geoFetch(`/search?q=${encodeURIComponent(address)}&format=json&limit=1&countrycodes=in`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.length > 0) {
+                    const place = data[0];
+                    const lat = parseFloat(place.lat);
+                    const lon = parseFloat(place.lon);
+                    setForm(f => ({ ...f, coords: { lat, lng: lon }, location: address }));
+                    setMapQuery(address);
+                }
+            }
+        } catch (error) {
+            console.error("Failed to fetch coords for address", error);
+        } finally {
+            setIsSearching(false);
         }
     };
 
@@ -859,11 +855,11 @@ export default function CitizenPortal() {
                                 </div>
 
                                 {/* Integrated Map & Address Unit */}
-                                <div className="relative rounded-[2rem] overflow-hidden border border-gray-100 shadow-2xl">
+                                <div className="rounded-[2rem] overflow-hidden border border-gray-100 shadow-2xl bg-gray-900">
                                     <div className="h-[320px]">
                                         <iframe
                                             key={`${form.coords.lat}-${form.coords.lng}`}
-                                            src={`https://www.openstreetmap.org/export/embed.html?bbox=${form.coords.lng - 0.008},${form.coords.lat - 0.008},${form.coords.lng + 0.008},${form.coords.lat + 0.008}&layer=mapnik&marker=${form.coords.lat},${form.coords.lng}`}
+                                            src={`https://www.openstreetmap.org/export/embed.html?bbox=${form.coords.lng - 0.002},${form.coords.lat - 0.002},${form.coords.lng + 0.002},${form.coords.lat + 0.002}&layer=mapnik&marker=${form.coords.lat},${form.coords.lng}`}
                                             width="100%"
                                             height="100%"
                                             style={{ border: "none" }}
@@ -872,14 +868,14 @@ export default function CitizenPortal() {
                                     </div>
 
                                     {/* Bottom Address HUD */}
-                                    <div className="absolute bottom-4 left-4 right-4 bg-gray-900/95 backdrop-blur-md rounded-2xl p-5 border border-white/10 shadow-2xl">
+                                    <div className="bg-gray-900 p-5 border-t border-white/10">
                                         <div className="flex items-start gap-4">
                                             <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0 border border-emerald-500/10">
                                                 <MapPin className="w-5 h-5 text-emerald-400" />
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <span className="text-[9px] font-black uppercase text-emerald-400 tracking-widest block mb-1">Live Map Intelligence</span>
-                                                <p className="text-lg font-black text-white leading-tight truncate">
+                                                <p className="text-2xl font-black text-white leading-tight">
                                                     {form.location || "Searching for address..."}
                                                 </p>
                                                 <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -900,7 +896,7 @@ export default function CitizenPortal() {
                                                 </div>
                                                 <div className="mt-3 py-2 px-3 bg-white/5 rounded-xl border border-white/10">
                                                     <p className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">Official Area Name</p>
-                                                    <p className="text-base font-black text-emerald-400 uppercase tracking-tight">{form.area}</p>
+                                                    <p className="text-xl font-black text-emerald-400 uppercase tracking-tight">{form.area}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -918,7 +914,9 @@ export default function CitizenPortal() {
                                             value={form.ward}
                                             onChange={e => {
                                                 const w = e.target.value;
-                                                setForm(f => ({ ...f, ward: w, area: LOCALITIES[w][0] }));
+                                                const newArea = LOCALITIES[w]?.[0] || "Other";
+                                                setForm(f => ({ ...f, ward: w, area: newArea }));
+                                                if (newArea !== "Other") fetchCoordsForAddress(`${newArea}, ${w}, Bengaluru`);
                                             }}
                                             className="w-full pl-11 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-lg font-bold focus:bg-white focus:border-[#B91C1C]/30 focus:outline-none text-gray-800 transition-all appearance-none cursor-pointer"
                                         >
@@ -935,7 +933,11 @@ export default function CitizenPortal() {
                                         <MapIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 group-focus-within:text-[#B91C1C] transition-colors" />
                                         <select
                                             value={form.area}
-                                            onChange={e => set("area", e.target.value)}
+                                            onChange={e => {
+                                                const a = e.target.value;
+                                                setForm(f => ({ ...f, area: a }));
+                                                if (a !== "Other") fetchCoordsForAddress(`${a}, ${form.ward}, Bengaluru`);
+                                            }}
                                             className="w-full pl-11 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-lg font-bold focus:bg-white focus:border-[#B91C1C]/30 focus:outline-none text-gray-800 transition-all appearance-none cursor-pointer"
                                         >
                                             {LOCALITIES[form.ward]?.map(a => <option key={a} value={a}>{a}</option>)}
@@ -954,8 +956,8 @@ export default function CitizenPortal() {
                                     <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 group-focus-within:text-[#B91C1C] transition-colors" />
                                     <input
                                         type="text"
-                                        value={form.location}
-                                        onChange={e => set("location", e.target.value)}
+                                        value={form.landmark}
+                                        onChange={e => set("landmark", e.target.value)}
                                         placeholder="e.g. Opposite to Post Office, Near Blue Building"
                                         className="w-full pl-11 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-lg font-bold focus:bg-white focus:border-[#B91C1C]/30 focus:outline-none text-gray-800 placeholder:text-gray-300 transition-all"
                                     />
@@ -991,7 +993,7 @@ export default function CitizenPortal() {
                                 <div className="mb-6 rounded-[1.5rem] overflow-hidden border border-white/10 shadow-inner h-40 group relative">
                                     <iframe
                                         key={`preview-${form.coords.lat}-${form.coords.lng}`}
-                                        src={`https://www.openstreetmap.org/export/embed.html?bbox=${form.coords.lng - 0.005},${form.coords.lat - 0.005},${form.coords.lng + 0.005},${form.coords.lat + 0.005}&layer=mapnik&marker=${form.coords.lat},${form.coords.lng}`}
+                                        src={`https://www.openstreetmap.org/export/embed.html?bbox=${form.coords.lng - 0.002},${form.coords.lat - 0.002},${form.coords.lng + 0.002},${form.coords.lat + 0.002}&layer=mapnik&marker=${form.coords.lat},${form.coords.lng}`}
                                         width="100%"
                                         height="100%"
                                         style={{ border: "none", opacity: 0.8, filter: "grayscale(1) invert(0.9) contrast(1.2)" }}
@@ -1003,6 +1005,7 @@ export default function CitizenPortal() {
                                 <div className="flex items-center gap-2 text-white/50 text-base font-bold">
                                     <MapPin className="w-4 h-4" />
                                     {form.location || "Co-ordinates Only"}
+                                    {form.landmark && <span className="text-white/70"> ({form.landmark})</span>}
                                 </div>
                             </div>
 

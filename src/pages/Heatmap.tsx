@@ -165,7 +165,7 @@ export default function Heatmap() {
                                         <iframe
                                             key={selectedWard.ward}
                                             src={`https://www.openstreetmap.org/export/embed.html?bbox=${WARD_COORDS[selectedWard.ward].lng - 0.025},${WARD_COORDS[selectedWard.ward].lat - 0.025},${WARD_COORDS[selectedWard.ward].lng + 0.025},${WARD_COORDS[selectedWard.ward].lat + 0.025}&layer=mapnik&marker=${WARD_COORDS[selectedWard.ward].lat},${WARD_COORDS[selectedWard.ward].lng}`}
-                                            width="100%"
+                                            width="99%"
                                             height="100%"
                                             style={{ border: "none" }}
                                             title={`${selectedWard.ward} map`}

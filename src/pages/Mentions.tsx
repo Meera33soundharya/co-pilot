@@ -154,7 +154,7 @@ export default function Mentions() {
                         <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
                             <h3 className="font-black text-gray-900 text-lg mb-5">7-Day Engagement</h3>
                             <div className="h-[200px]">
-                                <ResponsiveContainer width="100%" height="100%">
+                                <ResponsiveContainer width="99%" height="100%" minWidth={1} minHeight={1}>
                                     <BarChart data={engagementHistory}>
                                         <CartesianGrid strokeDasharray="3 3" vertical={false} strokeOpacity={0.4} />
                                         <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 9, fontWeight: 700, fill: '#94A3B8' }} />

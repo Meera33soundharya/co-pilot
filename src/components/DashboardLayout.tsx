@@ -49,6 +49,7 @@ const ADMIN_NAV: NavGroup[] = [
             { icon: MessageSquare, label: "Complaints", path: "/grievances", badge: "live" },
             { icon: BarChart2, label: "Analytics", path: "/analytics" },
             { icon: FileBarChart2, label: "Reports", path: "/reports" },
+            { icon: FolderOpen, label: "Resolution Reports", path: "/resolution-reports" },
         ]
     },
     {
@@ -82,6 +83,7 @@ const OFFICER_NAV: NavGroup[] = [
         group: "Work", items: [
             { icon: LayoutDashboard, label: "Field Portal", path: "/field-portal", badge: "new" },
             { icon: FileBarChart2, label: "Reports", path: "/reports" },
+            { icon: FolderOpen, label: "Resolution Reports", path: "/resolution-reports" },
             { icon: Megaphone, label: "Announcements", path: "/announcements" },
             { icon: Calendar, label: "Schedule", path: "/schedule" },
             { icon: FolderOpen, label: "Documents", path: "/documents" },
@@ -167,21 +169,21 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
 
             {/* ── Sidebar ──────────────────────────────────────────── */}
             <aside
-                className={`fixed lg:relative inset-y-0 left-0 z-[130] lg:z-[5] flex flex-col w-[400px] border-r border-gray-200 transform transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
+                className={`fixed lg:relative inset-y-0 left-0 z-[130] lg:z-[5] flex flex-col w-[520px] border-r border-gray-200 transform transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
                 style={{ backgroundColor: "#FFFFFF", isolation: "isolate" }}
             >
 
                 {/* Brand */}
-                <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-xl flex items-center justify-center relative shadow-lg shadow-red-900/10" style={{ backgroundColor: "#B91C1C" }}>
-                            <Shield className="w-5 h-5 text-white" />
-                            <div className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white animate-pulse" />
+                <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-2xl flex items-center justify-center relative shadow-lg shadow-red-900/10" style={{ backgroundColor: "#B91C1C" }}>
+                            <Shield className="w-6 h-6 text-white" />
+                            <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white animate-pulse" />
                         </div>
                         <div>
-                            <span className="font-bold text-lg text-gray-900 block leading-none">GovPilot</span>
-                            <span className="text-[9px] font-bold uppercase tracking-wide leading-none block mt-1 flex items-center gap-1" style={{ color: roleCfg.color }}>
-                                <div className="w-1 h-1 rounded-full bg-current animate-ping" /> {roleCfg.label}
+                            <span className="font-black text-2xl text-gray-900 block leading-none tracking-tight">GovPilot</span>
+                            <span className="text-[11px] font-bold uppercase tracking-widest leading-none block mt-1.5 flex items-center gap-1.5" style={{ color: roleCfg.color }}>
+                                <div className="w-1.5 h-1.5 rounded-full bg-current animate-ping" /> {roleCfg.label}
                             </span>
                         </div>
                     </div>
@@ -191,15 +193,15 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
                 </div>
 
                 {/* Role strip */}
-                <div className="mx-3 mt-3 px-4 py-3 rounded-2xl border flex items-center gap-2 text-2xl font-bold" style={{
+                <div className="mx-4 mt-4 px-5 py-3.5 rounded-2xl border flex items-center gap-3 text-xl font-bold" style={{
                     borderColor: `${roleCfg.color}30`,
-                    backgroundColor: `${roleCfg.color}10`,
+                    backgroundColor: `${roleCfg.color}08`,
                     color: roleCfg.color,
                 }}>
-                    {role === "admin" && <Shield className="w-4 h-4 shrink-0" />}
-                    {role === "officer" && <Building2 className="w-4 h-4 shrink-0" />}
-                    {role === "citizen" && <User className="w-4 h-4 shrink-0" />}
-                    <span className="truncate">{currentUser?.name ?? roleCfg.label}</span>
+                    {role === "admin" && <Shield className="w-5 h-5 shrink-0" />}
+                    {role === "officer" && <Building2 className="w-5 h-5 shrink-0" />}
+                    {role === "citizen" && <User className="w-5 h-5 shrink-0" />}
+                    <span className="truncate text-xl font-black">{currentUser?.name ?? roleCfg.label}</span>
                 </div>
 
                 {/* Live new complaints banner */}
@@ -215,11 +217,11 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
                 )}
 
                 {/* Nav */}
-                <nav className="flex-1 py-3 px-2 space-y-4 overflow-y-auto">
+                <nav className="flex-1 py-4 px-3 space-y-5 overflow-y-auto">
                     {navGroups.map(({ group, items }) => (
                         <div key={group}>
-                            <p className="px-3 mb-2 text-[18px] font-bold uppercase tracking-wide text-gray-400">{group}</p>
-                            <div className="space-y-0.5">
+                            <p className="px-4 mb-2 text-[11px] font-black uppercase tracking-[0.15em] text-gray-400">{group}</p>
+                            <div className="space-y-1">
                                 {items.map(({ icon: Icon, label, path, badge }) => {
                                     const isAssignedComplaints = label === "Assigned Complaints";
                                     const isComplaints = label === "Complaints";
@@ -236,22 +238,30 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
                                             to={navTo}
                                             onClick={() => setSidebarOpen(false)}
                                             className={() =>
-                                                `flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-150 group text-[28px] leading-tight font-bold ${
+                                                `flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-150 group ${
                                                     isActiveCustom
                                                         ? "text-white shadow-lg shadow-red-900/20"
-                                                        : "text-gray-600 hover:bg-red-50 hover:text-[#B91C1C]"
+                                                        : "text-gray-600 hover:bg-red-50/70 hover:text-[#B91C1C]"
                                                 }`
                                             }
                                             style={() => isActiveCustom ? { backgroundColor: "#B91C1C" } : {}}
                                         >
                                             {() => (
                                                 <>
-                                                    <div className="flex items-center gap-3">
-                                                        <Icon className={`w-4 h-4 ${isActiveCustom ? "text-white" : "text-gray-400 group-hover:text-[#B91C1C]"}`} />
-                                                        <span className="font-bold">{label}</span>
+                                                    <div className="flex items-center gap-3.5">
+                                                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all ${
+                                                            isActiveCustom
+                                                                ? "bg-white/20"
+                                                                : "bg-gray-100 group-hover:bg-red-100"
+                                                        }`}>
+                                                            <Icon className={`w-5 h-5 ${isActiveCustom ? "text-white" : "text-gray-500 group-hover:text-[#B91C1C]"}`} />
+                                                        </div>
+                                                        <span className={`text-[20px] font-bold whitespace-nowrap tracking-tight ${isActiveCustom ? "text-white" : ""}`}>{label}</span>
                                                     </div>
                                                     {liveCnt > 0 && (
-                                                        <span className={`text-base font-bold px-2 py-0.5 rounded-md ${isActiveCustom ? "bg-white/20 text-white" : isAssignedComplaints ? "bg-blue-50 text-blue-700" : "bg-red-50 text-[#B91C1C]"}`}>
+                                                        <span className={`text-sm font-black px-2.5 py-1 rounded-xl ml-auto ${
+                                                            isActiveCustom ? "bg-white/25 text-white" : isAssignedComplaints ? "bg-blue-50 text-blue-700" : "bg-red-50 text-[#B91C1C]"
+                                                        }`}>
                                                             {liveCnt}
                                                         </span>
                                                     )}
@@ -265,25 +275,23 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
                     ))}
                 </nav>
 
-                <div className="px-2 py-3 border-t border-gray-100 space-y-0.5">
-                    <div className="mt-2 px-1">
-                        <button
-                            onClick={handleLogout}
-                            className="w-full flex items-center gap-3 px-3 py-3 rounded-2xl hover:bg-gray-50 transition-all group border border-transparent hover:border-gray-100 shadow-sm"
+                <div className="px-4 py-4 border-t border-gray-100">
+                    <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl hover:bg-gray-50 transition-all group border border-transparent hover:border-gray-100"
+                    >
+                        <div
+                            className="w-11 h-11 rounded-2xl flex items-center justify-center text-base font-black text-white shrink-0"
+                            style={{ backgroundColor: roleCfg.color }}
                         >
-                            <div
-                                className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0"
-                                style={{ backgroundColor: roleCfg.color }}
-                            >
-                                {roleCfg.abbr}
-                            </div>
-                            <div className="flex-1 text-left min-w-0">
-                                <p className="text-lg font-bold text-gray-900 truncate">{currentUser?.name ?? roleCfg.label}</p>
-                                <p className="text-base text-gray-400 font-bold capitalize">{role}</p>
-                            </div>
-                            <LogOut className="w-3.5 h-3.5 text-gray-300 group-hover:text-[#B91C1C] transition-colors" />
-                        </button>
-                    </div>
+                            {roleCfg.abbr}
+                        </div>
+                        <div className="flex-1 text-left min-w-0">
+                            <p className="text-[18px] font-black text-gray-900 truncate leading-tight">{currentUser?.name ?? roleCfg.label}</p>
+                            <p className="text-[13px] font-semibold text-gray-400 capitalize mt-0.5 uppercase tracking-wide">{role}</p>
+                        </div>
+                        <LogOut className="w-4 h-4 text-gray-300 group-hover:text-[#B91C1C] transition-colors" />
+                    </button>
                 </div>
             </aside>
 
@@ -452,7 +460,7 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
                 {/* Page Content */}
                 <div className="flex-1 overflow-y-auto scroll-smooth relative bg-[#0A0F1C]">
                     {/* Theme Background Image - fixed to main content only */}
-                    <div className="fixed top-0 left-[400px] right-0 bottom-0 z-0 pointer-events-none opacity-40 overflow-hidden">
+                    <div className="fixed top-0 left-[520px] right-0 bottom-0 z-0 pointer-events-none opacity-40 overflow-hidden">
                         <img
                             key={bgImage || "/images/ai_hands_bg.png"}
                             src={bgImage || "/images/ai_hands_bg.png"}

@@ -33,7 +33,7 @@ export default function AIAnalytics() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="col-span-2 h-56">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="99%" height="100%" minWidth={1} minHeight={1}>
             <LineChart data={lineData}>
               <XAxis dataKey="name" />
               <YAxis />
@@ -45,7 +45,7 @@ export default function AIAnalytics() {
         </div>
 
         <div className="col-span-1 h-56 flex items-center justify-center">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="99%" height="100%" minWidth={1} minHeight={1}>
             <PieChart>
               <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={40} outerRadius={70} paddingAngle={4}>
                 {pieData.map((entry, index) => (

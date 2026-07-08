@@ -45,7 +45,7 @@ export default function AICoPilot() {
               value={inputContext}
               onChange={e => setInputContext(e.target.value)}
               placeholder="Paste documents, notes, or provide context here..."
-              className="flex-1 w-full bg-transparent border border-[#1E293B] rounded-xl p-4 text-lg text-gray-300 placeholder:text-gray-600 focus:outline-none focus:border-blue-500/50 resize-none mb-6 custom-scrollbar"
+              className="flex-1 w-full bg-white border border-gray-300 rounded-xl p-4 text-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none mb-6 custom-scrollbar shadow-sm"
             />
             
             <div className="flex flex-col sm:flex-row gap-3 shrink-0">
@@ -72,18 +72,18 @@ export default function AICoPilot() {
               Output
             </div>
             
-            <div className="flex-1 w-full bg-transparent border border-[#1E293B] rounded-xl p-4 flex items-center justify-center overflow-y-auto custom-scrollbar">
+            <div className="flex-1 w-full bg-white border border-gray-300 rounded-xl p-4 flex items-center justify-center overflow-y-auto custom-scrollbar shadow-sm">
               {loading ? (
                 <div className="flex flex-col items-center gap-3 text-gray-500">
                   <Sparkles className="w-8 h-8 animate-spin" />
                   <span className="text-lg">Processing...</span>
                 </div>
               ) : output ? (
-                <div className="w-full h-full text-lg text-gray-300 whitespace-pre-wrap leading-relaxed">
+                <div className="w-full h-full text-lg text-gray-800 whitespace-pre-wrap leading-relaxed">
                   {output}
                 </div>
               ) : (
-                <div className="flex flex-col items-center gap-3 text-gray-600">
+                <div className="flex flex-col items-center gap-3 text-gray-400">
                   <Sparkles className="w-8 h-8 opacity-50" />
                   <span className="text-lg">Select an action to generate content</span>
                 </div>

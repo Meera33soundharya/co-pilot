@@ -39,6 +39,7 @@ import Constituency from "./pages/Constituency";
 import AICoPilot from "./pages/AICoPilot";
 import SpeechStudio from "./pages/SpeechStudio";
 import VillageVoicePortal from "./pages/VillageVoicePortal";
+import ResolutionReports from "./pages/ResolutionReports";
 
 import { Toaster } from 'sonner';
 
@@ -94,6 +95,7 @@ function App() {
           <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
           <Route path="/speech-ai" element={<ProtectedRoute><SpeechAI /></ProtectedRoute>} />
           <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+          <Route path="/resolution-reports" element={<ProtectedRoute><ResolutionReports /></ProtectedRoute>} />
           <Route path="/mentions" element={<ProtectedRoute><Mentions /></ProtectedRoute>} />
           <Route path="/ai-alerts" element={<ProtectedRoute><AIAlerts /></ProtectedRoute>} />
           <Route path="/announcements" element={<ProtectedRoute><Announcements /></ProtectedRoute>} />

@@ -134,7 +134,7 @@ export function AnalyticsSuite() {
                     </div>
 
                     <div className="h-64">
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="99%" height="100%" minWidth={1} minHeight={1}>
                             <AreaChart data={trendData}>
                                 <defs>
                                     <linearGradient id="gradBlue" x1="0" y1="0" x2="0" y2="1">
@@ -190,7 +190,7 @@ export function AnalyticsSuite() {
                         <div className="flex justify-center mb-8">
                             <div className="relative">
                                 <div className="h-52 w-52">
-                                    <ResponsiveContainer width="100%" height="100%">
+                                    <ResponsiveContainer width="99%" height="100%" minWidth={1} minHeight={1}>
                                         <PieChart>
                                             <Pie data={categoryData} cx="50%" cy="50%" innerRadius={65} outerRadius={95} paddingAngle={6} dataKey="value" strokeWidth={0}>
                                                 {categoryData.map((entry, i) => (
@@ -252,7 +252,7 @@ export function AnalyticsSuite() {
 
                     {/* Bar chart */}
                     <div className="h-52">
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="99%" height="100%" minWidth={1} minHeight={1}>
                             <BarChart data={wardData} barSize={18}>
                                 <CartesianGrid strokeDasharray="0" vertical={false} stroke="#F8FAFC" />
                                 <XAxis dataKey="ward" axisLine={false} tickLine={false} tick={{ fontSize: 9, fontWeight: 700, fill: '#94A3B8' }} />
@@ -290,7 +290,7 @@ export function AnalyticsSuite() {
                     <p className="text-base font-semibold text-gray-400 uppercase tracking-wider mb-6">Multi-axis performance radar</p>
 
                     <div className="h-52">
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="99%" height="100%" minWidth={1} minHeight={1}>
                             <RadarChart data={radarData}>
                                 <PolarGrid stroke="rgba(99,102,241,0.15)" />
                                 <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748B', fontSize: 8, fontWeight: 700 }} />

@@ -88,7 +88,8 @@ interface ComplaintsCtx {
         autoAssignTo?: string;
         source?: "voice" | "web";
     }) => string;
-    updateStatus: (id: string, newStatus: Status, actorNote?: string, proofImg?: string) => void;
+    updateStatus: (id: string, newStatus: Status, actorNote?: string, proofImg?: string, supportingDocs?: string[]) => void;
+    verifyComplaint: (id: string, approved: boolean, remarks?: string) => void;
     assignComplaint: (id: string, dept: string, assignedTo: string) => void;
     notifyCitizen: (id: string) => void;
     categorize: (id: string, category: Category) => void;
@@ -406,7 +407,7 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
         return id;
     }
 
-    function updateStatus(id: string, newStatus: Status, actorNote?: string, proofImg?: string) {
+    function updateStatus(id: string, newStatus: Status, actorNote?: string, proofImg?: string, supportingDocs?: string[]) {
         const actor = currentUser?.name ?? "Officer";
         setAll(prev => prev.map(c => {
             if (c.id !== id) return c;
@@ -415,6 +416,8 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
                 status: newStatus,
                 time: timeAgo(c.timestamp),
                 resolutionProof: proofImg ?? c.resolutionProof,
+                resolutionNotes: actorNote ?? c.resolutionNotes,
+                supportingDocs: supportingDocs ?? c.supportingDocs,
                 audit: [...c.audit, {
                     time: "Just now",
                     actor,
@@ -467,6 +470,71 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
                     return updated;
                 });
             }
+        }
+    }
+
+    function verifyComplaint(id: string, approved: boolean, remarks?: string) {
+        const adminName = currentUser?.name ?? "Admin";
+        const newStatus = approved ? "Resolved" : "In Progress";
+        
+        setAll(prev => prev.map(c => {
+            if (c.id !== id) return c;
+            const updatedC = {
+                ...c,
+                status: newStatus as Status,
+                adminRemarks: remarks ?? c.adminRemarks,
+                time: timeAgo(c.timestamp),
+                resolutionDate: approved ? Date.now() : c.resolutionDate,
+                officerDetails: approved ? (c.assignedTo || "Field Officer") : c.officerDetails,
+                audit: [...c.audit, makeAudit(adminName, approved ? "Complaint Approved & Closed" : "Complaint Rejected & Sent Back", remarks)],
+            };
+
+            // 📄 Auto-generate report on approval
+            if (approved) {
+                const doc: ClosedDoc = {
+                    name: `Resolution_Report_${id}.pdf`,
+                    size: "2.4 MB",
+                    date: new Date().toLocaleDateString("en-IN", { day: 'numeric', month: 'short', year: 'numeric' }),
+                    type: "PDF",
+                    status: "approved",
+                    access: "public",
+                    assetId: `REP-${id.replace('GRV-', '')}`,
+                    dept: c.dept || "Unassigned",
+                    summary: `Verified and resolved by ${adminName}. Officer notes: ${c.resolutionNotes || 'N/A'}.`,
+                    complaintId: id,
+                };
+                setClosedDocs(prevDocs => {
+                    const updated = [doc, ...prevDocs];
+                    localStorage.setItem("co_pilot_closed_docs", JSON.stringify(updated));
+                    return updated;
+                });
+            }
+
+            return updatedC;
+        }));
+
+        const targetComplaint = allComplaints.find(c => c.id === id);
+
+        if (approved) {
+            // Notify citizen
+            pushNotif({
+                type: "alert",
+                title: "✅ Complaint Resolved",
+                message: "Your complaint has been successfully resolved. Please review the resolution details and provide your feedback.",
+                complaintId: id,
+                citizenId: targetComplaint?.citizenId,
+                target: "citizen"
+            });
+        } else {
+            // Notify officer
+            pushNotif({
+                type: "alert",
+                title: "❌ Verification Rejected",
+                message: `Admin rejected resolution for ${id}. Remarks: ${remarks}`,
+                complaintId: id,
+                dept: targetComplaint?.dept,
+                target: "officer"
+            });
         }
     }
 
@@ -592,7 +660,7 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
             complaints, allComplaints,
             notifications: userNotifications, readNotification,
             announcements, postAnnouncement, deleteAnnouncement,
-            addComplaint, updateStatus, assignComplaint, notifyCitizen, categorize,
+            addComplaint, updateStatus, verifyComplaint, assignComplaint, notifyCitizen, categorize,
             rateComplaint, reopenComplaint,
             closedDocs
         }}>

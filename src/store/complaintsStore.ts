@@ -22,6 +22,7 @@ export type Status =
     | "Categorized"
     | "Assigned"
     | "In Progress"
+    | "Pending Verification"
     | "Resolved"
     | "Closed";
 
@@ -56,8 +57,15 @@ export interface Complaint {
     notifPref?: "SMS" | "Email" | "None";
     sentiment?: number;       // 0 to 100 scoring
     rating?: number;          // 1-5 stars citizen feedback
-    resolutionProof?: string; // Base64 or URL of "after" photo
     source?: "voice" | "web"; // Where the complaint originated
+    
+    // 🆕 Resolution Evidence
+    resolutionProof?: string; // Base64 or URL of "after" photo
+    resolutionNotes?: string;
+    supportingDocs?: string[]; // URLs or Base64 of docs
+    adminRemarks?: string;
+    resolutionDate?: number;
+    officerDetails?: string;
 
     // Workflow
     status: Status;
