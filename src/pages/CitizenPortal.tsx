@@ -157,10 +157,14 @@ export default function CitizenPortal() {
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                 canvas.toBlob((blob) => {
                     if (blob) {
-                        const url = URL.createObjectURL(blob);
-                        const metaUrl = `${url}#name=Camera_Capture_${Date.now()}.png&type=image/png`;
-                        set("evidence", [...form.evidence, metaUrl]);
-                        stopCamera();
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                            const b64 = reader.result as string;
+                            const metaUrl = `${b64}#name=Camera_Capture_${Date.now()}.png&type=image/png`;
+                            set("evidence", [...form.evidence, metaUrl]);
+                            stopCamera();
+                        };
+                        reader.readAsDataURL(blob);
                     }
                 }, "image/png");
             }
@@ -183,10 +187,13 @@ export default function CitizenPortal() {
         const files = e.target.files;
         if (files && files.length > 0) {
             const file = files[0];
-            const url = URL.createObjectURL(file);
-            // Append metadata to the URL as a fragment to help with preview detection
-            const metaUrl = `${url}#name=${encodeURIComponent(file.name)}&type=${encodeURIComponent(file.type)}`;
-            set("evidence", [...form.evidence, metaUrl]);
+            const reader = new FileReader();
+            reader.onload = () => {
+                const b64 = reader.result as string;
+                const metaUrl = `${b64}#name=${encodeURIComponent(file.name)}&type=${encodeURIComponent(file.type)}`;
+                set("evidence", [...form.evidence, metaUrl]);
+            };
+            reader.readAsDataURL(file);
         }
     };
 
@@ -194,9 +201,13 @@ export default function CitizenPortal() {
         const files = e.target.files;
         if (files && files.length > 0) {
             const file = files[0];
-            const url = URL.createObjectURL(file);
-            const metaUrl = `${url}#name=${encodeURIComponent(file.name)}&type=audio`;
-            set("evidence", [...form.evidence, metaUrl]);
+            const reader = new FileReader();
+            reader.onload = () => {
+                const b64 = reader.result as string;
+                const metaUrl = `${b64}#name=${encodeURIComponent(file.name)}&type=audio`;
+                set("evidence", [...form.evidence, metaUrl]);
+            };
+            reader.readAsDataURL(file);
         }
     };
 
@@ -213,9 +224,13 @@ export default function CitizenPortal() {
 
             recorder.onstop = () => {
                 const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-                const url = URL.createObjectURL(blob);
-                const name = `Live_Voice_Record_${Date.now()}.webm`;
-                setAudioPreview({ url, name });
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const b64 = reader.result as string;
+                    const name = `Live_Voice_Record_${Date.now()}.webm`;
+                    setAudioPreview({ url: b64, name });
+                };
+                reader.readAsDataURL(blob);
                 setIsRecording(false);
                 // Stop all tracks to release the microphone
                 stream.getTracks().forEach(track => track.stop());

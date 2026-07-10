@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ComplaintsProvider } from "@/context/ComplaintsContext";
 import { useComplaints } from "@/context/ComplaintsContext";
+import { DocumentProvider } from "@/context/DocumentContext";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Grievances from "./pages/Grievances";
@@ -67,54 +68,56 @@ function App() {
         }}
       />
       <BrowserRouter>
-        <Routes>
-          {/* Public pages */}
-          <Route path="/" element={<Landing />} />
-          <Route path="/meetings" element={<ProtectedRoute><Meetings /></ProtectedRoute>} />
-          <Route path="/media-queue" element={<ProtectedRoute><MediaQueue /></ProtectedRoute>} />
-          <Route path="/constituency" element={<ProtectedRoute><Constituency /></ProtectedRoute>} />
-          <Route path="/ai-copilot" element={<ProtectedRoute><AICoPilot /></ProtectedRoute>} />
-          <Route path="/speech-studio" element={<ProtectedRoute><SpeechStudio /></ProtectedRoute>} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/submit-complaint" element={<CitizenPortal />} />
-          <Route path="/village-voice" element={<VillageVoicePortal />} />
+        <DocumentProvider>
+          <Routes>
+            {/* Public pages */}
+            <Route path="/" element={<Landing />} />
+            <Route path="/meetings" element={<ProtectedRoute><Meetings /></ProtectedRoute>} />
+            <Route path="/media-queue" element={<ProtectedRoute><MediaQueue /></ProtectedRoute>} />
+            <Route path="/constituency" element={<ProtectedRoute><Constituency /></ProtectedRoute>} />
+            <Route path="/ai-copilot" element={<ProtectedRoute><AICoPilot /></ProtectedRoute>} />
+            <Route path="/speech-studio" element={<ProtectedRoute><SpeechStudio /></ProtectedRoute>} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/submit-complaint" element={<CitizenPortal />} />
+            <Route path="/village-voice" element={<VillageVoicePortal />} />
 
 
 
-          {/* Protected pages */}
-          <Route path="/citizen" element={<ProtectedRoute><CitizenModule /></ProtectedRoute>} />
-          <Route path="/field-portal" element={<ProtectedRoute><FieldPortal /></ProtectedRoute>} />
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/interactive-dashboard" element={<ProtectedRoute><InteractiveDashboard /></ProtectedRoute>} />
-          <Route path="/brainspark" element={<ProtectedRoute><BrainSpark /></ProtectedRoute>} />
-          <Route path="/study-buddy" element={<ProtectedRoute><StudyBuddy /></ProtectedRoute>} />
-          <Route path="/proverbs" element={<ProtectedRoute><Proverbs /></ProtectedRoute>} />
-          <Route path="/policy-simulator" element={<ProtectedRoute><PolicySimulator /></ProtectedRoute>} />
-          <Route path="/explainable-ai" element={<ProtectedRoute><ExplainableAI /></ProtectedRoute>} />
-          <Route path="/grievances" element={<ProtectedRoute><Grievances /></ProtectedRoute>} />
-          <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
-          <Route path="/speech-ai" element={<ProtectedRoute><SpeechAI /></ProtectedRoute>} />
-          <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-          <Route path="/resolution-reports" element={<ProtectedRoute><ResolutionReports /></ProtectedRoute>} />
-          <Route path="/mentions" element={<ProtectedRoute><Mentions /></ProtectedRoute>} />
-          <Route path="/ai-alerts" element={<ProtectedRoute><AIAlerts /></ProtectedRoute>} />
-          <Route path="/announcements" element={<ProtectedRoute><Announcements /></ProtectedRoute>} />
-          <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-          <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
-          <Route path="/citizen-guide" element={<ProtectedRoute><CitizenModuleGuide /></ProtectedRoute>} />
-          <Route path="/schedule" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />
-          <Route path="/schedule-guide" element={<ProtectedRoute><ScheduleOperationGuide /></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          <Route path="/heatmap" element={<ProtectedRoute><Heatmap /></ProtectedRoute>} />
-          <Route path="/people" element={<ProtectedRoute><PeopleManagement /></ProtectedRoute>} />
-          <Route path="/admin-panel" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+            {/* Protected pages */}
+            <Route path="/citizen" element={<ProtectedRoute><CitizenModule /></ProtectedRoute>} />
+            <Route path="/field-portal" element={<ProtectedRoute><FieldPortal /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/interactive-dashboard" element={<ProtectedRoute><InteractiveDashboard /></ProtectedRoute>} />
+            <Route path="/brainspark" element={<ProtectedRoute><BrainSpark /></ProtectedRoute>} />
+            <Route path="/study-buddy" element={<ProtectedRoute><StudyBuddy /></ProtectedRoute>} />
+            <Route path="/proverbs" element={<ProtectedRoute><Proverbs /></ProtectedRoute>} />
+            <Route path="/policy-simulator" element={<ProtectedRoute><PolicySimulator /></ProtectedRoute>} />
+            <Route path="/explainable-ai" element={<ProtectedRoute><ExplainableAI /></ProtectedRoute>} />
+            <Route path="/grievances" element={<ProtectedRoute><Grievances /></ProtectedRoute>} />
+            <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
+            <Route path="/speech-ai" element={<ProtectedRoute><SpeechAI /></ProtectedRoute>} />
+            <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+            <Route path="/resolution-reports" element={<ProtectedRoute><ResolutionReports /></ProtectedRoute>} />
+            <Route path="/mentions" element={<ProtectedRoute><Mentions /></ProtectedRoute>} />
+            <Route path="/ai-alerts" element={<ProtectedRoute><AIAlerts /></ProtectedRoute>} />
+            <Route path="/announcements" element={<ProtectedRoute><Announcements /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+            <Route path="/citizen-guide" element={<ProtectedRoute><CitizenModuleGuide /></ProtectedRoute>} />
+            <Route path="/schedule" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />
+            <Route path="/schedule-guide" element={<ProtectedRoute><ScheduleOperationGuide /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/heatmap" element={<ProtectedRoute><Heatmap /></ProtectedRoute>} />
+            <Route path="/people" element={<ProtectedRoute><PeopleManagement /></ProtectedRoute>} />
+            <Route path="/admin-panel" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
 
-        {/* Global overlays */}
-        <AIAssistant />
-        <CommandPalette />
-        <VoiceAssistant />
+          {/* Global overlays */}
+          <AIAssistant />
+          <CommandPalette />
+          <VoiceAssistant />
+        </DocumentProvider>
       </BrowserRouter>
     </ComplaintsProvider>
   );

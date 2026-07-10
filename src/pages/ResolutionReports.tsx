@@ -3,7 +3,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { useComplaints } from "@/context/ComplaintsContext";
 import { 
     Search, Filter, Download, FileText, 
-    Calendar, MapPin, Building2, User, ChevronDown, Eye, X, Shield, Clock, AlertTriangle, CheckCircle2, MessageCircle, ImageIcon
+    Calendar, MapPin, Building2, User, ChevronDown, Eye, X, Shield, Clock, AlertTriangle, CheckCircle2, MessageCircle, ImageIcon, Trash2
 } from "lucide-react";
 
 // Category → default "before" placeholder image
@@ -21,9 +21,24 @@ const CATEGORY_IMAGE: Record<string, string> = {
     "Other":                     "/before_placeholder.png",
 };
 
+// Category → high-res "after" (resolved) image
+const CATEGORY_RESOLVED_IMAGE: Record<string, string> = {
+    "Water Supply":              "/resolved_water.png",
+    "Electricity":               "/resolved_electricity.png",
+    "Roads & Infrastructure":    "/resolved_road.png",
+    "Sanitation":                "/resolved_sanitation.png",
+    "Drainage":                  "/resolved_sanitation.png",
+    "Public Health":             "/resolved_sanitation.png",
+    "Parks & Recreation":        "/after_placeholder.png",
+    "Enforcement":               "/after_placeholder.png",
+    "Education":                 "/after_placeholder.png",
+    "Ward Committee & Governance": "/after_placeholder.png",
+    "Other":                     "/after_placeholder.png",
+};
+
 function downloadPDF(doc: any, complaint: any) {
     const beforeImg = (complaint?.evidence?.[0]) || CATEGORY_IMAGE[complaint?.category] || "/before_placeholder.png";
-    const afterImg  = complaint?.resolutionProof || "/after_placeholder.png";
+    const afterImg  = complaint?.resolutionProof || CATEGORY_RESOLVED_IMAGE[complaint?.category] || "/after_placeholder.png";
 
     const html = `<!DOCTYPE html>
 <html lang="en">
@@ -142,10 +157,11 @@ function downloadPDF(doc: any, complaint: any) {
 }
 
 export default function ResolutionReports() {
-    const { closedDocs, allComplaints, currentUser } = useComplaints();
+    const { closedDocs, allComplaints, currentUser, clearClosedDocs, deleteClosedDoc } = useComplaints();
     const [search, setSearch] = useState("");
     const [deptFilter, setDeptFilter] = useState("All");
     const [selectedDoc, setSelectedDoc] = useState<any>(null);
+    const [confirmClear, setConfirmClear] = useState(false);
 
     const filteredDocs = closedDocs.filter(doc => {
         const matchSearch = doc.name.toLowerCase().includes(search.toLowerCase()) || 
@@ -189,6 +205,35 @@ export default function ResolutionReports() {
                             <Filter className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                             <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                         </div>
+
+                        {/* Clear All Documents — admin only */}
+                        {currentUser?.role === "admin" && closedDocs.length > 0 && (
+                            confirmClear ? (
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm font-bold text-red-600">Are you sure?</span>
+                                    <button
+                                        onClick={() => { clearClosedDocs(); setConfirmClear(false); }}
+                                        className="px-4 py-2 bg-red-600 text-white text-sm font-black rounded-xl hover:bg-red-700 transition-colors"
+                                    >
+                                        Yes, Clear All
+                                    </button>
+                                    <button
+                                        onClick={() => setConfirmClear(false)}
+                                        className="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-black rounded-xl hover:bg-gray-200 transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={() => setConfirmClear(true)}
+                                    className="flex items-center gap-2 px-4 py-3 bg-red-50 border border-red-200 text-red-700 text-sm font-black rounded-2xl hover:bg-red-100 transition-colors"
+                                >
+                                    <X className="w-4 h-4" />
+                                    Clear All Documents
+                                </button>
+                            )
+                        )}
                     </div>
                 </div>
 
@@ -255,6 +300,19 @@ export default function ResolutionReports() {
                                     >
                                         <Download className="w-5 h-5" />
                                     </button>
+                                    {currentUser?.role === "admin" && (
+                                        <button 
+                                            className="w-12 h-12 bg-red-50 hover:bg-red-100 text-red-600 rounded-2xl flex items-center justify-center transition-all active:scale-95 shrink-0"
+                                            onClick={() => {
+                                                if (window.confirm("Are you sure you want to delete this report?")) {
+                                                    deleteClosedDoc(doc.assetId);
+                                                }
+                                            }}
+                                            title="Delete Report"
+                                        >
+                                            <Trash2 className="w-5 h-5" />
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         ))}
@@ -387,7 +445,7 @@ export default function ResolutionReports() {
                                                     </div>
                                                     <div className="w-full aspect-video bg-emerald-50 flex items-center justify-center overflow-hidden">
                                                         <img 
-                                                            src={complaint.resolutionProof || "/after_placeholder.png"} 
+                                                            src={complaint.resolutionProof || CATEGORY_RESOLVED_IMAGE[complaint.category] || "/after_placeholder.png"} 
                                                             alt="After Resolution" 
                                                             className="w-full h-full object-cover"
                                                         />
@@ -402,14 +460,29 @@ export default function ResolutionReports() {
                                             <div>
                                                 <h4 className="text-lg font-black uppercase tracking-widest text-gray-400 mb-4 border-b border-gray-50 pb-2">Supporting Documents</h4>
                                                 <div className="flex flex-wrap gap-3">
-                                                    {complaint.supportingDocs.map((doc, idx) => {
-                                                        const name = new URLSearchParams(doc.split('#')[1] || "").get("name") || `Document_${idx+1}`;
+                                                    {complaint.supportingDocs.map((docUrl, idx) => {
+                                                        const fragment = docUrl.split('#')[1] || "";
+                                                        const params = new URLSearchParams(fragment);
+                                                        const name = params.get("name") || `Document_${idx+1}`;
+                                                        const fileType = params.get("type") || "";
+                                                        const dataUrl = docUrl.split('#')[0];
+                                                        const isImage = fileType.startsWith("image/");
                                                         return (
-                                                            <a key={idx} href={doc.split('#')[0]} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-4 py-3 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors shadow-sm">
-                                                                <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-500">
-                                                                    <FileText className="w-4 h-4" />
+                                                            <a 
+                                                                key={idx} 
+                                                                href={dataUrl}
+                                                                download={name}
+                                                                target="_blank" 
+                                                                rel="noopener noreferrer" 
+                                                                className="flex items-center gap-3 px-4 py-3 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors shadow-sm"
+                                                            >
+                                                                <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-500 overflow-hidden shrink-0">
+                                                                    {isImage 
+                                                                        ? <img src={dataUrl} alt={name} className="w-full h-full object-cover" />
+                                                                        : <FileText className="w-4 h-4" />
+                                                                    }
                                                                 </div>
-                                                                <span className="text-sm font-bold text-gray-700">{name}</span>
+                                                                <span className="text-sm font-bold text-gray-700 max-w-[120px] truncate">{name}</span>
                                                             </a>
                                                         );
                                                     })}

@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { useComplaints } from "@/context/ComplaintsContext";
 import {
     Users, Building2, Search,
     Phone, MapPin,
@@ -30,6 +31,7 @@ export default function PeopleManagement() {
     const [tab, setTab] = useState<"officers" | "citizens">("officers");
     const [search, setSearch] = useState("");
     const [selected, setSelected] = useState<string | null>(null);
+    const { complaints } = useComplaints();
 
     const filteredOfficers = OFFICERS.filter(o =>
         o.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -43,6 +45,11 @@ export default function PeopleManagement() {
 
     const selectedOfficer = OFFICERS.find(o => o.id === selected);
     const selectedCitizen = CITIZENS.find(c => c.id === selected);
+
+    const citizenComplaints = useMemo(() => {
+        if (!selectedCitizen) return [];
+        return complaints.filter(c => c.citizen === selectedCitizen.name);
+    }, [complaints, selectedCitizen]);
 
     return (
         <DashboardLayout
@@ -220,15 +227,38 @@ export default function PeopleManagement() {
                                 <div className="space-y-3 flex-1">
                                     {[
                                         { label: "Phone", value: selectedCitizen.phone },
-                                        { label: "Total Complaints", value: String(selectedCitizen.complaints) },
-                                        { label: "Resolved",         value: String(selectedCitizen.resolved),   color: "text-emerald-600" },
-                                        { label: "Pending",          value: String(selectedCitizen.complaints - selectedCitizen.resolved), color: "text-amber-600" },
+                                        { label: "Total Complaints", value: String(citizenComplaints.length) },
+                                        { label: "Resolved",         value: String(citizenComplaints.filter(c => c.status === "Resolved" || c.status === "Closed").length),   color: "text-emerald-600" },
+                                        { label: "Pending",          value: String(citizenComplaints.filter(c => c.status !== "Resolved" && c.status !== "Closed").length), color: "text-amber-600" },
                                     ].map(item => (
                                         <div key={item.label} className="flex justify-between items-center py-3 border-b border-gray-50">
                                             <span className="text-base font-bold text-gray-500">{item.label}</span>
                                             <span className={`text-lg font-black ${item.color ?? "text-gray-900"}`}>{item.value}</span>
                                         </div>
                                     ))}
+                                    
+                                    {/* Complaint History */}
+                                    <div className="mt-4 border-t border-gray-100 pt-4">
+                                        <h4 className="text-sm font-black uppercase text-gray-400 tracking-widest mb-3">Complaint History</h4>
+                                        {citizenComplaints.length === 0 ? (
+                                            <p className="text-sm text-gray-400 font-bold text-center py-4 bg-gray-50 rounded-xl">No complaints found.</p>
+                                        ) : (
+                                            <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                                                {citizenComplaints.map(c => (
+                                                    <div key={c.id} className="p-3 bg-gray-50 rounded-2xl border border-gray-100 flex flex-col gap-1">
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="text-xs font-black text-gray-900 bg-white px-2 py-0.5 rounded shadow-sm">{c.id}</span>
+                                                            <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
+                                                                (c.status === "Resolved" || c.status === "Closed") ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+                                                            }`}>{c.status}</span>
+                                                        </div>
+                                                        <span className="text-sm font-bold text-gray-700 line-clamp-1">{c.issue}</span>
+                                                        <span className="text-[10px] font-bold text-gray-400">{c.time} • {c.category}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </>
                         ) : (

@@ -149,7 +149,8 @@ export const initialComplaints: Complaint[] = [
         category: "Water Supply", issue: "No water supply for 2 days – Sector 4",
         description: "The water supply has been completely cut off for 2 days in Sector 4. Residents are buying water at high cost. Urgent repair needed.",
         priority: "High", status: "New", assignedTo: "", dept: "Water Supply Department",
-        time: "Just now", timestamp: now - 1 * 60000, notified: false,
+        time: "Just now", timestamp: now - 1 * 60000, notified: false, source: "voice",
+        evidence: ["/resolved_water_supply_1783660023711.png#name=Water_Pipe_Leak.png&type=image/png"],
         audit: [
             entry("Citizen", "Complaint submitted via Online Portal", 1),
             entry("System", "Auto-categorized as Water Supply", 0),
@@ -162,7 +163,8 @@ export const initialComplaints: Complaint[] = [
         category: "Electricity", issue: "Live wire dangling on street near Park West",
         description: "Extremely dangerous live wire hanging low after last night's wind. Needs immediate isolation before anyone gets hurt.",
         priority: "High", status: "New", assignedTo: "", dept: "Electricity Board",
-        time: "Just now", timestamp: now - 5 * 60000, notified: false,
+        time: "Just now", timestamp: now - 5 * 60000, notified: false, source: "voice",
+        evidence: ["/resolved_electricity_1783660057433.png#name=Live_Wire.png&type=image/png"],
         audit: [
             entry("System", "Complaint submitted via mobile app", 5),
             entry("System", "Auto-categorized as Electricity (CRITICAL)", 4),
@@ -175,6 +177,7 @@ export const initialComplaints: Complaint[] = [
         description: "Water is leaking from the main pipeline near Block C and flooding the road, making it dangerous for pedestrians and vehicles.",
         priority: "High", status: "In Progress", assignedTo: "Rajiv Kumar (Water Dept)", dept: "Water Supply Department",
         time: "2 hours ago", timestamp: now - 2 * H, notified: false,
+        evidence: ["/resolved_road_infrastructure_1783660034470.png#name=Water_Flooding.png&type=image/png"],
         audit: [
             entry("System", "Complaint submitted by citizen", 120),
             entry("System", "Auto-categorized as Water Supply", 119),
@@ -213,7 +216,7 @@ export const initialComplaints: Complaint[] = [
         category: "Sanitation", issue: "Garbage not collected for 3 days",
         description: "No garbage collection truck has visited our area for 3 days. Waste is piling up near the main entrance gate.",
         priority: "Medium", status: "Resolved", assignedTo: "Sanitation Department", dept: "Sanitation Department",
-        time: "1 day ago", timestamp: now - 1 * D, notified: true,
+        time: "1 day ago", timestamp: now - 1 * D, notified: true, resolutionDate: now - 12 * H,
         audit: [
             entry("System", "Complaint submitted", 1440),
             entry("System", "Auto-categorized as Sanitation", 1438),
@@ -255,7 +258,7 @@ export const initialComplaints: Complaint[] = [
         category: "Enforcement", issue: "Loud construction work after 10 PM",
         description: "Construction work continues past 10 PM every night, violating municipal noise regulations and disturbing residents.",
         priority: "Medium", status: "Closed", assignedTo: "Municipal Enforcement", dept: "Municipal Enforcement",
-        time: "3 days ago", timestamp: now - 3 * D, notified: true,
+        time: "3 days ago", timestamp: now - 3 * D, notified: true, resolutionDate: now - 40 * H,
         audit: [
             entry("System", "Complaint submitted", 4320),
             entry("System", "Auto-categorized", 4319),
@@ -297,7 +300,7 @@ export const initialComplaints: Complaint[] = [
         category: "Enforcement", issue: "Footpath blocked by vendor stall near market",
         description: "A vendor has set up a permanent stall blocking the footpath near the main market, preventing pedestrian movement.",
         priority: "Low", status: "Resolved", assignedTo: "Municipal Enforcement", dept: "Municipal Enforcement",
-        time: "5 days ago", timestamp: now - 5 * D, notified: true,
+        time: "5 days ago", timestamp: now - 5 * D, notified: true, resolutionDate: now - 100 * H,
         audit: [
             entry("System", "Complaint submitted", 7200),
             entry("System", "Auto-categorized", 7199),

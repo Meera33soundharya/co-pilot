@@ -65,6 +65,8 @@ export interface ClosedDoc {
     dept: string;
     summary: string;
     complaintId: string;
+    supportingDocs?: string[];   // base64 data URLs of uploaded docs
+    resolutionProof?: string;   // base64 data URL of the resolution photo
 }
 
 // ── Context shape ──────────────────────────────────────────────
@@ -99,6 +101,8 @@ interface ComplaintsCtx {
     postAnnouncement: (data: { title: string; body: string; type: AnnouncementType; ward: string }) => void;
     deleteAnnouncement: (id: string) => void;
     closedDocs: ClosedDoc[];
+    clearClosedDocs: () => void;
+    deleteClosedDoc: (assetId: string) => void;
 }
 
 const Ctx = createContext<ComplaintsCtx | null>(null);
@@ -417,7 +421,20 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
                 time: timeAgo(c.timestamp),
                 resolutionProof: proofImg ?? c.resolutionProof,
                 resolutionNotes: actorNote ?? c.resolutionNotes,
-                supportingDocs: supportingDocs ?? c.supportingDocs,
+                supportingDocs: (supportingDocs && supportingDocs.length > 0) 
+                    ? (() => {
+                        const allDocs = [...(c.supportingDocs || []), ...supportingDocs];
+                        const seen = new Set<string>();
+                        return allDocs.filter(url => {
+                            const match = url.match(/#name=([^&]+)/);
+                            const name = match ? decodeURIComponent(match[1]) : url;
+                            if (seen.has(name)) return false;
+                            seen.add(name);
+                            return true;
+                        });
+                    })()
+                    : c.supportingDocs,
+                resolutionDate: (newStatus === "Resolved" || newStatus === "Closed") ? (c.resolutionDate ?? Date.now()) : c.resolutionDate,
                 audit: [...c.audit, {
                     time: "Just now",
                     actor,
@@ -463,8 +480,13 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
                     dept: comp.dept || "Unassigned",
                     summary: `${newStatus} complaint report: ${comp.issue}. ${comp.description}. Filed by ${comp.citizen} from ${comp.ward}. Department: ${comp.dept || 'N/A'}. Resolution: ${actorNote || 'Complaint resolved successfully.'}`,
                     complaintId: id,
+                    supportingDocs: supportingDocs ?? comp.supportingDocs ?? [],
+                    resolutionProof: proofImg ?? comp.resolutionProof,
                 };
                 setClosedDocs(prev => {
+                    // ── Dedup: don't add if this complaint already has a doc entry ──
+                    const alreadyExists = prev.some(d => d.complaintId === id);
+                    if (alreadyExists) return prev;
                     const updated = [doc, ...prev];
                     localStorage.setItem("co_pilot_closed_docs", JSON.stringify(updated));
                     return updated;
@@ -504,6 +526,9 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
                     complaintId: id,
                 };
                 setClosedDocs(prevDocs => {
+                    // ── Dedup: don't add if a report for this complaint already exists ──
+                    const alreadyExists = prevDocs.some(d => d.complaintId === id);
+                    if (alreadyExists) return prevDocs;
                     const updated = [doc, ...prevDocs];
                     localStorage.setItem("co_pilot_closed_docs", JSON.stringify(updated));
                     return updated;
@@ -654,6 +679,19 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
         localStorage.setItem("co_pilot_announcements_v2", JSON.stringify(updated));
     }
 
+    function clearClosedDocs() {
+        setClosedDocs([]);
+        localStorage.removeItem("co_pilot_closed_docs");
+    }
+
+    function deleteClosedDoc(assetId: string) {
+        setClosedDocs(prev => {
+            const updated = prev.filter(d => d.assetId !== assetId);
+            localStorage.setItem("co_pilot_closed_docs", JSON.stringify(updated));
+            return updated;
+        });
+    }
+
     return (
         <Ctx.Provider value={{
             currentUser, login, logout,
@@ -662,7 +700,7 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
             announcements, postAnnouncement, deleteAnnouncement,
             addComplaint, updateStatus, verifyComplaint, assignComplaint, notifyCitizen, categorize,
             rateComplaint, reopenComplaint,
-            closedDocs
+            closedDocs, clearClosedDocs, deleteClosedDoc
         }}>
             {children}
         </Ctx.Provider>

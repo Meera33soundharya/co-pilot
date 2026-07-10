@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useComplaints } from "@/context/ComplaintsContext";
 import { useSearchParams } from "react-router-dom";
@@ -23,6 +23,8 @@ export default function FieldPortal() {
     const [proofImg, setProofImg] = useState<string | null>(null);
     const [supportingDocs, setSupportingDocs] = useState<string[]>([]);
     const [showAllDepts, setShowAllDepts] = useState(false);
+    const cameraInputRef = useRef<HTMLInputElement>(null);
+    const docInputRef = useRef<HTMLInputElement>(null);
 
     // Filter complaints for this officer and department
     const myTasks = useMemo(() => {
@@ -33,8 +35,8 @@ export default function FieldPortal() {
                                  c.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
                                  c.ward.toLowerCase().includes(searchQuery.toLowerCase());
 
-            // Voice Assistant complaints: only appear in "Assigned" tab (not in New/InProgress/etc.)
-            if (c.source === "voice" && filterStatus !== "Assigned" && filterStatus !== "All") return false;
+            // User Requirement: ONLY show Voice Assistant complaints in the Field Portal
+            if (c.source !== "voice") return false;
 
             return matchesRole && matchesStatus && matchesSearch;
         });
@@ -53,26 +55,54 @@ export default function FieldPortal() {
     };
 
     const handleCapture = () => {
-        // Demo: select a random resolution image
-        const demoImgs = [
-            "https://images.unsplash.com/photo-1541888946425-d81bb19480c5?auto=format&fit=crop&q=80&w=800",
-            "https://images.unsplash.com/photo-1581094288338-2314dddb7bc3?auto=format&fit=crop&q=80&w=800",
-            "https://images.unsplash.com/photo-1590060417631-017606e30907?auto=format&fit=crop&q=80&w=800"
-        ];
-        setProofImg(demoImgs[Math.floor(Math.random() * demoImgs.length)]);
+        cameraInputRef.current?.click();
+    };
+
+    const handleCameraFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = () => {
+            setProofImg(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+        
+        // Reset so same file can be re-selected if needed
+        e.target.value = "";
     };
 
     const handleUploadDoc = () => {
-        // Demo: Add a fake doc URL
-        const docNames = ["Site_Survey_Report.pdf", "Materials_Invoice.pdf", "Safety_Checklist.docx"];
-        const name = docNames[Math.floor(Math.random() * docNames.length)];
-        setSupportingDocs(prev => [...prev, `https://example.com/docs/${name}#name=${name}&type=application/pdf`]);
+        docInputRef.current?.click();
+    };
+
+    const handleDocFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        
+        for (const file of files) {
+            const reader = new FileReader();
+            reader.onload = () => {
+                const base64Url = reader.result as string;
+                setSupportingDocs(prev => {
+                    const currentNames = new Set(prev.map(url => {
+                        const match = url.match(/#name=([^&]+)/);
+                        return match ? decodeURIComponent(match[1]) : "";
+                    }));
+                    if (!currentNames.has(file.name)) {
+                        return [...prev, `${base64Url}#name=${encodeURIComponent(file.name)}&type=${encodeURIComponent(file.type)}`];
+                    }
+                    return prev;
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+        e.target.value = "";
     };
 
     return (
         <DashboardLayout 
             title="Field Officer Portal" 
-            subtitle={`Managing tasks for ${currentUser?.dept || "General Operations"}`}
+            subtitle="Managing Voice Assistant Tasks (Uneducated Citizens Portal)"
         >
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 
@@ -212,7 +242,7 @@ export default function FieldPortal() {
                                                 )}
                                                 <button 
                                                     onClick={(e) => { e.stopPropagation(); setSelectedTask(task); }}
-                                                    className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all text-white/20 hover:text-[#B91C1C]"
+                                                    className="w-14 h-14 rounded-2xl bg-gray-50 border border-gray-200 flex items-center justify-center hover:bg-red-50 hover:border-red-200 transition-all text-gray-400 hover:text-[#B91C1C]"
                                                 >
                                                     <Navigation className="w-6 h-6" />
                                                 </button>
@@ -315,6 +345,13 @@ export default function FieldPortal() {
                                     <div className="space-y-6">
                                         <div>
                                             <label className="text-base font-black uppercase tracking-widest text-gray-400 mb-3 block">1. Capture Proof (Before/After)</label>
+                                            <input
+                                                ref={cameraInputRef}
+                                                type="file"
+                                                accept="image/*"
+                                                className="hidden"
+                                                onChange={handleCameraFileChange}
+                                            />
                                             {proofImg ? (
                                                 <div className="relative aspect-video rounded-3xl overflow-hidden group">
                                                     <img src={proofImg} alt="Proof" className="w-full h-full object-cover" />
@@ -328,12 +365,13 @@ export default function FieldPortal() {
                                             ) : (
                                                 <button 
                                                     onClick={handleCapture}
-                                                    className="w-full aspect-video border-2 border-dashed border-gray-100 rounded-3xl flex flex-col items-center justify-center gap-3 hover:bg-gray-50 hover:border-[#B91C1C]/20 transition-all group"
+                                                    className="w-full aspect-video border-2 border-dashed border-gray-200 rounded-3xl flex flex-col items-center justify-center gap-3 hover:bg-red-50 hover:border-[#B91C1C]/30 transition-all group cursor-pointer"
                                                 >
-                                                    <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                                        <Camera className="w-6 h-6 text-gray-300 group-hover:text-[#B91C1C]" />
+                                                    <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center group-hover:scale-110 group-hover:bg-[#B91C1C] transition-all">
+                                                        <Camera className="w-7 h-7 text-[#B91C1C] group-hover:text-white transition-colors" />
                                                     </div>
-                                                    <p className="text-sm font-black uppercase tracking-widest text-gray-400">Open Field Camera</p>
+                                                    <p className="text-sm font-black uppercase tracking-widest text-gray-500 group-hover:text-[#B91C1C] transition-colors">Tap to Capture / Upload Photo</p>
+                                                    <p className="text-xs text-gray-400 font-medium">Supports JPG, PNG, WEBP</p>
                                                 </button>
                                             )}
                                         </div>
@@ -365,9 +403,18 @@ export default function FieldPortal() {
                                                     );
                                                 })}
                                             </div>
+                                            {/* Hidden file input for documents */}
+                                            <input
+                                                ref={docInputRef}
+                                                type="file"
+                                                accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,image/*"
+                                                multiple
+                                                className="hidden"
+                                                onChange={handleDocFileChange}
+                                            />
                                             <button 
                                                 onClick={handleUploadDoc}
-                                                className="w-full py-4 border-2 border-dashed border-gray-200 rounded-2xl flex items-center justify-center gap-2 text-gray-500 hover:bg-gray-50 hover:text-blue-600 hover:border-blue-200 font-bold uppercase tracking-widest text-sm transition-all"
+                                                className="w-full py-4 border-2 border-dashed border-gray-200 rounded-2xl flex items-center justify-center gap-2 text-gray-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 font-bold uppercase tracking-widest text-sm transition-all"
                                             >
                                                 <Paperclip className="w-4 h-4" /> Attach Documents
                                             </button>
@@ -401,8 +448,8 @@ export default function FieldPortal() {
                                             {(selectedTask.status === "Assigned" || selectedTask.status === "In Progress") && (
                                                 <button 
                                                     onClick={() => handleStatusUpdate(selectedTask.id, "Pending Verification", proofNote || "Resolved on-site by officer")}
-                                                    disabled={isUpdating || !proofImg}
-                                                    className="flex-[2] flex items-center justify-center gap-3 py-4 rounded-3xl bg-[#B91C1C] hover:bg-red-700 text-white text-base font-black uppercase tracking-widest shadow-xl shadow-red-200 transition-all active:scale-95 disabled:opacity-50"
+                                                    disabled={isUpdating || !proofNote}
+                                                    className="flex-[2] flex items-center justify-center gap-3 py-4 rounded-3xl bg-[#B91C1C] hover:bg-red-700 text-white text-base font-black uppercase tracking-widest shadow-xl shadow-red-200 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                                                 >
                                                     {isUpdating ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
                                                     Submit for Verification
@@ -427,8 +474,8 @@ export default function FieldPortal() {
                                 <div>
                                     <p className="text-sm font-black uppercase tracking-widest text-white/40 mb-1">Quick Insight</p>
                                     <p className="text-3xl font-black tabular-nums">
-                                        {complaints.filter(c => c.status === "New" && (currentUser?.role === "admin" || c.dept === currentUser?.dept)).length}
-                                        <span className="text-lg font-bold opacity-50 ml-2">New Online</span>
+                                        {complaints.filter(c => c.status === "New" && c.source === "voice" && (currentUser?.role === "admin" || c.dept === currentUser?.dept)).length}
+                                        <span className="text-lg font-bold opacity-50 ml-2">New Voice Reports</span>
                                     </p>
                                 </div>
                                 <div className="w-14 h-14 rounded-3xl bg-white/10 flex items-center justify-center border border-white/20">

@@ -56,7 +56,9 @@ export default function Analytics() {
         let avgResHours = 0;
         if (resolvedItems.length > 0) {
             const totalHrs = resolvedItems.reduce((acc, c) => {
-                const ageMs = Date.now() - c.timestamp;
+                // Fallback to 24h if legacy complaint lacks resolutionDate
+                const endMs = c.resolutionDate || (c.timestamp + 86400000);
+                const ageMs = endMs - c.timestamp;
                 return acc + ageMs / 3600000;
             }, 0);
             avgResHours = totalHrs / resolvedItems.length;
@@ -289,8 +291,8 @@ export default function Analytics() {
                                                 itemStyle={{ fontSize: 11, fontWeight: 900, textTransform: 'uppercase', color: '#B91C1C' }}
                                             />
                                             <Legend wrapperStyle={{ fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', paddingTop: 20 }} />
-                                            <Area type="monotone" dataKey="total" stroke="#B91C1C" strokeWidth={4} fill="url(#totalGrad)" name="Total" />
-                                            <Area type="monotone" dataKey="resolved" stroke="#111827" strokeWidth={4} fill="transparent" name="Resolved" />
+                                            <Area type="linear" dataKey="total" stroke="#B91C1C" strokeWidth={4} fill="url(#totalGrad)" name="Total" />
+                                            <Area type="linear" dataKey="resolved" stroke="#111827" strokeWidth={4} fill="transparent" name="Resolved" />
                                         </AreaChart>
                                     </ResponsiveContainer>
                                 </div>

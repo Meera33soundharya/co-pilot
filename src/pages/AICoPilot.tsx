@@ -72,20 +72,29 @@ export default function AICoPilot() {
               Output
             </div>
             
-            <div className="flex-1 w-full bg-white border border-gray-300 rounded-xl p-4 flex items-center justify-center overflow-y-auto custom-scrollbar shadow-sm">
+            <div className="flex-1 w-full bg-white border border-gray-300 rounded-xl p-6 overflow-y-auto custom-scrollbar shadow-sm">
               {loading ? (
-                <div className="flex flex-col items-center gap-3 text-gray-500">
+                <div className="h-full flex flex-col items-center justify-center gap-3 text-gray-500">
                   <Sparkles className="w-8 h-8 animate-spin" />
-                  <span className="text-lg">Processing...</span>
+                  <span className="text-lg">Processing your request...</span>
                 </div>
               ) : output ? (
-                <div className="w-full h-full text-lg text-gray-800 whitespace-pre-wrap leading-relaxed">
-                  {output}
+                <div className="w-full text-lg text-gray-800 whitespace-pre-wrap leading-relaxed space-y-4">
+                  {output.split('\n\n').map((paragraph, i) => (
+                    <p key={i}>
+                      {paragraph.split(/(\*\*.*?\*\*)/g).map((part, j) => {
+                        if (part.startsWith('**') && part.endsWith('**')) {
+                          return <strong key={j} className="text-gray-900 font-bold">{part.slice(2, -2)}</strong>;
+                        }
+                        return <span key={j}>{part}</span>;
+                      })}
+                    </p>
+                  ))}
                 </div>
               ) : (
-                <div className="flex flex-col items-center gap-3 text-gray-400">
+                <div className="h-full flex flex-col items-center justify-center gap-3 text-gray-400">
                   <Sparkles className="w-8 h-8 opacity-50" />
-                  <span className="text-lg">Select an action to generate content</span>
+                  <span className="text-lg text-center max-w-sm">Select an action on the left to generate content based on your context.</span>
                 </div>
               )}
             </div>
