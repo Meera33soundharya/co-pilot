@@ -144,8 +144,23 @@ function entry(actor: string, action: string, minsAgo = 0): AuditEntry {
 
 export const initialComplaints: Complaint[] = [
     {
+        id: "GRV-8297", citizen: "Ajoy Mukhopadhyay", phone: "+91 98765 12345",
+        ward: "Ward Number 1, Kolkata", citizenId: "citizen_ajoy",
+        category: "Sanitation", issue: "Severe waterlogging near Dum Dum Metro",
+        description: "The area near the metro station is completely waterlogged after a brief spell of rain. Drains are clogged with plastic waste.",
+        priority: "High", status: "New", assignedTo: "", dept: "Sanitation Department",
+        time: "Just now", timestamp: now - 1 * 60000, notified: false, source: "web",
+        coords: { lat: 22.6178, lng: 88.3704 },
+        location: "Dum Dum Metro Station, Kolkata, West Bengal",
+        evidence: [],
+        audit: [
+            entry("System", "Complaint submitted via Web Portal", 1),
+            entry("System", "Auto-categorized as Sanitation", 0),
+        ],
+    },
+    {
         id: "GRV-8296", citizen: "Online Citizen", phone: "+91 90000 12345",
-        ward: "Ward 02", citizenId: "citizen_amit",
+        ward: "Ward 2", citizenId: "citizen_amit",
         category: "Water Supply", issue: "No water supply for 2 days – Sector 4",
         description: "The water supply has been completely cut off for 2 days in Sector 4. Residents are buying water at high cost. Urgent repair needed.",
         priority: "High", status: "New", assignedTo: "", dept: "Water Supply Department",
@@ -159,7 +174,7 @@ export const initialComplaints: Complaint[] = [
     {
 
         id: "GRV-8295", citizen: "Meera Soundarya", phone: "+91 63821 54321",
-        ward: "Ward 05", citizenId: "citizen_meera",
+        ward: "Ward 5", citizenId: "citizen_meera",
         category: "Electricity", issue: "Live wire dangling on street near Park West",
         description: "Extremely dangerous live wire hanging low after last night's wind. Needs immediate isolation before anyone gets hurt.",
         priority: "High", status: "New", assignedTo: "", dept: "Electricity Board",
@@ -172,7 +187,7 @@ export const initialComplaints: Complaint[] = [
     },
     {
         id: "GRV-8294", citizen: "Amit Patel", phone: "+91 98765 43210",
-        ward: "Ward 03", citizenId: "citizen_amit",
+        ward: "Ward 3", citizenId: "citizen_amit",
         category: "Water Supply", issue: "Severe water leakage – Block C, Sector 7",
         description: "Water is leaking from the main pipeline near Block C and flooding the road, making it dangerous for pedestrians and vehicles.",
         priority: "High", status: "In Progress", assignedTo: "Rajiv Kumar (Water Dept)", dept: "Water Supply Department",
@@ -200,7 +215,7 @@ export const initialComplaints: Complaint[] = [
     },
     {
         id: "GRV-8292", citizen: "Vikram Singh", phone: "+91 76543 21098",
-        ward: "Ward 06", citizenId: "citizen_vikram",
+        ward: "Ward 6", citizenId: "citizen_vikram",
         category: "Roads & Infrastructure", issue: "Broken road causing accidents on Main Road",
         description: "A large pothole formed due to recent rain. Two accidents have already occurred. Urgent road repair is needed immediately.",
         priority: "High", status: "New", assignedTo: "", dept: "Roads & PWD",
@@ -212,7 +227,7 @@ export const initialComplaints: Complaint[] = [
     },
     {
         id: "GRV-8291", citizen: "Ananya Iyer", phone: "+91 65432 10987",
-        ward: "Ward 09", citizenId: "citizen_ananya",
+        ward: "Ward 9", citizenId: "citizen_ananya",
         category: "Sanitation", issue: "Garbage not collected for 3 days",
         description: "No garbage collection truck has visited our area for 3 days. Waste is piling up near the main entrance gate.",
         priority: "Medium", status: "Resolved", assignedTo: "Sanitation Department", dept: "Sanitation Department",
@@ -228,7 +243,7 @@ export const initialComplaints: Complaint[] = [
     },
     {
         id: "GRV-8290", citizen: "Karan Mehta", phone: "+91 54321 09876",
-        ward: "Ward 03", citizenId: "citizen_karan",
+        ward: "Ward 3", citizenId: "citizen_karan",
         category: "Drainage", issue: "Drain blocked after heavy rain",
         description: "The drainage outlet near the park is completely blocked, causing waterlogging inside 4 residential houses.",
         priority: "High", status: "In Progress", assignedTo: "Drainage & Sewerage", dept: "Drainage & Sewerage",
@@ -242,7 +257,7 @@ export const initialComplaints: Complaint[] = [
     },
     {
         id: "GRV-8289", citizen: "Priya Sharma", phone: "+91 43210 98765",
-        ward: "Ward 07", citizenId: "citizen_priya",
+        ward: "Ward 7", citizenId: "citizen_priya",
         category: "Parks & Recreation", issue: "Broken swings in community park",
         description: "The swing and slide in the community park are broken and sharp-edged. Children risk injury when using them.",
         priority: "Low", status: "Categorized", assignedTo: "", dept: "Parks Department",
@@ -270,7 +285,7 @@ export const initialComplaints: Complaint[] = [
     },
     {
         id: "GRV-8287", citizen: "Deepika Nair", phone: "+91 21098 76543",
-        ward: "Ward 04", citizenId: "citizen_deepika",
+        ward: "Ward 4", citizenId: "citizen_deepika",
         category: "Roads & Infrastructure", issue: "Deep pothole damaging vehicles near temple",
         description: "A deep pothole near the temple entrance has damaged 3 vehicles this week. Urgent repair and warning signs needed.",
         priority: "High", status: "In Progress", assignedTo: "Roads & PWD", dept: "Roads & PWD",
@@ -284,7 +299,7 @@ export const initialComplaints: Complaint[] = [
     },
     {
         id: "GRV-8286", citizen: "Mohammed Ali", phone: "+91 10987 65432",
-        ward: "Ward 02", citizenId: "citizen_ali",
+        ward: "Ward 2", citizenId: "citizen_ali",
         category: "Sanitation", issue: "Public toilet dirty near Ward Office",
         description: "The public toilet near the ward office has not been cleaned for over a week. Condition is extremely unhygienic.",
         priority: "Medium", status: "New", assignedTo: "", dept: "Sanitation Department",
@@ -296,7 +311,7 @@ export const initialComplaints: Complaint[] = [
     },
     {
         id: "GRV-8285", citizen: "Suresh Babu", phone: "+91 09876 54321",
-        ward: "Ward 08", citizenId: "citizen_suresh",
+        ward: "Ward 8", citizenId: "citizen_suresh",
         category: "Enforcement", issue: "Footpath blocked by vendor stall near market",
         description: "A vendor has set up a permanent stall blocking the footpath near the main market, preventing pedestrian movement.",
         priority: "Low", status: "Resolved", assignedTo: "Municipal Enforcement", dept: "Municipal Enforcement",

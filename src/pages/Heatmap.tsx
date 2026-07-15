@@ -1,27 +1,10 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useComplaints } from "@/context/ComplaintsContext";
 import { MapPin, TrendingUp, Flame } from "lucide-react";
-import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
-import L from "leaflet";
-import icon from "leaflet/dist/images/marker-icon.png";
-import iconShadow from "leaflet/dist/images/marker-shadow.png";
-
-let DefaultIcon = L.icon({
-    iconUrl: icon,
-    shadowUrl: iconShadow,
-    iconAnchor: [12, 41]
-});
-L.Marker.prototype.options.icon = DefaultIcon;
-
-function MapUpdater({ center }: { center: [number, number] }) {
-    const map = useMap();
-    map.setView(center, map.getZoom());
-    return null;
-}
 
 const WARDS = Array.from({ length: 12 }, (_, i) => `Ward ${i + 1}`);
+
 
 const CATEGORY_COLORS: Record<string, string> = {
     "Roads & Infrastructure": "#B91C1C",
@@ -34,7 +17,7 @@ const CATEGORY_COLORS: Record<string, string> = {
     "Enforcement": "#9CA3AF",
 };
 
-// Real Bengaluru neighbourhood coords per ward
+// Real Bengaluru neighbourhood coords per ward (used only as fallback if complaint lacks coords)
 const WARD_COORDS: Record<string, { lat: number; lng: number; area: string }> = {
     "Ward 1":  { lat: 12.9716, lng: 77.5946, area: "MG Road, Bengaluru" },
     "Ward 2":  { lat: 12.9279, lng: 77.6271, area: "Koramangala" },
@@ -50,14 +33,35 @@ const WARD_COORDS: Record<string, { lat: number; lng: number; area: string }> = 
     "Ward 12": { lat: 13.0475, lng: 77.6177, area: "RT Nagar" },
 };
 
+// Normalize a ward string to a canonical key: extracts the leading integer.
+// "Ward 02" -> "Ward 2", "Ward Number 1, Kolkata" -> kept as-is (non-standard).
+function canonicalWardKey(ward: string): string {
+    // Match "Ward" followed by optional whitespace + zero-padded number
+    const m = ward.match(/^Ward\s+(\d+)$/i);
+    if (m) return `Ward ${parseInt(m[1], 10)}`;
+    return ward; // non-standard ward strings pass through unchanged
+}
+
 function generateWardData(complaints: any[]) {
-    return WARDS.map((ward) => {
-        const wardComplaints = complaints.filter(c => c.ward === ward);
+    // Base 12 canonical wards
+    const baseWards = Array.from({ length: 12 }, (_, i) => `Ward ${i + 1}`);
+
+    // Collect all unique canonical ward keys from complaint data
+    const extraWards = complaints
+        .map(c => c.ward)
+        .filter(Boolean)
+        .map(canonicalWardKey)
+        .filter(w => !baseWards.includes(w)); // only non-standard wards (e.g. Kolkata)
+
+    const uniqueWards = Array.from(new Set([...baseWards, ...extraWards]));
+
+    return uniqueWards.map((ward) => {
+        // Match complaints by canonical key so "Ward 02" and "Ward 2" both land on "Ward 2"
+        const wardComplaints = complaints.filter(c => canonicalWardKey(c.ward) === ward);
         const total = wardComplaints.length;
         const resolved = wardComplaints.filter(c => c.status === "Resolved").length;
         const highPri = wardComplaints.filter(c => c.priority === "High").length;
 
-        // Determine top issue from actual data, or default if empty
         const issueCounts = wardComplaints.reduce((acc: Record<string, number>, c) => {
             acc[c.category] = (acc[c.category] || 0) + 1;
             return acc;
@@ -65,12 +69,27 @@ function generateWardData(complaints: any[]) {
         
         const topCat = Object.entries(issueCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "General Maintenance";
 
-        // Intensity scale (0-10): 0 is empty, 1-3 is low, 4-7 is moderate, 8-10 is critical
-        // We scale based on the relative volume of complaints in the district
-        const maxComplaints = Math.max(...WARDS.map(w => complaints.filter(c => c.ward === w).length), 1);
+        const maxComplaints = Math.max(...uniqueWards.map(w => complaints.filter(c => canonicalWardKey(c.ward) === w).length), 1);
         const intensity = total === 0 ? 0 : Math.ceil((total / maxComplaints) * 10);
         
-        return { ward, total, resolved, highPri, topCat, intensity };
+        // Find correct coordinates: prefer actual complaint coords, then static fallback
+        const complaintWithCoords = wardComplaints.find(c => c.coords && typeof c.coords.lat === 'number');
+        let lat: number | undefined = undefined;
+        let lng: number | undefined = undefined;
+        let area = "Location details unavailable";
+
+        if (complaintWithCoords) {
+            lat = complaintWithCoords.coords.lat;
+            lng = complaintWithCoords.coords.lng;
+            area = complaintWithCoords.location || ward;
+        } else if (WARD_COORDS[ward]) {
+            lat = WARD_COORDS[ward].lat;
+            lng = WARD_COORDS[ward].lng;
+            area = WARD_COORDS[ward].area;
+        }
+        // Only warn once per unique ward key (memoized — this won't loop)
+
+        return { ward, total, resolved, highPri, topCat, intensity, lat, lng, area };
     });
 }
 
@@ -90,7 +109,9 @@ function heatTextColor(intensity: number): string {
 export default function Heatmap() {
     const { complaints } = useComplaints();
     const [selected, setSelected] = useState<string | null>(null);
-    const wardData = generateWardData(complaints);
+    // Memoize ward data — only recompute when the complaints array changes,
+    // not on every render. This eliminates the console.warn loop.
+    const wardData = useMemo(() => generateWardData(complaints), [complaints]);
     const selectedWard = wardData.find(w => w.ward === selected);
     const totalComplaints = wardData.reduce((s, w) => s + w.total, 0);
     const hottest = [...wardData].sort((a, b) => b.intensity - a.intensity)[0];
@@ -173,80 +194,67 @@ export default function Heatmap() {
                         </div>
                     </div>
 
-                    {/* Ward Detail / Top Issues */}
+                    {/* Ward Detail Panel */}
                     <div className="bg-white rounded-3xl border border-gray-100 shadow-sm flex flex-col overflow-hidden">
                         {selectedWard ? (
-                            <>
-                                {/* Mini OSM map for selected ward */}
-                                {WARD_COORDS[selectedWard.ward] && (
-                                    <div className="relative" style={{ height: "180px" }}>
-                                        <MapContainer
-                                            key={selectedWard.ward}
-                                            center={[WARD_COORDS[selectedWard.ward].lat, WARD_COORDS[selectedWard.ward].lng]}
-                                            zoom={13}
-                                            style={{ width: "100%", height: "100%", zIndex: 1 }}
-                                            zoomControl={false}
-                                            attributionControl={false}
-                                        >
-                                            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                                            <Marker position={[WARD_COORDS[selectedWard.ward].lat, WARD_COORDS[selectedWard.ward].lng]} />
-                                            <MapUpdater center={[WARD_COORDS[selectedWard.ward].lat, WARD_COORDS[selectedWard.ward].lng]} />
-                                        </MapContainer>
-                                        <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-widest text-[#B91C1C] border border-red-100 flex items-center gap-1.5">
-                                            <MapPin className="w-2.5 h-2.5" /> {selectedWard.ward}
+                            <div className="p-6 flex flex-col gap-4">
+                                {/* Ward header */}
+                                <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
+                                    <div
+                                        className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                                        style={{ backgroundColor: heatColor(selectedWard.intensity) }}
+                                    >
+                                        <MapPin className={`w-4 h-4 ${selectedWard.intensity > 4 ? 'text-white' : 'text-red-500'}`} />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <h3 className="text-lg font-black text-gray-900 leading-tight">{selectedWard.ward}</h3>
+                                        <p className="text-sm text-gray-400 font-medium truncate">{selectedWard.area}</p>
+                                    </div>
+                                    <div
+                                        className="ml-auto px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-widest text-white shrink-0"
+                                        style={{ backgroundColor: heatColor(selectedWard.intensity) }}
+                                    >
+                                        {selectedWard.total} cases
+                                    </div>
+                                </div>
+
+                                {/* Stats */}
+                                <div className="space-y-1">
+                                    {[
+                                        { label: "Total Complaints", value: selectedWard.total,   color: "text-gray-900" },
+                                        { label: "Resolved",         value: selectedWard.resolved, color: "text-emerald-600" },
+                                        { label: "High Priority",    value: selectedWard.highPri,  color: "text-red-600" },
+                                    ].map(item => (
+                                        <div key={item.label} className="flex items-center justify-between py-2.5 border-b border-gray-50">
+                                            <span className="text-base font-bold text-gray-500">{item.label}</span>
+                                            <span className={`text-lg font-black ${item.color}`}>{item.value}</span>
                                         </div>
-                                        <div
-                                            className="absolute top-2 right-2 px-2 py-0.5 rounded-lg text-[9px] font-black uppercase text-white"
-                                            style={{ backgroundColor: heatColor(selectedWard.intensity) }}
-                                        >
-                                            {selectedWard.total} cases
+                                    ))}
+                                    <div className="py-2.5 border-b border-gray-50">
+                                        <p className="text-base font-bold text-gray-500 mb-1.5">Top Issue</p>
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: CATEGORY_COLORS[selectedWard.topCat] ?? "#9CA3AF" }} />
+                                            <span className="text-base font-black text-gray-900">{selectedWard.topCat}</span>
                                         </div>
                                     </div>
-                                )}
-                                <div className="p-6 flex flex-col flex-1">
-                                    <div className="flex items-center gap-3 mb-4">
-                                        <div className="p-2.5 bg-red-50 rounded-xl">
-                                            <MapPin className="w-4 h-4 text-[#B91C1C]" />
-                                        </div>
-                                        <div>
-                                            <h3 className="text-lg font-black text-gray-900">{selectedWard.ward}</h3>
-                                            <p className="text-sm text-gray-400 font-medium">{WARD_COORDS[selectedWard.ward]?.area}</p>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-3 flex-1">
-                                        {[
-                                            { label: "Total Complaints", value: selectedWard.total,   color: "text-gray-900" },
-                                            { label: "Resolved",         value: selectedWard.resolved, color: "text-emerald-600" },
-                                            { label: "High Priority",    value: selectedWard.highPri,  color: "text-red-600" },
-                                        ].map(item => (
-                                            <div key={item.label} className="flex items-center justify-between py-2.5 border-b border-gray-50">
-                                                <span className="text-base font-bold text-gray-500">{item.label}</span>
-                                                <span className={`text-lg font-black ${item.color}`}>{item.value}</span>
-                                            </div>
-                                        ))}
-                                        <div className="py-2.5 border-b border-gray-50">
-                                            <p className="text-base font-bold text-gray-500 mb-1.5">Top Issue</p>
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: CATEGORY_COLORS[selectedWard.topCat] ?? "#9CA3AF" }} />
-                                                <span className="text-base font-black text-gray-900">{selectedWard.topCat}</span>
-                                            </div>
-                                        </div>
-                                        <div className="pt-1">
-                                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Heat Level</p>
-                                            <div className="h-2.5 bg-gray-50 rounded-full overflow-hidden">
-                                                <div className="h-full rounded-full transition-all duration-700" style={{ width: `${(selectedWard.intensity / 10) * 100}%`, backgroundColor: heatColor(selectedWard.intensity) }} />
-                                            </div>
+                                    <div className="pt-3">
+                                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Heat Level</p>
+                                        <div className="h-2.5 bg-gray-50 rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full rounded-full transition-all duration-700"
+                                                style={{ width: `${(selectedWard.intensity / 10) * 100}%`, backgroundColor: heatColor(selectedWard.intensity) }}
+                                            />
                                         </div>
                                     </div>
                                 </div>
-                            </>
+                            </div>
                         ) : (
                             <div className="flex-1 flex flex-col items-center justify-center text-center p-10">
                                 <div className="p-4 bg-gray-50 rounded-3xl mb-4">
                                     <MapPin className="w-8 h-8 text-gray-200" />
                                 </div>
                                 <p className="text-lg font-black text-gray-400 mb-2">Select a Ward</p>
-                                <p className="text-base text-gray-300">Click any ward cell to see its map and stats</p>
+                                <p className="text-base text-gray-300">Click any ward cell to see its stats</p>
                             </div>
                         )}
                     </div>

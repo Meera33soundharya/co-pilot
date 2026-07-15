@@ -108,83 +108,56 @@ export default function SpeechAI() {
     }
   }, []);
 
+  // ── Speak using Web Speech API (built-in, works in all modern browsers) ──
   function handlePlay(text: string, langLabel: string, broadcastId: number, e: React.MouseEvent) {
     e.stopPropagation();
-    
-    // If already speaking this broadcast, stop it
+
+    // Toggle off if already speaking this broadcast
     if (isSpeaking && speakingId === broadcastId) {
-      if ((window as any).currentGoogleAudio) {
-        (window as any).currentGoogleAudio.pause();
-        (window as any).currentGoogleAudio = null;
-      }
+      window.speechSynthesis.cancel();
       setIsSpeaking(false);
       setSpeakingId(null);
       return;
     }
 
-    // Stop any existing audio
-    if ((window as any).currentGoogleAudio) {
-      (window as any).currentGoogleAudio.pause();
-      (window as any).currentGoogleAudio = null;
-    }
-    
-    // Find the matching language config by label
-    const langConfig = LANGUAGES.find(l => l.label === langLabel);
-    const tl = langConfig?.bcp.split('-')[0] || 'en';
+    // Stop any running speech
+    window.speechSynthesis.cancel();
 
-    // Break text into chunks under 200 chars (Google TTS limit)
-    const chunks = text.match(/.{1,190}(?:\s|$)/g) || [text];
-    let currentChunkIdx = 0;
+    const langConfig = LANGUAGES.find(l => l.label === langLabel);
+    const bcp = langConfig?.bcp || 'en-IN';
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = bcp;
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+
+    // Try to pick a voice matching the language
+    const voices = window.speechSynthesis.getVoices();
+    const matched = voices.find(v => v.lang.startsWith(bcp.split('-')[0]));
+    if (matched) utterance.voice = matched;
+
+    utterance.onend = () => { setIsSpeaking(false); setSpeakingId(null); };
+    utterance.onerror = (err) => {
+      console.warn('[SpeechAI] SpeechSynthesis error:', err);
+      setIsSpeaking(false);
+      setSpeakingId(null);
+    };
 
     setIsSpeaking(true);
     setSpeakingId(broadcastId);
-
-    const playNextChunk = () => {
-      if (currentChunkIdx >= chunks.length) {
-        setIsSpeaking(false);
-        setSpeakingId(null);
-        return;
-      }
-      
-      const chunk = chunks[currentChunkIdx];
-      const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(chunk)}&tl=${tl}&client=tw-ob`;
-      
-      const audio = new Audio(url);
-      (window as any).currentGoogleAudio = audio;
-      
-      audio.onended = () => {
-        currentChunkIdx++;
-        playNextChunk();
-      };
-      
-      audio.onerror = () => {
-        console.warn("Audio chunk failed to load:", url);
-        currentChunkIdx++;
-        playNextChunk();
-      };
-      
-      audio.play().catch(e => {
-        console.warn("Audio playback prevented:", e);
-        currentChunkIdx++;
-        playNextChunk();
-      });
-    };
-
-    playNextChunk();
+    window.speechSynthesis.speak(utterance);
   }
 
   function handleDownload(text: string, langLabel: string, title: string, e: React.MouseEvent) {
     e.stopPropagation();
-    const langConfig = LANGUAGES.find(l => l.label === langLabel);
-    const tl = langConfig?.bcp.split('-')[0] || 'en';
-    
-    // For simplicity, download the first chunk if text is very long
-    const chunk = text.match(/.{1,190}(?:\s|$)/g)?.[0] || text; 
-    const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(chunk)}&tl=${tl}&client=tw-ob`;
-    
-    // Google TTS does not support CORS for fetch(). 
-    // Opening in a new tab allows the browser to play/download the file natively.
-    window.open(url, '_blank');
+    // Download as plain text — TTS download requires a backend; plain text is the reliable fallback
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   /* ── Native-language input translations ─────────────────── */
@@ -229,14 +202,29 @@ export default function SpeechAI() {
     let translatedInput = text;
 
     if (langId !== "english") {
-      try {
-        const tl = langObj.bcp.split('-')[0]; // "hi", "ta", "te", "bn", "mr", "ml"
-        const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`);
-        const data = await res.json();
-        translatedInput = data[0].map((item: any) => item[0]).join('');
-      } catch (err) {
-        console.error("Translation failed:", err);
-        translatedInput = NATIVE_INPUT[langId]?.[text] || text;
+      // Check static cache first
+      const cached = NATIVE_INPUT[langId]?.[text];
+      if (cached) {
+        translatedInput = cached;
+      } else {
+        try {
+          // MyMemory — free, CORS-friendly translation API
+          const tl = langObj.bcp; // e.g. "hi-IN"
+          const res = await fetch(
+            `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|${tl}`
+          );
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          const translated = data?.responseData?.translatedText;
+          if (translated && data.responseStatus === 200) {
+            translatedInput = translated;
+          } else {
+            throw new Error(data.responseDetails || 'No translation returned');
+          }
+        } catch (err) {
+          console.error("[SpeechAI] Translation failed, using English text:", err);
+          translatedInput = text; // graceful fallback — English with native tone wrapper
+        }
       }
     }
 
@@ -265,6 +253,7 @@ export default function SpeechAI() {
     setIsGenerating(false);
     setJustGenerated(true);
   }
+
 
   return (
     <DashboardLayout

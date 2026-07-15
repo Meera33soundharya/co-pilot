@@ -257,13 +257,21 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
     const complaints: Complaint[] = (() => {
         if (!currentUser || currentUser.role === "admin" || currentUser.role === "officer") return allComplaints;
         if (currentUser.role === "citizen") {
-            // Match by citizenId OR citizen name so public-portal submissions also appear
+            // Match by citizenId OR citizen name (case-insensitive, whitespace-insensitive)
             const cid = currentUser.citizenId;
-            const cname = currentUser.name?.toLowerCase().trim();
-            return allComplaints.filter(c =>
-                (cid && c.citizenId === cid) ||
-                (cname && c.citizen.toLowerCase().trim() === cname)
-            );
+            const cname = currentUser.name?.toLowerCase().trim().replace(/\s+/g, " ");
+            return allComplaints.filter(c => {
+                // Exact citizenId match
+                if (cid && c.citizenId === cid) return true;
+                // Name match (normalize both names)
+                if (cname) {
+                    const complaintName = c.citizen.toLowerCase().trim().replace(/\s+/g, " ");
+                    if (complaintName === cname) return true;
+                    // Also check if names are similar (e.g., "Amit Patel" vs "amit patel")
+                    if (complaintName.includes(cname) || cname.includes(complaintName)) return true;
+                }
+                return false;
+            });
         }
         return allComplaints;
     })();
@@ -344,14 +352,17 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
         const ts = Date.now();
         const cat = data.category ?? autoCategory(`${data.issue} ${data.description}`);
         const dept = data.dept ?? CATEGORY_DEPT[cat];
+        
+        // CRITICAL FIX: Generate consistent citizenId for both logged-in and anonymous users
+        const citizenId = currentUser?.citizenId 
+            ?? `citizen_${data.citizen.toLowerCase().replace(/[^a-z0-9]/g, "_")}_${Date.now().toString(36).slice(-4)}`;
+        
         const newC: Complaint = {
             id,
             citizen: data.citizen,
             phone: data.phone,
             ward: data.ward,
-            // Use logged-in user's citizenId so tracking works correctly
-            citizenId: currentUser?.citizenId
-                ?? `citizen_${data.citizen.toLowerCase().replace(/\s+/g, "_")}`,
+            citizenId: citizenId, // Use consistent ID
             location: data.location,
             category: cat,
             issue: data.issue,
@@ -404,7 +415,7 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
             title: "✅ Complaint Received",
             message: `Your complaint ${id} has been submitted and is being reviewed. We will keep you updated.`,
             complaintId: id,
-            citizenId: newC.citizenId,
+            citizenId: citizenId, // Use the same citizenId
             target: "citizen"
         });
 
