@@ -2,6 +2,24 @@ import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useComplaints } from "@/context/ComplaintsContext";
 import { MapPin, TrendingUp, Flame } from "lucide-react";
+import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+import icon from "leaflet/dist/images/marker-icon.png";
+import iconShadow from "leaflet/dist/images/marker-shadow.png";
+
+let DefaultIcon = L.icon({
+    iconUrl: icon,
+    shadowUrl: iconShadow,
+    iconAnchor: [12, 41]
+});
+L.Marker.prototype.options.icon = DefaultIcon;
+
+function MapUpdater({ center }: { center: [number, number] }) {
+    const map = useMap();
+    map.setView(center, map.getZoom());
+    return null;
+}
 
 const WARDS = Array.from({ length: 12 }, (_, i) => `Ward ${i + 1}`);
 
@@ -162,15 +180,18 @@ export default function Heatmap() {
                                 {/* Mini OSM map for selected ward */}
                                 {WARD_COORDS[selectedWard.ward] && (
                                     <div className="relative" style={{ height: "180px" }}>
-                                        <iframe
+                                        <MapContainer
                                             key={selectedWard.ward}
-                                            src={`https://www.openstreetmap.org/export/embed.html?bbox=${WARD_COORDS[selectedWard.ward].lng - 0.025},${WARD_COORDS[selectedWard.ward].lat - 0.025},${WARD_COORDS[selectedWard.ward].lng + 0.025},${WARD_COORDS[selectedWard.ward].lat + 0.025}&layer=mapnik&marker=${WARD_COORDS[selectedWard.ward].lat},${WARD_COORDS[selectedWard.ward].lng}`}
-                                            width="99%"
-                                            height="100%"
-                                            style={{ border: "none" }}
-                                            title={`${selectedWard.ward} map`}
-                                            loading="lazy"
-                                        />
+                                            center={[WARD_COORDS[selectedWard.ward].lat, WARD_COORDS[selectedWard.ward].lng]}
+                                            zoom={13}
+                                            style={{ width: "100%", height: "100%", zIndex: 1 }}
+                                            zoomControl={false}
+                                            attributionControl={false}
+                                        >
+                                            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                                            <Marker position={[WARD_COORDS[selectedWard.ward].lat, WARD_COORDS[selectedWard.ward].lng]} />
+                                            <MapUpdater center={[WARD_COORDS[selectedWard.ward].lat, WARD_COORDS[selectedWard.ward].lng]} />
+                                        </MapContainer>
                                         <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-widest text-[#B91C1C] border border-red-100 flex items-center gap-1.5">
                                             <MapPin className="w-2.5 h-2.5" /> {selectedWard.ward}
                                         </div>

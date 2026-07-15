@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useComplaints } from "@/context/ComplaintsContext";
 
 import { analyzeComplaint } from "@/services/aiService";
@@ -7,12 +7,129 @@ import {
     CheckCircle2, Loader2, ArrowLeft, Send,
     MessageSquare, Shield, Camera, X, Check,
     ChevronRight, Map as MapIcon, Paperclip, Mic, Video,
-    LogOut, FileText, Search, MicOff, Hash, Building2, Sparkles, Brain
+    LogOut, FileText, Search, MicOff, Hash, Building2, Sparkles, Brain, Navigation
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+// Fix Leaflet icon issue
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
 
 
 type Step = "details" | "issue" | "location" | "preview" | "submitting" | "success";
+
+function MapUpdater({ coords }: { coords: { lat: number, lng: number } }) {
+    const map = useMap();
+    useEffect(() => {
+        map.flyTo([coords.lat, coords.lng], map.getZoom());
+    }, [coords, map]);
+    return null;
+}
+
+function MapEventsHandler({ onLocationChange }: { onLocationChange: (lat: number, lng: number) => void }) {
+    useMapEvents({
+        click(e) {
+            onLocationChange(e.latlng.lat, e.latlng.lng);
+        },
+    });
+    return null;
+}
+
+// ─── Stable Search Input with Nominatim Autocomplete ─────────────────────────
+// React.memo prevents re-renders from parent state — fixes "one letter" bug.
+// Includes a live suggestion dropdown powered by Nominatim (no API key needed).
+const LocationSearchInput = React.memo(function LocationSearchInput({
+    inputRef,
+    onSearch,
+    isSearching,
+}: {
+    inputRef: React.RefObject<HTMLInputElement>;
+    onSearch: () => void;
+    isSearching: boolean;
+}) {
+    const [suggestions, setSuggestions] = useState<{ display_name: string; lat: string; lon: string }[]>([]);
+    const [showSugg, setShowSugg] = useState(false);
+    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value;
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        if (val.trim().length < 2) { setSuggestions([]); setShowSugg(false); return; }
+        debounceRef.current = setTimeout(() => {
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(val)}&limit=5&countrycodes=in`)
+                .then(r => r.json())
+                .then(data => { setSuggestions(data); setShowSugg(data.length > 0); })
+                .catch(() => {});
+        }, 350);
+    };
+
+    const pickSuggestion = (s: { display_name: string; lat: string; lon: string }) => {
+        if (inputRef.current) inputRef.current.value = s.display_name;
+        setSuggestions([]);
+        setShowSugg(false);
+        onSearch();
+    };
+
+    return (
+        <div style={{ position: 'relative', width: '100%' }}>
+            <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10 pointer-events-none" style={{ top: '50%', transform: 'translateY(-50%)' }} />
+            <input
+                ref={inputRef}
+                type="text"
+                placeholder="Search any village, street or landmark in India..."
+                className="w-full py-4 bg-gray-50 border border-transparent rounded-2xl text-lg font-bold focus:bg-white focus:border-red-300 focus:outline-none transition-all shadow-inner"
+                style={{ paddingLeft: '3.5rem', paddingRight: '128px' }}
+                onChange={handleInput}
+                onKeyDown={e => {
+                    if (e.key === 'Enter') { e.preventDefault(); setShowSugg(false); onSearch(); }
+                    if (e.key === 'Escape') setShowSugg(false);
+                }}
+                onBlur={() => setTimeout(() => setShowSugg(false), 150)}
+                onFocus={() => suggestions.length > 0 && setShowSugg(true)}
+                autoComplete="off"
+            />
+            <button
+                type="button"
+                onClick={() => { setShowSugg(false); onSearch(); }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl text-sm font-black transition-colors flex items-center justify-center min-w-[100px] z-20"
+                style={{ top: '50%', transform: 'translateY(-50%)' }}
+            >
+                {isSearching ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Search'}
+            </button>
+            {showSugg && suggestions.length > 0 && (
+                <ul style={{
+                    position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 9999,
+                    background: 'white', borderRadius: '1rem', boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+                    border: '1px solid #e5e7eb', marginTop: '6px', maxHeight: '260px', overflowY: 'auto',
+                    listStyle: 'none', padding: '6px 0'
+                }}>
+                    {suggestions.map((s, i) => (
+                        <li key={i}
+                            onMouseDown={() => pickSuggestion(s)}
+                            style={{
+                                padding: '10px 18px', cursor: 'pointer', fontSize: '0.95rem',
+                                fontWeight: 600, color: '#1f2937', display: 'flex', alignItems: 'flex-start', gap: '10px'
+                            }}
+                            onMouseEnter={e => (e.currentTarget.style.background = '#f3f4f6')}
+                            onMouseLeave={e => (e.currentTarget.style.background = 'white')}
+                        >
+                            <span style={{ color: '#6b7280', marginTop: '2px', flexShrink: 0 }}>📍</span>
+                            <span style={{ lineHeight: 1.4 }}>{s.display_name}</span>
+                        </li>
+                    ))}
+                </ul>
+            )}
+        </div>
+    );
+});
 
 const WARDS = Array.from({ length: 100 }, (_, i) => `Ward ${(i + 1).toString().padStart(2, '0')}`);
 
@@ -52,17 +169,27 @@ export default function CitizenPortal() {
     const [form, setForm] = useState({
         citizen: currentUser?.name || "",
         phone: "",
-        ward: "Ward 01",
-        area: "Richmond Town",
+        ward: "Ward 28",
+        area: "Saravanampatti",
         priority: "Medium" as "Low" | "Medium" | "High",
         issue: "",
         description: "",
         location: "",
         landmark: "",
-        coords: { lat: 12.9716, lng: 77.5946 }, // Default
+        coords: { lat: 11.0836, lng: 76.9979 }, // Default: Coimbatore
         evidence: [] as string[],
         notifPref: "SMS" as "SMS" | "Email" | "None"
     });
+
+    const mapsLoaded = false; // Google Maps SDK removed - using Nominatim
+    const mapDivRef = useRef<HTMLDivElement>(null);
+    const googleMapRef = useRef<any>(null);
+    const markerRef = useRef<any>(null);
+    const autocompleteInputRef = useRef<HTMLInputElement>(null);
+    const autocompleteRef = useRef<any>(null);
+    const [mapQuery, setMapQuery] = useState("");
+    const [isDetecting, setIsDetecting] = useState(false);
+    const [pendingLocation, setPendingLocation] = useState<{ address: string; lat: number; lng: number } | null>(null);
 
     const set = (key: string, val: any) => setForm(f => ({ ...f, [key]: val }));
 
@@ -171,17 +298,15 @@ export default function CitizenPortal() {
         }
     };
 
-    const [isDetecting, setIsDetecting] = useState(false);
     const [isListening, setIsListening] = useState(false);
-    const [mapQuery, setMapQuery] = useState("");
-    const [suggestions, setSuggestions] = useState<{ display_name: string; lat: string; lon: string }[]>([]);
-    const [showSuggestions, setShowSuggestions] = useState(false);
 
     const [isRecording, setIsRecording] = useState(false);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
     const audioInputRef = useRef<HTMLInputElement>(null);
     const speechRecRef = useRef<any>(null);
+
+    // Autocomplete is now handled inside LocationSearchInput component via Nominatim
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
@@ -232,7 +357,6 @@ export default function CitizenPortal() {
                 };
                 reader.readAsDataURL(blob);
                 setIsRecording(false);
-                // Stop all tracks to release the microphone
                 stream.getTracks().forEach(track => track.stop());
             };
 
@@ -250,250 +374,102 @@ export default function CitizenPortal() {
         }
     };
 
-    // Helper: fetch from proxy first, fallback to direct Nominatim
-    const geoFetch = async (path: string): Promise<Response> => {
-        try {
-            const proxyRes = await fetch(`/geo-api${path}`, { headers: { "Accept-Language": "en" } });
-            if (proxyRes.ok) return proxyRes;
-        } catch { /* proxy unavailable, try direct */ }
-        return fetch(`https://nominatim.openstreetmap.org${path}`, {
-            headers: { "Accept-Language": "en", "User-Agent": "CoPilot-District-Gov-v1.0" }
-        });
+    // Manual Search with Nominatim (Google API is restricted for this key)
+    const handleManualSearch = () => {
+        const query = autocompleteInputRef.current?.value || mapQuery;
+        if (!query.trim()) return;
+        setIsSearching(true);
+
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=in`)
+            .then(res => res.json())
+            .then(data => {
+                setIsSearching(false);
+                if (data && data.length > 0) {
+                    const lat = parseFloat(data[0].lat);
+                    const lng = parseFloat(data[0].lon);
+                    setForm(f => ({ ...f, coords: { lat, lng } }));
+                    reverseGeocodeGoogle(lat, lng);
+                } else {
+                    alert("Location not found. Try selecting from the suggestions or refining your search.");
+                }
+            })
+            .catch(() => {
+                setIsSearching(false);
+                alert("Location not found. Try selecting from the suggestions or refining your search.");
+            });
     };
 
-    const handleSearchLocation = async () => {
-        if (!mapQuery.trim()) return;
-        setIsSearching(true);
-        setSuggestions([]);
-        setShowSuggestions(false);
+    // Reverse geocode using Nominatim — auto-fills location + landmark fields
+    const reverseGeocodeGoogle = useCallback((lat: number, lng: number) => {
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`)
+            .then(res => res.json())
+            .then(data => {
+                const addr = data.display_name || `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+                const a = data.address || {};
 
-        // 1. Check if the query itself matches an internal ward or locality
-        const { matchedWard, matchedArea, found } = findInternalMatch(mapQuery);
-        if (found) {
-            setForm(f => ({ ...f, ward: matchedWard, area: matchedArea }));
-            await fetchCoordsForAddress(`${matchedArea}, ${matchedWard}, Bengaluru`);
-            setIsSearching(false);
-            return;
-        }
+                // Build a short, human-friendly landmark string from structured fields
+                const landmarkParts: string[] = [];
+                if (a.road)          landmarkParts.push(a.road);
+                if (a.neighbourhood) landmarkParts.push(a.neighbourhood);
+                else if (a.suburb)   landmarkParts.push(a.suburb);
+                else if (a.village)  landmarkParts.push(a.village);
+                else if (a.town)     landmarkParts.push(a.town);
+                if (a.city || a.county) landmarkParts.push(a.city || a.county);
+                const autoLandmark = landmarkParts.join(', ');
 
-        try {
-            const res = await geoFetch(`/search?q=${encodeURIComponent(mapQuery)}&format=json&limit=1&countrycodes=in`);
-            if (res.status === 429) {
-                const { matchedWard, matchedArea } = findBestMatch(mapQuery);
-                setForm(f => ({ ...f, location: mapQuery, ward: matchedWard, area: matchedArea }));
-                return;
-            }
-            const data = await res.json();
-            if (data.length > 0) {
-                const place = data[0];
-                const lat = parseFloat(place.lat);
-                const lon = parseFloat(place.lon);
-                const parts = place.display_name.split(",");
-                const name = parts.slice(0, 3).join(", ").trim();
-                const { matchedWard, matchedArea } = findBestMatch(place.display_name);
+                setPendingLocation({ address: addr, lat, lng });
+                setMapQuery(addr);
+                if (autocompleteInputRef.current) autocompleteInputRef.current.value = addr;
 
+                // Auto-fill the form fields
                 setForm(f => ({
                     ...f,
-                    coords: { lat, lng: lon },
-                    location: name,
-                    ward: matchedWard,
-                    area: matchedArea
+                    location: addr,
+                    landmark: autoLandmark || f.landmark,
                 }));
-                setMapQuery(name);
-            } else {
-                const { matchedWard, matchedArea } = findBestMatch(mapQuery);
-                setForm(f => ({ ...f, location: mapQuery, ward: matchedWard, area: matchedArea }));
-            }
-        } catch (error) {
-            console.error("Search error:", error);
-            const { matchedWard, matchedArea } = findBestMatch(mapQuery);
-            setForm(f => ({ ...f, location: mapQuery, ward: matchedWard, area: matchedArea }));
-        } finally {
-            setIsSearching(false);
-        }
-    };
+            })
+            .catch(() => {
+                const fallbackAddr = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+                setPendingLocation({ address: fallbackAddr, lat, lng });
+                setMapQuery(fallbackAddr);
+                if (autocompleteInputRef.current) autocompleteInputRef.current.value = fallbackAddr;
+            });
+    }, []);
 
-    const fetchSuggestions = async (q: string) => {
-        if (q.length < 3) { setSuggestions([]); setShowSuggestions(false); return; }
-        
-        // Just rely on the actual geocoding API for suggestions to get real coordinates
-
-        try {
-            const res = await geoFetch(`/search?q=${encodeURIComponent(q)}&format=json&limit=5&countrycodes=in`);
-            const data = await res.json();
-            setSuggestions(data);
-            setShowSuggestions(true);
-        } catch {
-            setSuggestions([]);
-        }
-    };
-
-    const fetchCoordsForAddress = async (address: string) => {
-        setIsSearching(true);
-        try {
-            const res = await geoFetch(`/search?q=${encodeURIComponent(address)}&format=json&limit=1&countrycodes=in`);
-            if (res.ok) {
-                const data = await res.json();
-                if (data.length > 0) {
-                    const place = data[0];
-                    const lat = parseFloat(place.lat);
-                    const lon = parseFloat(place.lon);
-                    setForm(f => ({ ...f, coords: { lat, lng: lon }, location: address }));
-                    setMapQuery(address);
-                }
-            }
-        } catch (error) {
-            console.error("Failed to fetch coords for address", error);
-        } finally {
-            setIsSearching(false);
-        }
-    };
-
-    const findInternalMatch = (q: string) => {
-        const lower = q.toLowerCase();
-        for (const [ward, areas] of Object.entries(LOCALITIES)) {
-            for (const area of areas) {
-                if (lower.includes(area.toLowerCase()) || area.toLowerCase().includes(lower)) {
-                    return { matchedWard: ward, matchedArea: area, found: true };
-                }
-            }
-        }
-        return { matchedWard: form.ward, matchedArea: form.area, found: false };
-    };
-
-    const findBestMatch = (address: string) => {
-        const lower = address.toLowerCase();
-        
-        // 1. First, try to find an exact locality match across ALL wards
-        for (const [ward, areas] of Object.entries(LOCALITIES)) {
-            for (const area of areas) {
-                if (lower.includes(area.toLowerCase())) {
-                    return { matchedWard: ward, matchedArea: area };
-                }
-            }
-        }
-
-        // 2. If no locality match, try to find a ward match (e.g. "Ward 03")
-        for (const w of WARDS) {
-            const wardNum = w.toLowerCase().replace("ward ", "");
-            if (lower.includes(w.toLowerCase()) || lower.includes(`ward ${wardNum}`) || lower.includes(`ward-${wardNum}`)) {
-                return { matchedWard: w, matchedArea: LOCALITIES[w][0] };
-            }
-        }
-
-        // 3. Fallback to current selections if no match found
-        return { matchedWard: form.ward, matchedArea: form.area };
-    };
-
-    const pickSuggestion = (s: { display_name: string; lat: string; lon: string }) => {
-        const lat = parseFloat(s.lat);
-        const lon = parseFloat(s.lon);
-        setForm(f => ({ ...f, coords: { lat, lng: lon } }));
-
-        const parts = s.display_name.split(",");
-        const name = parts.slice(0, 3).join(", ").trim();
-        const { matchedWard, matchedArea } = findBestMatch(s.display_name);
-
-        setForm(f => ({
-            ...f,
-            location: name,
-            coords: { lat, lng: lon },
-            ward: matchedWard,
-            area: matchedArea
-        }));
-
-        setMapQuery(name);
-        setSuggestions([]);
-        setShowSuggestions(false);
-    };
 
     const detectLocation = () => {
         setIsDetecting(true);
 
-        const reverseGeocode = async (lat: number, lon: number) => {
-            // First update the map immediately with raw coords
-            setForm(f => ({
-                ...f,
-                coords: { lat, lng: lon },
-                location: `${lat.toFixed(4)}° N, ${lon.toFixed(4)}° E`
-            }));
-            setMapQuery(`${lat.toFixed(4)}, ${lon.toFixed(4)}`);
-
-            try {
-                const res = await geoFetch(`/reverse?lat=${lat}&lon=${lon}&format=json`);
-                if (!res.ok) throw new Error("API error");
-                const data = await res.json();
-                const addr = data.display_name ?? "";
-                const parts = addr.split(",");
-                const shortName = parts.slice(0, 3).join(", ").trim();
-                const { matchedWard, matchedArea } = findBestMatch(addr);
-
-                setForm(f => ({
-                    ...f,
-                    location: shortName || `${lat.toFixed(4)}° N, ${lon.toFixed(4)}° E`,
-                    coords: { lat, lng: lon },
-                    ward: matchedWard,
-                    area: matchedArea
-                }));
-                setMapQuery(shortName || addr);
-            } catch {
-                // Coords already set above — keep them
-            }
+        const onCoords = (lat: number, lng: number) => {
+            setForm(f => ({ ...f, coords: { lat, lng }, location: `${lat.toFixed(5)}, ${lng.toFixed(5)}` }));
+            setMapQuery(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+            reverseGeocodeGoogle(lat, lng);
             setIsDetecting(false);
         };
 
-        const fallback = async () => {
-            try {
-                const res = await fetch("https://ipapi.co/json/");
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.latitude && data.longitude) {
-                        reverseGeocode(data.latitude, data.longitude);
-                        return;
-                    }
-                }
-            } catch (e) {
-                console.warn("IP Geolocation fallback failed", e);
-            }
-            
-            // Use a sensible demo location so the map always shows something
-            const pick = { lat: 12.9716, lng: 77.5946, loc: "MG Road, Bengaluru, Karnataka, India", ward: "Ward 05", area: "MG Road" };
-            setForm(f => ({
-                ...f,
-                coords: { lat: pick.lat, lng: pick.lng },
-                location: pick.loc,
-                ward: pick.ward,
-                area: pick.area
-            }));
-            setMapQuery(pick.loc);
-            setIsDetecting(false);
+        const fallback = () => {
+            // Fallback to Coimbatore KGISL
+            onCoords(11.0836, 76.9979);
         };
 
-        if ("geolocation" in navigator) {
-            let timeoutId: ReturnType<typeof setTimeout>;
+        if ('geolocation' in navigator) {
             let settled = false;
-
-            const handleFallback = () => {
-                if (settled) return;
-                settled = true;
-                fallback();
-            };
-
+            const timeout = setTimeout(() => { if (!settled) { settled = true; fallback(); } }, 10000);
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
+                    if (settled) return;
                     settled = true;
-                    clearTimeout(timeoutId);
-                    const { latitude: lat, longitude: lon } = pos.coords;
-                    reverseGeocode(lat, lon);
+                    clearTimeout(timeout);
+                    onCoords(pos.coords.latitude, pos.coords.longitude);
                 },
-                (err) => {
-                    console.warn("Geolocation error:", err.message);
-                    clearTimeout(timeoutId);
-                    handleFallback();
+                () => {
+                    if (settled) return;
+                    settled = true;
+                    clearTimeout(timeout);
+                    fallback();
                 },
-                { timeout: 15000, enableHighAccuracy: true, maximumAge: 60000 }
+                { timeout: 9000, enableHighAccuracy: true }
             );
-            timeoutId = setTimeout(handleFallback, 18000);
         } else {
             fallback();
         }
@@ -810,76 +786,57 @@ export default function CitizenPortal() {
                     <div className="space-y-8 animate-in fade-in slide-in-from-right-4">
                         <div className="text-center">
                             <h1 className="text-3xl font-black text-gray-900 mb-2">Confirm Location</h1>
-                            <p className="text-gray-500 text-lg">Help officers find the exact spot using GPS and interactive mapping.</p>
+                            <p className="text-gray-500 text-lg">Search any village, street, or landmark. Click on map to pin the exact spot.</p>
                         </div>
 
                         <div className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-xl space-y-6">
-                            {/* ── Search & Intelligence Hub ── */}
                             <div className="space-y-4">
+                                {/* Google Places Autocomplete search bar */}
                                 <div className="flex flex-col sm:flex-row gap-3">
                                     <div className="relative flex-1 group">
-                                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#B91C1C] transition-colors" />
-                                        <input
-                                            type="text"
-                                            value={mapQuery}
-                                            onChange={e => {
-                                                setMapQuery(e.target.value);
-                                                fetchSuggestions(e.target.value);
-                                            }}
-                                            onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); handleSearchLocation(); } }}
-                                            onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-                                            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                                            placeholder="Search locality, street or landmark..."
-                                            className="w-full pl-11 pr-4 py-4 bg-gray-50 border border-transparent rounded-2xl text-lg font-bold focus:bg-white focus:border-[#B91C1C]/30 focus:outline-none transition-all shadow-inner"
-                                        />
-
-                                        {/* Suggestions dropdown */}
-                                        {showSuggestions && suggestions.length > 0 && (
-                                            <div className="absolute top-full left-0 right-0 bg-white border border-gray-100 rounded-2xl shadow-2xl mt-2 z-[60] overflow-hidden">
-                                                {suggestions.map((s, i) => (
-                                                    <button
-                                                        key={i}
-                                                        onMouseDown={() => pickSuggestion(s)}
-                                                        className="w-full text-left px-5 py-5 hover:bg-red-50 flex items-center gap-4 transition-colors border-b border-gray-50 last:border-b-0 group/item"
-                                                    >
-                                                        <MapPin className="w-5 h-5 text-[#B91C1C] shrink-0" />
-                                                        <span className="text-lg font-bold text-gray-700 line-clamp-1">{s.display_name}</span>
-                                                    </button>
-                                                ))}
-                                            </div>
+                                        {(
+                                            <LocationSearchInput
+                                                inputRef={autocompleteInputRef}
+                                                onSearch={handleManualSearch}
+                                                isSearching={isSearching}
+                                            />
                                         )}
                                     </div>
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={handleSearchLocation}
-                                            disabled={isSearching || !mapQuery.trim()}
-                                            className="btn-primary !px-6 !py-4 flex-1 sm:flex-none !rounded-2xl active:scale-95"
-                                        >
-                                            {isSearching ? <Loader2 className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
-                                            <span className="text-sm uppercase font-black">Search</span>
-                                        </button>
-                                        <button
-                                            onClick={detectLocation}
-                                            disabled={isDetecting}
-                                            className="bg-gray-900 text-white rounded-2xl px-6 py-4 flex items-center gap-2 hover:bg-[#B91C1C] transition-all shadow-xl active:scale-95 disabled:opacity-50 flex-1 sm:flex-none"
-                                        >
-                                            {isDetecting ? <Loader2 className="w-5 h-5 animate-spin" /> : <MapIcon className="w-5 h-5" />}
-                                            <span className="text-sm uppercase font-black">GPS</span>
-                                        </button>
-                                    </div>
+                                    <button
+                                        onClick={detectLocation}
+                                        disabled={isDetecting}
+                                        className="bg-gray-900 text-white rounded-2xl px-6 py-4 flex items-center gap-2 hover:bg-[#B91C1C] transition-all shadow-xl active:scale-95 disabled:opacity-50 flex-1 sm:flex-none"
+                                    >
+                                        {isDetecting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Navigation className="w-5 h-5" />}
+                                        <span className="text-sm uppercase font-black">My GPS</span>
+                                    </button>
                                 </div>
 
-                                {/* Integrated Map & Address Unit */}
-                                <div className="rounded-[2rem] overflow-hidden border border-gray-100 shadow-2xl bg-gray-900">
-                                    <div className="h-[320px]">
-                                        <iframe
-                                            key={`${form.coords.lat}-${form.coords.lng}`}
-                                            src={`https://www.openstreetmap.org/export/embed.html?bbox=${form.coords.lng - 0.002},${form.coords.lat - 0.002},${form.coords.lng + 0.002},${form.coords.lat + 0.002}&layer=mapnik&marker=${form.coords.lat},${form.coords.lng}`}
-                                            width="100%"
-                                            height="100%"
-                                            style={{ border: "none" }}
-                                            title="Complaint Location"
-                                        />
+                                {/* OpenStreetMap (Leaflet) */}
+                                <div className="rounded-[2rem] overflow-hidden border border-gray-100 shadow-2xl bg-gray-900 relative z-0">
+                                    <div className="h-[320px] w-full">
+                                        <MapContainer center={[form.coords.lat, form.coords.lng]} zoom={15} style={{ height: '100%', width: '100%' }}>
+                                            <TileLayer
+                                                attribution='&copy; Google Maps'
+                                                url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
+                                            />
+                                            <Marker 
+                                                position={[form.coords.lat, form.coords.lng]} 
+                                                draggable={true} 
+                                                eventHandlers={{
+                                                    dragend: (e) => {
+                                                        const pos = e.target.getLatLng();
+                                                        setForm(f => ({ ...f, coords: { lat: pos.lat, lng: pos.lng } }));
+                                                        reverseGeocodeGoogle(pos.lat, pos.lng);
+                                                    }
+                                                }}
+                                            />
+                                            <MapUpdater coords={form.coords} />
+                                            <MapEventsHandler onLocationChange={(lat, lng) => {
+                                                setForm(f => ({ ...f, coords: { lat, lng } }));
+                                                reverseGeocodeGoogle(lat, lng);
+                                            }} />
+                                        </MapContainer>
                                     </div>
 
                                     {/* Bottom Address HUD */}
@@ -889,19 +846,11 @@ export default function CitizenPortal() {
                                                 <MapPin className="w-5 h-5 text-emerald-400" />
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <span className="text-[9px] font-black uppercase text-emerald-400 tracking-widest block mb-1">Live Map Intelligence</span>
-                                                <p className="text-2xl font-black text-white leading-tight">
-                                                    {form.location || "Searching for address..."}
+                                                <span className="text-[9px] font-black uppercase text-emerald-400 tracking-widest block mb-1">Live Map Intelligence · Powered by Google</span>
+                                                <p className="text-xl font-black text-white leading-tight line-clamp-2">
+                                                    {form.location || "Select a location on the map..."}
                                                 </p>
-                                                <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
-                                                    <div className="flex items-center gap-1.5">
-                                                        <Building2 className="w-3 h-3 text-white/40" />
-                                                        <span className="text-[9px] font-black text-white/70 uppercase tracking-widest">{form.ward}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-1.5">
-                                                        <MapIcon className="w-3 h-3 text-white/40" />
-                                                        <span className="text-[9px] font-black text-white/70 uppercase tracking-widest">{form.area}</span>
-                                                    </div>
+                                                <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
                                                     <div className="flex items-center gap-1.5">
                                                         <Hash className="w-3 h-3 text-white/40" />
                                                         <span className="text-[9px] font-black text-white/40 uppercase tracking-widest">
@@ -909,14 +858,82 @@ export default function CitizenPortal() {
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <div className="mt-3 py-2 px-3 bg-white/5 rounded-xl border border-white/10">
-                                                    <p className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">Official Area Name</p>
-                                                    <p className="text-xl font-black text-emerald-400 uppercase tracking-tight">{form.area}</p>
+                                                <div className="mt-3 flex items-center justify-between py-2 px-3 bg-white/5 rounded-xl border border-white/10">
+                                                    <div>
+                                                        <p className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] mb-0.5">Ward / Area</p>
+                                                        <p className="text-base font-black text-emerald-400 uppercase tracking-tight">{form.ward} · {form.area}</p>
+                                                    </div>
+                                                    <a
+                                                        href={`https://www.google.com/maps?q=${form.coords.lat},${form.coords.lng}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="flex items-center gap-1.5 bg-emerald-500/20 text-emerald-400 px-3 py-2 rounded-lg text-xs font-bold hover:bg-emerald-500/40 transition-colors border border-emerald-500/30"
+                                                    >
+                                                        <MapIcon className="w-3 h-3" /> OPEN MAPS
+                                                    </a>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
+
+                                {/* Pending Location Confirmation Banner */}
+                                {pendingLocation && (
+                                    <div className="bg-emerald-50 border-2 border-emerald-400 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 shadow-lg animate-in fade-in slide-in-from-bottom-2">
+                                        <div className="flex items-start gap-3 flex-1 min-w-0">
+                                            <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center shrink-0 shadow">
+                                                <MapPin className="w-5 h-5 text-white" />
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-0.5">📍 Location Selected</p>
+                                                <p className="text-base font-black text-gray-900 leading-tight line-clamp-2">{pendingLocation.address}</p>
+                                                <p className="text-[10px] text-gray-400 font-bold mt-0.5">{pendingLocation.lat.toFixed(5)}, {pendingLocation.lng.toFixed(5)}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-2 w-full sm:w-auto shrink-0">
+                                            <button
+                                                onClick={() => setPendingLocation(null)}
+                                                className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl border border-gray-200 text-gray-500 text-sm font-black hover:bg-gray-100 transition-colors"
+                                            >
+                                                Cancel
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    setForm(f => ({
+                                                        ...f,
+                                                        location: pendingLocation.address,
+                                                        coords: { lat: pendingLocation.lat, lng: pendingLocation.lng }
+                                                    }));
+                                                    setPendingLocation(null);
+                                                }}
+                                                className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl text-sm font-black shadow-lg shadow-emerald-200 active:scale-95 transition-all"
+                                            >
+                                                <Check className="w-4 h-4" /> Add This Location
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Confirmed location display */}
+                                {form.location && !pendingLocation && (
+                                    <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex items-center gap-3">
+                                        <CheckCircle2 className="w-5 h-5 text-blue-600 shrink-0" />
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-blue-500 mb-0.5">✅ Location Added to Complaint</p>
+                                            <p className="text-sm font-black text-gray-900 line-clamp-1">{form.location}</p>
+                                        </div>
+                                        <a
+                                            href={`https://www.google.com/maps?q=${form.coords.lat},${form.coords.lng}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-1 text-blue-600 text-xs font-bold hover:underline shrink-0"
+                                        >
+                                            <MapIcon className="w-3 h-3" /> View
+                                        </a>
+                                    </div>
+                                )}
+
+                                <p className="text-xs text-gray-400 font-bold text-center">💡 Search above, click on the map, or drag the pin — then press <strong>Add This Location</strong></p>
                             </div>
 
                             {/* Area Detail Grid */}
@@ -931,7 +948,6 @@ export default function CitizenPortal() {
                                                 const w = e.target.value;
                                                 const newArea = LOCALITIES[w]?.[0] || "Other";
                                                 setForm(f => ({ ...f, ward: w, area: newArea }));
-                                                if (newArea !== "Other") fetchCoordsForAddress(`${newArea}, ${w}, Bengaluru`);
                                             }}
                                             className="w-full pl-11 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-lg font-bold focus:bg-white focus:border-[#B91C1C]/30 focus:outline-none text-gray-800 transition-all appearance-none cursor-pointer"
                                         >
@@ -951,7 +967,6 @@ export default function CitizenPortal() {
                                             onChange={e => {
                                                 const a = e.target.value;
                                                 setForm(f => ({ ...f, area: a }));
-                                                if (a !== "Other") fetchCoordsForAddress(`${a}, ${form.ward}, Bengaluru`);
                                             }}
                                             className="w-full pl-11 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-lg font-bold focus:bg-white focus:border-[#B91C1C]/30 focus:outline-none text-gray-800 transition-all appearance-none cursor-pointer"
                                         >

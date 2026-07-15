@@ -21,6 +21,13 @@ export function DocumentPreviewModal({ document, onClose, onSelectDocument }: Do
     const { currentUser, allComplaints } = useComplaints();
     const [activeTab, setActiveTab] = useState<TabType>("overview");
 
+    React.useEffect(() => {
+        // Automatically trigger AI analysis if it hasn't been run yet
+        if (!document.executiveSummary && document.summaryStatus === 'idle') {
+            regenerateSummary(document.id);
+        }
+    }, [document.id, document.executiveSummary, document.summaryStatus, regenerateSummary]);
+
     const linkedComplaint = document.complaintId ? allComplaints.find(c => c.id === document.complaintId) : null;
 
     const statusColors = {
@@ -42,6 +49,35 @@ export function DocumentPreviewModal({ document, onClose, onSelectDocument }: Do
             deleteDocument(document.id);
             onClose();
         }
+    };
+
+    const exportIntelligenceReport = () => {
+        const reportContent = `
+GOVPILOT INTELLIGENCE REPORT
+=================================
+Document ID: ${document.id}
+Name: ${document.name}
+Category: ${document.category}
+Date: ${document.date}
+Department: ${document.dept}
+Status: ${document.status.toUpperCase()}
+Related Complaint ID: ${document.complaintId || 'None'}
+
+--- AI INSIGHTS ---
+AI Confidence: ${document.aiScore ? document.aiScore + '%' : 'N/A'}
+Summary: ${document.summary || 'Pending'}
+Highlights:
+${document.executiveSummary?.highlights.map(h => '- ' + h).join('\n') || 'None'}
+
+--- OCR DATA ---
+Extracted Text:
+${document.extractedText || document.ocrText || 'No text extracted.'}
+        `.trim();
+
+        const a = window.document.createElement('a');
+        a.href = `data:text/plain;charset=utf-8,${encodeURIComponent(reportContent)}`;
+        a.download = `Intelligence_Report_${document.id}.txt`;
+        a.click();
     };
 
     const handleApprove = () => {
@@ -131,7 +167,7 @@ export function DocumentPreviewModal({ document, onClose, onSelectDocument }: Do
                 <div className="border rounded-xl p-4 flex items-center justify-between">
                      <div>
                          <p className="text-xs text-gray-500 font-medium mb-1">Related Complaints</p>
-                         <p className="text-xl font-black text-gray-900">1</p>
+                         <p className="text-xl font-black text-gray-900">{linkedComplaint ? 1 : 0}</p>
                      </div>
                      <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">
                          <LinkIcon className="w-5 h-5" />
@@ -141,15 +177,45 @@ export function DocumentPreviewModal({ document, onClose, onSelectDocument }: Do
         </div>
     );
 
-                <ExecutiveSummaryPanel
-                    summary={document.executiveSummary || null}
-                    status={document.summaryStatus || 'idle'}
-                    onRegenerate={() => regenerateSummary(document.id)}
-                />
-
+    const renderAI = () => (
+        <div className="space-y-6">
+            <h3 className="text-lg font-bold text-gray-900 border-b pb-2 flex items-center gap-2">
+                <BrainCircuit className="w-5 h-5 text-indigo-600" />
+                AI Intelligence Report
+            </h3>
+            <ExecutiveSummaryPanel
+                summary={document.executiveSummary || null}
+                status={document.summaryStatus || 'idle'}
+                onRegenerate={() => regenerateSummary(document.id)}
+            />
+            <div className="grid grid-cols-2 gap-4">
+                <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4">
+                    <p className="text-xs text-indigo-500 font-medium uppercase tracking-wider mb-1">AI Confidence</p>
+                    <p className="text-2xl font-black text-indigo-700">{document.aiScore ? `${document.aiScore}%` : 'Pending'}</p>
+                </div>
+                <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4">
+                    <p className="text-xs text-emerald-500 font-medium uppercase tracking-wider mb-1">AI Insights</p>
+                    <p className="text-2xl font-black text-emerald-700">{document.aiInsights ? `${document.aiInsights.length} found` : 'None'}</p>
+                </div>
             </div>
-        );
-    };
+            {document.aiInsights && document.aiInsights.length > 0 && (
+                <div>
+                    <p className="text-sm font-bold text-gray-700 mb-2">AI-Generated Insights</p>
+                    <div className="flex flex-wrap gap-2">
+                        {document.aiInsights.map((insight, i) => (
+                            <span key={i} className="px-3 py-1 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-full text-xs font-semibold">{insight}</span>
+                        ))}
+                    </div>
+                </div>
+            )}
+            {document.summary && (
+                <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                    <p className="text-sm font-bold text-gray-700 mb-2">AI Summary</p>
+                    <p className="text-sm text-gray-600 leading-relaxed">{document.summary}</p>
+                </div>
+            )}
+        </div>
+    );
 
     const renderOCR = () => {
         const hasOcr = !!document.ocrText;
@@ -253,7 +319,6 @@ export function DocumentPreviewModal({ document, onClose, onSelectDocument }: Do
                                     <p className="text-sm font-mono text-gray-700 whitespace-pre-wrap leading-relaxed selection:bg-indigo-100">
                                         {document.extractedText || document.ocrText}
                                     </p>
-                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -347,7 +412,11 @@ export function DocumentPreviewModal({ document, onClose, onSelectDocument }: Do
                                 <div className="w-px h-6 bg-gray-200 mx-2" />
                             </>
                         )}
-                        <button onClick={handleDownload} className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="Download">
+                        <button onClick={exportIntelligenceReport} className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg font-semibold text-xs transition-colors flex items-center gap-1.5 border border-indigo-200" title="Export Intelligence Report">
+                            <Download className="w-3.5 h-3.5" /> Export Report
+                        </button>
+                        <div className="w-px h-6 bg-gray-200 mx-2" />
+                        <button onClick={handleDownload} className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="Download Document">
                             <Download className="w-5 h-5" />
                         </button>
                         <button onClick={handleDelete} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete">

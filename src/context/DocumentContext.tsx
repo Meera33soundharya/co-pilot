@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import { useComplaints } from "./ComplaintsContext";
 import { extractText, generateContentHash } from "../services/documentTextExtractor";
 import { generateDocumentSummary, type ExecutiveSummary } from "../services/documentAiService";
