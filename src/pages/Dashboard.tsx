@@ -1,6 +1,6 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useComplaints } from "@/context/ComplaintsContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState, useMemo } from "react";
 import {
     MessageSquare, Activity, ChevronRight, Zap,
@@ -12,6 +12,7 @@ export default function Dashboard() {
     const { complaints, currentUser, notifications } = useComplaints();
     const navigate = useNavigate();
     const [viewGrievance, setViewGrievance] = useState<any>(null);
+    const [viewNotification, setViewNotification] = useState<any>(null);
 
     const isAdmin = currentUser?.role === "admin";
     const isOfficer = currentUser?.role === "officer";
@@ -24,6 +25,22 @@ export default function Dashboard() {
     // Complaint table state
     const [tableQ, setTableQ] = useState("");
     const [tableStatus, setTableStatus] = useState("All");
+    
+    const location = useLocation();
+
+    // Check for notification ID in URL to open modal
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const notifId = params.get("notificationId");
+        if (notifId) {
+            const n = notifications.find(x => x.id === notifId);
+            if (n) {
+                setViewNotification(n);
+                // Remove parameter from URL so it doesn't reopen on refresh
+                navigate("/dashboard", { replace: true });
+            }
+        }
+    }, [location.search, notifications, navigate]);
 
     // Redirect citizens to their portal
     useEffect(() => {
@@ -160,6 +177,51 @@ export default function Dashboard() {
                                         Full Mission Log
                                     </button>
                                     <button onClick={() => setViewGrievance(null)} className="px-10 py-5 bg-gray-200 text-gray-900 rounded-3xl text-base font-black uppercase tracking-[0.2em] hover:bg-gray-300 transition-all active:scale-95">
+                                        Dismiss
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* ── NOTIFICATION DETAIL SIDE-TRAY ────────────────── */}
+                {viewNotification && (
+                    <div className="fixed inset-0 z-[110] flex items-center justify-end p-4 lg:p-8">
+                        <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={() => setViewNotification(null)} />
+                        <div className="relative bg-white rounded-[3rem] shadow-2xl w-full max-w-lg h-full overflow-hidden animate-slide-left border border-white/20">
+                            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-red-600/5 blur-[120px] pointer-events-none" />
+                            
+                            <div className="p-12 space-y-10 relative z-10">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center">
+                                            <Bell className="w-7 h-7 text-red-600" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-xl font-black text-gray-900 uppercase italic">Notification</h3>
+                                            <p className="text-sm text-gray-400 font-black uppercase tracking-widest">{viewNotification.time}</p>
+                                        </div>
+                                    </div>
+                                    <button onClick={() => setViewNotification(null)} className="p-3 rounded-2xl hover:bg-gray-100 text-gray-300 transition-colors">
+                                        <X className="w-6 h-6" />
+                                    </button>
+                                </div>
+
+                                <div className="space-y-6">
+                                    <div className="p-8 bg-white rounded-[2.5rem] border border-gray-100 shadow-sm space-y-4">
+                                        <h4 className="text-2xl font-black text-gray-900 italic uppercase leading-tight">{viewNotification.title}</h4>
+                                        <p className="text-gray-600 font-medium leading-relaxed whitespace-pre-wrap">{viewNotification.message}</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-4">
+                                    {viewNotification.complaintId && (
+                                        <button onClick={() => { navigate(`/grievances?id=${viewNotification.complaintId}`); setViewNotification(null); }} className="flex-1 py-5 bg-gray-900 text-white rounded-3xl text-base font-black uppercase tracking-[0.2em] hover:bg-red-600 transition-all shadow-xl active:scale-95">
+                                            View Mission
+                                        </button>
+                                    )}
+                                    <button onClick={() => setViewNotification(null)} className="px-10 py-5 bg-gray-200 text-gray-900 rounded-3xl text-base font-black uppercase tracking-[0.2em] hover:bg-gray-300 transition-all active:scale-95">
                                         Dismiss
                                     </button>
                                 </div>
@@ -447,7 +509,7 @@ export default function Dashboard() {
                                 </div>
                             ) : (
                                 recentNotifs.map(n => (
-                                    <div key={n.id} className={`p-5 rounded-2xl border transition-all hover:shadow-sm cursor-pointer ${!n.read ? "bg-red-50/30 border-red-100" : "bg-gray-50 border-gray-100"}`}>
+                                    <div key={n.id} onClick={() => setViewNotification(n)} className={`p-5 rounded-2xl border transition-all hover:shadow-sm cursor-pointer ${!n.read ? "bg-red-50/30 border-red-100" : "bg-gray-50 border-gray-100"}`}>
                                         <div className="flex items-start gap-3">
                                             <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${!n.read ? "bg-[#B91C1C]" : "bg-gray-300"}`} />
                                             <div className="flex-1 min-w-0">

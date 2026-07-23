@@ -18,6 +18,8 @@ const ACCOUNTS = [
         email: "admin@govpilot.in", password: "Admin@2026",
         user: { id: "admin_1", name: "District Admin", role: "admin" as const },
         desc: "Full system access & analytics",
+        portal: "Admin Portal",
+        redirectTo: "/dashboard",
     },
     {
         role: "officer" as const, label: "Field Officer", icon: Building2,
@@ -26,6 +28,8 @@ const ACCOUNTS = [
         email: "officer@govpilot.in", password: "Officer@2026",
         user: { id: "officer_1", name: "Rajiv Kumar", role: "officer" as const, dept: "Water Supply Department" },
         desc: "Manage & resolve complaints",
+        portal: "Field Officer Portal",
+        redirectTo: "/field-portal",
     },
     {
         role: "citizen" as const, label: "Citizen", icon: User,
@@ -34,6 +38,8 @@ const ACCOUNTS = [
         email: "citizen@govpilot.in", password: "Citizen@2026",
         user: { id: "citizen_amit", name: "Amit Patel", role: "citizen" as const, citizenId: "citizen_amit" },
         desc: "Submit & track your complaints",
+        portal: "Citizen Portal",
+        redirectTo: "/citizen",
     },
 ];
 
@@ -129,6 +135,7 @@ export default function Login() {
     const [loading, setLoading]   = useState(false);
     const [booting, setBooting]   = useState(false);
     const [selected, setSelected] = useState<CurrentUser | null>(null);
+    const [selectedAccount, setSelectedAccount] = useState<typeof ACCOUNTS[0] | null>(null);
     const [activeRole, setActiveRole] = useState<string | null>(null);
 
     const quickFill = (acct: typeof ACCOUNTS[0]) => {
@@ -146,16 +153,20 @@ export default function Login() {
         if (!matched) { setError("Invalid credentials — use quick access below to auto-fill."); return; }
         setLoading(true);
         setSelected(matched.user);
+        setSelectedAccount(matched);
         setTimeout(() => { setLoading(false); setBooting(true); }, 700);
     };
 
     const handleDone = useCallback(() => {
         if (!selected) return;
         login(selected);
-        if (selected.role === "citizen") navigate("/citizen");
-        else if (selected.role === "officer") navigate("/grievances");
+        const redirectTo = selectedAccount?.redirectTo;
+        if (redirectTo) navigate(redirectTo);
+        else if (selected.role === "citizen") navigate("/citizen");
+        else if (selected.role === "officer") navigate("/field-portal");
         else navigate("/dashboard");
-    }, [selected, login, navigate]);
+    }, [selected, selectedAccount, login, navigate]);
+
 
     return (
         <div className="min-h-screen flex overflow-hidden" style={{ fontFamily: "'Inter', sans-serif" }}>
@@ -220,6 +231,7 @@ export default function Login() {
 
                     {/* Quick role selector */}
                     <div>
+                        <p className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-3">Select Your Portal</p>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             {ACCOUNTS.map(acct => {
                                 const Icon = acct.icon;
@@ -230,7 +242,7 @@ export default function Login() {
                                         id={`role-${acct.role}`}
                                         onClick={() => quickFill(acct)}
                                         className={`
-                                            flex sm:flex-col items-center sm:justify-center p-4 rounded-2xl border-2 sm:text-center min-h-[80px] sm:min-h-[160px]
+                                            flex sm:flex-col items-center sm:justify-center p-4 rounded-2xl border-2 sm:text-center min-h-[80px] sm:min-h-[180px]
                                             transition-all duration-200 hover:scale-[1.02] active:scale-95 text-left gap-4 sm:gap-0
                                             ${isActive
                                                 ? `${acct.border} ${acct.bg} shadow-md ${acct.glow}`
@@ -245,6 +257,10 @@ export default function Login() {
                                             <p className={`text-lg sm:text-xl font-bold uppercase leading-tight w-full ${isActive ? acct.text : "text-gray-900"}`}>
                                                 {acct.label}
                                             </p>
+                                            <p className={`text-xs mt-1 font-semibold ${isActive ? acct.text : "text-gray-400"}`}>
+                                                {acct.portal}
+                                            </p>
+                                            <p className="text-xs mt-0.5 text-gray-400 hidden sm:block">{acct.desc}</p>
                                         </div>
                                     </button>
                                 );

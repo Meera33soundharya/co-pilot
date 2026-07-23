@@ -790,8 +790,8 @@ function generateActions(
       actions.push("Verify resolution quality through citizen feedback.");
       actions.push("Close the complaint ticket in the grievance management system.");
       actions.push("Archive documentation for future audit reference.");
-      if (lower.includes("recurring") || lower.includes("repeat")) {
-        actions.push("Flag location for recurring issue monitoring.");
+      if (lower.includes("audit") || lower.includes("review")) {
+        actions.push("Prepare corresponding files for external audit.");
       }
       break;
 

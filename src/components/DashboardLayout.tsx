@@ -154,7 +154,7 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
 
     function handleLogout() {
         logout();
-        navigate("/");
+        navigate("/login");
     }
 
     return (
@@ -375,13 +375,7 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
                                                             key={n.id}
                                                             onClick={() => {
                                                                 readNotification(n.id);
-                                                                if (n.announcementId) {
-                                                                    navigate(`/announcements?id=${n.announcementId}`);
-                                                                } else if (n.complaintId) {
-                                                                    if (role === "citizen") navigate("/citizen");
-                                                                    else if (role === "officer") navigate("/field-portal");
-                                                                    else navigate("/grievances");
-                                                                }
+                                                                navigate(`/dashboard?notificationId=${n.id}`);
                                                                 setShowNotifs(false);
                                                             }}
                                                             className={`p-5 hover:bg-gray-50 transition-all cursor-pointer group flex gap-4 ${!n.read ? "bg-red-50/30" : ""}`}

@@ -52,6 +52,17 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+// 🚀 If already logged in, redirect away from login page
+function PublicRoute({ children }: { children: React.ReactNode }) {
+  const { currentUser } = useComplaints();
+  if (currentUser) {
+    if (currentUser.role === "citizen") return <Navigate to="/citizen" replace />;
+    if (currentUser.role === "officer") return <Navigate to="/field-portal" replace />;
+    return <Navigate to="/dashboard" replace />;
+  }
+  return <>{children}</>;
+}
+
 function App() {
   useEffect(() => {
     // Initialize automation services on app startup
@@ -82,7 +93,7 @@ function App() {
             <Route path="/media-queue" element={<ProtectedRoute><MediaQueue /></ProtectedRoute>} />
             <Route path="/constituency" element={<ProtectedRoute><Constituency /></ProtectedRoute>} />
             <Route path="/ai-copilot" element={<ProtectedRoute><AICoPilot /></ProtectedRoute>} />
-            <Route path="/login" element={<Login />} />
+            <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
             <Route path="/submit-complaint" element={<CitizenPortal />} />
             <Route path="/village-voice" element={<VillageVoicePortal />} />
 

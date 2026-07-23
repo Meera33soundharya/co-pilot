@@ -78,6 +78,8 @@ const DocCtx = createContext<DocumentContextProps | null>(null);
 export function DocumentProvider({ children }: { children: ReactNode }) {
     const { closedDocs, allComplaints } = useComplaints();
     const documentsRef = useRef<DocumentRecord[]>([]);
+    const allDocumentsRef = useRef<DocumentRecord[]>([]);
+    const [documentUpdates, setDocumentUpdates] = useState<Record<string, Partial<DocumentRecord>>>({});
     
     const defaultDocuments: DocumentRecord[] = [
         {
@@ -183,6 +185,10 @@ export function DocumentProvider({ children }: { children: ReactNode }) {
             let existing: DocumentRecord[] = [];
             if (saved) {
                 existing = JSON.parse(saved);
+                // Auto-recover any stuck 'error' states from previous bugs
+                existing = existing.map(doc => 
+                    doc.summaryStatus === 'error' ? { ...doc, summaryStatus: 'idle' } : doc
+                );
             }
             
             // Merge defaults if they don't exist yet
@@ -289,6 +295,15 @@ export function DocumentProvider({ children }: { children: ReactNode }) {
         }
     });
 
+    // Apply any dynamic updates
+    const finalAllDocuments = allDocuments.map(doc => {
+        const updates = documentUpdates[doc.id];
+        return updates ? { ...doc, ...updates } : doc;
+    });
+
+    // Update ref for callbacks to access latest docs
+    allDocumentsRef.current = finalAllDocuments;
+
     const fileToBase64 = (file: File): Promise<string> => {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -298,44 +313,59 @@ export function DocumentProvider({ children }: { children: ReactNode }) {
         });
     };
 
+    // ─── State Update Helper ───────────────────────────────
+    const updateDocState = useCallback((docId: string, updates: Partial<DocumentRecord>) => {
+        setDocuments(prev => {
+            if (prev.some(d => d.id === docId)) {
+                return prev.map(d => d.id === docId ? { ...d, ...updates } : d);
+            }
+            return prev;
+        });
+        setDocumentUpdates(prev => ({ ...prev, [docId]: { ...(prev[docId] || {}), ...updates } }));
+    }, []);
+
     // ─── AI Summarization Pipeline ───────────────────────────────
     const runSummarizationPipeline = useCallback(async (docId: string, retryCount = 0) => {
-        // 1. Update status to "extracting"
-        setDocuments(prev => prev.map(d => d.id === docId ? { ...d, summaryStatus: 'extracting' as const } : d));
+        updateDocState(docId, { summaryStatus: 'extracting' });
 
         try {
-            // Get the document's current data from the latest state snapshot
-            const currentDoc = documentsRef.current.find(d => d.id === docId);
-            if (!currentDoc || !currentDoc.fileData) {
-                setDocuments(prev => prev.map(d => d.id === docId ? { ...d, summaryStatus: 'error' as const } : d));
+            const currentDoc = allDocumentsRef.current.find(d => d.id === docId);
+            
+            if (!currentDoc || (!currentDoc.fileData && !currentDoc.ocrText && !currentDoc.summary)) {
+                updateDocState(docId, { summaryStatus: 'error' });
                 return;
             }
 
             console.log(`[Pipeline] Extracting text for document ${docId}...`);
-            // 2. Extract text from document
-            const extraction = await extractText(currentDoc.fileData, currentDoc.name, currentDoc.type);
-            const newHash = generateContentHash(extraction.text);
+            let extractionText = currentDoc.extractedText || currentDoc.ocrText || currentDoc.summary || "";
+            
+            if (currentDoc.fileData) {
+                try {
+                    const extraction = await extractText(currentDoc.fileData, currentDoc.name, currentDoc.type);
+                    if (extraction.text) extractionText = extraction.text;
+                } catch (e) {
+                    console.warn("Extraction failed, using fallback text", e);
+                }
+            }
 
-            // Check if content hasn't changed (skip re-summarization)
+            const newHash = generateContentHash(extractionText);
+
             if (currentDoc.contentHash === newHash && currentDoc.executiveSummary) {
                 console.log(`[Pipeline] Content unchanged for ${docId}, skipping AI summary generation.`);
-                setDocuments(prev => prev.map(d => d.id === docId ? { ...d, summaryStatus: 'done' as const } : d));
+                updateDocState(docId, { summaryStatus: 'done' });
                 return;
             }
 
-            // 3. Update with extracted text, then move to summarizing
-            setDocuments(prev => prev.map(d => d.id === docId ? {
-                ...d,
-                extractedText: extraction.text,
-                ocrText: extraction.text || d.ocrText,
+            updateDocState(docId, {
+                extractedText: extractionText,
+                ocrText: extractionText || currentDoc.ocrText,
                 contentHash: newHash,
-                summaryStatus: 'summarizing' as const,
-            } : d));
+                summaryStatus: 'summarizing'
+            });
 
-            console.log(`[Pipeline] Summarizing content for ${docId} (Length: ${extraction.text.length})...`);
-            // 4. Generate AI summary from extracted content
+            console.log(`[Pipeline] Summarizing content for ${docId}...`);
             const summary = await generateDocumentSummary(
-                extraction.text,
+                extractionText,
                 currentDoc.category,
                 {
                     fileName: currentDoc.name,
@@ -348,13 +378,11 @@ export function DocumentProvider({ children }: { children: ReactNode }) {
                 }
             );
 
-            // 5. Store the result
-            setDocuments(prev => prev.map(d => d.id === docId ? {
-                ...d,
+            updateDocState(docId, {
                 executiveSummary: summary,
-                summary: summary.subject, // Update the old summary field too
-                summaryStatus: 'done' as const,
-            } : d));
+                summary: summary.subject,
+                summaryStatus: 'done'
+            });
             console.log(`[Pipeline] Success for ${docId}.`);
 
         } catch (error) {
@@ -364,24 +392,21 @@ export function DocumentProvider({ children }: { children: ReactNode }) {
                 console.log(`[Pipeline] Retrying in 2 seconds...`);
                 setTimeout(() => runSummarizationPipeline(docId, retryCount + 1), 2000);
             } else {
-                setDocuments(prev => prev.map(d => d.id === docId ? { ...d, summaryStatus: 'error' as const } : d));
+                updateDocState(docId, { summaryStatus: 'error' });
             }
         }
-    }, []);
+    }, [updateDocState]);
 
     const regenerateSummary = useCallback(async (id: string) => {
-        // Clear existing summary and re-run the pipeline
-        setDocuments(prev => prev.map(d => d.id === id ? {
-            ...d,
+        updateDocState(id, {
             executiveSummary: undefined,
             contentHash: undefined,
             extractedText: undefined,
-            summaryStatus: 'idle' as const,
-        } : d));
-        // Small delay to ensure state update propagates
+            summaryStatus: 'extracting',
+        });
         await new Promise(r => setTimeout(r, 100));
         await runSummarizationPipeline(id, 0);
-    }, [runSummarizationPipeline]);
+    }, [runSummarizationPipeline, updateDocState]);
 
     const uploadDocument = async (file: File, meta: Partial<DocumentRecord>) => {
         const base64 = await fileToBase64(file);
@@ -429,37 +454,35 @@ export function DocumentProvider({ children }: { children: ReactNode }) {
     };
 
     const updateStatus = (id: string, status: DocumentStatus) => {
-        setDocuments(prev => prev.map(d => d.id === id ? { ...d, status } : d));
+        updateDocState(id, { status });
     };
 
     const updateDetails = (id: string, updates: Partial<DocumentRecord>) => {
-        setDocuments(prev => prev.map(d => d.id === id ? { ...d, ...updates } : d));
+        updateDocState(id, updates);
     };
 
     const addVersion = async (id: string, file: File, changes: string, uploader: string) => {
         const base64 = await fileToBase64(file);
-        setDocuments(prev => prev.map(d => {
-            if (d.id === id) {
-                const newVersion: DocumentVersion = {
-                    versionId: `v${d.versions.length + 1}.0`,
-                    date: new Date().toLocaleDateString("en-IN"),
-                    uploadedBy: uploader,
-                    changes,
-                    url: base64
-                };
-                return {
-                    ...d,
-                    fileData: base64, // Update current file data
-                    versions: [newVersion, ...d.versions] // prepended so index 0 is latest
-                };
-            }
-            return d;
-        }));
+        const currentDoc = allDocumentsRef.current.find(d => d.id === id);
+        
+        if (currentDoc) {
+            const newVersion: DocumentVersion = {
+                versionId: `v${currentDoc.versions.length + 1}.0`,
+                date: new Date().toLocaleDateString("en-IN"),
+                uploadedBy: uploader,
+                changes,
+                url: base64
+            };
+            updateDocState(id, {
+                fileData: base64,
+                versions: [newVersion, ...currentDoc.versions]
+            });
+        }
     };
 
     return (
         <DocCtx.Provider value={{
-            documents, allDocuments, uploadDocument, deleteDocument, updateStatus, updateDetails, addVersion, regenerateSummary
+            documents, allDocuments: finalAllDocuments, uploadDocument, deleteDocument, updateStatus, updateDetails, addVersion, regenerateSummary
         }}>
             {children}
         </DocCtx.Provider>

@@ -122,7 +122,7 @@ export default function Documents() {
             
             {previewDoc && (
                 <DocumentPreviewModal 
-                    document={previewDoc} 
+                    document={allDocuments.find(d => d.id === previewDoc.id) || previewDoc} 
                     onClose={() => setPreviewDoc(null)} 
                     onSelectDocument={(doc) => setPreviewDoc(doc)}
                 />

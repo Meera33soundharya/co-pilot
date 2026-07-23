@@ -136,18 +136,6 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
         try {
             const saved = sessionStorage.getItem("co_pilot_user");
             if (saved) return JSON.parse(saved) as CurrentUser;
-
-            // DEV: Auto-login a demo admin when running on localhost for faster iteration
-            try {
-                const host = window.location.hostname;
-                if (host === 'localhost' || host === '127.0.0.1') {
-                    const demo: CurrentUser = { id: 'u-admin', name: 'District Admin', role: 'admin' };
-                    console.info('Dev auto-login as demo admin user');
-                    return demo;
-                }
-            } catch {
-                // ignore in non-browser environments
-            }
             return null;
         } catch {
             return null;
@@ -254,8 +242,15 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
         };
     }, [currentUser]);
 
-    const login = useCallback((user: CurrentUser) => setCurrentUser(user), []);
-    const logout = useCallback(() => setCurrentUser(null), []);
+    const login = useCallback((user: CurrentUser) => {
+        sessionStorage.setItem("co_pilot_user", JSON.stringify(user));
+        setCurrentUser(user);
+    }, []);
+    const logout = useCallback(() => {
+        sessionStorage.removeItem("co_pilot_user");
+        setCurrentUser(null);
+    }, []);
+
 
     // Role-based filtering
     const complaints: Complaint[] = (() => {
