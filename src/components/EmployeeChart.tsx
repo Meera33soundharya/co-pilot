@@ -129,8 +129,8 @@ export function ComplaintsByCategoryChart({ complaints }: ComplaintsByCategoryCh
                                     if (value < 5) return null; // skip tiny slices
                                     const RADIAN = Math.PI / 180;
                                     const r = innerRadius + (outerRadius - innerRadius) * 0.55;
-                                    const x = cx + r * Math.cos(-midAngle * RADIAN);
-                                    const y = cy + r * Math.sin(-midAngle * RADIAN);
+                                    const x = cx + r * Math.cos(-(midAngle ?? 0) * RADIAN);
+                                    const y = cy + r * Math.sin(-(midAngle ?? 0) * RADIAN);
                                     return (
                                         <text
                                             x={x} y={y}

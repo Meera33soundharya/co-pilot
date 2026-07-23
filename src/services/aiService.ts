@@ -8,7 +8,8 @@ import type { Category } from "../store/complaintsStore";
 import { CATEGORY_DEPT, autoCategory } from "../store/complaintsStore";
 
 // Restricted API Key from District Governance
-const GEMINI_API_KEY = "AIzaSyBimmkZi2w1zCVth4xPrHuqha9zDlRbviY";
+// Read API Key from environment or fallback
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "AIzaSyBimmkZi2w1zCVth4xPrHuqha9zDlRbviY";
 const MODEL_NAME = "gemini-1.5-flash"; // High-speed, high-reasoning model
 
 export interface AIResult {

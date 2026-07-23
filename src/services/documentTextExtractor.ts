@@ -137,7 +137,8 @@ async function extractFromPDF(
           canvas.height = viewport.height;
           canvas.width = viewport.width;
           
-          await page.render({ canvasContext: context, viewport }).promise;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (page.render as any)({ canvasContext: context, canvas, viewport }).promise;
           const dataUrl = canvas.toDataURL("image/png");
           
           console.log(`[Extraction] OCR processing page ${i}/${pagesToProcess}...`);

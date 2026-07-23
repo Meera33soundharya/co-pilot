@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: govpilot-backend
+    env: python
+    buildCommand: cd co-pilot/backend && pip install -r requirements.txt
+    startCommand: cd co-pilot/backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+
+  - type: web
+    name: govpilot-frontend
+    env: node
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        value: "https://govpilot-backend.onrender.com"
+      - key: VITE_GEMINI_API_KEY
+        sync: false
+      - key: VITE_GOOGLE_API_KEY
+        sync: false

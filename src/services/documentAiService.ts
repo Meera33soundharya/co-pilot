@@ -33,9 +33,9 @@ export interface ExecutiveSummary {
 // Configuration
 // ─────────────────────────────────────────────────────────────
 
-const GEMINI_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || "AIzaSyBimmkZi2w1zCVth4xPrHuqha9zDlRbviY";
 const MODEL_NAME = "gemini-1.5-flash";
 const PLACEHOLDER_KEY = "AIzaSyBimmkZi2w1zCVth4xPrHuqha9zDlRbviY";
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || PLACEHOLDER_KEY;
 
 // ─────────────────────────────────────────────────────────────
 // Main API
