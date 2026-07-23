@@ -16,6 +16,21 @@ const TYPE_CFG: Record<AnnouncementType, { color: string; bg: string; border: st
     General: { color: "text-gray-600", bg: "bg-gray-50", border: "border-gray-200", icon: Info, label: "Info" },
 };
 
+const AUTO_TYPE_KEYWORDS: { type: AnnouncementType; words: string[] }[] = [
+    { type: "Alert", words: ["issue", "disruption", "warning", "delay", "urgent", "broken", "leak", "cut", "no water", "danger", "alert"] },
+    { type: "Resolution", words: ["completed", "resolved", "fixed", "restored", "successful", "done", "repair"] },
+    { type: "Event", words: ["camp", "drive", "meeting", "celebration", "festival", "visit", "held", "schedule"] },
+];
+
+function autoType(text: string): AnnouncementType {
+    const lower = text.toLowerCase();
+    for (const { type, words } of AUTO_TYPE_KEYWORDS) {
+        if (words.some(w => lower.includes(w))) return type;
+    }
+    return "General";
+}
+
+
 export default function Announcements() {
     const { currentUser, announcements, postAnnouncement, deleteAnnouncement } = useComplaints();
     const role = currentUser?.role ?? "admin";
@@ -28,6 +43,16 @@ export default function Announcements() {
     const [showForm, setShowForm] = useState(false);
     const [posting, setPosting] = useState(false);
     const [newAnn, setNewAnn] = useState({ title: "", body: "", type: "General" as AnnouncementType, ward: "All Wards" });
+    const [manualType, setManualType] = useState(false);
+
+    useEffect(() => {
+        if (!manualType && (newAnn.title || newAnn.body)) {
+            const suggested = autoType(`${newAnn.title} ${newAnn.body}`);
+            if (suggested !== newAnn.type) {
+                setNewAnn(p => ({ ...p, type: suggested }));
+            }
+        }
+    }, [newAnn.title, newAnn.body, manualType, newAnn.type]);
 
     useEffect(() => {
         const id = searchParams.get("id");
@@ -54,6 +79,7 @@ export default function Announcements() {
         setTimeout(() => {
             postAnnouncement({ title: newAnn.title, body: newAnn.body, type: newAnn.type, ward: newAnn.ward });
             setNewAnn({ title: "", body: "", type: "General", ward: "All Wards" });
+            setManualType(false);
             setShowForm(false);
             setPosting(false);
         }, 1000);
@@ -106,7 +132,7 @@ export default function Announcements() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <label className="text-sm font-black uppercase tracking-widest text-gray-400">Type</label>
-                                    <select value={newAnn.type} onChange={e => setNewAnn(p => ({ ...p, type: e.target.value as AnnouncementType }))}
+                                    <select value={newAnn.type} onChange={e => { setNewAnn(p => ({ ...p, type: e.target.value as AnnouncementType })); setManualType(true); }}
                                         className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl text-lg font-bold focus:outline-none focus:border-[#B91C1C]/30 transition-all">
                                         {(["General", "Alert", "Resolution", "Event"] as AnnouncementType[]).map(t => (
                                             <option key={t} value={t}>{t}</option>

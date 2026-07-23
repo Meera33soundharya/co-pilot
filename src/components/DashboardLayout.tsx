@@ -47,7 +47,6 @@ const ADMIN_NAV: NavGroup[] = [
     {
         group: "Complaints", items: [
             { icon: MessageSquare, label: "Complaints", path: "/grievances", badge: "live" },
-            { icon: BarChart2, label: "Analytics", path: "/analytics" },
             { icon: FileBarChart2, label: "Reports", path: "/reports" },
             { icon: FolderOpen, label: "Resolution Reports", path: "/resolution-reports" },
         ]
@@ -57,7 +56,6 @@ const ADMIN_NAV: NavGroup[] = [
             { icon: Megaphone, label: "Announcements", path: "/announcements" },
             { icon: Volume2, label: "Speech AI", path: "/speech-ai" },
             { icon: Calendar, label: "Meetings", path: "/meetings" },
-            { icon: Volume2, label: "Speech Studio", path: "/speech-studio" },
             { icon: Megaphone, label: "Media Queue", path: "/media-queue" },
             { icon: Zap, label: "AI Co-Pilot", path: "/ai-copilot" },
             { icon: FolderOpen, label: "Documents", path: "/documents" },

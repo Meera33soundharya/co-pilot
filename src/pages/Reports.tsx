@@ -163,6 +163,7 @@ export default function Reports() {
             };
             setBriefing(summaries[reportType]);
             setIsGenerating(false);
+            // Toast is already imported globally from sonner
             import('sonner').then(({ toast }) => {
                 toast.success("Intelligence Briefing Generated", {
                     description: `${reportType} for ${periodStr} compiled.`

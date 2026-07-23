@@ -111,7 +111,7 @@ const Ctx = createContext<ComplaintsCtx | null>(null);
 export function ComplaintsProvider({ children }: { children: ReactNode }) {
     const [allComplaints, setAll] = useState<Complaint[]>(() => {
         try {
-            const saved = localStorage.getItem("co_pilot_complaints_v2");
+            const saved = localStorage.getItem("co_pilot_complaints_v3");
             const data = saved ? (JSON.parse(saved) as Complaint[]) : initialComplaints;
             // Deduplicate by ID to prevent ghost items in the UI
             const seen = new Set();
@@ -126,7 +126,7 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
     });
     const [notifications, setNotifications] = useState<AppNotification[]>(() => {
         try {
-            const saved = localStorage.getItem("co_pilot_notifications_v2");
+            const saved = localStorage.getItem("co_pilot_notifications_v3");
             return saved ? (JSON.parse(saved) as AppNotification[]) : [];
         } catch {
             return [];
@@ -164,7 +164,7 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
 
     const [announcements, setAnnouncements] = useState<Announcement[]>(() => {
         try {
-            const saved = localStorage.getItem("co_pilot_announcements_v2");
+            const saved = localStorage.getItem("co_pilot_announcements_v3");
             return saved ? (JSON.parse(saved) as Announcement[]) : INITIAL_ANNOUNCEMENTS;
         } catch {
             return INITIAL_ANNOUNCEMENTS;
@@ -173,7 +173,7 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
 
     const [closedDocs, setClosedDocs] = useState<ClosedDoc[]>(() => {
         try {
-            const saved = localStorage.getItem("co_pilot_closed_docs");
+            const saved = localStorage.getItem("co_pilot_closed_docs_v3");
             return saved ? (JSON.parse(saved) as ClosedDoc[]) : [];
         } catch {
             return [];
@@ -189,18 +189,22 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
     }, [currentUser]);
 
     useEffect(() => {
-        localStorage.setItem("co_pilot_announcements_v2", JSON.stringify(announcements));
+        localStorage.setItem("co_pilot_announcements_v3", JSON.stringify(announcements));
     }, [announcements]);
 
     useEffect(() => {
-        localStorage.setItem("co_pilot_complaints_v2", JSON.stringify(allComplaints));
+        localStorage.setItem("co_pilot_complaints_v3", JSON.stringify(allComplaints));
         complaintsChannel.send(allComplaints);   // instant cross-tab broadcast
     }, [allComplaints]);
 
     useEffect(() => {
-        localStorage.setItem("co_pilot_notifications_v2", JSON.stringify(notifications));
+        localStorage.setItem("co_pilot_notifications_v3", JSON.stringify(notifications));
         notifsChannel.send(notifications);       // instant cross-tab broadcast
     }, [notifications]);
+
+    useEffect(() => {
+        localStorage.setItem("co_pilot_closed_docs_v3", JSON.stringify(closedDocs));
+    }, [closedDocs]);
 
     // 🔄 Real-time cross-tab sync via BroadcastChannel
     useEffect(() => {

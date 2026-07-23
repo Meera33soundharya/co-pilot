@@ -1,22 +1,17 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useState } from "react";
-import { 
-    User, Bell, Shield, Key, Save, Camera, 
-    ChevronRight, FileBarChart2, Layers, MessageSquare, 
-    GraduationCap, Zap, Star, Activity, Clock, Users,
-    RefreshCw, Share2, Lightbulb, ExternalLink, CheckCircle2
+import {
+    User, Bell, Shield, Save, Camera,
+    ChevronRight, FileBarChart2, Star, Activity, Clock,
+    ExternalLink, CheckCircle2
 } from "lucide-react";
 import { useComplaints } from "@/context/ComplaintsContext";
-import { useNavigate } from "react-router-dom";
 
 const settingsSections = [
     { icon: User, label: "Profile & Identity" },
     { icon: Bell, label: "Notifications & Alerts" },
     { icon: Shield, label: "Security & Access" },
     { icon: FileBarChart2, label: "Performance Metrics" },
-    { icon: Layers, label: "Task Operations" },
-    { icon: MessageSquare, label: "Collaboration Tools" },
-    { icon: GraduationCap, label: "Knowledge Hub" },
 ];
 
 function Toggle({ defaultOn = false }: { defaultOn?: boolean }) {
@@ -33,7 +28,6 @@ function Toggle({ defaultOn = false }: { defaultOn?: boolean }) {
 
 export default function Settings() {
     const { currentUser, complaints } = useComplaints();
-    const navigate = useNavigate();
     const [activeSection, setActiveSection] = useState("Profile & Identity");
     const [name, setName] = useState(currentUser?.name || "Administrator");
     const [email, setEmail] = useState("officer@govpilot.in");
@@ -254,115 +248,7 @@ export default function Settings() {
                         </div>
                     )}
 
-                    {/* ──── TASK OPERATIONS SECTION ──── */}
-                    {activeSection === "Task Operations" && (
-                        <div className="bg-white border border-gray-100 rounded-[2.5rem] shadow-sm p-10 space-y-8 animate-in fade-in slide-in-from-right-4">
-                            <h2 className="text-sm font-black text-gray-400 uppercase tracking-[0.2em] mb-10 flex items-center gap-3">
-                                <Layers className="w-4 h-4 text-indigo-500" />
-                                Operation & Escalation Control
-                            </h2>
-                            
-                            <div className="p-8 bg-indigo-50 rounded-[2rem] border border-indigo-100">
-                                <h4 className="text-lg font-black text-indigo-900 mb-2">Automated Escalation Protocol</h4>
-                                <p className="text-base text-indigo-700 font-medium leading-relaxed">System-wide rule: Any grievance marked as High Priority which remains UNRESOLVED for more than 7 days will be automatically escalated to the District Supervisor.</p>
-                                <button className="mt-4 py-3 px-6 bg-white border border-indigo-200 rounded-2xl text-sm font-black uppercase text-indigo-600 hover:bg-indigo-100 transition-all">Configure Escalation Rules</button>
-                            </div>
 
-                            <div className="space-y-4">
-                                <h4 className="text-sm font-black uppercase tracking-widest text-gray-400 ml-1">Team Assignments</h4>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {[
-                                        { name: "Field Team A (West)", members: 12, load: "High" },
-                                        { name: "Mobile Repair Unit", members: 4, load: "Nominal" },
-                                    ].map(team => (
-                                        <div key={team.name} className="p-6 bg-gray-50 border border-gray-100 rounded-3xl flex items-center justify-between">
-                                            <div>
-                                                <p className="text-base font-black text-gray-900">{team.name}</p>
-                                                <p className="text-sm text-gray-400 font-bold uppercase mt-1">{team.members} Members</p>
-                                            </div>
-                                            <span className={`text-[9px] font-black px-2 py-1 rounded-lg ${team.load === "High" ? "bg-red-100 text-red-600" : "bg-emerald-100 text-emerald-600"}`}>{team.load}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                                <button className="w-full py-4 border-2 border-dashed border-gray-100 text-gray-400 rounded-3xl text-lg font-black uppercase tracking-widest hover:bg-gray-50 flex items-center justify-center gap-2">
-                                    <Users className="w-4 h-4" /> Delegate To New Unit
-                                </button>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* ──── COLLABORATION SECTION ──── */}
-                    {activeSection === "Collaboration Tools" && (
-                        <div className="bg-white border border-gray-100 rounded-[2.5rem] shadow-sm p-10 space-y-8 animate-in fade-in slide-in-from-right-4">
-                            <h2 className="text-sm font-black text-gray-400 uppercase tracking-[0.2em] mb-10 flex items-center gap-3">
-                                <MessageSquare className="w-4 h-4 text-cyan-500" />
-                                Inter-Departmental Sync
-                            </h2>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="p-8 bg-cyan-50 rounded-[2.5rem] border border-cyan-100 flex flex-col items-center text-center">
-                                    <div className="w-16 h-16 bg-white rounded-[1.5rem] flex items-center justify-center mb-6 shadow-xl shadow-cyan-100"><Share2 className="w-8 h-8 text-cyan-500" /></div>
-                                    <h4 className="text-base font-black text-cyan-900 mb-2">Private Intel Channel</h4>
-                                    <p className="text-base text-cyan-700 font-medium mb-6">Real-time secure chat for operational field teams and HODs.</p>
-                                    <button className="w-full py-4 bg-gray-900 text-white rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-[#B91C1C] transition-all">Launch Comm-Unit</button>
-                                </div>
-                                <div className="p-8 bg-neutral-900 rounded-[2.5rem] text-white flex flex-col items-center text-center">
-                                    <div className="w-16 h-16 bg-white/10 rounded-[1.5rem] flex items-center justify-center mb-6"><Users className="w-8 h-8 text-white" /></div>
-                                    <h4 className="text-base font-black mb-2">District Directory</h4>
-                                    <p className="text-base text-white/40 font-medium mb-6">Complete list of verified officers across all 24 wards.</p>
-                                    <button className="w-full py-4 bg-white text-gray-900 rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all">Contact Heads</button>
-                                </div>
-                            </div>
-
-                            <div className="bg-gray-50 rounded-[2rem] p-8 border border-gray-100">
-                                <div className="flex items-center justify-between mb-4">
-                                    <h4 className="text-sm font-black uppercase tracking-widest text-gray-400">Collaboration Note Sticky</h4>
-                                    <span className="text-[9px] font-black text-amber-500 tracking-widest uppercase">Pinned</span>
-                                </div>
-                                <textarea className="w-full bg-transparent border-none focus:outline-none text-lg font-bold text-gray-500 italic placeholder:text-gray-300 resize-none h-24" placeholder="Type a note for your relief officer..." />
-                            </div>
-                        </div>
-                    )}
-
-                    {/* ──── KNOWLEDGE HUB SECTION ──── */}
-                    {activeSection === "Knowledge Hub" && (
-                        <div className="bg-white border border-gray-100 rounded-[2.5rem] shadow-sm p-10 animate-in fade-in slide-in-from-right-4">
-                            <h2 className="text-sm font-black text-gray-400 uppercase tracking-[0.2em] mb-10 flex items-center gap-3">
-                                <Lightbulb className="w-4 h-4 text-amber-500" />
-                                Officer Assistance & Learning
-                            </h2>
-                            
-                            <div className="space-y-6">
-                                <div onClick={() => navigate("/study-buddy")} 
-                                     className="p-8 bg-gradient-to-r from-neutral-900 to-gray-800 rounded-[2.5rem] text-white flex items-center justify-between group cursor-pointer hover:scale-[1.01] transition-all">
-                                    <div>
-                                        <h4 className="text-lg font-black mb-2 flex items-center gap-2">Study Buddy <GraduationCap className="w-5 h-5 text-amber-400" /></h4>
-                                        <p className="text-base text-white/40 font-medium">Quick links to policy documents and past case studies.</p>
-                                    </div>
-                                    <ChevronRight className="w-6 h-6 text-white/20 group-hover:text-white group-hover:translate-x-2 transition-all" />
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="p-6 bg-emerald-50 rounded-3xl border border-emerald-100">
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <Zap className="w-4 h-4 text-emerald-600" />
-                                            <p className="text-sm font-black text-emerald-800 uppercase tracking-widest">AI Assistance Ready</p>
-                                        </div>
-                                        <p className="text-base font-black text-emerald-900 mb-1">Grievance-ID: GRV-8292</p>
-                                        <p className="text-sm text-emerald-600 font-medium italic">"Based on past rains, we suggest deploying the heavy drainage vac team to Ward-06 within 2 hours."</p>
-                                    </div>
-                                    <div className="p-6 bg-red-50 rounded-3xl border border-red-100">
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <Shield className="w-4 h-4 text-red-600" />
-                                            <p className="text-sm font-black text-red-800 uppercase tracking-widest">Policy Spotlight</p>
-                                        </div>
-                                        <p className="text-base font-black text-red-900 mb-1">Disaster Protocol V2.1</p>
-                                        <p className="text-sm text-red-600 font-medium leading-relaxed">Section 4.2: Handling live wire anomalies in residential parks.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
                 </div>
             </div>
         </DashboardLayout>

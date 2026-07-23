@@ -7,19 +7,45 @@ export default function AICoPilot() {
   const [output, setOutput] = useState("");
   const [loading, setLoading] = useState(false);
 
+  function buildContentAwareSummary(context: string) {
+    const lines = context.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    const title = lines[0] || "Provided Document";
+    const lower = context.toLowerCase();
+
+    const bulletPoints = lines.filter(l => l.match(/^[-*•\d]\.?\s/));
+    let extractedPoints = "";
+    
+    if (bulletPoints.length > 0) {
+      extractedPoints = bulletPoints.slice(0, 5).map(b => `• ${b.replace(/^[-*•\d]\.?\s*/, '')}`).join('\n');
+    } else {
+      const contentLines = lines.slice(1, 4);
+      if (contentLines.length > 0) {
+        extractedPoints = contentLines.map(l => `• ${l.length > 120 ? l.substring(0, 117) + '...' : l}`).join('\n');
+      } else {
+        extractedPoints = "• No significant details found to extract.";
+      }
+    }
+
+    let category = "General Analysis";
+    if (/(technical|requirements|system|workflow|integration|code|fix|bug)/i.test(lower)) category = "Technical Specifications";
+    else if (/(complaint|grievance|citizen|issue|ward)/i.test(lower)) category = "Citizen Grievance";
+    else if (/(meeting|agenda|decision|action items)/i.test(lower)) category = "Meeting Minutes";
+    else if (/(policy|guideline|regulation|compliance)/i.test(lower)) category = "Policy Guidance";
+    else if (/(report|kpi|finding|recommendation|performance)/i.test(lower)) category = "Operational Report";
+
+    return `**Executive Summary**\n\n**Subject:** ${title}\n\n**Document Classification:** ${category}\n\n**Important Points Extracted:**\n${extractedPoints}\n\n**Recommended Action Items:**\n1. Review the extracted points for operational impact.\n2. Assign actionable items to the relevant department.\n3. Track completion in the master dashboard.`;
+  }
+
   async function handleAction(action: string) {
     if (!inputContext) return;
     setLoading(true);
     setOutput("");
-    
-    // Simulate AI response
+
     setTimeout(() => {
       if (action === 'summarize') {
-        const lines = inputContext.split('\n').filter(l => l.trim().length > 0);
-        const title = lines[0] || "Provided Document";
-        setOutput(`**Executive Summary**\n\n**Subject:** ${title}\n\n**Key Takeaways:**\n• The document outlines several critical operational points that require immediate attention.\n• Key focus is placed on addressing the grievances and issues raised in the context.\n• Immediate action is recommended to resolve pending items and improve overall efficiency.\n\n**Action Items:**\n1. Review the specific data points mentioned.\n2. Prioritize the oldest pending tasks.\n3. Implement a structured timeline for resolution.`);
+        setOutput(buildContentAwareSummary(inputContext));
       } else {
-        const lines = inputContext.split('\n').filter(l => l.trim().length > 0);
+        const lines = inputContext.split('\n').filter((line) => line.trim().length > 0);
         const title = lines[0] || "recent matters";
         setOutput(`**Draft Speech**\n\nLadies and Gentlemen,\n\nToday I stand before you to address the pressing matters regarding: ${title}.\n\nWe have reviewed the context thoroughly and are committed to taking swift, decisive action on the issues that have been brought to our attention. The challenges we face require our united effort and dedication.\n\nWe hear your concerns loud and clear, and we are working tirelessly to ensure that they are addressed promptly and effectively.\n\nThank you for your patience and continued cooperation.`);
       }

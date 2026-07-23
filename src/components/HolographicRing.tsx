@@ -13,16 +13,19 @@ export default function HolographicRing({ className = "" }: { className?: string
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d")!;
+    const canvasEl = canvas;
+    const ctx = canvasEl.getContext("2d");
+    if (!ctx) return;
+    const drawingContext = ctx;
 
     // ── Sizing ──────────────────────────────────────────────────
     const resize = () => {
-      canvas.width  = canvas.offsetWidth  * window.devicePixelRatio;
-      canvas.height = canvas.offsetHeight * window.devicePixelRatio;
+      canvasEl.width  = canvasEl.offsetWidth  * window.devicePixelRatio;
+      canvasEl.height = canvasEl.offsetHeight * window.devicePixelRatio;
     };
     resize();
     const ro = new ResizeObserver(resize);
-    ro.observe(canvas);
+    ro.observe(canvasEl);
 
     // ── Load background image ────────────────────────────────────
     const bgImg = new Image();
@@ -32,9 +35,9 @@ export default function HolographicRing({ className = "" }: { className?: string
 
     // ── Ring center — between the two hands (approx 50% x, 52% y) ──
     const getRingCenter = () => ({
-      cx: canvas.width  * 0.50,
-      cy: canvas.height * 0.52,
-      scale: Math.min(canvas.width, canvas.height) / 700,
+      cx: canvasEl.width  * 0.50,
+      cy: canvasEl.height * 0.52,
+      scale: Math.min(canvasEl.width, canvasEl.height) / 700,
     });
 
     // ── Particles ────────────────────────────────────────────────
@@ -89,43 +92,43 @@ export default function HolographicRing({ className = "" }: { className?: string
       const rot = t * spd * dir;
 
       // Outer glow halo
-      const grd = ctx.createRadialGradient(cx, cy, r - lw*4, cx, cy, r + lw*4);
+      const grd = drawingContext.createRadialGradient(cx, cy, r - lw*4, cx, cy, r + lw*4);
       grd.addColorStop(0,   `rgba(${color},0)`);
       grd.addColorStop(0.5, `rgba(${color},${alpha * 0.55})`);
       grd.addColorStop(1,   `rgba(${color},0)`);
-      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
-      ctx.strokeStyle = grd; ctx.lineWidth = lw + 8; ctx.stroke();
+      drawingContext.beginPath(); drawingContext.arc(cx, cy, r, 0, Math.PI * 2);
+      drawingContext.strokeStyle = grd; drawingContext.lineWidth = lw + 8; drawingContext.stroke();
 
       // Dashed ring body
-      ctx.save();
-      ctx.translate(cx, cy); ctx.rotate(rot);
+      drawingContext.save();
+      drawingContext.translate(cx, cy); drawingContext.rotate(rot);
       const dashLen = (2 * Math.PI * r) / (segs * 2);
-      ctx.setLineDash([dashLen * 0.65, dashLen * 0.35]);
-      ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2);
-      ctx.strokeStyle = `rgba(${color},${alpha})`;
-      ctx.lineWidth = lw; ctx.stroke();
-      ctx.setLineDash([]);
+      drawingContext.setLineDash([dashLen * 0.65, dashLen * 0.35]);
+      drawingContext.beginPath(); drawingContext.arc(0, 0, r, 0, Math.PI * 2);
+      drawingContext.strokeStyle = `rgba(${color},${alpha})`;
+      drawingContext.lineWidth = lw; drawingContext.stroke();
+      drawingContext.setLineDash([]);
 
       // Node dots + tick lines
       for (let i = 0; i < segs; i++) {
         const a  = (i / segs) * Math.PI * 2;
         const nx = r * Math.cos(a), ny = r * Math.sin(a);
-        const ng = ctx.createRadialGradient(nx, ny, 0, nx, ny, lw * 2.5);
+        const ng = drawingContext.createRadialGradient(nx, ny, 0, nx, ny, lw * 2.5);
         ng.addColorStop(0,   "rgba(255,255,255,0.95)");
         ng.addColorStop(0.4, `rgba(${color},0.9)`);
         ng.addColorStop(1,   "transparent");
-        ctx.beginPath(); ctx.arc(nx, ny, lw * 2.5, 0, Math.PI * 2);
-        ctx.fillStyle = ng; ctx.fill();
-        ctx.beginPath();
-        ctx.moveTo(nx * 0.92, ny * 0.92); ctx.lineTo(nx * 1.08, ny * 1.08);
-        ctx.strokeStyle = `rgba(${color},0.8)`; ctx.lineWidth = lw * 0.5; ctx.stroke();
+        drawingContext.beginPath(); drawingContext.arc(nx, ny, lw * 2.5, 0, Math.PI * 2);
+        drawingContext.fillStyle = ng; drawingContext.fill();
+        drawingContext.beginPath();
+        drawingContext.moveTo(nx * 0.92, ny * 0.92); drawingContext.lineTo(nx * 1.08, ny * 1.08);
+        drawingContext.strokeStyle = `rgba(${color},0.8)`; drawingContext.lineWidth = lw * 0.5; drawingContext.stroke();
       }
-      ctx.restore();
+      drawingContext.restore();
     }
 
     function simpleRing(cx: number, cy: number, r: number, color: string, lw: number) {
-      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
-      ctx.strokeStyle = color; ctx.lineWidth = lw; ctx.stroke();
+      drawingContext.beginPath(); drawingContext.arc(cx, cy, r, 0, Math.PI * 2);
+      drawingContext.strokeStyle = color; drawingContext.lineWidth = lw; drawingContext.stroke();
     }
 
     // ── Main frame loop ──────────────────────────────────────────
@@ -134,13 +137,13 @@ export default function HolographicRing({ className = "" }: { className?: string
     function frame(ts: number) {
       if (!startTime) startTime = ts;
       const t = (ts - startTime) / 1000;
-      const W = canvas.width, H = canvas.height;
+      const W = canvasEl.width, H = canvasEl.height;
       const { cx, cy, scale } = getRingCenter();
       const OUTER_R = scale * 155;
       const INNER_R = scale * 100;
       const minDim  = Math.min(W, H);
 
-      ctx.clearRect(0, 0, W, H);
+      drawingContext.clearRect(0, 0, W, H);
 
       // ── 1. Background image (or dark fallback) ────────────────
       if (imgLoaded) {
@@ -150,41 +153,41 @@ export default function HolographicRing({ className = "" }: { className?: string
         let sw = W, sh = H, sx = 0, sy = 0;
         if (imgAR > canAR) { sw = H * imgAR; sx = (W - sw) / 2; }
         else               { sh = W / imgAR; sy = (H - sh) / 2; }
-        ctx.drawImage(bgImg, sx, sy, sw, sh);
+        drawingContext.drawImage(bgImg, sx, sy, sw, sh);
 
         // Subtle dark vignette so animations pop
-        const vig = ctx.createRadialGradient(cx, cy, minDim * 0.15, cx, cy, minDim * 0.75);
+        const vig = drawingContext.createRadialGradient(cx, cy, minDim * 0.15, cx, cy, minDim * 0.75);
         vig.addColorStop(0, "rgba(0,0,10,0.15)");
         vig.addColorStop(1, "rgba(0,0,10,0.65)");
-        ctx.fillStyle = vig; ctx.fillRect(0, 0, W, H);
+        drawingContext.fillStyle = vig; drawingContext.fillRect(0, 0, W, H);
       } else {
         // Dark blue fallback while image loads
-        const bg = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(W, H) * 0.8);
+        const bg = drawingContext.createRadialGradient(cx, cy, 0, cx, cy, Math.max(W, H) * 0.8);
         bg.addColorStop(0, "rgba(6,15,55,1)");
         bg.addColorStop(0.5,"rgba(3,10,35,1)");
         bg.addColorStop(1,  "rgba(0,3,14,1)");
-        ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+        drawingContext.fillStyle = bg; drawingContext.fillRect(0, 0, W, H);
       }
 
       // ── 2. Atmospheric light rays from center ─────────────────
-      const rayG = ctx.createRadialGradient(cx, cy, 0, cx, cy, minDim * 0.55);
+      const rayG = drawingContext.createRadialGradient(cx, cy, 0, cx, cy, minDim * 0.55);
       rayG.addColorStop(0, "rgba(80,150,255,0.18)");
       rayG.addColorStop(0.45,"rgba(100,50,255,0.08)");
       rayG.addColorStop(1, "transparent");
-      ctx.fillStyle = rayG; ctx.fillRect(0, 0, W, H);
+      drawingContext.fillStyle = rayG; drawingContext.fillRect(0, 0, W, H);
 
       // ── 3. HUD arc segments ───────────────────────────────────
       hudArcs.forEach(arc => {
         const r = minDim * arc.rFactor;
         const s = arc.start + t * arc.dir * arc.spd;
-        ctx.beginPath(); ctx.arc(cx, cy, r, s, s + arc.span);
-        ctx.strokeStyle = `rgba(${arc.color.join(",")},0.55)`;
-        ctx.lineWidth   = arc.w * scale; ctx.stroke();
+        drawingContext.beginPath(); drawingContext.arc(cx, cy, r, s, s + arc.span);
+        drawingContext.strokeStyle = `rgba(${arc.color.join(",")},0.55)`;
+        drawingContext.lineWidth   = arc.w * scale; drawingContext.stroke();
         // tick dot at end
         const ex = cx + r * Math.cos(s + arc.span);
         const ey = cy + r * Math.sin(s + arc.span);
-        ctx.beginPath(); ctx.arc(ex, ey, arc.w * 2.5 * scale, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${arc.color.join(",")},0.9)`; ctx.fill();
+        drawingContext.beginPath(); drawingContext.arc(ex, ey, arc.w * 2.5 * scale, 0, Math.PI * 2);
+        drawingContext.fillStyle = `rgba(${arc.color.join(",")},0.9)`; drawingContext.fill();
       });
 
       // ── 4. Circuit lines ──────────────────────────────────────
@@ -192,22 +195,22 @@ export default function HolographicRing({ className = "" }: { className?: string
         const progress = ((t * c.speed + c.phase) % 3) / 3;
         const maxLen   = minDim * c.lenFactor;
         const curLen   = progress * maxLen;
-        ctx.save(); ctx.translate(cx, cy); ctx.rotate(c.angle);
-        ctx.strokeStyle = `rgba(${c.color.join(",")},${0.55 * (1 - progress)})`;
-        ctx.lineWidth   = 1.2 * scale;
-        ctx.beginPath();
-        let x = OUTER_R, y = 0; ctx.moveTo(x, y);
+        drawingContext.save(); drawingContext.translate(cx, cy); drawingContext.rotate(c.angle);
+        drawingContext.strokeStyle = `rgba(${c.color.join(",")},${0.55 * (1 - progress)})`;
+        drawingContext.lineWidth   = 1.2 * scale;
+        drawingContext.beginPath();
+        let x = OUTER_R, y = 0; drawingContext.moveTo(x, y);
         const segLen = curLen / c.segments;
         for (let s = 0; s < c.segments; s++) {
           const dir = s % 2 === 0 ? 1 : -1;
           const nx = x + segLen * 0.7, ny = y + dir * segLen * 0.4;
-          ctx.lineTo(nx, ny);
-          ctx.fillStyle = `rgba(${c.color.join(",")},0.85)`;
-          ctx.beginPath(); ctx.arc(nx, ny, 2.5 * scale, 0, Math.PI * 2); ctx.fill();
-          ctx.beginPath(); ctx.moveTo(nx, ny);
+          drawingContext.lineTo(nx, ny);
+          drawingContext.fillStyle = `rgba(${c.color.join(",")},0.85)`;
+          drawingContext.beginPath(); drawingContext.arc(nx, ny, 2.5 * scale, 0, Math.PI * 2); drawingContext.fill();
+          drawingContext.beginPath(); drawingContext.moveTo(nx, ny);
           x = nx; y = ny;
         }
-        ctx.stroke(); ctx.restore();
+        drawingContext.stroke(); drawingContext.restore();
       });
 
       // ── 5. Outer ring — clockwise ──────────────────────────────
@@ -229,77 +232,77 @@ export default function HolographicRing({ className = "" }: { className?: string
         const py = cy + r * Math.sin(p.angle) * 0.38 + H * p.yOff;
         const al = p.alpha * (0.6 + 0.4 * Math.sin(t * 2 + p.angle));
         const sz = W * p.size;
-        const pg = ctx.createRadialGradient(px, py, 0, px, py, sz * 2.2);
+        const pg = drawingContext.createRadialGradient(px, py, 0, px, py, sz * 2.2);
         pg.addColorStop(0, `rgba(${p.color.join(",")},${al})`);
         pg.addColorStop(1, `rgba(${p.color.join(",")},0)`);
-        ctx.beginPath(); ctx.arc(px, py, sz, 0, Math.PI * 2);
-        ctx.fillStyle = pg; ctx.fill();
+        drawingContext.beginPath(); drawingContext.arc(px, py, sz, 0, Math.PI * 2);
+        drawingContext.fillStyle = pg; drawingContext.fill();
       });
 
       // ── 9. Energy burst at center ─────────────────────────────
       const pr = (30 + Math.sin(t * 3.2) * 9) * scale;
-      const bg2 = ctx.createRadialGradient(cx, cy, 0, cx, cy, pr * 3.8);
+      const bg2 = drawingContext.createRadialGradient(cx, cy, 0, cx, cy, pr * 3.8);
       bg2.addColorStop(0,    "rgba(255,255,255,0.98)");
       bg2.addColorStop(0.15, "rgba(140,230,255,0.88)");
       bg2.addColorStop(0.45, "rgba(100,60,255,0.38)");
       bg2.addColorStop(1,    "transparent");
-      ctx.fillStyle = bg2; ctx.beginPath(); ctx.arc(cx, cy, pr * 3.8, 0, Math.PI * 2); ctx.fill();
+      drawingContext.fillStyle = bg2; drawingContext.beginPath(); drawingContext.arc(cx, cy, pr * 3.8, 0, Math.PI * 2); drawingContext.fill();
       // bright inner core
-      ctx.beginPath(); ctx.arc(cx, cy, pr * 0.3, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(255,255,255,0.99)"; ctx.fill();
+      drawingContext.beginPath(); drawingContext.arc(cx, cy, pr * 0.3, 0, Math.PI * 2);
+      drawingContext.fillStyle = "rgba(255,255,255,0.99)"; drawingContext.fill();
 
       // ── 10. Shockwave expanding rings ─────────────────────────
       for (let i = 0; i < 3; i++) {
         const sp = ((t * 0.65 + i * 0.33) % 1);
         const sr = sp * minDim * 0.40;
         const sa = (1 - sp) * 0.38;
-        ctx.beginPath(); ctx.arc(cx, cy, sr, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(80,180,255,${sa})`; ctx.lineWidth = 2 * scale; ctx.stroke();
+        drawingContext.beginPath(); drawingContext.arc(cx, cy, sr, 0, Math.PI * 2);
+        drawingContext.strokeStyle = `rgba(80,180,255,${sa})`; drawingContext.lineWidth = 2 * scale; drawingContext.stroke();
       }
 
       // ── 11. Data tag labels ───────────────────────────────────
-      ctx.font = `bold ${Math.round(10 * scale)}px "Courier New", monospace`;
-      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      drawingContext.font = `bold ${Math.round(10 * scale)}px "Courier New", monospace`;
+      drawingContext.textAlign = "center"; drawingContext.textBaseline = "middle";
       dataTags.forEach(tag => {
         const r  = minDim * tag.rFactor;
         const a  = tag.angleFactor + t * 0.08;
         const tx = cx + r * Math.cos(a);
         const ty = cy + r * Math.sin(a) * 0.5;
-        const tw = ctx.measureText(tag.label).width + 14 * scale;
+        const tw = drawingContext.measureText(tag.label).width + 14 * scale;
         const th = 18 * scale;
-        ctx.fillStyle = "rgba(0,10,32,0.82)";
-        ctx.strokeStyle = "rgba(0,200,255,0.6)"; ctx.lineWidth = scale;
-        ctx.beginPath();
-        if (ctx.roundRect) ctx.roundRect(tx - tw/2, ty - th/2, tw, th, 2*scale);
-        else ctx.rect(tx - tw/2, ty - th/2, tw, th);
-        ctx.fill(); ctx.stroke();
-        ctx.fillStyle = "rgba(0,220,255,0.96)";
-        ctx.fillText(tag.label, tx, ty);
+        drawingContext.fillStyle = "rgba(0,10,32,0.82)";
+        drawingContext.strokeStyle = "rgba(0,200,255,0.6)"; drawingContext.lineWidth = scale;
+        drawingContext.beginPath();
+        if (drawingContext.roundRect) drawingContext.roundRect(tx - tw/2, ty - th/2, tw, th, 2*scale);
+        else drawingContext.rect(tx - tw/2, ty - th/2, tw, th);
+        drawingContext.fill(); drawingContext.stroke();
+        drawingContext.fillStyle = "rgba(0,220,255,0.96)";
+        drawingContext.fillText(tag.label, tx, ty);
         // dashed connector to ring edge
         const ex = cx + (OUTER_R + 8*scale) * Math.cos(a);
         const ey = cy + (OUTER_R + 8*scale) * Math.sin(a) * 0.5;
-        ctx.beginPath(); ctx.moveTo(ex, ey); ctx.lineTo(tx, ty);
-        ctx.strokeStyle = "rgba(0,180,255,0.3)"; ctx.lineWidth = 0.8*scale;
-        ctx.setLineDash([4*scale, 4*scale]); ctx.stroke(); ctx.setLineDash([]);
+        drawingContext.beginPath(); drawingContext.moveTo(ex, ey); drawingContext.lineTo(tx, ty);
+        drawingContext.strokeStyle = "rgba(0,180,255,0.3)"; drawingContext.lineWidth = 0.8*scale;
+        drawingContext.setLineDash([4*scale, 4*scale]); drawingContext.stroke(); drawingContext.setLineDash([]);
       });
 
       // ── 12. Crosshair at center ───────────────────────────────
       const ch = 18 * scale;
-      ctx.strokeStyle = "rgba(0,220,255,0.5)"; ctx.lineWidth = scale;
-      ctx.beginPath();
-      ctx.moveTo(cx - ch, cy); ctx.lineTo(cx + ch, cy);
-      ctx.moveTo(cx, cy - ch); ctx.lineTo(cx, cy + ch);
-      ctx.stroke();
-      ctx.strokeStyle = "rgba(0,220,255,0.22)";
-      ctx.beginPath();
-      ctx.moveTo(cx-10*scale, cy-10*scale); ctx.lineTo(cx+10*scale, cy+10*scale);
-      ctx.moveTo(cx+10*scale, cy-10*scale); ctx.lineTo(cx-10*scale, cy+10*scale);
-      ctx.stroke();
+      drawingContext.strokeStyle = "rgba(0,220,255,0.5)"; drawingContext.lineWidth = scale;
+      drawingContext.beginPath();
+      drawingContext.moveTo(cx - ch, cy); drawingContext.lineTo(cx + ch, cy);
+      drawingContext.moveTo(cx, cy - ch); drawingContext.lineTo(cx, cy + ch);
+      drawingContext.stroke();
+      drawingContext.strokeStyle = "rgba(0,220,255,0.22)";
+      drawingContext.beginPath();
+      drawingContext.moveTo(cx-10*scale, cy-10*scale); drawingContext.lineTo(cx+10*scale, cy+10*scale);
+      drawingContext.moveTo(cx+10*scale, cy-10*scale); drawingContext.lineTo(cx-10*scale, cy+10*scale);
+      drawingContext.stroke();
 
       // ── 13. Scan line overlay ─────────────────────────────────
       for (let y = 0; y < H; y += 4) {
-        ctx.fillStyle = "rgba(0,0,0,0.025)";
-        ctx.fillRect(0, y, W, 1);
+        drawingContext.fillStyle = "rgba(0,0,0,0.025)";
+        drawingContext.fillRect(0, y, W, 1);
       }
 
       animRef.current = requestAnimationFrame(frame);

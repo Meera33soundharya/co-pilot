@@ -5,76 +5,175 @@ import {
     Search, Filter, Download, FileText, 
     Calendar, MapPin, Building2, User, ChevronDown, Eye, X, Shield, Clock, AlertTriangle, CheckCircle2, MessageCircle, ImageIcon, Trash2
 } from "lucide-react";
+import { resolveComplaintImage } from "@/services/fallbackImageService";
+import { AiImageWrapper } from "@/components/AiImageBadge";
+import { VoiceAssistantFAB } from "@/components/VoiceAssistantFAB";
 
-// Category → default "before" placeholder image
-const CATEGORY_IMAGE: Record<string, string> = {
-    "Water Supply":              "/complaint_water.png",
-    "Electricity":               "/complaint_electricity.png",
-    "Roads & Infrastructure":    "/complaint_road.png",
-    "Sanitation":                "/complaint_sanitation.png",
-    "Drainage":                  "/complaint_sanitation.png",
-    "Public Health":             "/complaint_sanitation.png",
-    "Parks & Recreation":        "/before_placeholder.png",
-    "Enforcement":               "/before_placeholder.png",
-    "Education":                 "/before_placeholder.png",
-    "Ward Committee & Governance": "/before_placeholder.png",
-    "Other":                     "/before_placeholder.png",
-};
 
-// Category → high-res "after" (resolved) image
-const CATEGORY_RESOLVED_IMAGE: Record<string, string> = {
-    "Water Supply":              "/resolved_water.png",
-    "Electricity":               "/resolved_electricity.png",
-    "Roads & Infrastructure":    "/resolved_road.png",
-    "Sanitation":                "/resolved_sanitation.png",
-    "Drainage":                  "/resolved_sanitation.png",
-    "Public Health":             "/resolved_sanitation.png",
-    "Parks & Recreation":        "/after_placeholder.png",
-    "Enforcement":               "/after_placeholder.png",
-    "Education":                 "/after_placeholder.png",
-    "Ward Committee & Governance": "/after_placeholder.png",
-    "Other":                     "/after_placeholder.png",
-};
+function escapeHtml(value: string | undefined) {
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
 
-function downloadPDF(doc: any, complaint: any) {
-    const beforeImg = (complaint?.evidence?.[0]) || CATEGORY_IMAGE[complaint?.category] || "/before_placeholder.png";
-    const afterImg  = complaint?.resolutionProof || CATEGORY_RESOLVED_IMAGE[complaint?.category] || "/after_placeholder.png";
+function parseAsset(raw: string, fallbackName: string) {
+    const [src, fragment = ""] = raw.split("#");
+    const params = new URLSearchParams(fragment);
+    return {
+        src: src || "",
+        name: params.get("name") ? decodeURIComponent(params.get("name")!) : fallbackName,
+        type: params.get("type") || "",
+    };
+}
 
-    const html = `<!DOCTYPE html>
+function resolveAssetUrl(raw: string) {
+    if (!raw) return "";
+    if (raw.startsWith("data:") || raw.startsWith("blob:") || /^https?:\/\//i.test(raw)) return raw;
+    if (raw.startsWith("/")) return `${window.location.origin}${raw}`;
+    return raw;
+}
+
+function isImageAsset(raw: string, type: string) {
+    const lower = raw.toLowerCase();
+    return type.startsWith("image/") || /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(lower);
+}
+
+function buildEvidenceCards(complaint: any) {
+    const cards: Array<{ title: string; caption: string; src: string; name: string; type: string; isAiGenerated?: boolean }> = [];
+    const cid = complaint?.id ?? "unknown";
+    const cat = complaint?.category || "Other";
+    const issue = complaint?.issue || "";
+
+    // AFTER image — keyed by complaint.id
+    const afterRes = resolveComplaintImage(cid, complaint?.resolutionProof, cat, "after", issue);
+    const afterAsset = parseAsset(afterRes.src, "Resolution Evidence");
+    cards.push({
+        title: "Resolution Evidence",
+        caption: "After action / completed work",
+        src: resolveAssetUrl(afterAsset.src),
+        name: afterRes.isAiGenerated ? "AI Generated Illustration" : afterAsset.name,
+        type: afterRes.isAiGenerated ? "image/png" : afterAsset.type,
+        isAiGenerated: afterRes.isAiGenerated
+    });
+
+    // BEFORE image — keyed by complaint.id
+    const rawBefore = complaint?.evidence?.length ? complaint.evidence[0] : null;
+    const beforeRes = resolveComplaintImage(cid, rawBefore, cat, "before", issue);
+    const beforeAsset = parseAsset(beforeRes.src, "Original Complaint Evidence");
+    cards.push({
+        title: "Original Complaint Evidence",
+        caption: "Initial condition reported by citizen",
+        src: resolveAssetUrl(beforeAsset.src),
+        name: beforeRes.isAiGenerated ? "AI Generated Illustration" : beforeAsset.name,
+        type: beforeRes.isAiGenerated ? "image/png" : beforeAsset.type,
+        isAiGenerated: beforeRes.isAiGenerated
+    });
+
+    if (complaint?.evidence?.length > 1) {
+        complaint.evidence.slice(1).forEach((item: string, index: number) => {
+            const asset = parseAsset(item, `Additional Evidence ${index + 1}`);
+            cards.push({
+                title: "Additional Evidence",
+                caption: "Supporting complaint evidence",
+                src: resolveAssetUrl(asset.src),
+                name: asset.name,
+                type: asset.type,
+                isAiGenerated: false
+            });
+        });
+    }
+
+    if (complaint?.supportingDocs?.length) {
+        complaint.supportingDocs.forEach((item: string, index: number) => {
+            const asset = parseAsset(item, `Supporting Document ${index + 1}`);
+            cards.push({
+                title: "Supporting Document",
+                caption: "Inspection notes / attachments",
+                src: resolveAssetUrl(asset.src),
+                name: asset.name,
+                type: asset.type,
+                isAiGenerated: false
+            });
+        });
+    }
+
+    return cards;
+}
+
+function buildReportHtml(doc: any, complaint: any) {
+    const evidenceCards = buildEvidenceCards(complaint);
+    const resolutionText = complaint?.resolutionNotes || complaint?.adminRemarks || doc?.summary || "Complaint resolved successfully.";
+    const officer = complaint?.officerDetails || complaint?.assignedTo || "Field Officer";
+    const resolvedOn = complaint?.resolutionDate ? new Date(complaint.resolutionDate).toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+    }) : doc?.date || "—";
+
+    const evidenceMarkup = evidenceCards.length > 0
+        ? evidenceCards.map((card) => {
+            const isImage = card.isAiGenerated || isImageAsset(card.src, card.type);
+            const imageBlock = isImage
+                ? `<img src="${card.src}" alt="${escapeHtml(card.name)}" />`
+                : `<div class="asset-placeholder">${escapeHtml(card.name)}<br /><span>Attachment reference</span></div>`;
+
+            const badgeBlock = card.isAiGenerated 
+                ? `<div style="background:#FEF3C7; border-top:1px dashed #F59E0B; padding:6px; text-align:center; font-size:10px; font-weight:800; color:#92400E; text-transform:uppercase; letter-spacing:1px;">⚠️ Illustrative image — no photo submitted</div>`
+                : '';
+
+            return `
+              <div class="photo-card" ${card.isAiGenerated ? 'style="border:2px dashed #F59E0B;"' : ''}>
+                <div class="photo-label">${escapeHtml(card.title)}</div>
+                <div class="photo-caption">${escapeHtml(card.caption)}</div>
+                ${imageBlock}
+                ${badgeBlock}
+                <div class="photo-foot">${escapeHtml(card.name)}</div>
+              </div>`;
+        }).join("")
+        : `<div class="empty-box">No resolution evidence available for this complaint.</div>`;
+
+    return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <title>${doc.name}</title>
+  <title>${escapeHtml(doc.name)}</title>
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; background:#fff; color:#111; padding:40px; }
-    .header { display:flex; align-items:center; justify-content:space-between; border-bottom:3px solid #B91C1C; padding-bottom:20px; margin-bottom:30px; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background:#fff; color:#111; padding:40px; line-height:1.5; }
+    .header { display:flex; align-items:center; justify-content:space-between; border-bottom:3px solid #B91C1C; padding-bottom:20px; margin-bottom:24px; }
     .brand { font-size:28px; font-weight:900; color:#B91C1C; letter-spacing:-1px; }
     .brand span { color:#111; }
     .meta { font-size:12px; color:#999; text-align:right; }
+    .topbar { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:20px; }
     h1 { font-size:20px; font-weight:800; margin-bottom:4px; }
     .badge { display:inline-block; background:#dcfce7; color:#166534; padding:4px 14px; border-radius:20px; font-size:12px; font-weight:800; letter-spacing:1px; text-transform:uppercase; }
-    .grid4 { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin:24px 0; }
+    .grid4 { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin:18px 0; }
     .card { background:#f8f8f8; border:1px solid #eee; border-radius:12px; padding:16px; }
     .card .label { font-size:10px; font-weight:800; text-transform:uppercase; color:#999; letter-spacing:1px; margin-bottom:4px; }
     .card .value { font-size:15px; font-weight:700; color:#111; }
-    .section { margin:28px 0; }
-    .section h2 { font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:2px; color:#999; border-bottom:1px solid #eee; padding-bottom:8px; margin-bottom:16px; }
-    .desc-box { background:#f8f8f8; border:1px solid #eee; border-radius:12px; padding:20px; }
+    .section { margin:24px 0; }
+    .section h2 { font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:2px; color:#999; border-bottom:1px solid #eee; padding-bottom:8px; margin-bottom:14px; }
+    .desc-box, .notes-box, .empty-box { background:#f8f8f8; border:1px solid #eee; border-radius:12px; padding:18px; }
     .desc-box h3 { font-size:17px; font-weight:800; margin-bottom:8px; }
-    .desc-box p { font-size:14px; color:#555; line-height:1.6; }
-    .notes-box { background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:18px; margin-bottom:12px; }
+    .desc-box p, .notes-box p { font-size:14px; color:#555; line-height:1.6; }
+    .notes-box { background:#eff6ff; border:1px solid #bfdbfe; margin-bottom:12px; }
     .notes-box .lbl { font-size:10px; font-weight:800; text-transform:uppercase; color:#2563eb; letter-spacing:1px; margin-bottom:6px; }
-    .notes-box p { font-size:13px; color:#1e3a8a; line-height:1.6; }
-    .photos { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:16px; }
-    .photo-card { border-radius:12px; overflow:hidden; border:2px solid #eee; }
-    .photo-card.after { border-color:#bbf7d0; }
-    .photo-label { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:2px; padding:8px 14px; background:#f8f8f8; color:#555; }
-    .photo-card.after .photo-label { background:#f0fdf4; color:#166534; }
-    .photo-card img { width:100%; height:200px; object-fit:cover; display:block; }
+    .empty-box { text-align:center; color:#777; font-weight:600; }
+    .photos { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:16px; margin-top:16px; }
+    .photo-card { border-radius:12px; overflow:hidden; border:1px solid #e5e7eb; background:#fff; }
+    .photo-label { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:2px; padding:10px 12px; background:#f8f8f8; color:#555; }
+    .photo-caption { font-size:12px; color:#666; padding:8px 12px 0; }
+    .photo-card img { width:100%; height:220px; object-fit:cover; display:block; margin-top:8px; }
+    .asset-placeholder { min-height:180px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:18px; text-align:center; color:#777; font-weight:600; background:#f9fafb; }
+    .asset-placeholder span { font-size:12px; color:#999; margin-top:4px; }
+    .photo-foot { font-size:11px; color:#666; padding:10px 12px 12px; word-break:break-all; }
     .footer { margin-top:40px; border-top:1px solid #eee; padding-top:16px; display:flex; justify-content:space-between; font-size:11px; color:#aaa; }
     .stamp { text-align:right; }
     .stamp .verified { font-size:13px; font-weight:900; color:#166534; text-transform:uppercase; }
+    @media print { body { padding:24px; } }
   </style>
 </head>
 <body>
@@ -84,36 +183,36 @@ function downloadPDF(doc: any, complaint: any) {
       <div style="font-size:11px;color:#999;margin-top:4px;text-transform:uppercase;letter-spacing:1px;">AI Governance Co-Pilot — Grievance Resolution Report</div>
     </div>
     <div class="meta">
-      <div style="font-size:14px;font-weight:800;color:#111;">${doc.name}</div>
-      <div>Generated: ${doc.date}</div>
-      <div>Asset ID: ${doc.assetId}</div>
+      <div style="font-size:14px;font-weight:800;color:#111;">${escapeHtml(doc.name)}</div>
+      <div>Generated: ${escapeHtml(doc.date)}</div>
+      <div>Asset ID: ${escapeHtml(doc.assetId)}</div>
     </div>
   </div>
 
-  <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-    <h1>${complaint?.issue || "Complaint"}</h1>
+  <div class="topbar">
+    <h1>${escapeHtml(complaint?.issue || "Complaint")}</h1>
     <span class="badge">✓ Resolved</span>
   </div>
 
   <div class="grid4">
-    <div class="card"><div class="label">Complaint ID</div><div class="value">${complaint?.id || doc.complaintId}</div></div>
-    <div class="card"><div class="label">Category</div><div class="value">${complaint?.category || "—"}</div></div>
-    <div class="card"><div class="label">Department</div><div class="value">${complaint?.dept || doc.dept}</div></div>
-    <div class="card" style="background:#f0fdf4;border-color:#bbf7d0;"><div class="label" style="color:#166534;">Status</div><div class="value" style="color:#166534;">${complaint?.status || "Resolved"}</div></div>
+    <div class="card"><div class="label">Complaint ID</div><div class="value">${escapeHtml(complaint?.id || doc.complaintId)}</div></div>
+    <div class="card"><div class="label">Category</div><div class="value">${escapeHtml(complaint?.category || "—")}</div></div>
+    <div class="card"><div class="label">Department</div><div class="value">${escapeHtml(complaint?.dept || doc.dept)}</div></div>
+    <div class="card" style="background:#f0fdf4;border-color:#bbf7d0;"><div class="label" style="color:#166534;">Status</div><div class="value" style="color:#166534;">${escapeHtml(complaint?.status || "Resolved")}</div></div>
   </div>
 
   <div class="grid4" style="margin-top:0;">
-    <div class="card"><div class="label">Citizen</div><div class="value">${complaint?.citizen || "—"}</div></div>
-    <div class="card"><div class="label">Ward</div><div class="value">${complaint?.ward || "—"}</div></div>
-    <div class="card"><div class="label">Officer</div><div class="value">${complaint?.assignedTo || "Field Officer"}</div></div>
-    <div class="card"><div class="label">Resolution Date</div><div class="value">${doc.date}</div></div>
+    <div class="card"><div class="label">Citizen</div><div class="value">${escapeHtml(complaint?.citizen || "—")}</div></div>
+    <div class="card"><div class="label">Ward</div><div class="value">${escapeHtml(complaint?.ward || "—")}</div></div>
+    <div class="card"><div class="label">Officer</div><div class="value">${escapeHtml(officer)}</div></div>
+    <div class="card"><div class="label">Resolved On</div><div class="value">${escapeHtml(resolvedOn)}</div></div>
   </div>
 
   <div class="section">
     <h2>Issue Description</h2>
     <div class="desc-box">
-      <h3>${complaint?.issue || "—"}</h3>
-      <p>${complaint?.description || "No description provided."}</p>
+      <h3>${escapeHtml(complaint?.issue || "—")}</h3>
+      <p>${escapeHtml(complaint?.description || "No description provided.")}</p>
     </div>
   </div>
 
@@ -121,39 +220,59 @@ function downloadPDF(doc: any, complaint: any) {
     <h2>Resolution Information</h2>
     <div class="notes-box">
       <div class="lbl">Resolution Notes</div>
-      <p>${complaint?.resolutionNotes || doc.summary || "Complaint resolved by field officer."}</p>
+      <p>${escapeHtml(resolutionText)}</p>
     </div>
-    ${complaint?.adminRemarks ? `<div class="notes-box" style="background:#faf5ff;border-color:#e9d5ff;"><div class="lbl" style="color:#7c3aed;">Admin Remarks</div><p style="color:#3b0764;">${complaint.adminRemarks}</p></div>` : ""}
+    ${complaint?.adminRemarks ? `<div class="notes-box" style="background:#faf5ff;border-color:#e9d5ff;"><div class="lbl" style="color:#7c3aed;">Admin Remarks</div><p style="color:#3b0764;">${escapeHtml(complaint.adminRemarks)}</p></div>` : ""}
     <div class="photos">
-      <div class="photo-card">
-        <div class="photo-label">📷 Before — Original Issue</div>
-        <img src="${beforeImg}" alt="Before"/>
-      </div>
-      <div class="photo-card after">
-        <div class="photo-label">✅ After — Resolution Proof</div>
-        <img src="${afterImg}" alt="After"/>
-      </div>
+      ${evidenceMarkup}
     </div>
   </div>
 
   <div class="footer">
     <div>This report was auto-generated by GovPilot AI Governance Co-Pilot.<br/>For queries, contact your local Municipal Administration.</div>
-    <div class="stamp"><div class="verified">✓ Verified & Closed</div><div style="margin-top:4px;">Document ID: ${doc.assetId}</div></div>
+    <div class="stamp"><div class="verified">✓ Verified & Closed</div><div style="margin-top:4px;">Document ID: ${escapeHtml(doc.assetId)}</div></div>
   </div>
 </body>
 </html>`;
+}
 
+async function waitForImages(win: Window) {
+    const images = Array.from(win.document.querySelectorAll("img"));
+    await Promise.all(images.map((img: HTMLImageElement) => new Promise<void>((resolve) => {
+        if (img.complete && img.naturalWidth > 0) {
+            resolve();
+            return;
+        }
+        img.onload = () => resolve();
+        img.onerror = () => resolve();
+    })));
+}
+
+async function downloadPDF(doc: any, complaint: any) {
+    const html = buildReportHtml(doc, complaint);
     const blob = new Blob([html], { type: "text/html" });
-    const url  = URL.createObjectURL(blob);
-    const win  = window.open(url, "_blank");
-    if (win) {
-        win.onload = () => {
-            setTimeout(() => {
-                win.print();
-                URL.revokeObjectURL(url);
-            }, 800);
-        };
+    const url = URL.createObjectURL(blob);
+    const win = window.open("", "_blank", "noopener,noreferrer");
+
+    if (!win) {
+        window.alert("Please allow pop-ups to download the resolution report.");
+        return;
     }
+
+    win.document.write(html);
+    win.document.close();
+    await waitForImages(win);
+
+    setTimeout(() => {
+        try {
+            win.focus();
+            win.print();
+        } catch (error) {
+            console.error("Unable to print report", error);
+        } finally {
+            setTimeout(() => URL.revokeObjectURL(url), 1200);
+        }
+    }, 600);
 }
 
 export default function ResolutionReports() {
@@ -162,6 +281,10 @@ export default function ResolutionReports() {
     const [deptFilter, setDeptFilter] = useState("All");
     const [selectedDoc, setSelectedDoc] = useState<any>(null);
     const [confirmClear, setConfirmClear] = useState(false);
+
+    const handleVoiceResult = (text: string) => {
+        setSearch(text);
+    };
 
     const filteredDocs = closedDocs.filter(doc => {
         const matchSearch = doc.name.toLowerCase().includes(search.toLowerCase()) || 
@@ -422,19 +545,18 @@ export default function ResolutionReports() {
                                                         Before
                                                     </div>
                                                     <div className="w-full aspect-video bg-gray-100 flex items-center justify-center overflow-hidden">
-                                                        {complaint.evidence && complaint.evidence.length > 0 ? (
-                                                            <img 
-                                                                src={complaint.evidence[0]} 
-                                                                alt="Before" 
-                                                                className="w-full h-full object-cover"
-                                                            />
-                                                        ) : (
-                                                            <img 
-                                                                src={CATEGORY_IMAGE[complaint.category] || "/before_placeholder.png"} 
-                                                                alt="Before (default)" 
-                                                                className="w-full h-full object-cover"
-                                                            />
-                                                        )}
+                                                        {(() => {
+                                                            const rawBefore = complaint.evidence && complaint.evidence.length > 0 ? complaint.evidence[0] : null;
+                                                            const beforeRes = resolveComplaintImage(complaint.id, rawBefore, complaint.category, "before", complaint.issue);
+                                                            return (
+                                                                <AiImageWrapper
+                                                                    src={beforeRes.src}
+                                                                    alt="Before"
+                                                                    isAiGenerated={beforeRes.isAiGenerated}
+                                                                    className="w-full h-full"
+                                                                />
+                                                            );
+                                                        })()}
                                                     </div>
                                                 </div>
 
@@ -444,11 +566,17 @@ export default function ResolutionReports() {
                                                         After
                                                     </div>
                                                     <div className="w-full aspect-video bg-emerald-50 flex items-center justify-center overflow-hidden">
-                                                        <img 
-                                                            src={complaint.resolutionProof || CATEGORY_RESOLVED_IMAGE[complaint.category] || "/after_placeholder.png"} 
-                                                            alt="After Resolution" 
-                                                            className="w-full h-full object-cover"
-                                                        />
+                                                        {(() => {
+                                                            const afterRes = resolveComplaintImage(complaint.id, complaint.resolutionProof, complaint.category, "after", complaint.issue);
+                                                            return (
+                                                                <AiImageWrapper
+                                                                    src={afterRes.src}
+                                                                    alt="After Resolution"
+                                                                    isAiGenerated={afterRes.isAiGenerated}
+                                                                    className="w-full h-full"
+                                                                />
+                                                            );
+                                                        })()}
                                                     </div>
                                                 </div>
                                             </div>
@@ -516,6 +644,8 @@ export default function ResolutionReports() {
                     </div>
                 </div>
             )}
+            
+            <VoiceAssistantFAB onResult={handleVoiceResult} />
         </DashboardLayout>
     );
 }

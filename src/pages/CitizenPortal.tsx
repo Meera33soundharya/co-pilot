@@ -10,7 +10,7 @@ import {
     LogOut, FileText, Search, MicOff, Hash, Building2, Sparkles, Brain, Navigation
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Tooltip, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -21,6 +21,61 @@ L.Icon.Default.mergeOptions({
     iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
+
+const createLocationMarker = (label: string) => {
+    let short = "📍";
+    const wardMatch = label.match(/Ward(?:\s+Number)?\s+(\d+)/i);
+    if (wardMatch) {
+        short = `W${wardMatch[1]}`;
+    } else if (label.trim().length > 0) {
+        short = label.trim().substring(0, 2).toUpperCase();
+    }
+    
+    return L.divIcon({
+        className: 'custom-ward-marker bg-transparent border-0',
+        html: `
+            <div style="
+                width: 44px; height: 44px; 
+                background-color: #059669;
+                border-radius: 50% 50% 50% 0; 
+                transform: rotate(-45deg);
+                box-shadow: 0 4px 6px -1px rgba(5, 150, 105, 0.4);
+                display: flex; 
+                align-items: center; 
+                justify-content: center;
+                cursor: pointer;
+            ">
+                <div style="
+                    transform: rotate(45deg); 
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: center; 
+                    width: 100%; 
+                    height: 100%;
+                ">
+                    <span style="
+                        font-family: 'Inter', sans-serif;
+                        font-size: 11px; 
+                        font-weight: 900; 
+                        color: white; 
+                        line-height: 1;
+                        font-variant-numeric: tabular-nums;
+                        display: flex;
+                        align-items: center;
+                        gap: 1px;
+                    ">
+                        ${short.startsWith('W') ? `<span>W</span><span style="display: inline-block; width: 14px; text-align: left;">${short.substring(1)}</span>` : short}
+                    </span>
+                </div>
+            </div>
+        `,
+        iconSize: [44, 44],
+        iconAnchor: [22, 44],
+        popupAnchor: [0, -44],
+        tooltipAnchor: [0, -44]
+    });
+};
+
 
 
 
@@ -51,7 +106,7 @@ const LocationSearchInput = React.memo(function LocationSearchInput({
     onSearch,
     isSearching,
 }: {
-    inputRef: React.RefObject<HTMLInputElement>;
+    inputRef: React.RefObject<HTMLInputElement | null>;
     onSearch: () => void;
     isSearching: boolean;
 }) {
@@ -249,6 +304,7 @@ export default function CitizenPortal() {
     const [isSearching, setIsSearching] = useState(false);
     const [showCamera, setShowCamera] = useState(false);
     const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+    const [previewImage, setPreviewImage] = useState<string | null>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
     const [audioPreview, setAudioPreview] = useState<{url: string, name: string} | null>(null);
 
@@ -675,9 +731,14 @@ export default function CitizenPortal() {
                                         return (
                                             <div key={idx} className="aspect-video bg-gray-50 rounded-2xl relative group overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-200">
                                                 {isImage ? (
-                                                    <div className="w-full h-full relative">
+                                                    <div 
+                                                        className="w-full h-full relative cursor-pointer" 
+                                                        onClick={() => setPreviewImage(url)}
+                                                    >
                                                         <img src={url} alt="Evidence" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                                                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                            <Search className="w-6 h-6 text-white drop-shadow-lg" />
+                                                        </div>
                                                     </div>
                                                 ) : isAudio ? (
                                                     <div className="w-full h-full flex flex-col items-center justify-center bg-amber-50 p-4">
@@ -823,6 +884,7 @@ export default function CitizenPortal() {
                                             <Marker 
                                                 position={[form.coords.lat, form.coords.lng]} 
                                                 draggable={true} 
+                                                icon={createLocationMarker(form.location)}
                                                 eventHandlers={{
                                                     dragend: (e) => {
                                                         const pos = e.target.getLatLng();
@@ -830,7 +892,18 @@ export default function CitizenPortal() {
                                                         reverseGeocodeGoogle(pos.lat, pos.lng);
                                                     }
                                                 }}
-                                            />
+                                            >
+                                                {form.location && (
+                                                    <Tooltip direction="top" offset={[0, -4]} opacity={1} className="bg-transparent border-0 shadow-none p-0 !m-0">
+                                                        <div className="bg-gray-900 text-left p-3 rounded-2xl shadow-xl border border-white/10 max-w-[200px] whitespace-normal">
+                                                            <p className="font-black text-white text-sm">Location</p>
+                                                            <p className="text-xs text-gray-400 font-medium">
+                                                                {form.location}
+                                                            </p>
+                                                        </div>
+                                                    </Tooltip>
+                                                )}
+                                            </Marker>
                                             <MapUpdater coords={form.coords} />
                                             <MapEventsHandler onLocationChange={(lat, lng) => {
                                                 setForm(f => ({ ...f, coords: { lat, lng } }));
@@ -1011,55 +1084,66 @@ export default function CitizenPortal() {
                         </div>
 
                         <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-2xl overflow-hidden">
-                            <div className="bg-gray-900 p-8 text-white">
+
+                            {/* ── Light Header ── */}
+                            <div className="bg-gray-50 border-b border-gray-100 p-6">
                                 <div className="flex items-center justify-between mb-4">
-                                    <span className={`text-sm font-black px-3 py-1 rounded-full uppercase tracking-widest ${form.priority === "High" ? "bg-red-500 text-white" :
-                                        form.priority === "Medium" ? "bg-amber-500 text-white" : "bg-blue-500 text-white"
-                                        }`}>
+                                    <span className={`text-sm font-black px-4 py-1.5 rounded-full uppercase tracking-widest ${
+                                        form.priority === "High"   ? "bg-red-100 text-red-600" :
+                                        form.priority === "Medium" ? "bg-amber-100 text-amber-600" :
+                                                                     "bg-blue-100 text-blue-600"
+                                    }`}>
                                         {form.priority} Priority
                                     </span>
-                                    <span className="text-white/40 text-sm font-black uppercase tracking-[0.2em]">Preview Ticket</span>
+                                    <span className="text-gray-400 text-xs font-black uppercase tracking-[0.2em]">Preview Ticket</span>
                                 </div>
-                                <div className="mb-6 rounded-[1.5rem] overflow-hidden border border-white/10 shadow-inner h-40 group relative">
+
+                                {/* Map preview — light style */}
+                                <div className="mb-5 rounded-2xl overflow-hidden border border-gray-200 shadow-sm h-40 relative">
                                     <iframe
                                         key={`preview-${form.coords.lat}-${form.coords.lng}`}
                                         src={`https://www.openstreetmap.org/export/embed.html?bbox=${form.coords.lng - 0.002},${form.coords.lat - 0.002},${form.coords.lng + 0.002},${form.coords.lat + 0.002}&layer=mapnik&marker=${form.coords.lat},${form.coords.lng}`}
                                         width="100%"
                                         height="100%"
-                                        style={{ border: "none", opacity: 0.8, filter: "grayscale(1) invert(0.9) contrast(1.2)" }}
+                                        style={{ border: "none" }}
                                         title="Location Preview"
                                     />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent pointer-events-none" />
                                 </div>
-                                <h2 className="text-2xl font-black leading-tight drop-shadow-md mb-2">{form.issue}</h2>
-                                <div className="flex items-center gap-2 text-white/50 text-base font-bold">
-                                    <MapPin className="w-4 h-4" />
-                                    {form.location || "Co-ordinates Only"}
-                                    {form.landmark && <span className="text-white/70"> ({form.landmark})</span>}
+
+                                <h2 className="text-2xl font-black text-gray-900 leading-tight mb-2">{form.issue}</h2>
+                                <div className="flex items-start gap-2 text-gray-500 text-sm font-semibold">
+                                    <MapPin className="w-4 h-4 mt-0.5 shrink-0 text-[#B91C1C]" />
+                                    <span>{form.location || `${form.coords.lat.toFixed(5)}, ${form.coords.lng.toFixed(5)}`}
+                                        {form.landmark && <span className="text-gray-700 font-bold"> · {form.landmark}</span>}
+                                    </span>
                                 </div>
                             </div>
 
+                            {/* ── Body ── */}
                             <div className="p-8 space-y-6">
-                                <div className="grid grid-cols-2 gap-8">
-                                    <div>
-                                        <p className="text-sm font-black uppercase tracking-widest text-gray-400 mb-1">Citizen Name</p>
-                                        <p className="text-lg font-black text-gray-900">{form.citizen}</p>
+
+                                {/* Citizen details */}
+                                <div className="grid grid-cols-2 gap-6">
+                                    <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+                                        <p className="text-xs font-black uppercase tracking-widest text-gray-400 mb-1">Citizen Name</p>
+                                        <p className="text-base font-black text-gray-900">{form.citizen}</p>
                                     </div>
-                                    <div>
-                                        <p className="text-sm font-black uppercase tracking-widest text-gray-400 mb-1">Contact Phone</p>
-                                        <p className="text-lg font-black text-gray-900">{form.phone}</p>
+                                    <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+                                        <p className="text-xs font-black uppercase tracking-widest text-gray-400 mb-1">Contact Phone</p>
+                                        <p className="text-base font-black text-gray-900">{form.phone}</p>
                                     </div>
-                                    <div>
-                                        <p className="text-sm font-black uppercase tracking-widest text-gray-400 mb-1">Ward & Area</p>
-                                        <p className="text-lg font-black text-gray-900">{form.ward} · {form.area}</p>
+                                    <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 col-span-2">
+                                        <p className="text-xs font-black uppercase tracking-widest text-gray-400 mb-1">Ward &amp; Area</p>
+                                        <p className="text-base font-black text-gray-900">{form.ward} · {form.area}</p>
                                     </div>
                                 </div>
 
+                                {/* Evidence */}
                                 <div>
-                                    <p className="text-sm font-black uppercase tracking-widest text-gray-400 mb-2">Attached Evidence</p>
-                                    <div className="flex gap-2">
+                                    <p className="text-xs font-black uppercase tracking-widest text-gray-400 mb-3">Attached Evidence</p>
+                                    <div className="flex gap-2 flex-wrap">
                                         {form.evidence.length === 0 ? (
-                                            <p className="text-base italic text-gray-400">No media attached.</p>
+                                            <p className="text-sm italic text-gray-400">No media attached.</p>
                                         ) : (
                                             form.evidence.map((rawUrl, i) => {
                                                 const [url, meta] = rawUrl.split('#');
@@ -1067,12 +1151,11 @@ export default function CitizenPortal() {
                                                 const type = metaParsed.get("type") || "";
                                                 const isAudio = type.includes('audio') || url.startsWith('blob:audio');
                                                 const isDoc   = type.includes('pdf') || type.includes('word') || type.includes('sheet');
-
                                                 return (
                                                     <div key={i} className={`w-12 h-12 rounded-xl border flex items-center justify-center ${
                                                         isAudio ? "bg-amber-50 border-amber-100 text-amber-500" :
-                                                        isDoc ? "bg-blue-50 border-blue-100 text-blue-500" :
-                                                        "bg-gray-50 border-gray-100 text-gray-300"
+                                                        isDoc   ? "bg-blue-50 border-blue-100 text-blue-500" :
+                                                                  "bg-gray-50 border-gray-100 text-gray-400"
                                                     }`}>
                                                         {isAudio ? <Mic className="w-5 h-5" /> : isDoc ? <FileText className="w-5 h-5" /> : <Paperclip className="w-5 h-5" />}
                                                     </div>
@@ -1082,13 +1165,15 @@ export default function CitizenPortal() {
                                     </div>
                                 </div>
 
+                                {/* Notification */}
                                 <div className="p-5 bg-emerald-50 rounded-2xl border border-emerald-100">
-                                    <p className="text-sm font-black uppercase tracking-widest text-emerald-700 mb-2">Notification Settings</p>
-                                    <div className="flex gap-4">
+                                    <p className="text-xs font-black uppercase tracking-widest text-emerald-700 mb-3">Notification Settings</p>
+                                    <div className="flex gap-5">
                                         {["SMS", "Email", "None"].map(p => (
-                                            <button key={p} onClick={() => set("notifPref", p)} className={`flex items-center gap-2 text-sm font-black uppercase tracking-widest ${form.notifPref === p ? "text-emerald-700" : "text-emerald-900/30"}`}>
-                                                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${form.notifPref === p ? "border-emerald-600 bg-emerald-600" : "border-emerald-200"}`}>
-                                                    {form.notifPref === p && <Check className="w-3 h-3 text-white" />}
+                                            <button key={p} onClick={() => set("notifPref", p)}
+                                                className={`flex items-center gap-2 text-sm font-black uppercase tracking-widest transition-colors ${form.notifPref === p ? "text-emerald-700" : "text-gray-400"}`}>
+                                                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${form.notifPref === p ? "border-emerald-600 bg-emerald-600" : "border-gray-300"}`}>
+                                                    {form.notifPref === p && <Check className="w-2.5 h-2.5 text-white" />}
                                                 </div>
                                                 {p}
                                             </button>
@@ -1096,11 +1181,12 @@ export default function CitizenPortal() {
                                     </div>
                                 </div>
 
-                                <div className="flex gap-4 pt-4">
+                                {/* Actions */}
+                                <div className="flex gap-4 pt-2">
                                     <button onClick={back} className="btn-secondary flex-1">Back</button>
                                     <button onClick={handleSubmit}
                                         className="btn-primary flex-[2] !shadow-2xl !shadow-red-500/20 active:scale-95 group">
-                                        <span>Authorize & Submit Grievance</span>
+                                        <span>Authorize &amp; Submit Grievance</span>
                                         <Send className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                                     </button>
                                 </div>
@@ -1309,6 +1395,27 @@ export default function CitizenPortal() {
                             </button>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* Image Preview Modal */}
+            {previewImage && (
+                <div 
+                    className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex flex-col items-center justify-center p-4"
+                    onClick={() => setPreviewImage(null)}
+                >
+                    <button 
+                        onClick={() => setPreviewImage(null)}
+                        className="absolute top-6 right-6 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors"
+                    >
+                        <X className="w-6 h-6" />
+                    </button>
+                    <img 
+                        src={previewImage} 
+                        alt="Preview" 
+                        className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-200"
+                        onClick={(e) => e.stopPropagation()} // Prevent click from closing immediately
+                    />
                 </div>
             )}
         </div>

@@ -21,13 +21,15 @@ export default function RewordGame() {
     const current = gameChallenges[index];
 
     useEffect(() => {
-        let timer: number;
+        let timer: number | undefined;
         if (isActive && timeLeft > 0) {
-            timer = setInterval(() => setTimeLeft(t => t - 1), 1000);
+            timer = window.setInterval(() => setTimeLeft(t => t - 1), 1000);
         } else if (timeLeft === 0) {
             setIsActive(false);
         }
-        return () => clearInterval(timer);
+        return () => {
+            if (timer) clearInterval(timer);
+        };
     }, [isActive, timeLeft]);
 
     const handleCheck = () => {

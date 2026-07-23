@@ -7,6 +7,8 @@ import {
 import { useDocuments, type DocumentRecord } from "@/context/DocumentContext";
 import { useComplaints } from "@/context/ComplaintsContext";
 import { ExecutiveSummaryPanel } from "./ExecutiveSummaryPanel";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 
 interface DocumentPreviewModalProps {
     document: DocumentRecord;
@@ -52,32 +54,109 @@ export function DocumentPreviewModal({ document, onClose, onSelectDocument }: Do
     };
 
     const exportIntelligenceReport = () => {
-        const reportContent = `
-GOVPILOT INTELLIGENCE REPORT
-=================================
-Document ID: ${document.id}
-Name: ${document.name}
-Category: ${document.category}
-Date: ${document.date}
-Department: ${document.dept}
-Status: ${document.status.toUpperCase()}
-Related Complaint ID: ${document.complaintId || 'None'}
+        const doc = new jsPDF();
+        
+        // Header
+        doc.setFontSize(20);
+        doc.setTextColor(63, 81, 181); // Indigo color
+        doc.text("GovPilot Intelligence Report", 14, 22);
+        
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
+        
+        // Document Metadata
+        doc.setFontSize(12);
+        doc.setTextColor(0, 0, 0);
+        
+        // Using autoTable for metadata
+        (doc as any).autoTable({
+            startY: 40,
+            head: [['Property', 'Value']],
+            body: [
+                ['Document ID', document.id],
+                ['Title', document.name],
+                ['Category', document.category],
+                ['Date', document.date],
+                ['Department', document.dept || 'Unassigned'],
+                ['Ward', document.ward || linkedComplaint?.ward || 'Unassigned'],
+                ['Status', document.status.toUpperCase()],
+                ['Uploader', document.uploader || 'Unknown'],
+            ],
+            theme: 'grid',
+            headStyles: { fillColor: [63, 81, 181] },
+        });
 
---- AI INSIGHTS ---
-AI Confidence: ${document.aiScore ? document.aiScore + '%' : 'N/A'}
-Summary: ${document.summary || 'Pending'}
-Highlights:
-${document.executiveSummary?.highlights.map(h => '- ' + h).join('\n') || 'None'}
+        // Executive Summary
+        let finalY = (doc as any).lastAutoTable.finalY + 15;
+        
+        doc.setFontSize(14);
+        doc.setTextColor(63, 81, 181);
+        doc.text("Executive Summary", 14, finalY);
+        
+        finalY += 10;
+        doc.setFontSize(10);
+        doc.setTextColor(0, 0, 0);
+        const summaryLines = doc.splitTextToSize(document.summary || "Pending", 180);
+        doc.text(summaryLines, 14, finalY);
+        
+        finalY += (summaryLines.length * 5) + 10;
 
---- OCR DATA ---
-Extracted Text:
-${document.extractedText || document.ocrText || 'No text extracted.'}
-        `.trim();
+        // Key Findings
+        if (document.executiveSummary?.highlights?.length) {
+            if (finalY > 250) {
+                doc.addPage();
+                finalY = 20;
+            }
+            doc.setFontSize(14);
+            doc.setTextColor(63, 81, 181);
+            doc.text("Key Findings", 14, finalY);
+            
+            finalY += 10;
+            doc.setFontSize(10);
+            doc.setTextColor(0, 0, 0);
+            
+            document.executiveSummary.highlights.forEach((highlight) => {
+                const hLines = doc.splitTextToSize(`• ${highlight}`, 180);
+                doc.text(hLines, 14, finalY);
+                finalY += (hLines.length * 5) + 2;
+                
+                if (finalY > 280) {
+                    doc.addPage();
+                    finalY = 20;
+                }
+            });
+            finalY += 10;
+        }
 
-        const a = window.document.createElement('a');
-        a.href = `data:text/plain;charset=utf-8,${encodeURIComponent(reportContent)}`;
-        a.download = `Intelligence_Report_${document.id}.txt`;
-        a.click();
+        // Recommended Actions
+        if (document.executiveSummary?.actions?.length) {
+            if (finalY > 250) {
+                doc.addPage();
+                finalY = 20;
+            }
+            
+            doc.setFontSize(14);
+            doc.setTextColor(63, 81, 181);
+            doc.text("Recommended Actions", 14, finalY);
+            
+            finalY += 10;
+            doc.setFontSize(10);
+            doc.setTextColor(0, 0, 0);
+            
+            document.executiveSummary.actions.forEach((action, idx) => {
+                const aLines = doc.splitTextToSize(`${idx + 1}. ${action}`, 180);
+                doc.text(aLines, 14, finalY);
+                finalY += (aLines.length * 5) + 2;
+                
+                if (finalY > 280) {
+                    doc.addPage();
+                    finalY = 20;
+                }
+            });
+        }
+
+        doc.save(`Intelligence_Report_${document.id}.pdf`);
     };
 
     const handleApprove = () => {
@@ -313,7 +392,7 @@ ${document.extractedText || document.ocrText || 'No text extracted.'}
                             <div className="bg-gray-50 border border-gray-200 rounded-xl overflow-hidden shadow-sm">
                                 <div className="bg-gray-100 px-4 py-3 border-b border-gray-200 flex justify-between items-center">
                                     <h4 className="text-sm font-bold text-gray-700">Raw OCR Text</h4>
-                                    <span className="text-xs text-gray-500 font-mono">Length: {document.ocrText.length} chars</span>
+                                    <span className="text-xs text-gray-500 font-mono">Length: {(document.ocrText ?? "").length} chars</span>
                                 </div>
                                 <div className="p-4 max-h-64 overflow-y-auto">
                                     <p className="text-sm font-mono text-gray-700 whitespace-pre-wrap leading-relaxed selection:bg-indigo-100">

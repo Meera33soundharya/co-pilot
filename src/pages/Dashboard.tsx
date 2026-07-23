@@ -199,12 +199,11 @@ export default function Dashboard() {
                 </div>
 
                 {/* ── COMMAND CONSOLE: QUICK ACTIONS ─────────────── */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {[
                         { label: "Coordinate Mission", desc: "Deploy field units now", icon: Zap, link: "/schedule", color: "bg-red-600 text-white shadow-red-500/20" },
                         { label: "Review Grievances", desc: "Process urgent queue", icon: MessageSquare, link: "/grievances", color: "bg-white text-gray-900 border border-gray-100" },
                         { label: "Policy Simulator", desc: "Predict impact AI", icon: Sparkles, link: "/policy-simulator", color: "bg-white text-gray-900 border border-gray-100" },
-                        { label: "District Heatmap", desc: "Live problem clusters", icon: Activity, link: "/heatmap", color: "bg-white text-gray-900 border border-gray-100" },
                     ].map((btn, i) => (
                         <button key={i} onClick={() => navigate(btn.link)}
                             className={`group p-8 rounded-[2.5rem] flex flex-col gap-6 text-left transition-all hover:scale-[1.02] active:scale-[0.98] shadow-2xl ${btn.color}`}>

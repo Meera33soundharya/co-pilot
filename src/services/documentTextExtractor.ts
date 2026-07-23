@@ -116,11 +116,52 @@ async function extractFromPDF(
     }
   }
 
-  const fullText = textChunks.join("\n\n");
+  let fullText = textChunks.join("\n\n");
+  let method: "pdf" | "ocr" | "fallback" = "pdf";
+
+  // OCR Fallback for scanned/image-only PDFs
+  if (fullText.trim().length < 100) {
+    console.log(`[Extraction] PDF text length too short (${fullText.trim().length} chars). Attempting OCR fallback...`);
+    try {
+      const Tesseract = await import("tesseract.js");
+      const ocrChunks: string[] = [];
+      const pagesToProcess = Math.min(totalPages, 3); // Limit to first 3 pages for speed
+
+      for (let i = 1; i <= pagesToProcess; i++) {
+        const page = await pdf.getPage(i);
+        const viewport = page.getViewport({ scale: 2.0 }); // 2.0 scale for better OCR
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+        
+        if (context) {
+          canvas.height = viewport.height;
+          canvas.width = viewport.width;
+          
+          await page.render({ canvasContext: context, viewport }).promise;
+          const dataUrl = canvas.toDataURL("image/png");
+          
+          console.log(`[Extraction] OCR processing page ${i}/${pagesToProcess}...`);
+          const { data } = await Tesseract.recognize(dataUrl, "eng");
+          ocrChunks.push(data.text);
+        }
+      }
+      
+      const ocrText = ocrChunks.join("\n\n").trim();
+      if (ocrText.length > 50) {
+        fullText = ocrText;
+        method = "ocr";
+        console.log(`[Extraction] OCR successful. Extracted ${fullText.length} chars.`);
+      } else {
+        console.log("[Extraction] OCR also yielded insufficient text.");
+      }
+    } catch (error) {
+      console.error("PDF OCR fallback failed:", error);
+    }
+  }
 
   return {
     text: fullText,
-    method: "pdf",
+    method,
     confidence: fullText.length > 50 ? 95 : fullText.length > 0 ? 70 : 10,
     pageCount: totalPages,
     processingTimeMs: Math.round(performance.now() - start),

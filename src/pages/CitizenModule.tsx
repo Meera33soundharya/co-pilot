@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useComplaints } from "@/context/ComplaintsContext";
 import {
@@ -6,11 +6,14 @@ import {
     AlertTriangle, ArrowRight, MapPin, Calendar,
     ChevronRight, Search, Filter, Shield,
     Star, RefreshCw, MessageCircle, ImageIcon,
-    X, Zap, Mail, Phone, Info, Megaphone, Bell
+    X, Zap, Mail, Phone, Info, Megaphone, Bell,
+    FileText, ThumbsUp, ThumbsDown, Check, User
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import type { Status, Priority } from "@/store/complaintsStore";
-import { useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { resolveComplaintImage } from "@/services/fallbackImageService";
+import { AiImageWrapper } from "@/components/AiImageBadge";
 
 const STATUS_CFG: Record<Status, { color: string; bg: string; icon: any; step: number }> = {
     "New": { color: "text-gray-500", bg: "bg-gray-50", icon: Clock, step: 1 },
@@ -43,31 +46,53 @@ const STATUS_TO_STEP: Record<Status, number> = {
 function ComplaintTimeline({ status }: { status: Status }) {
     const currentStep = STATUS_TO_STEP[status];
     return (
-        <div className="mt-5 flex items-center gap-0">
-            {TIMELINE_STEPS.map((label, i) => {
-                const step = i + 1;
-                const done = step < currentStep;
-                const active = step === currentStep;
-                return (
-                    <div key={label} className="flex items-center flex-1">
-                        <div className="flex flex-col items-center">
-                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${done ? "bg-[#B91C1C] border-[#B91C1C]" :
-                                    active ? "bg-white border-[#B91C1C] shadow-lg shadow-red-100" :
-                                        "bg-white border-gray-200"
-                                }`}>
-                                {done && <div className="w-2 h-2 rounded-full bg-white" />}
-                                {active && <div className="w-2 h-2 rounded-full bg-[#B91C1C]" />}
+        <div className="mt-8 mb-8 pb-4">
+            <div className="flex items-center justify-between relative">
+                {/* Connecting lines background */}
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-gray-100 rounded-full z-0" />
+                
+                {/* Active connecting line */}
+                <div 
+                    className="absolute left-0 top-1/2 -translate-y-1/2 h-1 rounded-full z-0 transition-all duration-1000 ease-in-out" 
+                    style={{ width: `${((currentStep - 1) / (TIMELINE_STEPS.length - 1)) * 100}%`, backgroundColor: '#B91C1C' }}
+                />
+
+                {TIMELINE_STEPS.map((label, i) => {
+                    const step = i + 1;
+                    const done = step < currentStep;
+                    const active = step === currentStep;
+
+                    return (
+                        <div key={label} className="relative z-10 flex flex-col items-center gap-3">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-500 bg-white border-2`}
+                                style={{
+                                    borderColor: done ? '#B91C1C' : active ? '#B91C1C' : '#e5e7eb',
+                                    backgroundColor: done ? '#B91C1C' : 'white',
+                                    boxShadow: active ? '0 0 0 4px rgba(185,28,28,0.15)' : undefined,
+                                }}>
+                                {done ? (
+                                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                                        <Check className="w-4 h-4 text-white" />
+                                    </motion.div>
+                                ) : active ? (
+                                    <motion.div 
+                                        className="w-2.5 h-2.5 rounded-full"
+                                        style={{ backgroundColor: '#B91C1C' }}
+                                        animate={{ scale: [1, 1.3, 1] }}
+                                        transition={{ repeat: Infinity, duration: 1.5 }}
+                                    />
+                                ) : (
+                                    <div className="w-2.5 h-2.5 rounded-full bg-transparent" />
+                                )}
                             </div>
-                            <span className={`mt-1.5 text-base font-black uppercase tracking-widest whitespace-nowrap ${active ? "text-[#B91C1C]" : done ? "text-gray-400" : "text-gray-200"
-                                }`}>{label}</span>
+                            <span className={`text-[10px] font-black uppercase tracking-wider absolute -bottom-6 w-24 text-center`}
+                                style={{ color: done ? '#B91C1C' : active ? '#B91C1C' : '#9ca3af' }}>
+                                {label}
+                            </span>
                         </div>
-                        {i < TIMELINE_STEPS.length - 1 && (
-                            <div className={`h-0.5 flex-1 mx-1 rounded-full transition-all ${step < currentStep ? "bg-[#B91C1C]" : "bg-gray-100"
-                                }`} />
-                        )}
-                    </div>
-                );
-            })}
+                    );
+                })}
+            </div>
         </div>
     );
 }
@@ -275,8 +300,9 @@ export default function CitizenModule() {
                                                         <span className="text-xl font-bold text-gray-400 flex items-center gap-2"><Calendar className="w-5 h-5" /> {c.time}</span>
                                                     </div>
                                                     <h4 className="text-3xl font-black text-gray-900 group-hover:text-[#B91C1C] transition-colors truncate">{c.issue}</h4>
-
-                                                    <ComplaintTimeline status={c.status} />
+                                                    
+                                                    {/* We will hide the timeline in the minimized card and only show it expanded */}
+                                                    {!isExp && <ComplaintTimeline status={c.status} />}
                                                 </div>
 
                                                 {/* Sentiment / Community Urgency */}
@@ -297,112 +323,158 @@ export default function CitizenModule() {
                                                 </button>
                                             </div>
 
-                                            {/* Expanded Body: Officer Notes, Feedback, Proof */}
+                                            {/* Expanded Body: Redesigned Dashboard */}
+                                            <AnimatePresence>
                                             {isExp && (
-                                                <div className="mt-8 pt-8 border-t border-gray-100 grid grid-cols-1 lg:grid-cols-2 gap-10 animate-in fade-in slide-in-from-top-4">
-                                                    {/* Left: Audit / Officer Updates */}
-                                                    <div className="space-y-6">
-                                                        <div className="flex items-center gap-2 mb-4">
-                                                            <MessageCircle className="w-4 h-4 text-blue-500" />
-                                                            <h5 className="text-base font-black uppercase tracking-widest text-gray-900">Live Timeline & Updates</h5>
-                                                        </div>
-                                                        <div className="space-y-4 relative ml-3 border-l border-gray-100 pl-6">
-                                                            {c.audit.map((a, i) => (
-                                                                <div key={i} className="relative">
-                                                                    <div className="absolute -left-[31px] top-0 w-3 h-3 rounded-full bg-white border-2 border-gray-200" />
-                                                                    <p className="text-base font-black text-gray-400 uppercase mb-0.5">{a.time} · {a.actor}</p>
-                                                                    <p className="text-base font-black text-gray-700">{a.action}</p>
-                                                                    {a.note && <div className="mt-2 p-3 bg-gray-50 rounded-xl text-xl italic text-gray-500 font-medium">"{a.note}"</div>}
-                                                                    {a.image && (
-                                                                        <div className="mt-2 w-28 aspect-video bg-gray-200 rounded-lg overflow-hidden border border-gray-100 cursor-pointer hover:opacity-80 transition-opacity">
-                                                                            <img src={a.image} className="w-full h-full object-cover" alt="Proof" />
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
+                                                <motion.div 
+                                                    initial={{ opacity: 0, height: 0 }}
+                                                    animate={{ opacity: 1, height: 'auto' }}
+                                                    exit={{ opacity: 0, height: 0 }}
+                                                    className="mt-8 pt-8 border-t border-gray-100 overflow-hidden"
+                                                >
+                                                    <div className="grid grid-cols-1 lg:grid-cols-[65%_35%] gap-6">
+                                                        
+                                                        {/* LEFT COLUMN: 65% */}
+                                                        <div className="space-y-6">
+                                                            {/* Horizontal Progress Tracker */}
+                                                            <div className="bg-white/80 backdrop-blur-xl p-8 rounded-[18px] border border-gray-100 shadow-sm">
+                                                                <h5 className="text-base font-black uppercase tracking-widest text-gray-900 mb-8">Progress Tracker</h5>
+                                                                <ComplaintTimeline status={c.status} />
+                                                            </div>
 
-                                                    {/* Right: Actions / Evidence / Proof */}
-                                                    <div className="space-y-8">
-                                                        {/* Citizen Feedback (If Resolved) */}
-                                                        {c.status === "Resolved" && (
-                                                            <div className="bg-emerald-50 p-6 rounded-3xl border border-emerald-100">
-                                                                <h5 className="text-xl font-black uppercase tracking-widest text-emerald-700 mb-4 text-center">Rate the Resolution</h5>
-                                                                <div className="flex items-center justify-center gap-3">
-                                                                    {[1, 2, 3, 4, 5].map(star => (
-                                                                        <button key={star} onClick={() => rateComplaint(c.id, star)}
-                                                                            className={`w-10 h-10 flex items-center justify-center transition-all ${c.rating && c.rating >= star ? 'scale-110' : 'opacity-30 hover:opacity-100'}`}>
-                                                                            <Star className={`w-6 h-6 ${c.rating && c.rating >= star ? 'fill-emerald-500 text-emerald-500' : 'text-gray-400'}`} />
-                                                                        </button>
+                                                            {/* Activity Timeline Cards */}
+                                                            <div className="bg-white/80 backdrop-blur-xl p-8 rounded-[18px] border border-gray-100 shadow-sm">
+                                                                <div className="flex items-center gap-2 mb-6">
+                                                                    <MessageCircle className="w-5 h-5 text-blue-600" />
+                                                                    <h5 className="text-base font-black uppercase tracking-widest text-gray-900">Live Activity Feed</h5>
+                                                                </div>
+                                                                <div className="space-y-4">
+                                                                    {c.audit.map((a, i) => (
+                                                                        <div key={i} className="group relative bg-gray-50/80 p-5 rounded-[18px] border border-gray-100 hover:shadow-md transition-all duration-300">
+                                                                            <div className="flex items-start gap-4">
+                                                                                <div className="w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center shrink-0 shadow-sm">
+                                                                                    <User className="w-5 h-5 text-gray-400" />
+                                                                                </div>
+                                                                                <div className="flex-1">
+                                                                                    <div className="flex items-center justify-between mb-1">
+                                                                                        <p className="text-sm font-black text-gray-900">{a.actor}</p>
+                                                                                        <p className="text-xs font-bold text-gray-400">{a.time}</p>
+                                                                                    </div>
+                                                                                    <p className="text-sm font-medium text-gray-700">{a.action}</p>
+                                                                                    {a.note && <div className="mt-3 p-3 bg-white rounded-xl text-sm italic text-gray-500 border border-gray-100">"{a.note}"</div>}
+                                                                                    {a.image && (
+                                                                                        <div className="mt-3 w-32 aspect-video bg-gray-200 rounded-xl overflow-hidden border border-gray-100 hover:opacity-90 cursor-pointer">
+                                                                                            <img src={a.image} className="w-full h-full object-cover" alt="Audit Proof" />
+                                                                                        </div>
+                                                                                    )}
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
                                                                     ))}
                                                                 </div>
-                                                                <p className="text-xl text-center text-emerald-600 font-bold mt-4 uppercase">Your feedback helps us improve governance</p>
                                                             </div>
-                                                        )}
-
-                                                        {/* Evidence / Resolution Proof */}
-                                                        <div>
-                                                            <h5 className="text-xl font-black uppercase tracking-widest text-gray-400 mb-4 border-b border-gray-50 pb-2">Evidence & Verification</h5>
-                                                            <div className="grid grid-cols-2 gap-4">
-                                                                {/* Submit Evidence */}
-                                                                <div className="p-4 bg-gray-50 rounded-2xl flex flex-col gap-2">
-                                                                    <p className="text-base font-black text-gray-400 uppercase">My Submission</p>
-                                                                    <div className="aspect-square bg-white rounded-xl flex items-center justify-center italic text-xl text-gray-300">
-                                                                        {c.evidence && c.evidence.length > 0 ? <ImageIcon className="w-6 h-6" /> : "No Media"}
-                                                                    </div>
-                                                                </div>
-                                                                {/* Officer Proof */}
-                                                                <div className="p-4 bg-emerald-50 rounded-2xl flex flex-col gap-2">
-                                                                    <p className="text-base font-black text-emerald-600 uppercase">Resolution Proof</p>
-                                                                    <div className="aspect-square bg-white rounded-xl flex items-center justify-center italic text-xl text-gray-300 font-bold overflow-hidden border border-emerald-100">
-                                                                        <img src={c.resolutionProof || "/after_placeholder.png"} className="w-full h-full object-cover" />
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            {c.resolutionNotes && (
-                                                                <div className="mt-4 p-4 bg-amber-50 rounded-2xl border border-amber-100">
-                                                                    <p className="text-base font-black text-amber-700 uppercase mb-2">Resolution Notes</p>
-                                                                    <p className="text-lg text-amber-900">{c.resolutionNotes}</p>
-                                                                </div>
-                                                            )}
-                                                            {c.supportingDocs && c.supportingDocs.length > 0 && (
-                                                                <div className="mt-4 p-4 bg-blue-50 rounded-2xl border border-blue-100">
-                                                                    <p className="text-base font-black text-blue-700 uppercase mb-2">Supporting Documents</p>
-                                                                    <div className="flex flex-wrap gap-2">
-                                                                        {c.supportingDocs.map((doc, idx) => {
-                                                                            const name = new URLSearchParams(doc.split('#')[1] || "").get("name") || `Doc_${idx+1}`;
-                                                                            return (
-                                                                                <a key={idx} href={doc.split('#')[0]} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-3 py-2 bg-white border border-blue-200 rounded-xl hover:bg-blue-100 transition-colors">
-                                                                                    <FileText className="w-4 h-4 text-blue-600" />
-                                                                                    <span className="text-sm font-bold text-blue-800">{name}</span>
-                                                                                </a>
-                                                                            );
-                                                                        })}
-                                                                    </div>
-                                                                </div>
-                                                            )}
                                                         </div>
 
-                                                        {/* REOPEN ACTION */}
-                                                        {c.status === "Resolved" || c.status === "Closed" ? (
-                                                            <div className="p-6 border-2 border-dashed border-red-100 rounded-[2rem] flex flex-col gap-4 text-center">
-                                                                <p className="text-xl font-black text-red-700 uppercase tracking-widest">Still have a problem?</p>
-                                                                <button onClick={() => reopenComplaint(c.id, "Citizen reopened: Issue persists")}
-                                                                    className="w-full py-4 bg-red-600 text-white rounded-2xl text-xl font-black uppercase tracking-[0.2em] shadow-xl shadow-red-100 flex items-center justify-center gap-2 group active:scale-95 transition-all">
-                                                                    <RefreshCw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
-                                                                    Reopen Case
-                                                                </button>
+                                                        {/* RIGHT COLUMN: 35% */}
+                                                        <div className="space-y-6">
+                                                            {/* Evidence & Verification */}
+                                                            <div className="bg-white/80 backdrop-blur-xl p-6 rounded-[18px] border border-gray-100 shadow-sm">
+                                                                <h5 className="text-base font-black uppercase tracking-widest text-gray-900 mb-4">Evidence & Proof</h5>
+                                                                <div className="space-y-4">
+                                                                    {/* Citizen Evidence Card */}
+                                                                    <div className="bg-gray-50 rounded-[18px] p-4 border border-gray-100">
+                                                                        <div className="flex items-center justify-between mb-3">
+                                                                            <span className="text-xs font-black uppercase text-gray-500">Citizen Uploaded</span>
+                                                                            <span className="text-xs font-bold text-gray-400">{c.time}</span>
+                                                                        </div>
+                                                                        <div className="aspect-video bg-gray-200 rounded-xl flex items-center justify-center overflow-hidden mb-3">
+                                                                            {(() => {
+                                                                                const rawBefore = c.evidence && c.evidence.length > 0 ? c.evidence[0].split('#')[0] : null;
+                                                                                const beforeRes = resolveComplaintImage(c.id, rawBefore, c.category || "Other", "before", c.issue);
+                                                                                return (
+                                                                                    <AiImageWrapper
+                                                                                        src={beforeRes.src}
+                                                                                        alt="Before"
+                                                                                        isAiGenerated={beforeRes.isAiGenerated}
+                                                                                        className="w-full h-full"
+                                                                                    />
+                                                                                );
+                                                                            })()}
+                                                                        </div>
+                                                                        <p className="text-xs font-bold text-gray-600 truncate">{c.issue}</p>
+                                                                    </div>
+                                                                    
+                                                                    {/* Officer Proof Card */}
+                                                                    <div className="bg-emerald-50 rounded-[18px] p-4 border border-emerald-100">
+                                                                        <div className="flex items-center justify-between mb-3">
+                                                                            <span className="text-xs font-black uppercase text-emerald-700">Resolution Proof</span>
+                                                                            <div className="flex items-center gap-1 bg-emerald-100 px-2 py-1 rounded text-[10px] font-black text-emerald-800 uppercase">
+                                                                                <MapPin className="w-3 h-3" /> GPS Verified
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="aspect-video bg-emerald-100 rounded-xl flex items-center justify-center overflow-hidden mb-3 border border-emerald-200">
+                                                                            {(() => {
+                                                                                if (c.status === "Resolved" || c.status === "Closed") {
+                                                                                    const afterRes = resolveComplaintImage(c.id, c.resolutionProof, c.category || "Other", "after", c.issue);
+                                                                                    return (
+                                                                                        <AiImageWrapper
+                                                                                            src={afterRes.src}
+                                                                                            alt="After Resolution"
+                                                                                            isAiGenerated={afterRes.isAiGenerated}
+                                                                                            className="w-full h-full"
+                                                                                        />
+                                                                                    );
+                                                                                }
+                                                                                return c.resolutionProof ? (
+                                                                                    <img src={c.resolutionProof} className="w-full h-full object-cover" />
+                                                                                ) : (
+                                                                                    <span className="text-xs font-bold text-emerald-600/50 uppercase">Pending</span>
+                                                                                );
+                                                                            })()}
+                                                                        </div>
+                                                                        <p className="text-xs font-bold text-emerald-800 text-right">By Assigned Officer</p>
+                                                                    </div>
+                                                                </div>
                                                             </div>
-                                                        ) : (
-                                                            <div className="p-6 bg-gray-50 rounded-[2rem] flex items-center gap-4 border border-gray-100">
-                                                                <Info className="w-6 h-6 text-blue-500" />
-                                                                <p className="text-xl text-gray-500 font-bold leading-relaxed uppercase">Assigning an regular officer will expedite the resolution process.</p>
+
+                                                            {/* Resolution Notes */}
+                                                            {c.resolutionNotes && (
+                                                                <div className="bg-blue-50/80 backdrop-blur-xl p-6 rounded-[18px] border border-blue-100 shadow-sm">
+                                                                    <div className="flex items-center gap-2 mb-3">
+                                                                        <Info className="w-5 h-5 text-blue-600" />
+                                                                        <h5 className="text-base font-black uppercase tracking-widest text-blue-900">Resolution Notes</h5>
+                                                                    </div>
+                                                                    <p className="text-sm font-medium text-blue-800 leading-relaxed">
+                                                                        {c.resolutionNotes}
+                                                                    </p>
+                                                                </div>
+                                                            )}
+
+                                                            {/* Community Poll */}
+                                                            <div className="bg-white/80 backdrop-blur-xl p-6 rounded-[18px] border border-gray-100 shadow-sm">
+                                                                <h5 className="text-base font-black uppercase tracking-widest text-gray-900 mb-4">Community Poll</h5>
+                                                                <div className="flex items-center justify-between mb-4">
+                                                                    <div className="flex gap-1">
+                                                                        {[1,2,3,4].map(s => <Star key={s} className="w-5 h-5 fill-amber-400 text-amber-400" />)}
+                                                                        <Star className="w-5 h-5 text-gray-300" />
+                                                                    </div>
+                                                                    <span className="text-lg font-black text-emerald-600">{c.sentiment ?? 68}% Positive</span>
+                                                                </div>
+                                                                <div className="grid grid-cols-2 gap-3">
+                                                                    <button className="py-3 bg-gray-50 hover:bg-emerald-50 text-gray-600 hover:text-emerald-700 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-colors border border-gray-100">
+                                                                        <ThumbsUp className="w-4 h-4" /> Helpful
+                                                                    </button>
+                                                                    <button className="py-3 bg-gray-50 hover:bg-red-50 text-gray-600 hover:text-red-700 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-colors border border-gray-100">
+                                                                        <ThumbsDown className="w-4 h-4" /> Needs Review
+                                                                    </button>
+                                                                </div>
                                                             </div>
-                                                        )}
+
+                                                        </div>
                                                     </div>
-                                                </div>
+                                                </motion.div>
                                             )}
+                                            </AnimatePresence>
                                         </div>
                                     </div>
                                 );
@@ -534,6 +606,39 @@ export default function CitizenModule() {
                         </div>
                     </div>
                 </div>
+
+                {/* Optional Floating Notification for verified status */}
+                <AnimatePresence>
+                    {filtered.some(c => c.status === "Pending Verification") && (
+                        <motion.div 
+                            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 50, scale: 0.9 }}
+                            className="fixed bottom-8 right-8 z-50 bg-white/95 backdrop-blur-xl p-5 rounded-[18px] border border-gray-100 shadow-2xl max-w-sm"
+                        >
+                            <div className="flex gap-4">
+                                <div className="w-12 h-12 rounded-full bg-emerald-100 flex flex-shrink-0 items-center justify-center">
+                                    <Check className="w-6 h-6 text-emerald-600" />
+                                </div>
+                                <div>
+                                    <h4 className="text-lg font-black text-gray-900 mb-1">Complaint Updated</h4>
+                                    <p className="text-sm font-medium text-gray-600 mb-4">Work completed successfully. Waiting for citizen verification.</p>
+                                    <div className="flex items-center gap-2">
+                                        <button className="px-4 py-2 bg-gray-900 text-white rounded-xl text-xs font-bold transition-all hover:bg-gray-800">
+                                            View Details
+                                        </button>
+                                        <button className="px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold transition-all hover:bg-emerald-100 border border-emerald-200">
+                                            Give Feedback
+                                        </button>
+                                    </div>
+                                </div>
+                                <button className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
         </DashboardLayout>
     );

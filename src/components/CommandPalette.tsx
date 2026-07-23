@@ -18,7 +18,6 @@ const commands = [
     { icon: FileText, label: "Go to Grievances", path: "/grievances", group: "Navigation" },
     { icon: FolderOpen, label: "Go to Documents", path: "/documents", group: "Navigation" },
     { icon: Mic, label: "Go to SpeechAI", path: "/speech-ai", group: "Navigation" },
-    { icon: BarChart2, label: "Go to Analytics", path: "/analytics", group: "Navigation" },
     { icon: AtSign, label: "Go to Mentions", path: "/mentions", group: "Navigation" },
     { icon: BellRing, label: "Go to Crisis Radar", path: "/ai-alerts", group: "Navigation" },
     { icon: Settings, label: "Go to Settings", path: "/settings", group: "Navigation" },

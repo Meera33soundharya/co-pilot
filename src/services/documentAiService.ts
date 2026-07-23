@@ -61,7 +61,9 @@ export async function generateDocumentSummary(
   } = {}
 ): Promise<ExecutiveSummary> {
   // Validate: must have actual document content to summarize
-  if (!extractedText || extractedText.trim().length < 20) {
+  // Lowered threshold to 15 to allow partial OCR data to be summarized
+  if (!extractedText || extractedText.trim().length < 15) {
+    console.warn(`[Document AI] Extracted text too short (${extractedText?.length || 0} chars). Using minimal summary.`);
     return createMinimalSummary(category, metadata);
   }
 
@@ -74,7 +76,7 @@ export async function generateDocumentSummary(
       const apiResult = await callGeminiAPI(truncatedText, category, metadata);
       if (apiResult) return apiResult;
     } catch (error) {
-      console.warn("Gemini API failed for document summarization, using local fallback:", error);
+      console.warn("[Document AI] Gemini API failed or returned invalid response. Falling back to local AI:", error);
     }
   }
 
@@ -135,11 +137,17 @@ The actions should contain 3-5 recommended next steps based on the document cont
     }
   );
 
-  if (!response.ok) return null;
+  if (!response.ok) {
+    console.error(`[Document AI] Gemini API HTTP error: ${response.status} ${response.statusText}`);
+    return null;
+  }
 
   const data = await response.json();
   let textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!textResponse) return null;
+  if (!textResponse) {
+    console.warn("[Document AI] Gemini API returned empty or missing text response.");
+    return null;
+  }
 
   // Strip markdown backticks
   if (textResponse.startsWith("```json")) {
@@ -148,17 +156,23 @@ The actions should contain 3-5 recommended next steps based on the document cont
     textResponse = textResponse.replace(/^```\n/, "").replace(/\n```$/, "");
   }
 
-  const parsed = JSON.parse(textResponse);
+  try {
+    const parsed = JSON.parse(textResponse);
 
-  return {
-    subject: parsed.subject || "Document Analysis",
-    summary: parsed.summary || "",
-    highlights: Array.isArray(parsed.highlights) ? parsed.highlights.slice(0, 6) : [],
-    actions: Array.isArray(parsed.actions) ? parsed.actions.slice(0, 5) : [],
-    generatedAt: Date.now(),
-    source: "gemini",
-    confidence: 92,
-  };
+    return {
+      subject: parsed.subject || "Document Analysis",
+      summary: parsed.summary || "",
+      highlights: Array.isArray(parsed.highlights) ? parsed.highlights.slice(0, 6) : [],
+      actions: Array.isArray(parsed.actions) ? parsed.actions.slice(0, 5) : [],
+      generatedAt: Date.now(),
+      source: "gemini",
+      confidence: 92,
+    };
+  } catch (parseError) {
+    console.error("[Document AI] Failed to parse Gemini JSON response:", parseError);
+    console.error("[Document AI] Raw response was:", textResponse);
+    throw new Error("Invalid JSON response from Gemini API");
+  }
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -170,34 +184,275 @@ function localSmartSummarize(
   category: DocumentCategory,
   metadata: Record<string, string | undefined>
 ): ExecutiveSummary {
-  // 1. Extract key sentences using a simple scoring algorithm
-  const sentences = splitIntoSentences(text);
-  const scoredSentences = scoreSentences(sentences, text);
-
-  // 2. Extract entities from the text
-  const entities = extractEntitiesFromText(text);
-
-  // 3. Generate subject from content
-  const subject = generateSubjectFromContent(text, category, entities);
-
-  // 4. Build summary from top-scoring sentences
-  const topSentences = scoredSentences.slice(0, 4).map(s => s.text);
-  const summaryText = topSentences.join(" ").slice(0, 600);
-
-  // 5. Generate highlights from entities and key phrases
-  const highlights = generateHighlights(text, category, entities, metadata);
-
-  // 6. Generate recommended actions based on content analysis
-  const actions = generateActions(text, category, entities, metadata);
+  const contentAware = buildContentAwareSummary(text, category, metadata);
 
   return {
-    subject,
-    summary: summaryText || `This ${category.toLowerCase()} document contains information pertaining to ${metadata.dept || "the concerned department"}. The content has been extracted and analyzed for key data points and actionable insights.`,
-    highlights: highlights.slice(0, 6),
-    actions: actions.slice(0, 5),
+    subject: contentAware.subject,
+    summary: contentAware.summary,
+    highlights: contentAware.highlights.slice(0, 6),
+    actions: contentAware.actions.slice(0, 5),
     generatedAt: Date.now(),
     source: "local-ai",
-    confidence: Math.min(85, 50 + Math.floor(text.length / 100)),
+    confidence: Math.min(95, 60 + Math.floor(text.length / 80)),
+  };
+}
+
+function buildContentAwareSummary(
+  text: string,
+  category: DocumentCategory,
+  metadata: Record<string, string | undefined>
+): { subject: string; summary: string; highlights: string[]; actions: string[] } {
+  const normalized = text.replace(/\s+/g, " ").trim();
+  const lower = normalized.toLowerCase();
+  const sentences = splitIntoSentences(text);
+  const entities = extractEntitiesFromText(text);
+  const subject = generateSubjectFromContent(text, category, entities);
+  const documentType = classifyDocumentType(lower, category);
+
+  if (documentType === "technical-requirements") {
+    const objectives = extractSectionContent(text, ["system objectives", "objective", "objectives"]);
+    const requirements = extractSectionContent(text, ["core functional requirements", "functional requirements", "requirements"]);
+    const workflow = extractSectionContent(text, ["automation workflow", "workflow"]);
+    const integration = extractSectionContent(text, ["integration requirements", "integration"]);
+    const outcome = extractSectionContent(text, ["expected outcome", "outcome"]);
+
+    return {
+      subject: subject || "Technical Requirements Document",
+      summary: objectives || "This document defines the requirements for a production-ready digital governance module with automation, integration, and intelligent document handling.",
+      highlights: [
+        requirements || "Core functional requirements are defined for the system.",
+        workflow || "Automation workflow steps are outlined for the process.",
+        integration || "Integration and synchronization requirements are described.",
+        outcome || "Expected operational outcome is stated.",
+      ].slice(0, 4),
+      actions: [
+        "Prioritize implementation of the core requirements first.",
+        "Map each workflow step to the relevant downstream module.",
+        "Validate integration points and synchronization dependencies.",
+        "Review the expected outcome against the delivery plan.",
+      ],
+    };
+  }
+
+  if (documentType === "complaint") {
+    const department = entities.departments[0] || metadata.dept || "Relevant Department";
+    return {
+      subject: subject || "Citizen Complaint",
+      summary: `The content describes a citizen issue that requires follow-up by ${department}.`,
+      highlights: [
+        entities.referenceNumbers[0] ? `Reference: ${entities.referenceNumbers[0]}` : "Complaint reference is present in the document.",
+        `Department: ${department}`,
+        entities.locations[0] ? `Location: ${entities.locations[0]}` : "Location details are included in the content.",
+      ],
+      actions: [
+        "Assign the case to the relevant field team.",
+        "Verify the reported location and severity.",
+        "Update the complaint status and notify the citizen.",
+      ],
+    };
+  }
+
+  if (documentType === "resolution-report") {
+    return {
+      subject: subject || "Resolution Report",
+      summary: "The document records the resolution status, actions completed, and evidence of closure for the case or workflow.",
+      highlights: [
+        "Resolution outcome is described in the document.",
+        "Actions taken are captured for review.",
+        entities.dates[0] ? `Completion date: ${entities.dates[0]}` : "Resolution timing is referenced.",
+      ],
+      actions: [
+        "Confirm the resolved outcome against the reported issue.",
+        "Archive the supporting evidence and final status.",
+        "Notify the relevant stakeholder of the closure.",
+      ],
+    };
+  }
+
+  if (documentType === "meeting-minutes") {
+    return {
+      subject: subject || "Meeting Minutes",
+      summary: "The document captures decisions, attendance context, and follow-up commitments from the meeting.",
+      highlights: [
+        "Proceedings and decisions are summarized in the content.",
+        "Action owners or commitments are described.",
+        entities.dates[0] ? `Meeting date: ${entities.dates[0]}` : "Meeting timing is noted.",
+      ],
+      actions: [
+        "Share the minutes with the relevant participants.",
+        "Track the agreed follow-up actions.",
+        "Record the next meeting checkpoint.",
+      ],
+    };
+  }
+
+  if (documentType === "policy") {
+    return {
+      subject: subject || "Operational Policy",
+      summary: "The document outlines policy guidance, implementation expectations, or compliance requirements.",
+      highlights: [
+        "Policy guidance is present in the document.",
+        "Implementation or compliance expectations are described.",
+        entities.departments[0] ? `Department focus: ${entities.departments[0]}` : "Departmental applicability is cited in the content.",
+      ],
+      actions: [
+        "Distribute the document to the relevant department heads.",
+        "Verify that operational teams follow the new requirements.",
+        "Track implementation milestones and update the record.",
+      ],
+    };
+  }
+
+  if (documentType === "analytics-report") {
+    return {
+      subject: subject || "Analytics Report",
+      summary: "The document evaluates patterns, trends, or operational metrics that should inform decision-making.",
+      highlights: [
+        "Key metrics or trends are presented.",
+        "Insights are tied to performance or operational outcomes.",
+        entities.dates[0] ? `Analysis period: ${entities.dates[0]}` : "Analysis window is included in the document.",
+      ],
+      actions: [
+        "Review the metrics and identify the top insight.",
+        "Translate the findings into an operational action plan.",
+        "Share the analysis with the relevant decision-makers.",
+      ],
+    };
+  }
+
+  if (documentType === "speech-transcript") {
+    return {
+      subject: subject || "Speech Transcript",
+      summary: "The document contains spoken remarks, announcements, or public communication that should be interpreted as a transcript.",
+      highlights: [
+        "Speech content is present in the source text.",
+        "Announcements or public statements are described.",
+        entities.locations[0] ? `Context: ${entities.locations[0]}` : "Audience or location context is included.",
+      ],
+      actions: [
+        "Extract the key message for public communication.",
+        "Format the content for a formal announcement or briefing.",
+        "Store the transcript with the relevant metadata.",
+      ],
+    };
+  }
+
+  if (documentType === "budget-report") {
+    return {
+      subject: subject || "Budget Report",
+      summary: "The document outlines financial allocations, funding priorities, or budgetary implications for the initiative.",
+      highlights: [
+        "Financial allocations or budget categories are described.",
+        "Funding priorities are highlighted in the content.",
+        entities.amounts[0] ? `Amount: ${entities.amounts[0]}` : "Budget values are present in the document.",
+      ],
+      actions: [
+        "Review the allocations against the stated goals.",
+        "Confirm whether any approvals or follow-ups are required.",
+        "Track spending implications for the responsible teams.",
+      ],
+    };
+  }
+
+  if (documentType === "project-proposal") {
+    return {
+      subject: subject || "Project Proposal",
+      summary: "The document proposes a project idea, implementation approach, or initiative plan with expected benefits.",
+      highlights: [
+        "Project objective or scope is described.",
+        "Implementation approach is outlined.",
+        entities.departments[0] ? `Department focus: ${entities.departments[0]}` : "Responsible function is referenced.",
+      ],
+      actions: [
+        "Review the proposal scope and expected impact.",
+        "Identify the dependencies and implementation owners.",
+        "Prepare the next-step approval or execution plan.",
+      ],
+    };
+  }
+
+  if (documentType === "government-circular") {
+    return {
+      subject: subject || "Government Circular",
+      summary: "The document carries an official directive, notification, or advisory instruction from a government authority.",
+      highlights: [
+        "Official instruction or directive is present.",
+        "Administrative or compliance expectations are stated.",
+        entities.departments[0] ? `Issued by: ${entities.departments[0]}` : "Issuing authority is identified in the content.",
+      ],
+      actions: [
+        "Distribute the instruction to the affected teams.",
+        "Confirm implementation deadlines and compliance needs.",
+        "Record the circular for future reference.",
+      ],
+    };
+  }
+
+  if (documentType === "inspection-report") {
+    return {
+      subject: subject || "Inspection Report",
+      summary: "The document records findings from an inspection or field review and highlights any follow-up requirements.",
+      highlights: [
+        "Inspection observations are described.",
+        "Compliance or service issues are noted.",
+        entities.locations[0] ? `Inspection area: ${entities.locations[0]}` : "Inspection location is referenced.",
+      ],
+      actions: [
+        "Review the inspection findings and risk level.",
+        "Assign follow-up work to the responsible team.",
+        "Track corrective action until closure.",
+      ],
+    };
+  }
+
+  if (documentType === "field-officer-report") {
+    return {
+      subject: subject || "Field Officer Report",
+      summary: "The document reports field activity, observations, and operational status from the assigned officer.",
+      highlights: [
+        "Field observations are documented.",
+        "Operational status or service condition is described.",
+        entities.locations[0] ? `Field location: ${entities.locations[0]}` : "Field location is referenced.",
+      ],
+      actions: [
+        "Review the officer observations and next tasks.",
+        "Escalate issues that require higher-level intervention.",
+        "Update the workflow with the latest field status.",
+      ],
+    };
+  }
+
+  if (documentType === "ai-analysis-report") {
+    return {
+      subject: subject || "AI Analysis Report",
+      summary: "The document contains analytical findings, model insights, or AI-driven operational observations.",
+      highlights: [
+        "Analytical insight or evaluation is presented.",
+        "Operational or decision implications are discussed.",
+        entities.dates[0] ? `Analysis date: ${entities.dates[0]}` : "Analysis timing is provided.",
+      ],
+      actions: [
+        "Review the core findings and their implications.",
+        "Translate insights into an operational decision.",
+        "Share the report with stakeholders who need the recommendation.",
+      ],
+    };
+  }
+
+  const topSentence = sentences[0] || normalized.slice(0, 240);
+  return {
+    subject: subject || `${category} Document`,
+    summary: topSentence || `This ${category.toLowerCase()} document contains context-specific information that should be reviewed carefully.`,
+    highlights: [
+      entities.referenceNumbers[0] ? `Reference: ${entities.referenceNumbers[0]}` : "Document contains identifiable reference information.",
+      entities.departments[0] ? `Departments involved: ${entities.departments[0]}` : "Department context is present.",
+      entities.locations[0] ? `Location: ${entities.locations[0]}` : "Location details are included in the content.",
+    ],
+    actions: [
+      "Review the document content and assign it to the appropriate workflow.",
+      "Capture the key next step for teams or citizens.",
+      "Store the latest summary for future reference.",
+    ],
   };
 }
 
@@ -268,6 +523,74 @@ interface ExtractedEntities {
   referenceNumbers: string[];
   phoneNumbers: string[];
   amounts: string[];
+}
+
+function classifyDocumentType(lower: string, category: DocumentCategory): string {
+  if (/(technical requirements|requirements document|functional requirements|system objectives|automation workflow|integration requirements)/i.test(lower)) {
+    return "technical-requirements";
+  }
+  if (/(complaint|grievance|citizen issue|citizen complaint|case id|reported issue|service issue)/i.test(lower)) {
+    return "complaint";
+  }
+  if (/(resolution report|resolved|closure|case closed|resolution)/i.test(lower)) {
+    return "resolution-report";
+  }
+  if (/(meeting minutes|agenda|attendees|minutes|decision|action items)/i.test(lower)) {
+    return "meeting-minutes";
+  }
+  if (/(government circular|circular|directive|notification|official order)/i.test(lower)) {
+    return "government-circular";
+  }
+  if (/(policy|guideline|directive|regulation|compliance)/i.test(lower)) {
+    return "policy";
+  }
+  if (/(inspection report|inspection|field review|compliance check)/i.test(lower)) {
+    return "inspection-report";
+  }
+  if (/(field officer report|field officer|field visit|field activity)/i.test(lower)) {
+    return "field-officer-report";
+  }
+  if (/(speech transcript|transcript|speech|announcement|public address)/i.test(lower)) {
+    return "speech-transcript";
+  }
+  if (/(budget report|budget|allocation|funding)/i.test(lower)) {
+    return "budget-report";
+  }
+  if (/(project proposal|proposal|initiative plan|implementation plan)/i.test(lower)) {
+    return "project-proposal";
+  }
+  if (/(analytics report|analytics|trend|metrics|dashboard)/i.test(lower)) {
+    return "analytics-report";
+  }
+  if (/(ai analysis|ai analysis report|model insights|analysis report)/i.test(lower)) {
+    return "ai-analysis-report";
+  }
+
+  if (category === "Complaint Documents") return "complaint";
+  if (category === "Resolution Reports") return "resolution-report";
+  if (category === "Government Circulars") return "government-circular";
+  if (category === "Meeting Documents") return "meeting-minutes";
+  if (category === "Policy Documents") return "policy";
+  if (category === "Field Officer Reports") return "field-officer-report";
+
+  return "generic";
+}
+
+function extractSectionContent(text: string, keywords: string[]): string | null {
+  const normalized = text.replace(/\s+/g, " ").trim();
+  const lower = normalized.toLowerCase();
+
+  for (const keyword of keywords) {
+    const index = lower.indexOf(keyword);
+    if (index >= 0) {
+      const start = Math.max(0, index);
+      const end = Math.min(normalized.length, start + 260);
+      const slice = normalized.slice(start, end).trim();
+      return slice.replace(/\s+/g, " ");
+    }
+  }
+
+  return null;
 }
 
 function extractEntitiesFromText(text: string): ExtractedEntities {

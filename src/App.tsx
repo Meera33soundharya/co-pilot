@@ -38,11 +38,12 @@ import Meetings from "./pages/Meetings";
 import MediaQueue from "./pages/MediaQueue";
 import Constituency from "./pages/Constituency";
 import AICoPilot from "./pages/AICoPilot";
-import SpeechStudio from "./pages/SpeechStudio";
 import VillageVoicePortal from "./pages/VillageVoicePortal";
 import ResolutionReports from "./pages/ResolutionReports";
 
 import { Toaster } from 'sonner';
+import { useEffect } from 'react';
+import { initializeAutomationServices } from '@/services/realtimeService';
 
 // 🔒 Route Guard - redirect to /login if not authenticated
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -52,6 +53,11 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function App() {
+  useEffect(() => {
+    // Initialize automation services on app startup
+    initializeAutomationServices();
+  }, []);
+
   return (
     <ComplaintsProvider>
       <Toaster
@@ -76,7 +82,6 @@ function App() {
             <Route path="/media-queue" element={<ProtectedRoute><MediaQueue /></ProtectedRoute>} />
             <Route path="/constituency" element={<ProtectedRoute><Constituency /></ProtectedRoute>} />
             <Route path="/ai-copilot" element={<ProtectedRoute><AICoPilot /></ProtectedRoute>} />
-            <Route path="/speech-studio" element={<ProtectedRoute><SpeechStudio /></ProtectedRoute>} />
             <Route path="/login" element={<Login />} />
             <Route path="/submit-complaint" element={<CitizenPortal />} />
             <Route path="/village-voice" element={<VillageVoicePortal />} />

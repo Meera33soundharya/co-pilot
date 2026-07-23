@@ -9,6 +9,7 @@ import {
     AlertCircle, X, FileText, Paperclip, Video
 } from "lucide-react";
 import type { Complaint, Status } from "@/store/complaintsStore";
+import { VoiceAssistantFAB } from "@/components/VoiceAssistantFAB";
 
 export default function FieldPortal() {
     const { complaints, currentUser, updateStatus, assignComplaint } = useComplaints();
@@ -26,6 +27,14 @@ export default function FieldPortal() {
     const cameraInputRef = useRef<HTMLInputElement>(null);
     const docInputRef = useRef<HTMLInputElement>(null);
 
+    const handleVoiceResult = (text: string) => {
+        if (selectedTask) {
+            setProofNote(prev => prev ? prev + " " + text : text);
+        } else {
+            setSearchQuery(text);
+        }
+    };
+
     // Filter complaints for this officer and department
     const myTasks = useMemo(() => {
         return complaints.filter(c => {
@@ -34,9 +43,6 @@ export default function FieldPortal() {
             const matchesSearch = c.issue.toLowerCase().includes(searchQuery.toLowerCase()) || 
                                  c.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
                                  c.ward.toLowerCase().includes(searchQuery.toLowerCase());
-
-            // User Requirement: ONLY show Voice Assistant complaints in the Field Portal
-            if (c.source !== "voice") return false;
 
             return matchesRole && matchesStatus && matchesSearch;
         });
@@ -474,8 +480,8 @@ export default function FieldPortal() {
                                 <div>
                                     <p className="text-sm font-black uppercase tracking-widest text-white/40 mb-1">Quick Insight</p>
                                     <p className="text-3xl font-black tabular-nums">
-                                        {complaints.filter(c => c.status === "New" && c.source === "voice" && (currentUser?.role === "admin" || c.dept === currentUser?.dept)).length}
-                                        <span className="text-lg font-bold opacity-50 ml-2">New Voice Reports</span>
+                                        {complaints.filter(c => c.status === "New" && (currentUser?.role === "admin" || c.dept === currentUser?.dept)).length}
+                                        <span className="text-lg font-bold opacity-50 ml-2">New Complaints</span>
                                     </p>
                                 </div>
                                 <div className="w-14 h-14 rounded-3xl bg-white/10 flex items-center justify-center border border-white/20">
@@ -483,6 +489,16 @@ export default function FieldPortal() {
                                 </div>
                             </div>
                             <div className="space-y-4 relative">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="bg-white/10 rounded-2xl p-3">
+                                        <p className="text-[10px] font-black uppercase tracking-widest opacity-50 mb-1">In Progress</p>
+                                        <p className="text-2xl font-black">{complaints.filter(c => c.status === "In Progress" && (currentUser?.role === "admin" || c.dept === currentUser?.dept)).length}</p>
+                                    </div>
+                                    <div className="bg-white/10 rounded-2xl p-3">
+                                        <p className="text-[10px] font-black uppercase tracking-widest opacity-50 mb-1">Resolved</p>
+                                        <p className="text-2xl font-black">{complaints.filter(c => c.status === "Resolved" && (currentUser?.role === "admin" || c.dept === currentUser?.dept)).length}</p>
+                                    </div>
+                                </div>
                                 <div className="flex justify-between items-end">
                                     <p className="text-[9px] font-black uppercase tracking-widest opacity-50">Response Readiness</p>
                                     <p className="text-[9px] font-black uppercase tracking-widest">Active</p>
@@ -496,6 +512,8 @@ export default function FieldPortal() {
                     </div>
                 </div>
             </div>
+            
+            <VoiceAssistantFAB onResult={handleVoiceResult} />
         </DashboardLayout>
     );
 }

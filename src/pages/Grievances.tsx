@@ -238,7 +238,7 @@ const FILTER_PRIORITIES: (Priority | "All")[] = ["All", "High", "Medium", "Low"]
 
 export default function Grievances() {
     const {
-        complaints, currentUser,
+        complaints, allComplaints, currentUser,
         updateStatus, verifyComplaint, assignComplaint, notifyCitizen, categorize,
     } = useComplaints();
 
@@ -295,14 +295,18 @@ export default function Grievances() {
         const matchS = statusFilter === "All" || c.status === statusFilter;
         const matchP = priFilter === "All" || c.priority === priFilter;
         const matchC = catFilter === "All" || c.category === catFilter;
-        
-        // Requirement: Voice Assistant complaints strictly in Assigned tab only
-        if (c.source === "voice" && statusFilter !== "Assigned" && statusFilter !== "All") return false;
+
+        // ✅ Officers: ONLY show complaints assigned to their name
+        if (isOfficer && currentUser) {
+            const assignedToMe = c.assignedTo?.toLowerCase().includes(currentUser.name.toLowerCase()) ||
+                                 c.dept === currentUser.dept;
+            if (!assignedToMe) return false;
+        }
 
         // Citizens only see their own
         if (isCitizen && currentUser) return matchQ && matchS && matchP && matchC && c.citizenId === currentUser.citizenId;
         return matchQ && matchS && matchP && matchC;
-    }), [sorted, query, statusFilter, priFilter, catFilter, isCitizen, currentUser]);
+    }), [sorted, query, statusFilter, priFilter, catFilter, isCitizen, isOfficer, currentUser]);
 
     function toast_(msg: string) {
         setToast(msg);
@@ -674,6 +678,29 @@ export default function Grievances() {
                             className="shrink-0 flex items-center gap-2 bg-white text-[#B91C1C] font-black text-base px-4 py-2.5 rounded-2xl hover:bg-red-50 transition-all whitespace-nowrap">
                             <ExternalLink className="w-3.5 h-3.5" /> Open Portal
                         </a>
+                    </div>
+                )}
+
+                {/* Debug Panel (visible to admin only) */}
+                {isAdmin && (
+                    <div className="bg-gray-900 text-white rounded-3xl p-5 space-y-2">
+                        <p className="text-lg font-black uppercase tracking-widest text-gray-300">🔧 Debug Panel</p>
+                        <div className="grid grid-cols-3 gap-3 text-sm">
+                            <div className="bg-gray-800 p-3 rounded-xl">
+                                <p className="text-gray-400 font-bold">Total Complaints</p>
+                                <p className="text-2xl font-black text-white">{allComplaints.length}</p>
+                            </div>
+                            <div className="bg-gray-800 p-3 rounded-xl">
+                                <p className="text-gray-400 font-bold">Current User</p>
+                                <p className="text-lg font-bold text-white truncate">{currentUser?.name || 'None'}</p>
+                                <p className="text-gray-400 text-xs">Role: {currentUser?.role || 'None'}</p>
+                            </div>
+                            <div className="bg-gray-800 p-3 rounded-xl">
+                                <p className="text-gray-400 font-bold">Filtered View</p>
+                                <p className="text-lg font-bold text-white">{filtered.length} visible</p>
+                                <p className="text-gray-400 text-xs">Status: {statusFilter} | Priority: {priFilter}</p>
+                            </div>
+                        </div>
                     </div>
                 )}
 

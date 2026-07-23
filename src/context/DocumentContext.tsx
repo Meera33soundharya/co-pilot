@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 import { useComplaints } from "./ComplaintsContext";
 import { extractText, generateContentHash } from "../services/documentTextExtractor";
 import { generateDocumentSummary, type ExecutiveSummary } from "../services/documentAiService";
@@ -77,6 +77,7 @@ const DocCtx = createContext<DocumentContextProps | null>(null);
 
 export function DocumentProvider({ children }: { children: ReactNode }) {
     const { closedDocs, allComplaints } = useComplaints();
+    const documentsRef = useRef<DocumentRecord[]>([]);
     
     const defaultDocuments: DocumentRecord[] = [
         {
@@ -199,6 +200,7 @@ export function DocumentProvider({ children }: { children: ReactNode }) {
     });
 
     useEffect(() => {
+        documentsRef.current = documents;
         localStorage.setItem("copilot_documents_v1", JSON.stringify(documents));
     }, [documents]);
 
@@ -297,24 +299,26 @@ export function DocumentProvider({ children }: { children: ReactNode }) {
     };
 
     // ─── AI Summarization Pipeline ───────────────────────────────
-    const runSummarizationPipeline = useCallback(async (docId: string) => {
+    const runSummarizationPipeline = useCallback(async (docId: string, retryCount = 0) => {
         // 1. Update status to "extracting"
         setDocuments(prev => prev.map(d => d.id === docId ? { ...d, summaryStatus: 'extracting' as const } : d));
 
         try {
-            // Get the document's current data
-            const currentDoc = documents.find(d => d.id === docId);
+            // Get the document's current data from the latest state snapshot
+            const currentDoc = documentsRef.current.find(d => d.id === docId);
             if (!currentDoc || !currentDoc.fileData) {
                 setDocuments(prev => prev.map(d => d.id === docId ? { ...d, summaryStatus: 'error' as const } : d));
                 return;
             }
 
+            console.log(`[Pipeline] Extracting text for document ${docId}...`);
             // 2. Extract text from document
             const extraction = await extractText(currentDoc.fileData, currentDoc.name, currentDoc.type);
             const newHash = generateContentHash(extraction.text);
 
             // Check if content hasn't changed (skip re-summarization)
             if (currentDoc.contentHash === newHash && currentDoc.executiveSummary) {
+                console.log(`[Pipeline] Content unchanged for ${docId}, skipping AI summary generation.`);
                 setDocuments(prev => prev.map(d => d.id === docId ? { ...d, summaryStatus: 'done' as const } : d));
                 return;
             }
@@ -328,6 +332,7 @@ export function DocumentProvider({ children }: { children: ReactNode }) {
                 summaryStatus: 'summarizing' as const,
             } : d));
 
+            console.log(`[Pipeline] Summarizing content for ${docId} (Length: ${extraction.text.length})...`);
             // 4. Generate AI summary from extracted content
             const summary = await generateDocumentSummary(
                 extraction.text,
@@ -350,12 +355,19 @@ export function DocumentProvider({ children }: { children: ReactNode }) {
                 summary: summary.subject, // Update the old summary field too
                 summaryStatus: 'done' as const,
             } : d));
+            console.log(`[Pipeline] Success for ${docId}.`);
 
         } catch (error) {
-            console.error('Summarization pipeline failed for', docId, error);
-            setDocuments(prev => prev.map(d => d.id === docId ? { ...d, summaryStatus: 'error' as const } : d));
+            console.error(`[Pipeline] Summarization failed for ${docId} (Attempt ${retryCount + 1}):`, error);
+            
+            if (retryCount < 2) {
+                console.log(`[Pipeline] Retrying in 2 seconds...`);
+                setTimeout(() => runSummarizationPipeline(docId, retryCount + 1), 2000);
+            } else {
+                setDocuments(prev => prev.map(d => d.id === docId ? { ...d, summaryStatus: 'error' as const } : d));
+            }
         }
-    }, [documents]);
+    }, []);
 
     const regenerateSummary = useCallback(async (id: string) => {
         // Clear existing summary and re-run the pipeline
@@ -363,11 +375,12 @@ export function DocumentProvider({ children }: { children: ReactNode }) {
             ...d,
             executiveSummary: undefined,
             contentHash: undefined,
+            extractedText: undefined,
             summaryStatus: 'idle' as const,
         } : d));
         // Small delay to ensure state update propagates
-        await new Promise(r => setTimeout(r, 50));
-        await runSummarizationPipeline(id);
+        await new Promise(r => setTimeout(r, 100));
+        await runSummarizationPipeline(id, 0);
     }, [runSummarizationPipeline]);
 
     const uploadDocument = async (file: File, meta: Partial<DocumentRecord>) => {
