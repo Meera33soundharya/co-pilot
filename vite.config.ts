@@ -15,6 +15,8 @@ export default defineConfig({
     },
   },
   server: {
+    port: 5173,
+    strictPort: true,
     proxy: {
       '/geo-api': {
         target: 'https://nominatim.openstreetmap.org',
