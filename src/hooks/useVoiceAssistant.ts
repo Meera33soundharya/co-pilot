@@ -20,6 +20,7 @@ export function useVoiceAssistant({ onResult, lang = "en-IN" }: UseVoiceAssistan
   const [transcript, setTranscript] = useState("");
   const [error, setError] = useState<string | null>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const isActiveRef = useRef(false); // true while recognition is actively running
 
   // Audio Context for Chimes
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -112,6 +113,7 @@ export function useVoiceAssistant({ onResult, lang = "en-IN" }: UseVoiceAssistan
       recognition.interimResults = false;
       
       recognition.onstart = () => {
+        isActiveRef.current = true;
         setIsListening(true);
         setError(null);
         setTranscript("");
@@ -144,6 +146,7 @@ export function useVoiceAssistant({ onResult, lang = "en-IN" }: UseVoiceAssistan
       };
 
       recognition.onend = () => {
+        isActiveRef.current = false;
         setIsListening(false);
       };
 
@@ -162,8 +165,10 @@ export function useVoiceAssistant({ onResult, lang = "en-IN" }: UseVoiceAssistan
       }
       recognitionRef.current.lang = lang;
       try {
-        recognitionRef.current.start();
-        playChime("start");
+        if (!isActiveRef.current) {
+          recognitionRef.current.start();
+          playChime("start");
+        }
       } catch (e) {
         // Handle case where it might already be started
         console.error(e);

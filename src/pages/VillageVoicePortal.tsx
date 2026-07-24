@@ -36,7 +36,10 @@ export default function VillageVoicePortal() {
   const answersRef = useRef({ name: "", issue: "", ward: "", phone: "" });
   const recognitionRef = useRef<any>(null);
   const isListeningExpectedRef = useRef(false);
+  const isActiveRef = useRef(false); // tracks if recognition.start() has been called and is running
   const silenceTimeoutRef = useRef<any>(null);
+  const msgIdRef = useRef(0); // counter for stable unique message IDs
+  const nextId = () => ++msgIdRef.current;
 
   useEffect(() => {
     if (window.speechSynthesis) {
@@ -53,6 +56,7 @@ export default function VillageVoicePortal() {
       recognitionRef.current.interimResults = true;
       
       recognitionRef.current.onstart = () => {
+        isActiveRef.current = true;
         setStatus("listening");
         setTranscript("");
         transcriptRef.current = "";
@@ -71,6 +75,7 @@ export default function VillageVoicePortal() {
           if (transcriptRef.current.trim().length > 0) {
             isListeningExpectedRef.current = false;
             try { recognitionRef.current.stop(); } catch(e) {}
+            // isActiveRef will be set to false in onend
             processTranscriptStep(transcriptRef.current.trim());
             setTranscript("");
             transcriptRef.current = "";
@@ -99,8 +104,16 @@ export default function VillageVoicePortal() {
       };
       
       recognitionRef.current.onend = () => {
+        isActiveRef.current = false;
         if (isListeningExpectedRef.current) {
-          try { recognitionRef.current.start(); } catch(e) {}
+          // Only restart if not already active
+          if (!isActiveRef.current) {
+            try {
+              recognitionRef.current.start();
+            } catch(e) {
+              console.warn("Could not restart recognition:", e);
+            }
+          }
         } else {
           setStatus(prev => {
             if (prev !== "waiting" && prev !== "processing" && prev !== "success" && prev !== "error" && prev !== "speaking") {
@@ -193,15 +206,17 @@ export default function VillageVoicePortal() {
         : `Name: ${name}. Complaint: ${issue}. Ward: ${ward}. Mobile: ${phone}. Please confirm. Say YES to submit or NO to re-record.`;
     }
 
-    setMessages(prev => [...prev, { id: Date.now(), sender: 'ai', text: textToSpeak }]);
+    setMessages(prev => [...prev, { id: nextId(), sender: 'ai', text: textToSpeak }]);
 
     speak(textToSpeak, () => {
       if (recognitionRef.current) {
         isListeningExpectedRef.current = true;
-        try {
-          recognitionRef.current.start();
-        } catch(e) {
-          console.log("Mic already listening or failed", e);
+        if (!isActiveRef.current) {
+          try {
+            recognitionRef.current.start();
+          } catch(e) {
+            console.warn("Mic already listening or failed", e);
+          }
         }
       } else {
           // If no recognition support, just go to waiting to allow typing
@@ -212,13 +227,13 @@ export default function VillageVoicePortal() {
 
   const processTranscriptStep = (text: string) => {
     setStatus("waiting"); 
-    setMessages(prev => [...prev, { id: Date.now(), sender: 'user', text }]);
+    setMessages(prev => [...prev, { id: nextId(), sender: 'user', text }]);
     
     if (stepRef.current === 0) {
        answersRef.current.name = text;
        let ackMsg = lang === 'TA' ? `நன்றி ${text}.` : `Thank you ${text}.`;
        setStatus("speaking");
-       setMessages(prev => [...prev, { id: Date.now(), sender: 'ai', text: ackMsg }]);
+       setMessages(prev => [...prev, { id: nextId(), sender: 'ai', text: ackMsg }]);
        speak(ackMsg, () => {
            setStatus("waiting");
            setTimeout(() => startStep(1), 1000);
@@ -284,7 +299,7 @@ export default function VillageVoicePortal() {
         ? `உங்கள் புகார் வெற்றிகரமாக பதிவு செய்யப்பட்டது. உங்கள் புகார் எண் ${id}. புகார் சம்பந்தப்பட்ட அதிகாரிக்கு ஒதுக்கப்பட்டுள்ளது. நன்றி.` 
         : `Your complaint has been registered successfully. Your Complaint ID is ${id}. The complaint has been assigned to the concerned officer. Thank you.`;
       
-      setMessages(prev => [...prev, { id: Date.now(), sender: 'ai', text: msg }]);
+      setMessages(prev => [...prev, { id: nextId(), sender: 'ai', text: msg }]);
       speak(msg);
     } catch (err) {
       console.error("Failed to process complaint via AI", err);
@@ -309,7 +324,9 @@ export default function VillageVoicePortal() {
           startStep(0);
       } else {
           isListeningExpectedRef.current = true;
-          try { recognitionRef.current?.start(); } catch(e) {}
+          if (!isActiveRef.current) {
+            try { recognitionRef.current?.start(); } catch(e) {}
+          }
       }
     }
   };
