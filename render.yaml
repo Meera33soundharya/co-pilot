@@ -31,7 +31,7 @@ services:
   # ──────────────────────────────────────────
   - type: web
     name: govpilot-frontend
-    env: node
+    env: static
     plan: free
     buildCommand: npm install && npm run build
     staticPublishPath: dist
