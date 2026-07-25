@@ -29,24 +29,6 @@ export default defineConfig({
     },
   },
   build: {
-    chunkSizeWarningLimit: 2000,
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) return 'react-vendor';
-            if (id.includes('recharts') || id.includes('d3')) return 'chart-vendor';
-            if (id.includes('lucide')) return 'ui-icons';
-            if (id.includes('framer-motion')) return 'animation';
-            if (id.includes('sonner')) return 'toast';
-            if (id.includes('leaflet')) return 'map-vendor';
-            if (id.includes('html2canvas') || id.includes('jspdf')) return 'pdf-vendor';
-            if (id.includes('tesseract')) return 'ocr-vendor';
-            if (id.includes('pdfjs')) return 'pdfjs-vendor';
-            return 'vendor';
-          }
-        }
-      }
-    }
+    chunkSizeWarningLimit: 2000
   }
 })
