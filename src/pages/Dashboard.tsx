@@ -110,11 +110,16 @@ export default function Dashboard() {
     const recentNotifs = notifications.slice(0, 4);
 
     return (
-        <DashboardLayout title="Dashboard" subtitle={
-            isAdmin ? "Live overview — all complaints" :
-                isOfficer ? `Your dept: ${currentUser?.dept}` :
-                    "Your complaint status"
-        }>
+        <DashboardLayout 
+            title="Dashboard" 
+            subtitle={
+                isAdmin ? "Live overview — all complaints" :
+                    isOfficer ? `Your dept: ${currentUser?.dept}` :
+                        "Your complaint status"
+            }
+            isDark={true}
+            bgImage="/images/dashboard_bg.png"
+        >
             <div className="space-y-8 pb-10 relative">
                 
                 {/* ── GRIEVANCE DETAIL SIDE-TRAY ────────────────── */}
