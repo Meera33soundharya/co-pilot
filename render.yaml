@@ -28,12 +28,15 @@ services:
 
   # ──────────────────────────────────────────
   # Frontend — React + Vite (Static Site)
+  # rootDir is the repo root (where package.json lives)
   # ──────────────────────────────────────────
   - type: web
     name: govpilot-frontend
     env: static
-    buildCommand: npm install && npm run build
-    staticPublishPath: dist
+    rootDir: .
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    pullRequestPreviewsEnabled: false
     routes:
       - type: rewrite
         source: /*
@@ -41,11 +44,11 @@ services:
     envVars:
       - key: VITE_API_URL
         value: https://govpilot-backend.onrender.com
+      - key: VITE_GOOGLE_API_KEY
+        value: AIzaSyBimmkZi2w1zCVth4xPrHuqha9zDlRbviY
       - key: VITE_OPENAI_API_KEY
         sync: false
       - key: VITE_GEMINI_API_KEY
         sync: false
-      - key: VITE_GOOGLE_API_KEY
-        sync: false
       - key: NODE_VERSION
-        value: "20"
+        value: "20.18.0"

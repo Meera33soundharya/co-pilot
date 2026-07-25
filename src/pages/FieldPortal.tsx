@@ -7,7 +7,9 @@ import { useComplaints } from '@/context/ComplaintsContext';
 
 export default function FieldPortal() {
     const navigate = useNavigate();
-    const [step, setStep] = useState<'idle' | 'recording' | 'processing' | 'confirm' | 'success'>('idle');
+    const [step, setStep] = useState<'idle' | 'recording' | 'waiting_1min' | 'processing' | 'confirm' | 'success'>('idle');
+    const [voiceMode, setVoiceMode] = useState<'name' | 'complaint'>('name');
+    const [userName, setUserName] = useState('');
     const [transcript, setTranscript] = useState('');
     const [parsedData, setParsedData] = useState<any>(null);
     const [complaintId, setComplaintId] = useState('');
@@ -19,10 +21,21 @@ export default function FieldPortal() {
             setStep('idle');
             return;
         }
+
+        if (voiceMode === 'name') {
+            setUserName(text);
+            setStep('waiting_1min');
+            setTimeout(() => {
+                setVoiceMode('complaint');
+                setStep('idle');
+            }, 60000); // 1 minute wait
+            return;
+        }
+
         setTranscript(text);
         setStep('processing');
         try {
-            const result = await analyzeComplaint(text);
+            const result = await analyzeComplaint(text, "");
             setParsedData(result);
             setStep('confirm');
         } catch (error) {
@@ -47,23 +60,32 @@ export default function FieldPortal() {
     const handleSubmit = () => {
         const newComplaint = {
             id: `CMPL-${Math.floor(10000 + Math.random() * 90000)}`,
-            issue: parsedData?.title || transcript.substring(0, 50),
-            category: parsedData?.category || 'General',
+            citizen: userName || parsedData?.name || 'Anonymous Voice',
+            phone: parsedData?.phone || 'N/A',
             ward: parsedData?.location || 'Unknown',
+            citizenId: 'voice_user',
+            issue: parsedData?.title || transcript.substring(0, 50),
+            description: transcript,
+            category: parsedData?.category || 'Other',
             status: 'New' as any,
             priority: parsedData?.priority || 'Medium',
-            date: 'Just now',
-            assignee: 'Unassigned',
-            phone: 'N/A',
-            source: 'Voice Portal'
+            assignedTo: 'Unassigned',
+            dept: parsedData?.dept || 'General Administration',
+            time: 'Just now',
+            timestamp: Date.now(),
+            notified: false,
+            source: 'voice' as const,
+            audit: [{ time: 'Just now', actor: 'System', action: 'Complaint submitted via Voice Portal' }]
         };
-        addComplaint(newComplaint);
+        addComplaint(newComplaint as any);
         setComplaintId(newComplaint.id);
         setStep('success');
     };
 
     const reset = () => {
         setStep('idle');
+        setVoiceMode('name');
+        setUserName('');
         setTranscript('');
         setParsedData(null);
     };
@@ -107,12 +129,28 @@ export default function FieldPortal() {
                         </button>
                         <div className="text-center space-y-4 px-4">
                             <h2 className="text-4xl font-black text-gray-800 leading-tight">
-                                {isListening ? 'கவனிக்கப்படுகிறது...' : 'உங்கள் புகாரை பதிவு செய்ய அழுத்தவும்'}
+                                {isListening 
+                                    ? 'கவனிக்கப்படுகிறது...' 
+                                    : voiceMode === 'name' 
+                                        ? 'உங்கள் பெயரை கூறவும்' 
+                                        : 'உங்கள் புகாரை பதிவு செய்ய அழுத்தவும்'}
                             </h2>
                             <p className="text-xl font-bold text-gray-500 uppercase tracking-wider">
-                                {isListening ? 'Listening...' : '(Press to Record)'}
+                                {isListening 
+                                    ? 'Listening...' 
+                                    : voiceMode === 'name'
+                                        ? '(Press to speak your name)'
+                                        : '(Press to Record)'}
                             </p>
                         </div>
+                    </div>
+                )}
+
+                {step === 'waiting_1min' && (
+                    <div className="flex flex-col items-center gap-6 w-full animate-in fade-in zoom-in duration-500">
+                        <Loader2 className="w-24 h-24 text-blue-600 animate-spin" />
+                        <h2 className="text-3xl font-black text-gray-800 text-center leading-tight">1 நிமிடம் காத்திருக்கவும்...</h2>
+                        <p className="text-xl font-bold text-gray-500 uppercase tracking-wide">Please wait 1 minute for representative connection...</p>
                     </div>
                 )}
 
