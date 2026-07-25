@@ -8,7 +8,7 @@ interface VoiceAssistantFABProps {
 }
 
 export function VoiceAssistantFAB({ onResult, className = "" }: VoiceAssistantFABProps) {
-  const [lang, setLang] = useState<VoiceLanguage>("en-IN");
+  const [lang, setLang] = useState<VoiceLanguage>("ta-IN");
   const [showLangMenu, setShowLangMenu] = useState(false);
 
   const {

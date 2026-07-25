@@ -5,7 +5,7 @@ import {
     Calendar, X, Menu, Search, Bell, LogOut,
     ChevronRight, Shield, FolderOpen, Layers, Zap, FileBarChart2, Volume2,
     User, Building2, PlusCircle, Activity, ArrowRight, BarChart2, Megaphone,
-    Map, Users2
+    Map, Users2, Mic
 } from "lucide-react";
 import AdminSlide from "./AdminSlide";
 import { useState, useEffect } from "react";
@@ -17,6 +17,7 @@ interface DashboardLayoutProps {
     subtitle?: string;
     bgImage?: string;
     actions?: ReactNode;
+    isDark?: boolean;
 }
 
 interface NavItem {
@@ -107,7 +108,7 @@ const CITIZEN_NAV: NavGroup[] = [
     },
 ];
 
-export function DashboardLayout({ children, title, subtitle, bgImage, actions }: DashboardLayoutProps) {
+export default function DashboardLayout({ children, title, subtitle, bgImage, actions, isDark = false }: DashboardLayoutProps) {
     const navigate = useNavigate();
     const location = useLocation();
     const { currentUser, logout, complaints, notifications, readNotification } = useComplaints();
@@ -158,7 +159,7 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
     }
 
     return (
-        <div className="flex h-screen overflow-hidden" style={{ backgroundColor: "#0A0F1C", fontFamily: "'Inter', sans-serif" }}>
+        <div className="flex h-screen overflow-hidden" style={{ backgroundColor: isDark ? "#0A0F1C" : "#F9FAFB", fontFamily: "'Inter', sans-serif" }}>
 
             {/* Mobile overlay */}
             {sidebarOpen && (
@@ -450,25 +451,27 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
                 <AdminSlide open={adminSlideOpen} onClose={() => setAdminSlideOpen(false)} navGroups={navGroups} />
 
                 {/* Page Content */}
-                <div className="flex-1 overflow-y-auto scroll-smooth relative bg-[#0A0F1C]">
+                <div className={`flex-1 overflow-y-auto scroll-smooth relative ${isDark ? "bg-[#0A0F1C]" : "bg-[#F9FAFB]"}`}>
                     {/* Theme Background Image - fixed to main content only */}
-                    <div className="fixed top-0 left-[520px] right-0 bottom-0 z-0 pointer-events-none opacity-40 overflow-hidden">
-                        <img
-                            key={bgImage || "/images/ai_hands_bg.png"}
-                            src={bgImage || "/images/ai_hands_bg.png"}
-                            alt="Dashboard Theme"
-                            onError={e => (e.currentTarget.style.display = "none")}
-                            className="w-full h-full object-cover filter brightness-[0.7] contrast-[1.2]"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-b from-[#0A0F1C] via-transparent to-[#0A0F1C]/90" />
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,transparent_0%,#0A0F1C_100%)] opacity-60" />
-                    </div>
+                    {isDark && (
+                        <div className="fixed top-0 left-[520px] right-0 bottom-0 z-0 pointer-events-none opacity-40 overflow-hidden">
+                            <img
+                                key={bgImage || "/images/ai_hands_bg.png"}
+                                src={bgImage || "/images/ai_hands_bg.png"}
+                                alt="Dashboard Theme"
+                                onError={e => (e.currentTarget.style.display = "none")}
+                                className="w-full h-full object-cover filter brightness-[0.7] contrast-[1.2]"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-b from-[#0A0F1C] via-transparent to-[#0A0F1C]/90" />
+                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,transparent_0%,#0A0F1C_100%)] opacity-60" />
+                        </div>
+                    )}
 
                     <div className="relative z-10 p-6 lg:p-10 max-w-[2200px] mx-auto">
                         <div className="mb-6 flex items-start justify-between gap-4">
                             <div className="animate-fade-in">
-                                <h1 className="text-3xl font-bold text-white drop-shadow-[0_0_8px_rgba(34,211,238,0.6)] tracking-wide">{title}</h1>
-                                {subtitle && <p className="text-base text-white/50 font-medium mt-0.5">{subtitle}</p>}
+                                <h1 className={`text-3xl font-bold tracking-wide ${isDark ? "text-white drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]" : "text-gray-900"}`}>{title}</h1>
+                                {subtitle && <p className={`text-base font-medium mt-0.5 ${isDark ? "text-white/50" : "text-gray-500"}`}>{subtitle}</p>}
                             </div>
                             {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
                         </div>

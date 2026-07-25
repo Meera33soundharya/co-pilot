@@ -1413,8 +1413,8 @@ export default function CitizenPortal() {
                     <img 
                         src={previewImage} 
                         alt="Preview" 
+                        onClick={(e) => e.stopPropagation()}
                         className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-200"
-                        onClick={(e) => e.stopPropagation()} // Prevent click from closing immediately
                     />
                 </div>
             )}

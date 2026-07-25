@@ -7,13 +7,14 @@ import {
     ChevronRight, Search, Filter, Shield,
     Star, RefreshCw, MessageCircle, ImageIcon,
     X, Zap, Mail, Phone, Info, Megaphone, Bell,
-    FileText, ThumbsUp, ThumbsDown, Check, User
+    FileText, ThumbsUp, ThumbsDown, Check, User, Mic
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import type { Status, Priority } from "@/store/complaintsStore";
 import { motion, AnimatePresence } from "framer-motion";
 import { resolveComplaintImage } from "@/services/fallbackImageService";
 import { AiImageWrapper } from "@/components/AiImageBadge";
+import { VoiceAssistantModal } from "@/components/VoiceAssistantModal";
 
 const STATUS_CFG: Record<Status, { color: string; bg: string; icon: any; step: number }> = {
     "New": { color: "text-gray-500", bg: "bg-gray-50", icon: Clock, step: 1 },
@@ -107,6 +108,7 @@ export default function CitizenModule() {
     const [search, setSearch] = useState("");
     const [selectedC, setSelectedC] = useState<string | null>(null);
     const [dismissedAnns, setDismissedAnns] = useState<string[]>([]);
+    const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
 
     useEffect(() => {
         if (location.hash === "#track-complaint") {
@@ -640,6 +642,22 @@ export default function CitizenModule() {
                     )}
                 </AnimatePresence>
             </div>
+
+            {/* Voice Assistant FAB */}
+            <button 
+                onClick={() => setIsVoiceModalOpen(true)}
+                className="fixed bottom-8 right-8 w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-2xl hover:bg-blue-700 hover:scale-105 transition-all z-50 group"
+                title="Voice Assistant"
+            >
+                <div className="absolute inset-0 bg-blue-400 rounded-full animate-ping opacity-20 group-hover:opacity-40"></div>
+                <Mic className="w-7 h-7 relative z-10" />
+            </button>
+
+            <VoiceAssistantModal 
+                isOpen={isVoiceModalOpen} 
+                onClose={() => setIsVoiceModalOpen(false)} 
+            />
+
         </DashboardLayout>
     );
 }

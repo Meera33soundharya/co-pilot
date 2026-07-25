@@ -266,9 +266,12 @@ export default function VillageVoicePortal() {
 
       setStatus("speaking");
       addAIMessage(text);
-      speak(text, () => setStatus("waiting"));
+      speak(text, () => {
+        setStatus("waiting");
+        startRecording();
+      });
     },
-    [lang, speak]
+    [lang, speak, startRecording]
   );
 
   const processStep = useCallback(
