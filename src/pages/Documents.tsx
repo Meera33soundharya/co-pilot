@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef } from "react";
-import { DashboardLayout } from "@/components/DashboardLayout";
+import DashboardLayout from "@/components/DashboardLayout";
 import { 
     FileText, FolderOpen, Download, Search, Upload, Clock, 
     CheckCircle2, Lock, Share2, AlertCircle, Shield, Grid, List, 

@@ -38,11 +38,14 @@ export interface AuditEntry {
 
 export interface Complaint {
     id: string;
+
     // Citizen info
     citizen: string;
     phone: string;
     ward: string;
     citizenId: string;
+
+    // Problem info
 
     // Problem info
     category: Category;

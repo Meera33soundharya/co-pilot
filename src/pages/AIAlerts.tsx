@@ -1,4 +1,4 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
+import DashboardLayout from "@/components/DashboardLayout";
 import { useState } from "react";
 import { AlertTriangle, Info, Zap, Filter, BellOff, Eye, ArrowRight, Activity, X, CheckCircle2 } from "lucide-react";
 

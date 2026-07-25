@@ -10,7 +10,7 @@ import {
   Sparkles,
   Volume2,
 } from "lucide-react";
-import { DashboardLayout } from "@/components/DashboardLayout";
+import DashboardLayout from "@/components/DashboardLayout";
 import { useComplaints } from "@/context/ComplaintsContext";
 import { analyzeComplaint, extractEntities } from "@/services/aiService";
 

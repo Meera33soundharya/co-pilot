@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { DashboardLayout } from "@/components/DashboardLayout";
+import DashboardLayout from "@/components/DashboardLayout";
 import { useComplaints } from "@/context/ComplaintsContext";
 import {
     Users, Building2, Search,

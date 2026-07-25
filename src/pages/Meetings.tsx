@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Calendar, Users, MapPin, Plus, Trash2, X } from "lucide-react";
-import { DashboardLayout } from "@/components/DashboardLayout";
+import DashboardLayout from "@/components/DashboardLayout";
 
 interface Meeting {
   id: number;

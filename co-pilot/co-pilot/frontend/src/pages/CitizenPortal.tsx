@@ -33,7 +33,7 @@ const LOCALITIES: Record<string, string[]> = {
 
 export default function CitizenPortal() {
     const { addComplaint, currentUser, logout } = useComplaints();
-    const { t, language } = useLanguage();
+    const { t, lang } = useLanguage();
     const navigate = useNavigate();
     const [step, setStep] = useState<Step>("details");
     const [ticketId, setTicketId] = useState("");
@@ -57,9 +57,9 @@ export default function CitizenPortal() {
     const [isTranslating, setIsTranslating] = useState(false);
 
     const autoTranslate = async (field: "issue" | "description" | "citizen", text: string) => {
-        if (language !== "ta" || !text.trim()) return;
-        if (/[\u0B80-\u0BFF]/.test(text)) return; 
-        
+        if (lang !== "ta" || !text.trim()) return;
+        if (/[\u0B80-\u0BFF]/.test(text)) return;
+
         setIsTranslating(true);
         try {
             const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ta&dt=t&q=${encodeURIComponent(text)}`;
@@ -93,18 +93,18 @@ export default function CitizenPortal() {
         e.preventDefault();
         setStep("submitting");
         setIsAnalyzing(true);
-        
+
         try {
             const analysis = await analyzeComplaint(form.issue, form.description);
             setAiResult(analysis);
-            
-            const id = await addComplaint({ 
-                ...form, 
+
+            const id = await addComplaint({
+                ...form,
                 category: analysis.category,
                 priority: analysis.priority,
                 dept: analysis.dept
             });
-            
+
             setTicketId(id);
             setStep("success");
         } catch (err) {
@@ -223,12 +223,12 @@ export default function CitizenPortal() {
                     <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-xl space-y-6">
                         <div className="space-y-2 relative">
                             <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">{t("portal_fullName")}</label>
-                            <input 
-                                value={form.citizen} 
-                                onChange={e => set("citizen", e.target.value)} 
+                            <input
+                                value={form.citizen}
+                                onChange={e => set("citizen", e.target.value)}
                                 onBlur={e => autoTranslate("citizen", e.target.value)}
-                                className="input-field w-full" 
-                                placeholder={t("portal_fullName")} 
+                                className="input-field w-full"
+                                placeholder={t("portal_fullName")}
                             />
                             {isTranslating && <Loader2 className="w-4 h-4 text-gray-400 absolute right-4 top-9 animate-spin" />}
                         </div>
@@ -246,30 +246,30 @@ export default function CitizenPortal() {
                             {isRecording ? t("portal_stopRecording") : t("portal_recordVoice")}
                         </button>
                         <div className="relative">
-                            <input 
-                                value={form.issue} 
-                                onChange={e => set("issue", e.target.value)} 
+                            <input
+                                value={form.issue}
+                                onChange={e => set("issue", e.target.value)}
                                 onBlur={e => autoTranslate("issue", e.target.value)}
-                                className="input-field w-full" 
-                                placeholder={t("portal_problemTitle_label")} 
+                                className="input-field w-full"
+                                placeholder={t("portal_problemTitle_label")}
                             />
                             {isTranslating && <Loader2 className="w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 animate-spin" />}
                         </div>
                         <div className="relative">
-                            <textarea 
-                                value={form.description} 
-                                onChange={e => set("description", e.target.value)} 
+                            <textarea
+                                value={form.description}
+                                onChange={e => set("description", e.target.value)}
                                 onBlur={e => autoTranslate("description", e.target.value)}
-                                rows={4} 
-                                className="input-field w-full" 
-                                placeholder={t("portal_descPlaceholder")} 
+                                rows={4}
+                                className="input-field w-full"
+                                placeholder={t("portal_descPlaceholder")}
                             />
                             {isTranslating && <Loader2 className="w-4 h-4 text-gray-400 absolute right-4 top-4 animate-spin" />}
                         </div>
                         <button onClick={() => fileInputRef.current?.click()} className="btn-secondary w-full">{t("portal_uploadDoc")}</button>
                         <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} />
                         <div className="flex gap-4">
-                            <button onClick={back} className="btn-secondary flex-1">{t("portal_back")}</button>
+                            <button onClick={back} className="btn-secondary flex-1">{t("back")}</button>
                             <button onClick={next} className="btn-primary flex-[2]">{t("portal_nextLocation")}</button>
                         </div>
                     </div>
@@ -280,8 +280,8 @@ export default function CitizenPortal() {
                         <input value={mapQuery} onChange={e => setMapQuery(e.target.value)} className="input-field" placeholder={t("portal_searchLocation")} />
                         <button onClick={detectLocation} className="btn-secondary w-full">{t("portal_detectLocation")}</button>
                         <div className="flex gap-4">
-                            <button onClick={back} className="btn-secondary flex-1">{t("portal_back")}</button>
-                            <button onClick={next} className="btn-primary flex-[2]">{t("portal_nextReview")}</button>
+                            <button onClick={back} className="btn-secondary flex-1">{t("back")}</button>
+                            <button onClick={next} className="btn-primary flex-[2]">{t("next")}</button>
                         </div>
                     </div>
                 )}
@@ -314,7 +314,7 @@ export default function CitizenPortal() {
             </main>
 
             <footer className="py-10 text-center border-t border-gray-100 bg-white/50">
-                <p className="text-[10px] font-black uppercase tracking-widest text-gray-300">{language === "ta" ? "மாவட்ட மின் ஆளுமை போர்ட்டல் · 2026" : "District e-Governance Portal · 2026"}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-gray-300">{lang === "ta" ? "மாவட்ட மின் ஆளுமை போர்ட்டல் · 2026" : "District e-Governance Portal · 2026"}</p>
             </footer>
 
             <style>{`

@@ -151,7 +151,7 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
                             <div className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white animate-pulse" />
                         </div>
                         <div>
-                            {role !== "citizen" ? (
+                            {(role as string) !== "citizen" ? (
                                 <>
                                     <span className="font-black text-lg text-white tracking-tight block leading-none">POLITICO AI</span>
                                     <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 leading-none block mt-1">OPERATIONS</span>
@@ -184,7 +184,7 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
                 </div>
 
                 {/* Live new complaints banner */}
-                {(role !== "citizen" || role === "officer") && newCount > 0 && (
+                {(role as string) !== "citizen" && newCount > 0 && (
                     <button
                         onClick={() => navigate("/grievances?status=Pending")}
                         className="mx-3 mt-2 flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-black uppercase tracking-wide text-red-700 bg-red-50 border border-red-100 hover:bg-red-100 transition-colors group"
@@ -252,7 +252,7 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
                             </div>
                             <div className="flex-1 text-left min-w-0">
                                 <p className={`text-sm font-black truncate ${role !== "citizen" ? "text-white" : "text-gray-900"}`}>{currentUser?.name ?? roleCfg.label}</p>
-                                <p className={`text-[11px] font-bold capitalize ${role !== "citizen" ? "text-gray-500" : "text-gray-400"}`}>{role !== "citizen" ? (currentUser?.email ?? "admin@politico.gov") : (lang === "ta" ? "குடிமகன்" : "Citizen")}</p>
+                                <p className={`text-[11px] font-bold capitalize ${(role as string) !== "citizen" ? "text-gray-500" : "text-gray-400"}`}>{(role as string) !== "citizen" ? (currentUser?.dept ?? roleCfg.label) : (lang === "ta" ? "குடிமகன்" : "Citizen")}</p>
                             </div>
                             <LogOut className={`w-3.5 h-3.5 transition-colors ${role !== "citizen" ? "text-gray-600 group-hover:text-red-400" : "text-gray-300 group-hover:text-[#B91C1C]"}`} />
                         </button>

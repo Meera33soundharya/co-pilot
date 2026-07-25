@@ -1,4 +1,4 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
+import DashboardLayout from "@/components/DashboardLayout";
 import { useState, useEffect } from "react";
 import { useComplaints } from "@/context/ComplaintsContext";
 import {

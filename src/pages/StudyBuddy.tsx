@@ -1,4 +1,4 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
+import DashboardLayout from "@/components/DashboardLayout";
 import {
     BookOpen, GraduationCap, Search, Sparkles, Star, History,
     FileText, ArrowRight, PlayCircle, Bookmark, AlertCircle,

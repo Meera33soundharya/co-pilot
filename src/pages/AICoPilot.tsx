@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Sparkles, FileText, Mic } from "lucide-react";
-import { DashboardLayout } from "@/components/DashboardLayout";
+import DashboardLayout from "@/components/DashboardLayout";
 
 export default function AICoPilot() {
   const [inputContext, setInputContext] = useState("");

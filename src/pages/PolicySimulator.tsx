@@ -1,4 +1,4 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
+import DashboardLayout from "@/components/DashboardLayout";
 import {
     Activity, Users, DollarSign,
     AlertTriangle, ShieldCheck, Zap, Layers,

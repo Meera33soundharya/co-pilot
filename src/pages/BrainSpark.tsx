@@ -1,4 +1,4 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
+import DashboardLayout from "@/components/DashboardLayout";
 import { Brain, Sparkles, Zap, Cpu, Network, Activity, Layers, ShieldCheck } from "lucide-react";
 
 export default function BrainSpark() {

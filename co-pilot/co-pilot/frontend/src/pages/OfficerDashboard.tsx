@@ -130,7 +130,7 @@ export default function OfficerDashboard() {
                                         </span>
                                         <div className="flex flex-col">
                                             <span className="text-gray-200 text-sm font-bold">{c.issue}</span>
-                                            <span className="text-gray-500 text-[10px] uppercase tracking-wider">{c.author} - {c.category}</span>
+                                            <span className="text-gray-500 text-[10px] uppercase tracking-wider">{c.citizen} - {c.category}</span>
                                         </div>
                                     </div>
                                     <div className="flex items-center">

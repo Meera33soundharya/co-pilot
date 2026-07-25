@@ -1,344 +1,322 @@
-import { useState, useMemo } from "react";
-import { DashboardLayout } from "@/components/DashboardLayout";
+import { useState, useRef, useEffect } from "react";
 import { useComplaints } from "@/context/ComplaintsContext";
-import { 
-    CheckCircle2, Clock, MapPin, Phone, 
-    Camera, Sparkles, Navigation,
-    Search, Loader2, Play, Activity,
-    AlertCircle, X
-} from "lucide-react";
-import type { Complaint, Status } from "@/store/complaintsStore";
+import { Mic, Loader2, CheckCircle2, ArrowLeft, X, Volume2, MicOff } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { analyzeComplaint } from "@/services/aiService";
+
+type ConversationStep = "idle" | "name" | "issue" | "location" | "confirm" | "success";
 
 export default function FieldPortal() {
-    const { complaints, currentUser, updateStatus } = useComplaints();
-    const [filterStatus, setFilterStatus] = useState<Status | "All">("All");
-    const [searchQuery, setSearchQuery] = useState("");
-    const [selectedTask, setSelectedTask] = useState<Complaint | null>(null);
-    const [isUpdating, setIsUpdating] = useState(false);
-    const [proofNote, setProofNote] = useState("");
-    const [proofImg, setProofImg] = useState<string | null>(null);
-    const [showAllDepts, setShowAllDepts] = useState(false);
+    const { addComplaint } = useComplaints();
+    const navigate = useNavigate();
 
-    // Filter complaints for this officer and department
-    const myTasks = useMemo(() => {
-        return complaints.filter(c => {
-            // Show if: admin, showAllDepts toggled, dept matches, or complaint has no dept yet (newly filed, Pending)
-            const matchesRole = currentUser?.role === "admin" || showAllDepts 
-                || c.dept === currentUser?.dept
-                || (!c.dept || c.dept === ""); // show unassigned/pending complaints to all officers
-            const matchesStatus = filterStatus === "All" || c.status === filterStatus;
-            const matchesSearch = c.issue.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                                 c.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                 c.ward.toLowerCase().includes(searchQuery.toLowerCase());
-            return matchesRole && matchesStatus && matchesSearch;
-        });
-    }, [complaints, currentUser, filterStatus, searchQuery, showAllDepts]);
+    const [step, setStep] = useState<ConversationStep>("idle");
+    const [isRecording, setIsRecording] = useState(false);
+    const [isSpeaking, setIsSpeaking] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
+    
+    // Conversation data
+    const [citizenName, setCitizenName] = useState("");
+    const [issueText, setIssueText] = useState("");
+    const [locationText, setLocationText] = useState("");
+    const [ticketId, setTicketId] = useState("");
+    const [aiAnalysis, setAiAnalysis] = useState<any>(null);
 
-    const handleStatusUpdate = async (id: string, nextStatus: Status, note: string) => {
-        setIsUpdating(true);
-        // Simulate network delay
-        await new Promise(r => setTimeout(r, 1500));
-        updateStatus(id, nextStatus, note, proofImg || undefined);
-        setIsUpdating(false);
-        setSelectedTask(null);
-        setProofNote("");
-        setProofImg(null);
+    const recognitionRef = useRef<any>(null);
+    const synth = window.speechSynthesis;
+
+    // We use a ref to track the current expected input to avoid stale closures in recognition
+    const currentStepRef = useRef<ConversationStep>("idle");
+    useEffect(() => { currentStepRef.current = step; }, [step]);
+
+    const speak = (text: string, onEnd?: () => void) => {
+        if (synth.speaking) synth.cancel();
+        
+        setIsSpeaking(true);
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = "ta-IN"; // Tamil
+        utterance.rate = 0.9;
+        
+        utterance.onend = () => {
+            setIsSpeaking(false);
+            if (onEnd) onEnd();
+        };
+        
+        synth.speak(utterance);
     };
 
-    const handleCapture = () => {
-        // Demo: select a random resolution image
-        const demoImgs = [
-            "https://images.unsplash.com/photo-1541888946425-d81bb19480c5?auto=format&fit=crop&q=80&w=800",
-            "https://images.unsplash.com/photo-1581094288338-2314dddb7bc3?auto=format&fit=crop&q=80&w=800",
-            "https://images.unsplash.com/photo-1590060417631-017606e30907?auto=format&fit=crop&q=80&w=800"
-        ];
-        setProofImg(demoImgs[Math.floor(Math.random() * demoImgs.length)]);
+    const startListening = () => {
+        try {
+            const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert("Voice recognition is not supported in this browser.");
+                return;
+            }
+
+            const recognition = new SpeechRecognition();
+            recognition.lang = "ta-IN";
+            recognition.continuous = false; // We want it to stop when they pause naturally
+            recognition.interimResults = false;
+
+            recognition.onstart = () => setIsRecording(true);
+            
+            recognition.onresult = (event: any) => {
+                const transcript = event.results[0][0].transcript;
+                handleVoiceInput(transcript);
+            };
+
+            recognition.onerror = (event: any) => {
+                console.error("Speech recognition error", event.error);
+                setIsRecording(false);
+                // Restart listening on error if we are expecting input
+                if (currentStepRef.current !== "idle" && currentStepRef.current !== "success" && currentStepRef.current !== "confirm") {
+                    setTimeout(() => startListening(), 1000);
+                }
+            };
+            
+            recognition.onend = () => {
+                setIsRecording(false);
+            };
+
+            recognitionRef.current = recognition;
+            recognition.start();
+        } catch (error) {
+            console.error("Error starting recognition", error);
+        }
+    };
+
+    const stopListening = () => {
+        if (recognitionRef.current && isRecording) {
+            recognitionRef.current.stop();
+            setIsRecording(false);
+        }
+        if (synth.speaking) synth.cancel();
+    };
+
+    const handleVoiceInput = async (text: string) => {
+        const current = currentStepRef.current;
+        
+        if (current === "name") {
+            setCitizenName(text);
+            setStep("issue");
+            speak(`நன்றி ${text}. உங்கள் புகாரை சுருக்கமாக கூறவும்.`, () => startListening());
+        } 
+        else if (current === "issue") {
+            setIssueText(text);
+            setStep("location");
+            speak("நன்றி. புகார் பதிவு செய்ய வேண்டிய இடத்தை கூறவும்.", () => startListening());
+        }
+        else if (current === "location") {
+            setLocationText(text);
+            setIsProcessing(true);
+            stopListening();
+            speak("உங்கள் புகார் பரிசீலிக்கப்படுகிறது. தயவுசெய்து காத்திருக்கவும்.");
+            
+            try {
+                // Analyze using AI
+                const fullText = `Issue: ${issueText}. Location: ${text}.`;
+                const analysis = await analyzeComplaint("Field Portal Voice", fullText);
+                setAiAnalysis(analysis);
+                
+                setIsProcessing(false);
+                setStep("confirm");
+                speak(`உங்கள் புகார் ${analysis.category} துறையின் கீழ் பதிவு செய்ய தயாராக உள்ளது. உறுதிப்படுத்த ஆம் என்று கூறவும்.`, () => startListening());
+            } catch (err) {
+                console.error(err);
+                setIsProcessing(false);
+                setStep("confirm");
+                speak("உங்கள் புகார் தயாராக உள்ளது. உறுதிப்படுத்த ஆம் என்று கூறவும்.", () => startListening());
+            }
+        }
+        else if (current === "confirm") {
+            if (text.toLowerCase().includes("ஆம்") || text.toLowerCase().includes("yes") || text.toLowerCase().includes("s") || text.toLowerCase().includes("ok") || text.toLowerCase().includes("சரி")) {
+                finalizeComplaint();
+            } else {
+                speak("மன்னிக்கவும், மீண்டும் கூறவும். உறுதிப்படுத்த ஆம் என்று கூறவும்.", () => startListening());
+            }
+        }
+    };
+
+    const finalizeComplaint = async () => {
+        setIsProcessing(true);
+        try {
+            const id = await addComplaint({
+                citizen: citizenName || "Unknown Citizen",
+                phone: "Not Provided",
+                ward: "Ward 01",
+                priority: aiAnalysis?.priority || "Medium",
+                issue: aiAnalysis?.category || "Voice Complaint",
+                description: issueText,
+                location: locationText || "Unknown Area",
+                coords: { lat: 12.9716, lng: 77.5946 },
+                evidence: [],
+                notifPref: "None",
+                category: aiAnalysis?.category || "Infrastructure",
+                dept: aiAnalysis?.dept || "General"
+            });
+            
+            setTicketId(id);
+            setStep("success");
+            setIsProcessing(false);
+            speak(`உங்கள் புகார் வெற்றிகரமாக பதிவு செய்யப்பட்டது. உங்கள் புகார் எண் ${id.replace(/\D/g, '').split('').join(' ')}`);
+        } catch (err) {
+            console.error(err);
+            setIsProcessing(false);
+        }
+    };
+
+    const startConversation = () => {
+        setStep("name");
+        speak("வணக்கம். உங்கள் பெயரை கூறவும்.", () => startListening());
+    };
+
+    const exitFlow = () => {
+        stopListening();
+        navigate("/");
     };
 
     return (
-        <DashboardLayout 
-            title="Field Officer Portal" 
-            subtitle={`Managing tasks for ${currentUser?.dept || "General Operations"}`}
-        >
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="min-h-screen bg-gradient-to-b from-[#0F172A] to-[#1E293B] flex flex-col items-center justify-center p-6 relative overflow-hidden" style={{ fontFamily: "'Inter', sans-serif" }}>
+            
+            {/* Ambient Background Effects */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-[120px] mix-blend-screen" />
+                <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-green-500/20 rounded-full blur-[120px] mix-blend-screen" />
+            </div>
+
+            <button 
+                onClick={exitFlow} 
+                className="absolute top-6 left-6 flex items-center gap-2 text-sm font-black text-gray-400 hover:text-white transition-colors bg-white/5 border border-white/10 px-5 py-2.5 rounded-2xl shadow-xl hover:bg-white/10 z-50 backdrop-blur-xl"
+            >
+                <ArrowLeft className="w-4 h-4" /> வெளியேறு (Exit)
+            </button>
+
+            <div className="text-center w-full max-w-2xl z-10 animate-in fade-in zoom-in duration-700 ease-out">
                 
-                {/* ── Left Side: Task List ── */}
-                <div className="lg:col-span-2 space-y-6">
-                    
-                    <div className="bg-white/10 backdrop-blur-md border border-white/10 rounded-3xl p-4 flex flex-col md:flex-row gap-4 items-center">
-                        <div className="relative flex-1">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                            <input 
-                                type="text"
-                                placeholder="Search tasks by ID or location..."
-                                value={searchQuery}
-                                onChange={e => setSearchQuery(e.target.value)}
-                                className="w-full pl-11 pr-4 py-3 bg-white/5 border border-transparent rounded-2xl text-sm font-bold text-white focus:bg-white/10 focus:border-white/20 focus:outline-none transition-all"
-                            />
+                {step === "idle" && (
+                    <div className="space-y-12">
+                        <div className="space-y-4">
+                            <div className="w-20 h-20 bg-gradient-to-tr from-blue-500 to-emerald-400 rounded-3xl mx-auto flex items-center justify-center shadow-2xl shadow-blue-500/20 mb-8 border border-white/20 relative group overflow-hidden">
+                                <div className="absolute inset-0 bg-white/20 group-hover:translate-y-full transition-transform duration-500" />
+                                <Mic className="w-10 h-10 text-white" />
+                            </div>
+                            <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight leading-tight">
+                                FieldPortal <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">குரல் பதிவு அமைப்பு</span>
+                            </h1>
+                            <p className="text-lg text-gray-400 font-medium max-w-md mx-auto">
+                                Type-free complaint registration. Completely Voice-Driven.
+                            </p>
+                        </div>
+
+                        <button 
+                            onClick={startConversation}
+                            className="relative group w-full max-w-sm mx-auto flex flex-col items-center justify-center p-12 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-500/50 rounded-[3rem] transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/20 hover:-translate-y-2 overflow-hidden"
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-b from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                            <div className="w-24 h-24 bg-gradient-to-tr from-blue-600 to-emerald-500 rounded-full flex items-center justify-center mb-6 shadow-2xl shadow-blue-500/40 relative z-10 group-hover:scale-110 transition-transform duration-500">
+                                <div className="absolute inset-0 rounded-full border-2 border-white/20 animate-ping opacity-50" style={{ animationDuration: '3s' }} />
+                                <Mic className="w-10 h-10 text-white" />
+                            </div>
+                            <h2 className="text-2xl font-black text-white relative z-10 tracking-tight">தொடங்க அழுத்தவும்</h2>
+                            <p className="text-sm text-gray-400 mt-2 relative z-10 font-bold uppercase tracking-widest">(Tap to Start)</p>
+                        </button>
+                    </div>
+                )}
+
+                {(step !== "idle" && step !== "success") && (
+                    <div className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[3rem] p-10 md:p-14 shadow-2xl relative overflow-hidden">
+                        
+                        {/* Audio visualizer effect */}
+                        {(isSpeaking || isRecording) && (
+                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-50 animate-pulse" />
+                        )}
+
+                        <div className="flex flex-col items-center justify-center space-y-10 relative z-10">
+                            
+                            <div className="text-center space-y-4">
+                                <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight">
+                                    {step === "name" && "உங்கள் பெயரை கூறவும்"}
+                                    {step === "issue" && "உங்கள் புகாரை கூறவும்"}
+                                    {step === "location" && "இடத்தை கூறவும்"}
+                                    {step === "confirm" && "உறுதிப்படுத்த ஆம் என்று கூறவும்"}
+                                </h2>
+                                <p className="text-blue-400/80 font-bold tracking-widest uppercase text-sm">
+                                    {step === "name" && "Listening for Name..."}
+                                    {step === "issue" && "Listening for Complaint..."}
+                                    {step === "location" && "Listening for Location..."}
+                                    {step === "confirm" && "Waiting for Confirmation..."}
+                                </p>
+                            </div>
+
+                            <div className="relative">
+                                {isSpeaking ? (
+                                    <div className="w-32 h-32 bg-blue-500/20 rounded-full flex items-center justify-center border-4 border-blue-500/30 animate-pulse">
+                                        <Volume2 className="w-12 h-12 text-blue-400" />
+                                    </div>
+                                ) : isProcessing ? (
+                                    <div className="w-32 h-32 bg-amber-500/20 rounded-full flex items-center justify-center border-4 border-amber-500/30">
+                                        <Loader2 className="w-12 h-12 text-amber-400 animate-spin" />
+                                    </div>
+                                ) : isRecording ? (
+                                    <div className="relative">
+                                        <div className="absolute inset-0 bg-red-500/30 rounded-full animate-ping" />
+                                        <div className="w-32 h-32 bg-red-500/20 rounded-full flex items-center justify-center border-4 border-red-500/50 relative z-10">
+                                            <Mic className="w-12 h-12 text-red-500 animate-pulse" />
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="w-32 h-32 bg-gray-500/10 rounded-full flex items-center justify-center border-4 border-gray-500/20 cursor-pointer hover:bg-gray-500/20 transition-colors" onClick={() => startListening()}>
+                                        <MicOff className="w-12 h-12 text-gray-500" />
+                                    </div>
+                                )}
+                            </div>
+                            
+                            <div className="w-full bg-black/20 rounded-2xl p-6 text-left space-y-4 border border-white/5">
+                                <div className={`flex justify-between items-center ${citizenName ? "text-white" : "text-gray-600"}`}>
+                                    <span className="text-sm font-bold uppercase tracking-widest">பெயர் (Name):</span>
+                                    <span className="text-lg font-black truncate max-w-[200px]">{citizenName || "---"}</span>
+                                </div>
+                                <div className={`flex justify-between items-center ${issueText ? "text-white" : "text-gray-600"}`}>
+                                    <span className="text-sm font-bold uppercase tracking-widest">புகார் (Issue):</span>
+                                    <span className="text-lg font-black truncate max-w-[200px]">{issueText || "---"}</span>
+                                </div>
+                                <div className={`flex justify-between items-center ${locationText ? "text-white" : "text-gray-600"}`}>
+                                    <span className="text-sm font-bold uppercase tracking-widest">இடம் (Location):</span>
+                                    <span className="text-lg font-black truncate max-w-[200px]">{locationText || "---"}</span>
+                                </div>
+                                {aiAnalysis && (
+                                    <div className="mt-4 pt-4 border-t border-white/10 flex flex-wrap gap-2 justify-center">
+                                        <span className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-lg text-xs font-black uppercase tracking-widest">{aiAnalysis.category}</span>
+                                        <span className="px-3 py-1 bg-amber-500/20 text-amber-300 rounded-lg text-xs font-black uppercase tracking-widest">{aiAnalysis.priority} Priority</span>
+                                    </div>
+                                )}
+                            </div>
+
+                        </div>
+                    </div>
+                )}
+
+                {step === "success" && (
+                    <div className="bg-gradient-to-b from-emerald-500/20 to-transparent border border-emerald-500/30 rounded-[3rem] p-12 shadow-2xl relative overflow-hidden backdrop-blur-3xl animate-in zoom-in duration-500">
+                        <div className="w-24 h-24 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-xl shadow-emerald-500/40 relative">
+                            <div className="absolute inset-0 bg-emerald-500 rounded-full animate-ping opacity-50" />
+                            <CheckCircle2 className="w-12 h-12 text-white relative z-10" />
+                        </div>
+                        <h2 className="text-3xl md:text-4xl font-black text-white mb-4 tracking-tight">புகார் பதிவு செய்யப்பட்டது!</h2>
+                        <p className="text-emerald-400 font-medium mb-10 text-lg">Your complaint has been successfully registered.</p>
+                        <div className="bg-black/20 p-6 rounded-3xl border border-white/10 backdrop-blur-md mb-10">
+                            <p className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-2">புகார் எண் (Ticket ID)</p>
+                            <p className="text-5xl font-mono font-black text-white tracking-widest">{ticketId}</p>
                         </div>
                         <button 
-                            onClick={() => setShowAllDepts(!showAllDepts)}
-                            className={`flex items-center gap-3 px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border shrink-0 shadow-sm ${
-                                showAllDepts 
-                                    ? "bg-amber-500 text-white border-amber-400 shadow-xl shadow-amber-900/40 scale-105" 
-                                    : "bg-white/5 text-white/40 border-white/10 hover:bg-white/10 hover:border-white/20"
-                            }`}
+                            onClick={exitFlow}
+                            className="btn-primary w-full max-w-xs mx-auto py-4 text-sm tracking-widest font-black uppercase bg-emerald-600 hover:bg-emerald-500 border-none rounded-2xl shadow-xl shadow-emerald-900/50"
                         >
-                            <Activity className={`w-3.5 h-3.5 ${showAllDepts ? "animate-pulse" : ""}`} />
-                            {showAllDepts ? "Global Intelligence" : "Dept Console"}
+                            முகப்புக்குச் செல் (Home)
                         </button>
-                        
-                        <div className="flex gap-2.5 flex-wrap">
-                            {(["Pending", "Accepted", "Assigned", "In Progress", "Resolved", "Closed", "All"] as const).map(s => (
-                                <button
-                                    key={s}
-                                    onClick={() => setFilterStatus(s)}
-                                    className={`px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border duration-300 ${
-                                        filterStatus === s 
-                                            ? "bg-[#B91C1C] text-white border-[#B91C1C] shadow-2xl shadow-red-900/50 scale-105" 
-                                            : "bg-white/5 text-white/30 border-white/5 hover:bg-white/10 hover:text-white/60 hover:border-white/10"
-                                    }`}
-                                >
-                                    {s} 
-                                    {s === "Assigned" && complaints.filter(c => c.status === "Assigned" && (currentUser?.role === "admin" || showAllDepts || c.dept === currentUser?.dept)).length > 0 && (
-                                        <span className="ml-2 w-1.5 h-1.5 rounded-full bg-white animate-ping inline-block" />
-                                    )}
-                                </button>
-                            ))}
-                        </div>
                     </div>
-
-                    {/* Tasks */}
-                    <div className="space-y-4">
-                        {myTasks.length === 0 ? (
-                            <div className="bg-white/5 border border-dashed border-white/10 rounded-[2.5rem] p-20 text-center">
-                                <Clock className="w-12 h-12 text-white/10 mx-auto mb-4" />
-                                <p className="text-white/40 font-black uppercase tracking-[0.2em]">No tasks found</p>
-                            </div>
-                        ) : (
-                            myTasks.map(task => (
-                                    <div 
-                                        key={task.id}
-                                        className={`bg-white/5 border transition-all cursor-pointer rounded-[2.5rem] p-8 hover:translate-x-1 group/card ${
-                                            selectedTask?.id === task.id 
-                                                ? "border-[#B91C1C] bg-white/10 shadow-2xl shadow-red-900/20" 
-                                                : "border-white/10 hover:bg-white/10"
-                                        }`}
-                                    >
-                                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-                                            <div className="flex-1 min-w-0" onClick={() => setSelectedTask(task)}>
-                                                <div className="flex items-center gap-3 mb-3 flex-wrap">
-                                                    <span className="font-mono text-[10px] font-black text-[#B91C1C] px-2.5 py-1 bg-red-900/30 rounded-lg border border-red-900/40 tracking-widest">
-                                                        {task.id}
-                                                    </span>
-                                                    <span className={`text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-[0.2em] ${
-                                                        task.status === "Pending" ? "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20" :
-                                                        task.status === "Accepted" ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20" :
-                                                        task.status === "Rejected" ? "bg-red-500/10 text-red-400 border border-red-500/20" :
-                                                        task.status === "Assigned" ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" :
-                                                        task.status === "In Progress" ? "bg-amber-500/10 text-amber-500 border border-amber-500/20" :
-                                                        task.status === "Resolved" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" :
-                                                        "bg-gray-500/10 text-gray-400 border border-gray-500/20"
-                                                    }`}>
-                                                        {task.status}
-                                                    </span>
-                                                    <div className="flex items-center gap-1.5 bg-emerald-500/5 px-2.5 py-1.5 rounded-lg border border-emerald-500/10">
-                                                        <div className="w-1 h-1 rounded-full bg-emerald-500 animate-ping" />
-                                                        <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Live</span>
-                                                    </div>
-                                                </div>
-                                                <h3 className="text-2xl font-black text-white mb-3 tracking-tight group-hover/card:text-[#B91C1C] transition-colors">{task.issue}</h3>
-                                                <div className="flex items-center gap-6 text-white/40 text-[10px] font-black uppercase tracking-widest">
-                                                    <div className="flex items-center gap-2">
-                                                        <MapPin className="w-4 h-4 text-[#B91C1C]" /> {task.ward}
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <Clock className="w-4 h-4 text-white/20" /> {task.time}
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Quick Action Side Buttons */}
-                                            <div className="flex items-center gap-3 shrink-0">
-                                                {task.status === "Assigned" && !selectedTask && (
-                                                    <span className="h-14 px-8 rounded-2xl bg-blue-600/20 text-blue-300 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 border border-blue-500/20">
-                                                        <Play className="w-4 h-4 rotate-90" /> Awaiting Start
-                                                    </span>
-                                                )}
-                                                {task.status === "Assigned" && (
-                                                    <button 
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleStatusUpdate(task.id, "In Progress", "Strategic deployment started.");
-                                                        }}
-                                                        className="h-14 px-8 rounded-2xl bg-amber-500 hover:bg-amber-400 text-white text-[10px] font-black uppercase tracking-widest shadow-xl shadow-amber-900/20 transition-all active:scale-95 flex items-center gap-2"
-                                                    >
-                                                        <Play className="w-4 h-4" /> Start
-                                                    </button>
-                                                )}
-                                                {task.status === "In Progress" && (
-                                                    <button 
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setSelectedTask(task);
-                                                            // Scrolling to proof section logic could go here
-                                                        }}
-                                                        className="h-14 px-8 rounded-2xl bg-[#B91C1C] hover:bg-red-600 text-white text-[10px] font-black uppercase tracking-widest shadow-xl shadow-red-900/30 transition-all active:scale-95 flex items-center gap-2"
-                                                    >
-                                                        <CheckCircle2 className="w-4 h-4" /> Resolve
-                                                    </button>
-                                                )}
-                                                <button 
-                                                    onClick={(e) => { e.stopPropagation(); setSelectedTask(task); }}
-                                                    className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all text-white/20 hover:text-[#B91C1C]"
-                                                >
-                                                    <Navigation className="w-6 h-6" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                            ))
-                        )}
-                    </div>
-                </div>
-
-                {/* ── Right Side: Task Execution ── */}
-                <div className="lg:col-span-1">
-                    <div className="sticky top-8 space-y-6">
-                        {selectedTask ? (
-                            <div className="bg-white rounded-[2.5rem] shadow-2xl overflow-hidden animate-in slide-in-from-right-8 duration-500">
-                                <div className="bg-gray-900 p-8 text-white relative">
-                                    <button 
-                                        onClick={() => setSelectedTask(null)}
-                                        className="absolute top-6 right-6 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-all"
-                                    >
-                                        <X className="w-4 h-4" />
-                                    </button>
-                                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 mb-2">Resolution Console</p>
-                                    <h2 className="text-2xl font-black leading-tight mb-4">{selectedTask.issue}</h2>
-                                    <div className="flex items-center gap-4">
-                                        <a href={`tel:${selectedTask.phone}`} className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-xl text-xs font-black border border-white/10 hover:bg-white/20 transition-all">
-                                            <Phone className="w-3.5 h-3.5" /> Call Citizen
-                                        </a>
-                                        <button className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-xl text-xs font-black border border-white/10 hover:bg-white/20 transition-all">
-                                            <Navigation className="w-3.5 h-3.5" /> Navigate
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div className="p-8 space-y-8">
-                                    {/* AI Insight */}
-                                    <div className="bg-amber-50 border border-amber-100 rounded-3xl p-5 flex gap-4">
-                                        <div className="w-10 h-10 rounded-2xl bg-amber-100 flex items-center justify-center shrink-0">
-                                            <Sparkles className="w-5 h-5 text-amber-600" />
-                                        </div>
-                                        <div>
-                                            <p className="text-xs font-black uppercase tracking-widest text-amber-700 mb-1">Field Intelligence</p>
-                                            <p className="text-sm font-bold text-amber-800 leading-relaxed">Based on sensors, this issue might require extra insulation due to moisture.</p>
-                                        </div>
-                                    </div>
-
-                                    {/* Action Form */}
-                                    <div className="space-y-6">
-                                        <div>
-                                            <label className="text-xs font-black uppercase tracking-widest text-gray-400 mb-3 block">1. Capture Proof (Before/After)</label>
-                                            {proofImg ? (
-                                                <div className="relative aspect-video rounded-3xl overflow-hidden group">
-                                                    <img src={proofImg} alt="Proof" className="w-full h-full object-cover" />
-                                                    <button 
-                                                        onClick={() => setProofImg(null)}
-                                                        className="absolute top-4 right-4 p-2 bg-black/50 text-white rounded-full hover:bg-red-600 transition-all opacity-0 group-hover:opacity-100"
-                                                    >
-                                                        <X className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            ) : (
-                                                <button 
-                                                    onClick={handleCapture}
-                                                    className="w-full aspect-video border-2 border-dashed border-gray-100 rounded-3xl flex flex-col items-center justify-center gap-3 hover:bg-gray-50 hover:border-[#B91C1C]/20 transition-all group"
-                                                >
-                                                    <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                                        <Camera className="w-6 h-6 text-gray-300 group-hover:text-[#B91C1C]" />
-                                                    </div>
-                                                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Open Field Camera</p>
-                                                </button>
-                                            )}
-                                        </div>
-
-                                        <div>
-                                            <label className="text-xs font-black uppercase tracking-widest text-gray-400 mb-3 block">2. Resolution Summary</label>
-                                            <textarea 
-                                                rows={4}
-                                                value={proofNote}
-                                                onChange={e => setProofNote(e.target.value)}
-                                                placeholder="What action was taken? (e.g. Pipe welded and pressure tested)"
-                                                className="w-full px-5 py-4 bg-gray-50 border border-transparent rounded-3xl text-sm font-bold focus:bg-white focus:border-red-200 outline-none transition-all resize-none shadow-inner"
-                                            />
-                                        </div>
-
-                                        <div className="flex gap-4">
-
-                                            {selectedTask.status === "Assigned" && (
-                                                <button 
-                                                    onClick={() => handleStatusUpdate(selectedTask.id, "In Progress", "Officer started work on-site")}
-                                                    disabled={isUpdating}
-                                                    className="flex-1 flex items-center justify-center gap-3 py-4 rounded-3xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-black uppercase tracking-widest shadow-xl shadow-amber-200 transition-all active:scale-95 disabled:opacity-50"
-                                                >
-                                                    {isUpdating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5" />}
-                                                    Start Work
-                                                </button>
-                                            )}
-                                            {(selectedTask.status === "Assigned" || selectedTask.status === "In Progress") && (
-                                                <button 
-                                                    onClick={() => handleStatusUpdate(selectedTask.id, "Resolved", proofNote || "Resolved on-site by officer")}
-                                                    disabled={isUpdating || !proofImg}
-                                                    className="flex-[2] flex items-center justify-center gap-3 py-4 rounded-3xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-widest shadow-xl shadow-emerald-200 transition-all active:scale-95 disabled:opacity-50"
-                                                >
-                                                    {isUpdating ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
-                                                    Mark Resolved
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="bg-white/5 border border-dashed border-white/10 rounded-[3rem] p-12 text-center">
-                                <AlertCircle className="w-12 h-12 text-white/10 mx-auto mb-4" />
-                                <h3 className="text-lg font-black text-white mb-2 uppercase tracking-wide">No Selection</h3>
-                                <p className="text-xs text-white/40 leading-relaxed uppercase font-bold tracking-widest">Select a task from the list to start field operations.</p>
-                            </div>
-                        )}
-
-                        {/* Summary Card */}
-                        <div className="bg-gradient-to-br from-[#B91C1C]/40 to-red-900/40 backdrop-blur-md border border-red-500/20 rounded-[3rem] p-8 text-white relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-red-500/20 transition-all" />
-                            <div className="flex items-center justify-between mb-8 relative">
-                                <div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-1">Quick Insight</p>
-                                    <p className="text-3xl font-black tabular-nums">
-                                        {complaints.filter(c => c.status === "Assigned" && (currentUser?.role === "admin" || showAllDepts || c.dept === currentUser?.dept)).length}
-                                        <span className="text-sm font-bold opacity-50 ml-2">Assigned</span>
-                                    </p>
-                                </div>
-                                <div className="w-14 h-14 rounded-3xl bg-white/10 flex items-center justify-center border border-white/20">
-                                    <Activity className="w-8 h-8 text-white animate-pulse" />
-                                </div>
-                            </div>
-                            <div className="space-y-4 relative">
-                                <div className="flex justify-between items-end">
-                                    <p className="text-[9px] font-black uppercase tracking-widest opacity-50">Response Readiness</p>
-                                    <p className="text-[9px] font-black uppercase tracking-widest">Active</p>
-                                </div>
-                                <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-                                    <div className="h-full bg-white w-[100%] rounded-full shadow-[0_0_12px_rgba(255,255,255,0.4)]" />
-                                </div>
-                                <p className="text-[10px] text-white/60 font-medium leading-relaxed italic">"Officers are notified instantly when a citizen files a report online."</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                )}
             </div>
-        </DashboardLayout>
+        </div>
     );
 }

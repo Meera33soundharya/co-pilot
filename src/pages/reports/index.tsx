@@ -1,4 +1,4 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
+import DashboardLayout from "@/components/DashboardLayout";
 import { Link } from "react-router-dom";
 import { 
   BarChart3, Building2, Brain, Users, 

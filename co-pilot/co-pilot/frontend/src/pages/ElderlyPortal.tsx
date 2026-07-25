@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 
 export default function ElderlyPortal() {
     const { addComplaint } = useComplaints();
-    const { language } = useLanguage();
+    const { lang } = useLanguage();
     const navigate = useNavigate();
     
     const [isRecording, setIsRecording] = useState(false);
@@ -24,7 +24,7 @@ export default function ElderlyPortal() {
         try {
             const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
             if (!SpeechRecognition) {
-                alert(language === "ta"
+                alert(lang === "ta"
                     ? "இந்த உலாவியில் குரல் அங்கீகாரம் ஆதரிக்கப்படவில்லை. Google Chrome ஐ பயன்படுத்தவும்."
                     : "Voice recognition is not supported in this browser. Please use Google Chrome.");
                 return;
@@ -34,7 +34,7 @@ export default function ElderlyPortal() {
             setTranscript("");
 
             const recognition = new SpeechRecognition();
-            recognition.lang = language === "ta" ? "ta-IN" : "en-IN";
+            recognition.lang = lang === "ta" ? "ta-IN" : "en-IN";
             recognition.continuous = true;
             recognition.interimResults = true;
             
@@ -83,11 +83,10 @@ export default function ElderlyPortal() {
                         citizen: "Voice User",
                         phone: "Not Provided",
                         ward: "Ward 01",
-                        area: "Unknown Area",
                         priority: analysis.priority || "Medium",
                         issue: analysis.category || "Voice Complaint",
                         description: finalTranscript,
-                        location: "From Voice Portal",
+                        location: "Unknown Area",
                         coords: { lat: 12.9716, lng: 77.5946 },
                         evidence: [],
                         notifPref: "None",
@@ -104,11 +103,10 @@ export default function ElderlyPortal() {
                         citizen: "Voice User",
                         phone: "Not Provided",
                         ward: "Ward 01",
-                        area: "Unknown Area",
                         priority: "Medium",
                         issue: "Voice Complaint",
                         description: finalTranscript,
-                        location: "From Voice Portal",
+                        location: "Unknown Area",
                         coords: { lat: 12.9716, lng: 77.5946 },
                         evidence: [],
                         notifPref: "None",
@@ -122,7 +120,7 @@ export default function ElderlyPortal() {
         }
     };
 
-    const isTamil = language === "ta";
+    const isTamil = lang === "ta";
 
     return (
         <div className="min-h-screen bg-[#F5F0E8] flex flex-col items-center justify-center p-6 relative overflow-hidden" style={{ fontFamily: "'Inter', sans-serif" }}>

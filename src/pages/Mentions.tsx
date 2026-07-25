@@ -1,5 +1,5 @@
 import React from "react";
-import { DashboardLayout } from "@/components/DashboardLayout";
+import DashboardLayout from "@/components/DashboardLayout";
 import { Twitter, Facebook, ExternalLink, ThumbsUp, ThumbsDown, Minus, TrendingUp, TrendingDown, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";

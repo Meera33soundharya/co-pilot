@@ -3,7 +3,7 @@ import {
   Mic, Volume2, Play, Square, Download, Settings,
   Loader2, Sparkles, AlertCircle, Clock, Heart, Info, Star, CheckCircle2
 } from "lucide-react";
-import { DashboardLayout } from "@/components/DashboardLayout";
+import DashboardLayout from "@/components/DashboardLayout";
 
 /* ─── Language Config ─────────────────────────────────────── */
 const LANGUAGES = [

@@ -1,4 +1,4 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
+import DashboardLayout from "@/components/DashboardLayout";
 import { 
     BookOpen, Shield, Zap, 
     MessageSquare, CheckCircle2, 

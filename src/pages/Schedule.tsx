@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Clock, MapPin, Plus, Trash2, Calendar, X, ChevronLeft, ChevronRight } from "lucide-react";
-import { DashboardLayout } from "@/components/DashboardLayout";
+import DashboardLayout from "@/components/DashboardLayout";
 
 interface ScheduleEvent {
   id: number;

@@ -1,4 +1,4 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
+import DashboardLayout from "@/components/DashboardLayout";
 import {
     Brain, ShieldCheck, Cpu,
     Network, CheckCircle2, ChevronRight,

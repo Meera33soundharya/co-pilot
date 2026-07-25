@@ -1,4 +1,4 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
+import DashboardLayout from "@/components/DashboardLayout";
 import { Gamepad2, Trophy, Clock, Zap, Star, RefreshCw, ArrowRight, Brain, AlertCircle, CheckCircle2 } from "lucide-react";
 import { useState, useEffect } from "react";
 

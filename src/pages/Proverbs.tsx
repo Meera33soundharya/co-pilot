@@ -1,4 +1,4 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
+import DashboardLayout from "@/components/DashboardLayout";
 import { Quote, Sparkles, MessageSquare, History, Search, RefreshCw, Share2, Heart, Languages, Lightbulb } from "lucide-react";
 import { useState } from "react";
 
