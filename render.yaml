@@ -35,9 +35,15 @@ services:
     plan: free
     buildCommand: npm install && npm run build
     staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
     envVars:
       - key: VITE_API_URL
         value: https://govpilot-backend.onrender.com
+      - key: VITE_OPENAI_API_KEY
+        sync: false
       - key: VITE_GEMINI_API_KEY
         sync: false
       - key: VITE_GOOGLE_API_KEY

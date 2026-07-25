@@ -41,6 +41,52 @@ export async function transcribeAudio(
   return (data.text || "").trim();
 }
 
+// ── Transcript Refinement ──────────────────────────────────────────────────
+
+/**
+ * Refines a broken, raw transcript into a proper, grammatical sentence 
+ * while keeping the original meaning and language intact.
+ */
+export async function refineTranscriptGPT(
+  rawTranscript: string,
+  lang: "ta" | "en" = "ta"
+): Promise<string> {
+  if (!OPENAI_KEY || !rawTranscript.trim()) return rawTranscript;
+
+  const prompt = lang === "ta"
+    ? `Rewrite the following broken Tamil text into a clear, single proper sentence without adding extra information:\n"${rawTranscript}"`
+    : `Rewrite the following broken English text into a clear, single proper sentence without adding extra information:\n"${rawTranscript}"`;
+
+  try {
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${OPENAI_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: "You are a helpful assistant that corrects grammar and structure for raw voice transcripts. Output ONLY the corrected sentence."
+          },
+          { role: "user", content: prompt },
+        ],
+        temperature: 0.1,
+        max_tokens: 100,
+      }),
+    });
+
+    if (!res.ok) return rawTranscript;
+    const data = await res.json();
+    return (data.choices?.[0]?.message?.content || rawTranscript).trim();
+  } catch (e) {
+    console.warn("Failed to refine transcript:", e);
+    return rawTranscript;
+  }
+}
+
 // ── GPT-4o Entity Extraction ───────────────────────────────────────────────
 
 /**
@@ -139,4 +185,41 @@ export function extractEntitiesLocal(
   }
 
   return t.replace(/\s+/g, " ").trim();
+}
+
+// ── Conversation Summary ─────────────────────────────────────────────────
+
+export async function generateConversationSummary(transcripts: string[], lang: "ta" | "en" = "ta"): Promise<string> {
+  if (!OPENAI_KEY || transcripts.length === 0) return "Summary unavailable.";
+  
+  const textContext = transcripts.join("\n");
+  const prompt = lang === "ta" 
+    ? `இந்த உரையாடலின் சுருக்கத்தை தமிழில் வழங்கவும். (Provide a brief summary of this conversation in Tamil):\n\n${textContext}`
+    : `Provide a brief summary of this conversation in English:\n\n${textContext}`;
+
+  try {
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${OPENAI_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "gpt-4o",
+        messages: [
+          { role: "system", content: "You are a helpful assistant that summarizes civic complaints." },
+          { role: "user", content: prompt },
+        ],
+        temperature: 0.3,
+        max_tokens: 150,
+      }),
+    });
+
+    if (!res.ok) return "Summary generation failed.";
+    const data = await res.json();
+    return (data.choices?.[0]?.message?.content || "Summary unavailable.").trim();
+  } catch (e) {
+    console.warn("Failed to generate summary:", e);
+    return "Summary generation failed.";
+  }
 }
