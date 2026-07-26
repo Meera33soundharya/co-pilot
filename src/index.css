@@ -117,8 +117,8 @@
   /* Scrollbar */
   ::-webkit-scrollbar       { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 99px; }
-  ::-webkit-scrollbar-thumb:hover { background: #D1D5DB; }
+  ::-webkit-scrollbar-thumb { background: rgba(156, 163, 175, 0.4); border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(156, 163, 175, 0.6); }
 
   ::selection { background: rgba(185,28,28,0.12); color: #991b1b; }
 
