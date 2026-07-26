@@ -90,24 +90,6 @@ export default function FieldPortal() {
                 {/* ── Left Side: Voice Complaint List ── */}
                 <div className="lg:col-span-2 space-y-6">
                     
-                    {/* Voice Badge Banner */}
-                    <div className="flex items-center gap-3 bg-gradient-to-r from-purple-900/40 to-violet-900/30 border border-purple-500/20 rounded-2xl px-5 py-3.5">
-                        <div className="w-8 h-8 rounded-xl bg-purple-500/20 flex items-center justify-center">
-                            <Mic className="w-4 h-4 text-purple-400 animate-pulse" />
-                        </div>
-                        <div className="flex-1">
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-purple-300">Voice AI Complaints Only</p>
-                            <p className="text-[10px] text-purple-400/60 font-medium">Filed by uneducated citizens via Voice Assistant</p>
-                        </div>
-                        <div className="flex items-center gap-1.5 bg-purple-500/10 px-3 py-1.5 rounded-lg border border-purple-500/20">
-                            <div className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-ping" />
-                            <span className="text-[9px] font-black text-purple-300 uppercase tracking-widest">{newCount} New</span>
-                        </div>
-                    </div>
-
-                {/* ── Left Side: Voice Complaint List ── */}
-                <div className="lg:col-span-2 space-y-6">
-                    
                     {/* Top Control Bar */}
                     <div className="flex flex-wrap items-center gap-3">
                         {/* Search Input */}
