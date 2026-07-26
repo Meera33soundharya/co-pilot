@@ -141,10 +141,10 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
             )}
 
             {/* ── Sidebar ──────────────────────────────────────────── */}
-            <aside className={`fixed lg:relative inset-y-0 left-0 z-50 lg:z-auto flex flex-col w-56 bg-white border-gray-200 border-r transform transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
+            <aside className={`fixed lg:relative inset-y-0 left-0 z-50 lg:z-auto flex flex-col w-56 ${role !== "citizen" ? "bg-[#0B1221] border-gray-800" : "bg-white border-gray-200"} border-r transform transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
 
                 {/* Brand */}
-                <div className="px-5 py-4 border-b flex items-center justify-between border-gray-100">
+                <div className={`px-5 py-4 border-b flex items-center justify-between ${role !== "citizen" ? "border-gray-800" : "border-gray-100"}`}>
                     <div className="flex items-center gap-2.5">
                         <div className={`w-8 h-8 rounded-xl flex items-center justify-center relative shadow-lg bg-[#B91C1C] shadow-red-900/10`}>
                             {role !== "citizen" ? <Map className="w-5 h-5 text-white" /> : <Shield className="w-5 h-5 text-white" />}
@@ -153,8 +153,8 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
                         <div>
                             {role !== "citizen" ? (
                                 <>
-                                    <span className="font-black text-lg tracking-tight block leading-none text-gray-900">GovPilot</span>
-                                    <span className="text-[9px] font-black uppercase tracking-widest text-gray-500 leading-none block mt-1">OPERATIONS</span>
+                                    <span className="font-black text-lg tracking-tight block leading-none text-white">GovPilot</span>
+                                    <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 leading-none block mt-1">OPERATIONS</span>
                                 </>
                             ) : (
                                 <>
@@ -199,7 +199,7 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
                 <nav className="flex-1 py-3 px-2 space-y-4 overflow-y-auto">
                     {navGroups.map(({ group, items }) => (
                         <div key={group}>
-                            <p className="px-3 mb-2 text-xs font-black uppercase tracking-[0.2em] text-gray-400">{t(group as any)}</p>
+                            <p className="px-3 mb-2 text-xs font-black uppercase tracking-[0.2em] text-gray-500">{t(group as any)}</p>
                             <div className="space-y-0.5">
                                 {items.map(({ icon: Icon, label, path, badge }) => {
                                     const liveCnt = badge === "live" ? newCount : 0;
@@ -212,7 +212,7 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
                                             className={({ isActive }) =>
                                                 `flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-150 group text-sm font-medium ${isActive
                                                     ? "bg-[#B91C1C] text-white shadow-lg shadow-red-900/20"
-                                                    : "text-gray-600 hover:bg-red-50 hover:text-[#B91C1C]"
+                                                    : role !== "citizen" ? "text-gray-400 hover:bg-white/5 hover:text-white" : "text-gray-600 hover:bg-red-50 hover:text-[#B91C1C]"
                                                 }`
                                             }
                                         >
@@ -237,11 +237,11 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
                     ))}
                 </nav>
 
-                <div className="px-2 py-3 border-t space-y-0.5 border-gray-100">
+                <div className={`px-2 py-3 border-t space-y-0.5 ${role !== "citizen" ? "border-gray-800" : "border-gray-100"}`}>
                     <div className="mt-2 px-1">
                         <button
                             onClick={handleLogout}
-                            className="w-full flex items-center gap-3 px-3 py-3 rounded-2xl transition-all group border border-transparent shadow-sm hover:bg-gray-50 hover:border-gray-100"
+                            className={`w-full flex items-center gap-3 px-3 py-3 rounded-2xl transition-all group border border-transparent shadow-sm ${role !== "citizen" ? "hover:bg-white/5 hover:border-white/10" : "hover:bg-gray-50 hover:border-gray-100"}`}
                         >
                             <div
                                 className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black text-white shrink-0"
@@ -250,10 +250,10 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
                                 {roleCfg.abbr}
                             </div>
                             <div className="flex-1 text-left min-w-0">
-                                <p className="text-sm font-black truncate text-gray-900 group-hover:text-[#B91C1C] transition-colors">{currentUser?.name ?? roleCfg.label}</p>
-                                <p className="text-[11px] font-bold capitalize text-gray-500">{role !== "citizen" ? (currentUser?.email ?? "admin@politico.gov") : (lang === "ta" ? "குடிமகன்" : "Citizen")}</p>
+                                <p className={`text-sm font-black truncate transition-colors ${role !== "citizen" ? "text-gray-200 group-hover:text-white" : "text-gray-900 group-hover:text-[#B91C1C]"}`}>{currentUser?.name ?? roleCfg.label}</p>
+                                <p className={`text-[11px] font-bold capitalize ${role !== "citizen" ? "text-gray-500" : "text-gray-500"}`}>{role !== "citizen" ? (currentUser?.email ?? "admin@politico.gov") : (lang === "ta" ? "குடிமகன்" : "Citizen")}</p>
                             </div>
-                            <LogOut className="w-4 h-4 text-gray-400 group-hover:text-[#B91C1C] transition-colors" />
+                            <LogOut className={`w-4 h-4 transition-colors ${role !== "citizen" ? "text-gray-500 group-hover:text-white" : "text-gray-400 group-hover:text-[#B91C1C]"}`} />
                         </button>
                     </div>
                 </div>
