@@ -105,66 +105,49 @@ export default function FieldPortal() {
                         </div>
                     </div>
 
-                    {/* Search + Dept Toggle */}
-                    <div className="bg-white/10 backdrop-blur-md border border-white/10 rounded-3xl p-4 flex flex-col md:flex-row gap-4 items-center">
-                        <div className="relative flex-1">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                {/* ── Left Side: Voice Complaint List ── */}
+                <div className="lg:col-span-2 space-y-6">
+                    
+                    {/* Top Control Bar */}
+                    <div className="flex flex-wrap items-center gap-3">
+                        {/* Search Input */}
+                        <div className="relative flex-1 min-w-[200px]">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                             <input 
                                 type="text"
-                                placeholder="Search voice complaints..."
+                                placeholder="Search"
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
-                                className="w-full pl-11 pr-4 py-3 bg-white/5 border border-transparent rounded-2xl text-sm font-bold text-white focus:bg-white/10 focus:border-white/20 focus:outline-none transition-all placeholder:text-white/30"
+                                className="w-full pl-11 pr-4 py-3 bg-white rounded-full text-xs font-bold text-gray-900 focus:outline-none shadow-sm"
                             />
                         </div>
+                        
+                        {/* Dept Console Button */}
                         <button 
                             onClick={() => setShowAllDepts(!showAllDepts)}
-                            className={`flex items-center gap-3 px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border shrink-0 shadow-sm ${
-                                showAllDepts 
-                                    ? "bg-amber-500 text-white border-amber-400 shadow-xl shadow-amber-900/40 scale-105" 
-                                    : "bg-white/5 text-white/40 border-white/10 hover:bg-white/10 hover:border-white/20"
-                            }`}
+                            className="flex items-center gap-2 px-5 py-3 bg-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm text-gray-500 hover:text-gray-900 transition-colors"
                         >
-                            <Activity className={`w-3.5 h-3.5 ${showAllDepts ? "animate-pulse" : ""}`} />
-                            {showAllDepts ? "Global View" : "Dept Console"}
+                            <Activity className="w-3.5 h-3.5" />
+                            DEPT CONSOLE
                         </button>
-                    </div>
 
-                    {/* Status Filter Tabs */}
-                    <div className="flex gap-2 flex-wrap">
+                        {/* Filter Tabs */}
                         {TABS.map(tab => {
-                            const count = tab.key === "All"
-                                ? complaints.filter(c => (c as any).source === "voice" || c.citizen === "Voice User").length
-                                : complaints.filter(c => {
-                                    const isVoice = (c as any).source === "voice" || c.citizen === "Voice User";
-                                    if (!isVoice) return false;
-                                    if (tab.key === "New") return c.status === "Pending";
-                                    if (tab.key === "Assigned") return c.status === "Assigned";
-                                    if (tab.key === "In Progress") return c.status === "In Progress";
-                                    if (tab.key === "Resolved") return c.status === "Resolved" || c.status === "Closed";
-                                    return false;
-                                }).length;
-
+                            const isAll = tab.key === "All";
+                            const isActive = filterTab === tab.key;
                             return (
                                 <button
                                     key={tab.key}
                                     onClick={() => setFilterTab(tab.key)}
-                                    className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border duration-300 flex items-center gap-2 ${
-                                        filterTab === tab.key 
-                                            ? "bg-[#B91C1C] text-white border-[#B91C1C] shadow-2xl shadow-red-900/50 scale-105" 
-                                            : "bg-white/5 text-white/30 border-white/5 hover:bg-white/10 hover:text-white/60 hover:border-white/10"
+                                    className={`px-5 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all shadow-sm flex items-center gap-2 ${
+                                        isActive || isAll 
+                                            ? "bg-[#B91C1C] text-white" 
+                                            : "bg-white text-gray-500 hover:text-gray-900"
                                     }`}
                                 >
                                     {tab.label}
-                                    {count > 0 && (
-                                        <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-md ${
-                                            filterTab === tab.key ? "bg-white/20 text-white" : "bg-white/10 text-white/40"
-                                        }`}>
-                                            {count}
-                                        </span>
-                                    )}
-                                    {tab.key === "New" && count > 0 && filterTab !== tab.key && (
-                                        <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-ping" />
+                                    {tab.key === "New" && (
+                                        <div className="w-2 h-2 rounded-full bg-red-200" />
                                     )}
                                 </button>
                             );
@@ -175,110 +158,81 @@ export default function FieldPortal() {
                     <div className="space-y-4">
                         {voiceComplaints.length === 0 ? (
                             <div className="bg-white/5 border border-dashed border-white/10 rounded-[2.5rem] p-20 text-center">
-                                <div className="w-16 h-16 rounded-3xl bg-purple-500/10 flex items-center justify-center mx-auto mb-4">
-                                    <Volume2 className="w-8 h-8 text-purple-400/40" />
+                                <div className="w-16 h-16 rounded-3xl bg-white flex items-center justify-center mx-auto mb-4">
+                                    <Volume2 className="w-8 h-8 text-gray-400" />
                                 </div>
-                                <p className="text-white/40 font-black uppercase tracking-[0.2em] text-sm">No voice complaints found</p>
-                                <p className="text-white/20 text-xs mt-1 font-medium">Voice AI complaints will appear here</p>
+                                <p className="text-white font-black uppercase tracking-[0.2em] text-sm">No voice complaints found</p>
                             </div>
                         ) : (
                             voiceComplaints.map(task => (
                                 <div 
                                     key={task.id}
-                                    className={`bg-white/5 border transition-all cursor-pointer rounded-[2.5rem] p-8 hover:translate-x-1 group/card ${
-                                        selectedTask?.id === task.id 
-                                            ? "border-[#B91C1C] bg-white/10 shadow-2xl shadow-red-900/20" 
-                                            : "border-white/10 hover:bg-white/10"
+                                    className={`bg-white transition-all cursor-pointer rounded-[2rem] p-6 hover:translate-x-1 group/card shadow-sm ${
+                                        selectedTask?.id === task.id ? "ring-4 ring-purple-500/20" : ""
                                     }`}
                                 >
                                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                                         <div className="flex-1 min-w-0" onClick={() => setSelectedTask(task)}>
-                                            <div className="flex items-center gap-3 mb-3 flex-wrap">
-                                                <span className="font-mono text-[10px] font-black text-[#B91C1C] px-2.5 py-1 bg-red-900/30 rounded-lg border border-red-900/40 tracking-widest">
+                                            <div className="flex items-center gap-2 mb-3 flex-wrap">
+                                                {/* ID Tag */}
+                                                <span className="text-[10px] font-black text-red-500 px-3 py-1.5 bg-red-50 rounded-full tracking-widest">
                                                     {task.id}
                                                 </span>
-                                                {/* Voice badge */}
-                                                <span className="flex items-center gap-1.5 text-[9px] font-black px-2.5 py-1.5 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20 uppercase tracking-widest">
-                                                    <Mic className="w-3 h-3" /> Voice
-                                                </span>
-                                                <span className={`text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-[0.2em] ${
-                                                    task.status === "Pending" ? "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20" :
-                                                    task.status === "Accepted" ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20" :
-                                                    task.status === "Rejected" ? "bg-red-500/10 text-red-400 border border-red-500/20" :
-                                                    task.status === "Assigned" ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" :
-                                                    task.status === "In Progress" ? "bg-amber-500/10 text-amber-500 border border-amber-500/20" :
-                                                    task.status === "Resolved" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" :
-                                                    "bg-gray-500/10 text-gray-400 border border-gray-500/20"
+                                                {/* Status Tag */}
+                                                <span className={`text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest ${
+                                                    task.status === "Pending" ? "bg-purple-100 text-purple-600" :
+                                                    task.status === "In Progress" ? "bg-amber-100 text-amber-600" :
+                                                    "bg-gray-100 text-gray-600"
                                                 }`}>
-                                                    {task.status}
+                                                    {task.status === "Pending" ? "NEW" : task.status}
                                                 </span>
-                                                <div className="flex items-center gap-1.5 bg-emerald-500/5 px-2.5 py-1.5 rounded-lg border border-emerald-500/10">
-                                                    <div className="w-1 h-1 rounded-full bg-emerald-500 animate-ping" />
-                                                    <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Live</span>
+                                                {/* Live Tag */}
+                                                <div className="flex items-center gap-1.5 bg-emerald-50 px-3 py-1.5 rounded-full">
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                                    <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">LIVE</span>
                                                 </div>
                                             </div>
-                                            <h3 className="text-2xl font-black text-white mb-3 tracking-tight group-hover/card:text-[#B91C1C] transition-colors">{task.issue}</h3>
-                                            {/* Description preview — voice transcript */}
-                                            {task.description && (
-                                                <p className="text-white/40 text-xs font-medium mb-3 line-clamp-2 leading-relaxed italic">
-                                                    "{task.description}"
-                                                </p>
-                                            )}
-                                            <div className="flex items-center gap-6 text-white/40 text-[10px] font-black uppercase tracking-widest">
-                                                <div className="flex items-center gap-2">
-                                                    <MapPin className="w-4 h-4 text-[#B91C1C]" /> {task.ward}
+                                            
+                                            <h3 className="text-xl font-black text-gray-900 mb-4">{task.issue}</h3>
+                                            
+                                            <div className="flex items-center gap-6 text-gray-400 text-[10px] font-black uppercase tracking-widest">
+                                                <div className="flex items-center gap-1.5">
+                                                    <MapPin className="w-3.5 h-3.5 text-red-500" /> {task.ward}
                                                 </div>
-                                                <div className="flex items-center gap-2">
-                                                    <Clock className="w-4 h-4 text-white/20" /> {task.time}
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <Mic className="w-3.5 h-3.5 text-purple-400" />
-                                                    <span className="text-purple-300/60">{task.citizen}</span>
+                                                <div className="flex items-center gap-1.5">
+                                                    <Clock className="w-3.5 h-3.5 text-gray-300" /> {task.time}
                                                 </div>
                                             </div>
                                         </div>
 
                                         {/* Quick Action Side Buttons */}
                                         <div className="flex items-center gap-3 shrink-0">
-                                            {/* Accept button for new/pending voice complaints */}
-                                            {task.status === "Pending" && (
+                                            {task.status === "Pending" ? (
                                                 <button 
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         handleStatusUpdate(task.id, "Accepted", "Complaint accepted by field officer.");
                                                     }}
-                                                    className="h-14 px-8 rounded-2xl bg-[#B91C1C] hover:bg-red-600 text-white text-[10px] font-black uppercase tracking-widest shadow-xl shadow-red-900/30 transition-all active:scale-95 flex items-center gap-2"
+                                                    className="px-6 py-3.5 rounded-2xl bg-[#a855f7] hover:bg-purple-600 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-purple-500/30 transition-all active:scale-95 flex items-center gap-2"
                                                 >
-                                                    <CheckCircle2 className="w-4 h-4" /> Accept
+                                                    <CheckCircle2 className="w-4 h-4" /> ACCEPT
                                                 </button>
-                                            )}
-                                            {task.status === "Assigned" && (
-                                                <button 
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleStatusUpdate(task.id, "In Progress", "Strategic deployment started.");
-                                                    }}
-                                                    className="h-14 px-8 rounded-2xl bg-amber-500 hover:bg-amber-400 text-white text-[10px] font-black uppercase tracking-widest shadow-xl shadow-amber-900/20 transition-all active:scale-95 flex items-center gap-2"
-                                                >
-                                                    <Play className="w-4 h-4" /> Start Work
-                                                </button>
-                                            )}
-                                            {task.status === "In Progress" && (
+                                            ) : task.status === "Assigned" || task.status === "In Progress" ? (
                                                 <button 
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         setSelectedTask(task);
                                                     }}
-                                                    className="h-14 px-8 rounded-2xl bg-[#B91C1C] hover:bg-red-600 text-white text-[10px] font-black uppercase tracking-widest shadow-xl shadow-red-900/30 transition-all active:scale-95 flex items-center gap-2"
+                                                    className="px-6 py-3.5 rounded-2xl bg-[#B91C1C] hover:bg-red-700 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-red-500/30 transition-all active:scale-95 flex items-center gap-2"
                                                 >
-                                                    <CheckCircle2 className="w-4 h-4" /> Resolve
+                                                    <CheckCircle2 className="w-4 h-4" /> RESOLVE
                                                 </button>
-                                            )}
+                                            ) : null}
                                             <button 
                                                 onClick={(e) => { e.stopPropagation(); setSelectedTask(task); }}
-                                                className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all text-white/20 hover:text-[#B91C1C]"
+                                                className="w-12 h-12 rounded-2xl bg-white border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-all text-gray-400 hover:text-gray-900"
                                             >
-                                                <Navigation className="w-6 h-6" />
+                                                <Navigation className="w-5 h-5" />
                                             </button>
                                         </div>
                                     </div>
