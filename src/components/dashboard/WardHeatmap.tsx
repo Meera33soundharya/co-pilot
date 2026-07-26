@@ -40,13 +40,13 @@ export function WardHeatmap() {
                 <div className="flex items-center gap-3">
                     <div className="h-5 w-1 rounded-full bg-gradient-to-b from-blue-500 to-violet-600" />
                     <h2 className="text-base font-bold text-gray-950 tracking-tight">District Heat Map</h2>
-                    <span className="text-sm font-bold uppercase tracking-widest text-violet-600 bg-violet-50 border border-violet-100 px-3 py-1 rounded-xl">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-violet-600 bg-violet-50 border border-violet-100 px-3 py-1 rounded-xl">
                         15 Wards
                     </span>
                 </div>
                 <button
                     onClick={() => navigate("/analytics")}
-                    className="flex items-center gap-1.5 text-base font-bold text-blue-600 uppercase tracking-widest hover:text-blue-800 transition-all"
+                    className="flex items-center gap-1.5 text-xs font-bold text-blue-600 uppercase tracking-widest hover:text-blue-800 transition-all"
                 >
                     Full Analytics →
                 </button>
@@ -113,7 +113,7 @@ export function WardHeatmap() {
                         {Object.entries(riskConfig).map(([key, cfg]) => (
                             <div key={key} className="flex items-center gap-1.5">
                                 <div className="w-3 h-3 rounded-sm border" style={{ background: cfg.fill, borderColor: cfg.stroke }} />
-                                <span className="text-sm font-bold text-gray-500 uppercase tracking-wider">{cfg.label}</span>
+                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{cfg.label}</span>
                             </div>
                         ))}
                     </div>
@@ -126,24 +126,24 @@ export function WardHeatmap() {
                             <div className="flex items-center gap-2 mb-3">
                                 <MapPin className="w-4 h-4" style={{ color: riskConfig[hoveredWard.risk as keyof typeof riskConfig].stroke }} />
                                 <span className="font-black text-gray-900">{hoveredWard.name}</span>
-                                <span className={`ml-auto text-sm font-black px-2 py-0.5 rounded-lg ${riskConfig[hoveredWard.risk as keyof typeof riskConfig].badge}`}>
+                                <span className={`ml-auto text-[10px] font-black px-2 py-0.5 rounded-lg ${riskConfig[hoveredWard.risk as keyof typeof riskConfig].badge}`}>
                                     {riskConfig[hoveredWard.risk as keyof typeof riskConfig].label}
                                 </span>
                             </div>
                             <div className="space-y-2">
-                                <div className="flex justify-between text-base">
+                                <div className="flex justify-between text-xs">
                                     <span className="text-gray-500 font-bold">Total Cases</span>
                                     <span className="font-black text-gray-900">{hoveredWard.cases}</span>
                                 </div>
-                                <div className="flex justify-between text-base">
+                                <div className="flex justify-between text-xs">
                                     <span className="text-gray-500 font-bold">Resolved</span>
                                     <span className="font-black text-emerald-600">{hoveredWard.resolved}</span>
                                 </div>
-                                <div className="flex justify-between text-base">
+                                <div className="flex justify-between text-xs">
                                     <span className="text-gray-500 font-bold">Resolution Rate</span>
                                     <span className="font-black text-blue-600">{Math.round(hoveredWard.resolved / hoveredWard.cases * 100)}%</span>
                                 </div>
-                                <div className="flex justify-between text-base">
+                                <div className="flex justify-between text-xs">
                                     <span className="text-gray-500 font-bold">Top Issue</span>
                                     <span className="font-black text-gray-700">{hoveredWard.dept}</span>
                                 </div>
@@ -158,13 +158,13 @@ export function WardHeatmap() {
                     ) : (
                         <div className="p-5 rounded-2xl border border-dashed border-gray-200 text-center">
                             <MapPin className="w-8 h-8 text-gray-200 mx-auto mb-2" />
-                            <p className="text-base font-bold text-gray-400">Hover over a ward to see details</p>
+                            <p className="text-xs font-bold text-gray-400">Hover over a ward to see details</p>
                         </div>
                     )}
 
                     {/* Top at-risk wards */}
                     <div className="space-y-2">
-                        <p className="text-sm font-black uppercase tracking-widest text-gray-400">Top Risk Wards</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Top Risk Wards</p>
                         {wards
                             .filter(w => w.risk === "critical" || w.risk === "high")
                             .slice(0, 4)
@@ -179,8 +179,8 @@ export function WardHeatmap() {
                                         className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-white hover:shadow-sm transition-all cursor-pointer"
                                     >
                                         <AlertTriangle className="w-3.5 h-3.5 shrink-0" style={{ color: cfg.stroke }} />
-                                        <span className="text-base font-bold text-gray-800 flex-1">{ward.name}</span>
-                                        <span className="text-base font-black text-gray-500">{ward.cases}</span>
+                                        <span className="text-xs font-bold text-gray-800 flex-1">{ward.name}</span>
+                                        <span className="text-xs font-black text-gray-500">{ward.cases}</span>
                                         <TrendingUp className="w-3.5 h-3.5 text-gray-300" />
                                     </div>
                                 );

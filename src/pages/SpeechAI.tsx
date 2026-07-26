@@ -1,439 +1,412 @@
-import { useState, useEffect } from "react";
+import { DashboardLayout } from "@/components/DashboardLayout";
+import { useState, useRef, useEffect } from "react";
 import {
-  Mic, Volume2, Play, Square, Download, Settings,
-  Loader2, Sparkles, AlertCircle, Clock, Heart, Info, Star, CheckCircle2
+    Mic, Play, Square, Download, Languages, Clock, CheckCircle2,
+    RefreshCw, ShieldCheck, Heart, Zap, Info, Star, Volume2
 } from "lucide-react";
-import DashboardLayout from "@/components/DashboardLayout";
+import { api } from "@/services/api";
 
-/* ─── Language Config ─────────────────────────────────────── */
-const LANGUAGES = [
-  { id: "english",   label: "ENGLISH",   code: "EN", bcp: "en-IN", placeholder: "Write your announcement in English..." },
-  { id: "hindi",     label: "HINDI",     code: "HI", bcp: "hi-IN", placeholder: "यहाँ अपना संदेश लिखें..." },
-  { id: "tamil",     label: "TAMIL",     code: "TA", bcp: "ta-IN", placeholder: "உங்கள் அறிவிப்பை இங்கே எழுதவும்..." },
-  { id: "telugu",    label: "TELUGU",    code: "TE", bcp: "te-IN", placeholder: "మీ ప్రకటనను ఇక్కడ వ్రాయండి..." },
-  { id: "bengali",   label: "BENGALI",   code: "BN", bcp: "bn-IN", placeholder: "আপনার ঘোষণা এখানে লিখুন..." },
-  { id: "marathi",   label: "MARATHI",   code: "MR", bcp: "mr-IN", placeholder: "तुमची घोषणा येथे लिहा..." },
-  { id: "malayalam", label: "MALAYALAM", code: "ML", bcp: "ml-IN", placeholder: "നിങ്ങളുടെ അറിയിപ്പ് ഇവിടെ എഴുതുക..." },
-];
+// ─── Tone configuration ───────────────────────────────────────────────────────
+type ToneKey = "Formal" | "Empathetic" | "Urgent" | "Informational" | "Motivational";
 
-/* ─── Tone Config ─────────────────────────────────────────── */
-const TONES = [
-  { id: "formal",        label: "FORMAL",        Icon: Settings,    desc: "Official, authoritative government style" },
-  { id: "empathetic",    label: "EMPATHETIC",    Icon: Heart,       desc: "Caring, understanding, community-focused" },
-  { id: "urgent",        label: "URGENT",        Icon: AlertCircle, desc: "Fast-paced, clear, emergency style" },
-  { id: "informational", label: "INFORMATIONAL", Icon: Info,        desc: "Clear, neutral, fact-based delivery" },
-  { id: "motivational",  label: "MOTIVATIONAL",  Icon: Star,        desc: "Uplifting, encouraging, positive" },
-];
-
-/* ─── Full native-language tone wrappers (no English mixing) ── */
-const TONE_WRAPPERS: Record<string, Record<string, (t: string) => string>> = {
-  english: {
-    formal:        (t) => `Official Notice:\n\n${t}\n\nThis is an official communication from the District Administration. Please comply accordingly. Thank you for your cooperation.`,
-    empathetic:    (t) => `Dear Citizens,\n\nWe understand this may cause inconvenience and we sincerely apologize.\n\n${t}\n\nYour patience and understanding means a great deal to us. We are working hard to minimize disruptions.`,
-    urgent:        (t) => `URGENT ALERT. Immediate action required!\n\n${t}\n\nPlease act now. Inform your family and neighbours immediately. Do not delay.`,
-    informational: (t) => `Public Information Notice:\n\n${t}\n\nFor further details, please contact your local ward office or call the helpline.`,
-    motivational:  (t) => `Together, we build a stronger community!\n\n${t}\n\nEvery small step by each one of us makes our district a better place to live. Thank you for being a responsible citizen!`,
-  },
-  hindi: {
-    formal:        (t) => `आधिकारिक सूचना:\n\n${t}\n\nयह जिला प्रशासन की आधिकारिक सूचना है। कृपया तदनुसार अनुपालन करें। आपके सहयोग के लिए धन्यवाद।`,
-    empathetic:    (t) => `प्रिय नागरिकों,\n\nहम समझते हैं कि इससे असुविधा हो सकती है और हम क्षमा चाहते हैं।\n\n${t}\n\nआपका धैर्य और समझदारी हमारे लिए बहुत महत्वपूर्ण है।`,
-    urgent:        (t) => `तत्काल चेतावनी! तुरंत कार्रवाई आवश्यक!\n\n${t}\n\nकृपया अभी कार्रवाई करें। अपने परिवार और पड़ोसियों को तुरंत सूचित करें। देरी न करें।`,
-    informational: (t) => `जन सूचना:\n\n${t}\n\nअधिक जानकारी के लिए कृपया अपने स्थानीय वार्ड कार्यालय से संपर्क करें।`,
-    motivational:  (t) => `मिलकर हम एक मजबूत समुदाय बनाएंगे!\n\n${t}\n\nहम में से हर एक का छोटा कदम हमारे जिले को बेहतर बनाता है। एक जिम्मेदार नागरिक होने के लिए धन्यवाद!`,
-  },
-  tamil: {
-    formal:        (t) => `அதிகாரப்பூர்வ அறிவிப்பு:\n\n${t}\n\nஇது மாவட்ட நிர்வாகத்தின் அதிகாரப்பூர்வ அறிவிப்பு ஆகும். தயவுசெய்து இதன்படி நடவடிக்கை எடுக்கவும். உங்கள் ஒத்துழைப்புக்கு நன்றி.`,
-    empathetic:    (t) => `அன்புள்ள குடிமக்களே,\n\nஇது சிரமத்தை ஏற்படுத்தலாம் என்பதை நாங்கள் புரிந்துகொள்கிறோம், மன்னிக்கவும்.\n\n${t}\n\nஉங்கள் பொறுமையும் புரிதலும் எங்களுக்கு மிகவும் முக்கியம்.`,
-    urgent:        (t) => `அவசர எச்சரிக்கை! உடனடி நடவடிக்கை தேவை!\n\n${t}\n\nதயவுசெய்து இப்போதே நடவடிக்கை எடுக்கவும். உங்கள் குடும்பத்தினருக்கும் அண்டை வீட்டாருக்கும் உடனடியாக தெரிவிக்கவும். தாமதிக்காதீர்கள்.`,
-    informational: (t) => `பொது தகவல் அறிவிப்பு:\n\n${t}\n\nமேலும் விவரங்களுக்கு உங்கள் உள்ளூர் வார்டு அலுவலகத்தை தொடர்பு கொள்ளவும்.`,
-    motivational:  (t) => `ஒன்றாக சேர்ந்து ஒரு வலுவான சமூகத்தை உருவாக்குவோம்!\n\n${t}\n\nநம் ஒவ்வொருவரின் சிறிய முயற்சியும் நமது மாவட்டத்தை சிறந்ததாக மாற்றுகிறது. பொறுப்பான குடிமகனாக இருப்பதற்கு நன்றி!`,
-  },
-  telugu: {
-    formal:        (t) => `అధికారిక ప్రకటన:\n\n${t}\n\nఇది జిల్లా పరిపాలన నుండి అధికారిక ప్రకటన. దయచేసి తదనుగుణంగా పాటించండి. మీ సహకారానికి ధన్యవాదాలు.`,
-    empathetic:    (t) => `ప్రియమైన పౌరులారా,\n\nఇది అసౌకర్యం కలిగించవచ్చని మేము అర్థం చేసుకుంటున్నాము, క్షమించండి.\n\n${t}\n\nమీ ఓపిక మరియు అవగాహన మాకు చాలా ముఖ్యం.`,
-    urgent:        (t) => `అత్యవసర హెచ్చరిక! తక్షణ చర్య అవసరం!\n\n${t}\n\nదయచేసి ఇప్పుడే చర్య తీసుకోండి. మీ కుటుంబ సభ్యులకు మరియు ఇరుగుపొరుగు వారికి వెంటనే తెలియజేయండి. ఆలస్యం చేయకండి.`,
-    informational: (t) => `ప్రజా సమాచార ప్రకటన:\n\n${t}\n\nమరిన్ని వివరాల కోసం దయచేసి మీ స్థానిక వార్డు కార్యాలయాన్ని సంప్రదించండి.`,
-    motivational:  (t) => `కలిసి మనం బలమైన సమాజాన్ని నిర్మిద్దాం!\n\n${t}\n\nమనలో ప్రతి ఒక్కరి చిన్న అడుగు మన జిల్లాను మెరుగైనదిగా చేస్తుంది. బాధ్యతాయుతమైన పౌరునిగా ఉన్నందుకు ధన్యవాదాలు!`,
-  },
-  bengali: {
-    formal:        (t) => `সরকারি বিজ্ঞপ্তি:\n\n${t}\n\nএটি জেলা প্রশাসনের সরকারি বিজ্ঞপ্তি। অনুগ্রহ করে সেই অনুযায়ী মেনে চলুন। আপনার সহযোগিতার জন্য ধন্যবাদ।`,
-    empathetic:    (t) => `প্রিয় নাগরিকবৃন্দ,\n\nএতে অসুবিধা হতে পারে বলে আমরা বুঝতে পারি এবং আমরা ক্ষমাপ্রার্থী।\n\n${t}\n\nআপনার ধৈর্য এবং বোঝাপড়া আমাদের কাছে অত্যন্ত গুরুত্বপূর্ণ।`,
-    urgent:        (t) => `জরুরি সতর্কতা! অবিলম্বে পদক্ষেপ নিন!\n\n${t}\n\nঅনুগ্রহ করে এখনই পদক্ষেপ নিন। আপনার পরিবার এবং প্রতিবেশীদের অবিলম্বে জানান। বিলম্ব করবেন না।`,
-    informational: (t) => `জন তথ্য বিজ্ঞপ্তি:\n\n${t}\n\nআরও বিস্তারিত জানতে অনুগ্রহ করে আপনার স্থানীয় ওয়ার্ড অফিসে যোগাযোগ করুন।`,
-    motivational:  (t) => `একসাথে আমরা একটি শক্তিশালী সমাজ গড়ে তুলব!\n\n${t}\n\nআমাদের প্রতিটি ছোট পদক্ষেপ আমাদের জেলাকে আরও ভালো করে তোলে। একজন দায়িত্বশীল নাগরিক হওয়ার জন্য ধন্যবাদ!`,
-  },
-  marathi: {
-    formal:        (t) => `अधिकृत सूचना:\n\n${t}\n\nही जिल्हा प्रशासनाची अधिकृत सूचना आहे. कृपया तदनुसार अनुपालन करा. आपल्या सहकार्यासाठी धन्यवाद.`,
-    empathetic:    (t) => `प्रिय नागरिकांनो,\n\nयामुळे गैरसोय होऊ शकते हे आम्हाला समजते आणि आम्ही क्षमा मागतो.\n\n${t}\n\nतुमचा संयम आणि समज आमच्यासाठी खूप महत्त्वाची आहे.`,
-    urgent:        (t) => `तातडीचा इशारा! तात्काळ कारवाई आवश्यक!\n\n${t}\n\nकृपया आत्ताच कारवाई करा. तुमच्या कुटुंबाला आणि शेजाऱ्यांना तात्काळ कळवा. विलंब करू नका.`,
-    informational: (t) => `सार्वजनिक माहिती सूचना:\n\n${t}\n\nअधिक माहितीसाठी कृपया तुमच्या स्थानिक वार्ड कार्यालयाशी संपर्क साधा.`,
-    motivational:  (t) => `एकत्र येऊन आपण एक मजबूत समाज बनवूया!\n\n${t}\n\nआपल्या प्रत्येकाचे छोटे पाऊल आपला जिल्हा अधिक चांगला बनवते. जबाबदार नागरिक असल्याबद्दल धन्यवाद!`,
-  },
-  malayalam: {
-    formal:        (t) => `ഔദ്യോഗിക അറിയിപ്പ്:\n\n${t}\n\nഇത് ജില്ലാ ഭരണകൂടത്തിന്റെ ഔദ്യോഗിക അറിയിപ്പാണ്. ദയവായി അതനുസരിച്ച് പ്രവർത്തിക്കുക. നിങ്ങളുടെ സഹകരണത്തിന് നന്ദി.`,
-    empathetic:    (t) => `പ്രിയ പൗരന്മാരേ,\n\nഇത് അസൗകര്യം ഉണ്ടാക്കിയേക്കാം എന്ന് ഞങ്ങൾ മനസ്സിലാക്കുന്നു, ക്ഷമിക്കുക.\n\n${t}\n\nനിങ്ങളുടെ ക്ഷമയും ധാരണയും ഞങ്ങൾക്ക് വളരെ പ്രധാനമാണ്.`,
-    urgent:        (t) => `അടിയന്തര മുന്നറിയിപ്പ്! ഉടനടി നടപടി ആവശ്യമാണ്!\n\n${t}\n\nദയവായി ഇപ്പോൾ തന്നെ നടപടി എടുക്കുക. നിങ്ങളുടെ കുടുംബത്തെയും അയൽവാസികളെയും ഉടൻ അറിയിക്കുക. താമസിക്കരുത്.`,
-    informational: (t) => `പൊതു വിവര അറിയിപ്പ്:\n\n${t}\n\nകൂടുതൽ വിവരങ്ങൾക്ക് ദയവായി നിങ്ങളുടെ പ്രാദേശിക വാർഡ് ഓഫീസുമായി ബന്ധപ്പെടുക.`,
-    motivational:  (t) => `ഒരുമിച്ച് നമ്മൾ ശക്തമായ ഒരു സമൂഹം കെട്ടിപ്പടുക്കാം!\n\n${t}\n\nനമ്മൾ ഓരോരുത്തരുടെയും ചെറിയ ചുവട് നമ്മുടെ ജില്ലയെ മെച്ചപ്പെടുത്തുന്നു. ഉത്തരവാദിത്വമുള്ള പൗരനായതിന് നന്ദി!`,
-  },
+const TONE_CONFIG: Record<ToneKey, {
+    label: string; color: string; bg: string; border: string;
+    icon: React.ElementType; desc: string;
+    rate: number; pitch: number; volume: number;   // Web Speech API params
+    prefix: string;                                // prepended to spoken text
+}> = {
+    Formal:        { label:"Formal",        color:"text-gray-700",    bg:"bg-gray-100",   border:"border-gray-200",   icon:ShieldCheck, desc:"Official, authoritative government-style",        rate:0.85, pitch:1.0,  volume:1.0, prefix:"Official notice from the Municipal Corporation. " },
+    Empathetic:    { label:"Empathetic",    color:"text-rose-700",    bg:"bg-rose-50",    border:"border-rose-200",   icon:Heart,       desc:"Warm, understanding and community-focused",        rate:0.90, pitch:1.1,  volume:0.95,prefix:"Dear residents, we understand this may be difficult. " },
+    Urgent:        { label:"Urgent",        color:"text-red-700",     bg:"bg-red-50",     border:"border-red-200",    icon:Zap,         desc:"High-alert — immediate action required",           rate:1.10, pitch:1.2,  volume:1.0, prefix:"Urgent alert. Immediate action required. " },
+    Informational: { label:"Informational", color:"text-blue-700",    bg:"bg-blue-50",    border:"border-blue-200",   icon:Info,        desc:"Factual, clear, structured information",           rate:0.88, pitch:0.95, volume:0.95,prefix:"The following information is for public awareness. " },
+    Motivational:  { label:"Motivational",  color:"text-emerald-700", bg:"bg-emerald-50", border:"border-emerald-200",icon:Star,        desc:"Encouraging, positive and community-building",     rate:0.95, pitch:1.15, volume:1.0, prefix:"Together, we are building a better community! " },
 };
 
-/* ─── Initial broadcasts ──────────────────────────────────── */
-const INITIAL_BROADCASTS = [
-  { id: 1, title: "Council Address - Water Crisis Resolution",  fullText: "அதிகாரப்பூர்வ அறிவிப்பு:\n\nநீர் நெருக்கடி தீர்வு குறித்த இந்த அறிவிப்பு. மாவட்ட நிர்வாகம் சிக்கலை தீர்க்க நடவடிக்கை எடுத்துள்ளது.\n\nஇது மாவட்ட நிர்வாகத்தின் அதிகாரப்பூர்வ அறிவிப்பு ஆகும். தயவுசெய்து இதன்படி நடவடிக்கை எடுக்கவும். உங்கள் ஒத்துழைப்புக்கு நன்றி.", date: "FEB 18, 2026", duration: "4:32", lang: "TAMIL" },
-  { id: 2, title: "Public Health Advisory - Dengue Prevention", fullText: "Official Notice:\n\nPublic health advisory: Please clear all stagnant water around your homes to prevent dengue mosquito breeding. Health camps will be organized in affected wards.\n\nThis is an official communication from the District Administration. Please comply accordingly. Thank you for your cooperation.", date: "FEB 17, 2026", duration: "2:15", lang: "ENGLISH" },
-  { id: 3, title: "Budget Announcement FY 2025-26",             fullText: "आधिकारिक सूचना:\n\nवित्त वर्ष 2025-26 का नगर पालिका बजट बुनियादी ढांचे और सार्वजनिक स्वास्थ्य को प्राथमिकता देता है। सड़क मरम्मत और जल आपूर्ति उन्नयन के लिए 450 करोड़ रुपये आवंटित किए गए हैं।\n\nयह जिला प्रशासन की आधिकारिक सूचना है। कृपया तदनुसार अनुपालन करें। आपके सहयोग के लिए धन्यवाद।", date: "FEB 15, 2026", duration: "7:45", lang: "HINDI" },
-  { id: 4, title: "Emergency Road Closure Notice - NH48",       fullText: "అత్యవసర హెచ్చరిక! తక్షణ చర్య అవసరం!\n\nఎన్‌హెచ్ 48 వాహనం బోల్తా పడిన కారణంగా 12 గంటల పాటు మూసివేయబడుతుంది. దయచేసి ఇన్నర్ రింగ్ రోడ్ ద్వారా ప్రత్యామ్నాయ మార్గాలను ఉపయోగించండి.\n\nదయచేసి ఇప్పుడే చర్య తీసుకోండి. మీ కుటుంబ సభ్యులకు మరియు ఇరుగుపొరుగు వారికి వెంటనే తెలియజేయండి. ఆలస్యం చేయకండి.", date: "FEB 12, 2026", duration: "1:05", lang: "TELUGU" },
+// ─── Language configuration ───────────────────────────────────────────────────
+// `voiceLang`  = BCP-47 code used to pick the right system voice
+// `fallback`   = language code to try if primary not found
+const LANG_CONFIG: Record<string, {
+    label: string; native: string; voiceLang: string; fallback: string;
+    placeholder: string;
+    toneOutputs: Record<ToneKey, string>;
+}> = {
+    English: {
+        label:"English", native:"EN", voiceLang:"en-IN", fallback:"en-US",
+        placeholder:"Write your announcement in English…\ne.g. Water supply will be disrupted tomorrow from 10 AM to 4 PM in Wards 12 and 13. Please store sufficient water.",
+        toneOutputs:{
+            Formal:        "This is an official notice from the Municipal Corporation. Water supply will be disrupted on March 15th from 10 AM to 4 PM in Wards 12 and 13. All citizens are requested to store adequate water before this period. Thank you for your cooperation.",
+            Empathetic:    "Dear residents, we understand this may cause inconvenience and we are deeply sorry. Tomorrow, water supply will be interrupted from 10 AM to 4 PM in Wards 12 and 13 due to essential maintenance. Please store enough water. We truly appreciate your patience and understanding.",
+            Urgent:        "Urgent alert. Immediate action required by all citizens. Water supply in Wards 12 and 13 will be cut off tomorrow from 10 AM to 4 PM. Store water right now. Inform elderly and differently-abled neighbours immediately. Do not delay.",
+            Informational: "Public information notice. Date: March 15th, 2026. Affected wards: Ward 12 and Ward 13. Disruption time: 10 AM to 4 PM. Reason: Scheduled pipeline maintenance. Action required: Store 2 to 3 days of drinking water. For help, contact the ward office helpline.",
+            Motivational:  "Together we are building a stronger community! Tomorrow our teams will work hard to improve your water infrastructure in Wards 12 and 13 from 10 AM to 4 PM. A small inconvenience today means a better system for all of us tomorrow. Your cooperation makes our ward shine!",
+        },
+    },
+    Hindi: {
+        label:"Hindi", native:"हिंदी", voiceLang:"hi-IN", fallback:"hi",
+        placeholder:"यहाँ हिंदी में अपनी घोषणा लिखें…\nकल सुबह 10 बजे से शाम 4 बजे तक वार्ड 12 और 13 में पानी की आपूर्ति बंद रहेगी।",
+        toneOutputs:{
+            Formal:        "यह नगर निगम की आधिकारिक सूचना है। कल 15 मार्च को सुबह 10 बजे से शाम 4 बजे तक वार्ड 12 और 13 में पानी की आपूर्ति बाधित रहेगी। सभी नागरिकों से अनुरोध है कि पर्याप्त मात्रा में पानी संग्रहित करें। आपके सहयोग के लिए धन्यवाद।",
+            Empathetic:    "प्रिय निवासियों, हम जानते हैं यह असुविधाजनक है और हमें खेद है। कल सुबह 10 से शाम 4 बजे तक वार्ड 12 और 13 में पानी नहीं आएगा। कृपया पर्याप्त पानी संग्रहित करें। आपकी सहनशीलता का हम हृदय से धन्यवाद करते हैं।",
+            Urgent:        "तत्काल सूचना। सभी नागरिक तुरंत ध्यान दें। कल सुबह 10 बजे से शाम 4 बजे तक वार्ड 12 और 13 में पानी की आपूर्ति पूरी तरह बंद रहेगी। अभी पानी संग्रहित करें। बुजुर्गों को तुरंत सूचित करें। देरी न करें।",
+            Informational: "सार्वजनिक सूचना। तिथि: 15 मार्च 2026। प्रभावित क्षेत्र: वार्ड 12 और 13। समय: सुबह 10 से शाम 4 बजे। कारण: पाइपलाइन रखरखाव। आवश्यक कदम: 2 से 3 दिनों का पेयजल संग्रहित करें। अधिक जानकारी के लिए वार्ड कार्यालय से संपर्क करें।",
+            Motivational:  "मिलकर हम एक बेहतर समाज बना रहे हैं। कल हमारी टीम वार्ड 12 और 13 में जल व्यवस्था को मजबूत बनाएगी। आज की छोटी असुविधा कल एक बेहतर जीवन देगी। आपका सहयोग हमारे वार्ड को चमकाता है।",
+        },
+    },
+    Tamil: {
+        label:"Tamil", native:"தமிழ்", voiceLang:"ta-IN", fallback:"ta",
+        placeholder:"இங்கே தமிழில் அறிவிப்பை எழுதுங்கள்…\nவார்டு 12 மற்றும் 13இல் நாளை தண்ணீர் விநியோகம் நிறுத்தப்படும்.",
+        toneOutputs:{
+            Formal:        "இது நகராட்சி மன்றத்தின் அதிகாரப்பூர்வ அறிவிப்பு. நாளை மார்ச் 15 அன்று காலை 10 மணி முதல் மாலை 4 மணி வரை வார்டு 12 மற்றும் 13இல் தண்ணீர் விநியோகம் நிறுத்தப்படும். அனைத்து குடிமக்களும் தேவையான தண்ணீர் சேமிக்கவும். ஒத்துழைப்புக்கு நன்றி.",
+            Empathetic:    "அன்புள்ள குடிமக்களே, இது உங்களுக்கு சிரமம் என்று நாங்கள் அறிவோம், மிகவும் மன்னிக்கவும். நாளை காலை 10 முதல் மாலை 4 வரை வார்டு 12 மற்றும் 13இல் தண்ணீர் இருக்காது. தேவையான தண்ணீர் வையுங்கள். உங்கள் பொறுமைக்கு நன்றி.",
+            Urgent:        "அவசர அறிவிப்பு. அனைத்து குடிமக்களும் உடனே கவனிக்கவும். நாளை காலை 10 முதல் மாலை 4 வரை வார்டு 12 மற்றும் 13இல் தண்ணீர் முற்றிலும் இருக்காது. இப்போதே தண்ணீர் சேமிக்கவும். வயதானவர்களுக்கு உடனே தெரிவிக்கவும்.",
+            Informational: "பொது விழிப்புணர்வு சூட்டிச் சொல். தேதி: மார்ச் 15, 2026. பாதிக்கப்படும் பகுதி: வார்டு 12 மற்றும் 13. நேரம்: காலை 10 முதல் மாலை 4 வரை. காரணம்: குழாய் பராமரிப்பு. நடவடிக்கை: 2 முதல் 3 நாட்களுக்கான குடிநீர் சேமியுங்கள். வார்டு அலுவலகத்தை தொடர்பு கொள்ளவும்.",
+            Motivational:  "ஒன்றாக சேர்ந்து நாம் சிறந்த சமுதாயம் கட்டுகிறோம். நாளை வார்டு 12 மற்றும் 13இல் சிறந்த நீர் வழங்கல் உள்கட்டமைப்பை உருவாக்க நமது குழு உழைக்கும். இன்றைய சிறு இடர்பாடு நாளை சிறந்த வாழ்க்கையை தரும். உங்கள் ஒத்துழைப்பு நம் வார்டை பிரகாசிக்க வைக்கிறது!",
+        },
+    },
+    Telugu: {
+        label:"Telugu", native:"తెలుగు", voiceLang:"te-IN", fallback:"te",
+        placeholder:"ఇక్కడ తెలుగులో ప్రకటన రాయండి…\nవార్డు 12 మరియు 13లో రేపు నీటి సరఫరా నిలిచిపోతుంది.",
+        toneOutputs:{
+            Formal:        "ఇది మున్సిపల్ కార్పొరేషన్ అధికారిక నోటీసు. రేపు మార్చి 15న, ఉదయం 10 నుండి సాయంత్రం 4 వరకు వార్డులు 12 మరియు 13లో నీటి సరఫరా నిలిపివేయబడుతుంది. అందరు నాగరికులు తగినంత నీటిని నిల్వ చేసుకోవాలి. మీ సహకారానికి ధన్యవాదాలు.",
+            Empathetic:    "ప్రియమైన నివాసితులారా, ఇది మీకు అసౌకర్యం కలిగిస్తుందని మాకు తెలుసు, మేము మిక్కిలి క్షమించమని కోరుతున్నాం. రేపు ఉదయం 10 నుండి సాయంత్రం 4 వరకు వార్డులు 12 మరియు 13లో నీటి సరఫరా ఉండదు. దయచేసి నీటిని నిల్వ చేసుకోండి. మీ సహనానికి ధన్యవాదాలు.",
+            Urgent:        "అత్యవసర హెచ్చరిక. అన్ని నాగరికులు వెంటనే దృష్టి పెట్టండి. రేపు ఉదయం 10 నుండి సాయంత్రం 4 వరకు వార్డులు 12 మరియు 13లో నీటి సరఫరా పూర్తిగా నిలిపివేయబడుతుంది. ఇప్పుడే నీటిని నిల్వ చేసుకోండి. వృద్ధులకు వెంటనే తెలియజేయండి.",
+            Informational: "ప్రజా అవగాహన నోటీసు. తేదీ: మార్చి 15, 2026. ప్రభావిత ప్రాంతాలు: వార్డు 12 మరియు 13. సమయం: ఉదయం 10 నుండి సాయంత్రం 4 గంటల వరకు. కారణం: పైప్‌లైన్ నిర్వహణ. చర్య: 2 నుండి 3 రోజులు తాగునీరు నిల్వ చేసుకోండి. వార్డు కార్యాలయాన్ని సంప్రదించండి.",
+            Motivational:  "కలిసికట్టుగా మనం మెరుగైన సమాజాన్ని నిర్మిస్తున్నాం. రేపు మన బృందం వార్డు 12 మరియు 13 నీటి సౌకర్యాన్ని మెరుగుపరచడానికి కష్టపడి పని చేస్తుంది. నేటి చిన్న అసౌకర్యం రేపు మెరుగైన జీవితాన్ని అందిస్తుంది. మీ సహకారం మన వార్డును వెలిగిస్తుంది.",
+        },
+    },
+    Bengali: {
+        label:"Bengali", native:"বাংলা", voiceLang:"bn-IN", fallback:"bn",
+        placeholder:"এখানে বাংলায় বিজ্ঞপ্তি লিখুন…\nওয়ার্ড ১২ ও ১৩-এ আগামীকাল জলের সরবরাহ বন্ধ থাকবে।",
+        toneOutputs:{
+            Formal:        "এটি পৌরসভার একটি আনুষ্ঠানিক নোটিশ। আগামীকাল ১৫ই মার্চ সকাল ১০টা থেকে বিকাল ৪টা পর্যন্ত ওয়ার্ড ১২ ও ১৩-এ জলের সরবরাহ বাধাগ্রস্ত হবে। সকল নাগরিকদের প্রয়োজনীয় জল সঞ্চয় করতে অনুরোধ করা হচ্ছে। আপনাদের সহযোগিতার জন্য ধন্যবাদ।",
+            Empathetic:    "প্রিয় বাসিন্দারা, আমরা বুঝতে পারছি এটি অসুবিধাজনক এবং এজন্য আমরা আন্তরিকভাবে দুঃখিত। আগামীকাল সকাল ১০টা থেকে বিকাল ৪টা পর্যন্ত ওয়ার্ড ১২ ও ১৩-এ জলের সরবরাহ থাকবে না। দয়া করে জল সংরক্ষণ করুন। আপনাদের ধৈর্যের জন্য আন্তরিক ধন্যবাদ।",
+            Urgent:        "জরুরি সতর্কতা। সকল নাগরিকদের অবিলম্বে মনোযোগ দিন। আগামীকাল সকাল ১০টা থেকে বিকাল ৪টা পর্যন্ত ওয়ার্ড ১২ ও ১৩-এ জলের সরবরাহ সম্পূর্ণ বন্ধ থাকবে। এখনই জল সংগ্রহ করুন। প্রবীণ প্রতিবেশীদের তাৎক্ষণিকভাবে জানান।",
+            Informational: "জনসচেতনতার জন্য। তারিখ: ১৫ই মার্চ, ২০২৬। আক্রান্ত এলাকা: ওয়ার্ড ১২ ও ১৩। সময়: সকাল ১০টা থেকে বিকাল ৪টা। কারণ: পাইপলাইন রক্ষণাবেক্ষণ। পদক্ষেপ: দুই থেকে তিন দিনের পানীয় জল সঞ্চয় করুন। বিস্তারিত জানতে ওয়ার্ড অফিসে যোগাযোগ করুন।",
+            Motivational:  "একসাথে আমরা একটি উন্নত সমাজ গড়ছি। আগামীকাল আমাদের দল ওয়ার্ড ১২ ও ১৩-এর জল সরবরাহ ব্যবস্থা উন্নত করতে কঠোর পরিশ্রম করবে। আজকের ছোট্ট অসুবিধা আগামীকালের উন্নত জীবন নিশ্চিত করবে। আপনাদের সহযোগিতা আমাদের ওয়ার্ডকে আলোকিত করে।",
+        },
+    },
+    Marathi: {
+        label:"Marathi", native:"मराठी", voiceLang:"mr-IN", fallback:"mr",
+        placeholder:"येथे मराठीत घोषणा लिहा…\nवार्ड १२ आणि १३ मध्ये उद्या पाणीपुरवठा बंद राहील.",
+        toneOutputs:{
+            Formal:        "हे महानगरपालिकेचे अधिकृत परिपत्रक आहे. उद्या १५ मार्च रोजी सकाळी १० ते संध्याकाळी ४ पर्यंत वार्ड १२ आणि १३ मध्ये पाणीपुरवठा बंद राहील. सर्व नागरिकांनी पुरेसे पाणी साठवून ठेवावे. आपल्या सहकार्याबद्दल धन्यवाद.",
+            Empathetic:    "प्रिय नागरिकांनो, यामुळे त्रास होईल हे आम्हाला माहीत आहे आणि आम्ही मनापासून दिलगीर आहोत. उद्या सकाळी १० ते संध्याकाळी ४ वार्ड १२ आणि १३ मध्ये पाणी येणार नाही. कृपया पुरेसे पाणी साठवा. आपल्या संयमाबद्दल मनापासून आभार.",
+            Urgent:        "तातडीची सूचना. सर्व नागरिकांनी त्वरित लक्ष द्यावे. उद्या सकाळी १० ते संध्याकाळी ४ वार्ड १२ आणि १३ मध्ये पाणीपुरवठा पूर्णपणे बंद राहणार आहे. आत्ताच पाणी साठवा. वृद्ध शेजाऱ्यांना तत्काळ सांगा. उशीर करू नका.",
+            Informational: "जनजागृतीसाठी. तारीख: १५ मार्च २०२६. प्रभावित भाग: वार्ड १२ आणि १३. वेळ: सकाळी १० ते संध्याकाळी ४. कारण: पाइपलाइन देखभाल. कृती: दोन ते तीन दिवसांचे पिण्याचे पाणी साठवा. अधिक माहितीसाठी वार्ड कार्यालयाशी संपर्क करा.",
+            Motivational:  "एकत्र मिळून आपण उत्तम समाज घडवतो आहोत. उद्या आमची टीम वार्ड १२ आणि १३ मधील पाणी व्यवस्था अधिक मजबूत करण्यासाठी कठोर परिश्रम करेल. आजची ही अडचण उद्या बेहतर जीवन देईल. आपले सहकार्य आपल्या वार्डाला उजळवते.",
+        },
+    },
+};
+
+const toneOptions: ToneKey[] = ["Formal", "Empathetic", "Urgent", "Informational", "Motivational"];
+
+const recentSpeeches = [
+    { title:"Council Address – Water Crisis Resolution",   date:"Feb 19, 2026", duration:"4:32", lang:"Hindi + English" },
+    { title:"Public Health Advisory – Dengue Prevention", date:"Feb 17, 2026", duration:"2:18", lang:"English" },
+    { title:"Budget Announcement FY2025-26",               date:"Feb 15, 2026", duration:"7:45", lang:"Hindi" },
+    { title:"Emergency Road Closure Notice – NH48",        date:"Feb 12, 2026", duration:"1:05", lang:"English + Tamil" },
 ];
 
-/* ─── Component ───────────────────────────────────────────── */
-export default function SpeechAI() {
-  const [inputText,       setInputText]       = useState("Water supply will be disrupted tomorrow from 10 AM to 4 PM in Wards 12 and 13. Please store sufficient water.");
-  const [selectedLangId,  setSelectedLangId]  = useState("english");
-  const [selectedToneId,  setSelectedToneId]  = useState("formal");
-  const [isGenerating,    setIsGenerating]    = useState(false);
-  const [broadcasts,      setBroadcasts]      = useState(INITIAL_BROADCASTS);
-  const [expandedId,      setExpandedId]      = useState<number | null>(null);
-  const [justGenerated,   setJustGenerated]   = useState(false);
-  const [isSpeaking,      setIsSpeaking]      = useState(false);
-  const [speakingId,      setSpeakingId]      = useState<number | null>(null);
-
-  const activeLang = LANGUAGES.find(l => l.id === selectedLangId)!;
-  const activeTone = TONES.find(t => t.id === selectedToneId)!;
-
-  // Load voices on mount (kept for fallback if needed, but we use Google TTS now)
-  useEffect(() => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.getVoices();
-    }
-  }, []);
-
-  // ── Speak using Web Speech API (built-in, works in all modern browsers) ──
-  function handlePlay(text: string, langLabel: string, broadcastId: number, e: React.MouseEvent) {
-    e.stopPropagation();
-
-    // Toggle off if already speaking this broadcast
-    if (isSpeaking && speakingId === broadcastId) {
-      window.speechSynthesis.cancel();
-      setIsSpeaking(false);
-      setSpeakingId(null);
-      return;
-    }
-
-    // Stop any running speech
-    window.speechSynthesis.cancel();
-
-    const langConfig = LANGUAGES.find(l => l.label === langLabel);
-    const bcp = langConfig?.bcp || 'en-IN';
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = bcp;
-    utterance.rate = 0.9;
-    utterance.pitch = 1;
-
-    // Try to pick a voice matching the language
+// ─── Helper: find best voice for a given lang code ────────────────────────────
+function pickVoice(primary: string, fallback: string): SpeechSynthesisVoice | null {
     const voices = window.speechSynthesis.getVoices();
-    const matched = voices.find(v => v.lang.startsWith(bcp.split('-')[0]));
-    if (matched) utterance.voice = matched;
+    return (
+        voices.find(v => v.lang === primary) ||
+        voices.find(v => v.lang.startsWith(primary.split("-")[0])) ||
+        voices.find(v => v.lang === fallback) ||
+        voices.find(v => v.lang.startsWith(fallback)) ||
+        voices.find(v => v.lang.startsWith("en")) ||
+        voices[0] || null
+    );
+}
 
-    utterance.onend = () => { setIsSpeaking(false); setSpeakingId(null); };
-    utterance.onerror = (err) => {
-      console.warn('[SpeechAI] SpeechSynthesis error:', err);
-      setIsSpeaking(false);
-      setSpeakingId(null);
+export default function SpeechAI() {
+    const [inputText,     setInputText]     = useState("");
+    const [selectedTone,  setSelectedTone]  = useState<ToneKey>("Formal");
+    const [selectedLang,  setSelectedLang]  = useState("English");
+    const [isGenerating,  setIsGenerating]  = useState(false);
+    const [isPlaying,     setIsPlaying]     = useState(false);
+    const [generated,     setGenerated]     = useState(false);
+    const [generatedLang, setGeneratedLang] = useState("English");
+    const [generatedTone, setGeneratedTone] = useState<ToneKey>("Formal");
+    const [generatedText, setGeneratedText] = useState("");
+    const [action,        setAction]        = useState<string | null>(null);
+    const [voicesReady,   setVoicesReady]   = useState(false);
+
+    const utterRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+    // Load voices (some browsers require this event)
+    useEffect(() => {
+        const load = () => setVoicesReady(true);
+        if (window.speechSynthesis.getVoices().length > 0) { setVoicesReady(true); return; }
+        window.speechSynthesis.addEventListener("voiceschanged", load);
+        return () => window.speechSynthesis.removeEventListener("voiceschanged", load);
+    }, []);
+
+    // Stop speech on unmount
+    useEffect(() => () => { window.speechSynthesis.cancel(); }, []);
+
+    const langCfg = LANG_CONFIG[selectedLang];
+    const toneCfg = TONE_CONFIG[selectedTone];
+
+    // ── Generate: build output text + show it ─────────────────────────────────
+    const handleGenerate = () => {
+        if (!inputText.trim()) return;
+        window.speechSynthesis.cancel();
+        setIsPlaying(false);
+        setIsGenerating(true);
+        api.speech.generate(inputText, selectedLang)
+            .then(res => {
+                setIsGenerating(false);
+                setGenerated(true);
+                setGeneratedLang(selectedLang);
+                setGeneratedTone(selectedTone);
+                setGeneratedText(res.script);
+            })
+            .catch(err => {
+                setIsGenerating(false);
+                console.error("Speech generation failed:", err);
+            });
     };
 
-    setIsSpeaking(true);
-    setSpeakingId(broadcastId);
-    window.speechSynthesis.speak(utterance);
-  }
-
-  function handleDownload(text: string, langLabel: string, title: string, e: React.MouseEvent) {
-    e.stopPropagation();
-    // Download as plain text — TTS download requires a backend; plain text is the reliable fallback
-    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
-  /* ── Native-language input translations ─────────────────── */
-  const NATIVE_INPUT: Record<string, Record<string, string>> = {
-    hindi: {
-      "Water supply will be disrupted tomorrow from 10 AM to 4 PM in Wards 12 and 13. Please store sufficient water.":
-        "जल आपूर्ति कल सुबह 10 बजे से शाम 4 बजे तक वार्ड 12 और 13 में बाधित रहेगी। कृपया पर्याप्त जल का भंडारण करें।",
-    },
-    tamil: {
-      "Water supply will be disrupted tomorrow from 10 AM to 4 PM in Wards 12 and 13. Please store sufficient water.":
-        "நாளை காலை 10 மணி முதல் மாலை 4 மணி வரை வார்டு 12 மற்றும் 13ல் குடிநீர் விநியோகம் தடைபடும். போதிய அளவு தண்ணீரை சேமித்து வைக்கவும்.",
-    },
-    telugu: {
-      "Water supply will be disrupted tomorrow from 10 AM to 4 PM in Wards 12 and 13. Please store sufficient water.":
-        "రేపు ఉదయం 10 గంటల నుండి సాయంత్రం 4 గంటల వరకు వార్డు 12 మరియు 13లో నీటి సరఫరా నిలిపివేయబడుతుంది. దయచేసి తగినంత నీటిని నిల్వ చేసుకోండి.",
-    },
-    bengali: {
-      "Water supply will be disrupted tomorrow from 10 AM to 4 PM in Wards 12 and 13. Please store sufficient water.":
-        "আগামীকাল সকাল ১০টা থেকে বিকাল ৪টা পর্যন্ত ১২ ও ১৩ নং ওয়ার্ডে জল সরবরাহ ব্যাহত হবে। অনুগ্রহ করে পর্যাপ্ত জল সংরক্ষণ করুন।",
-    },
-    marathi: {
-      "Water supply will be disrupted tomorrow from 10 AM to 4 PM in Wards 12 and 13. Please store sufficient water.":
-        "उद्या सकाळी १० ते दुपारी ४ वाजेपर्यंत प्रभाग १२ आणि १३ मध्ये पाणीपुरवठा खंडित होईल. कृपया पुरेशा पाण्याची साठवणूक करा.",
-    },
-    malayalam: {
-      "Water supply will be disrupted tomorrow from 10 AM to 4 PM in Wards 12 and 13. Please store sufficient water.":
-        "നാളെ രാവിലെ 10 മണി മുതൽ വൈകുന്നേരം 4 മണി വരെ വാർഡ് 12, 13 എന്നിവിടങ്ങളിൽ ജലവിതരണം തടസ്സപ്പെടും. ദയവായി ആവശ്യമായ വെള്ളം ശേഖരിച്ചു വയ്ക്കുക.",
-    },
-  };
-
-  async function handleGenerate() {
-    const text = inputText.trim();
-    if (!text || isGenerating) return;
-
-    setIsGenerating(true);
-    setJustGenerated(false);
-
-    const langId = selectedLangId;
-    const toneId = selectedToneId;
-    const langObj = LANGUAGES.find(l => l.id === langId)!;
-
-    let translatedInput = text;
-
-    if (langId !== "english") {
-      // Check static cache first
-      const cached = NATIVE_INPUT[langId]?.[text];
-      if (cached) {
-        translatedInput = cached;
-      } else {
-        try {
-          // MyMemory — free, CORS-friendly translation API
-          const tl = langObj.bcp; // e.g. "hi-IN"
-          const res = await fetch(
-            `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|${tl}`
-          );
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const data = await res.json();
-          const translated = data?.responseData?.translatedText;
-          if (translated && data.responseStatus === 200) {
-            translatedInput = translated;
-          } else {
-            throw new Error(data.responseDetails || 'No translation returned');
-          }
-        } catch (err) {
-          console.error("[SpeechAI] Translation failed, using English text:", err);
-          translatedInput = text; // graceful fallback — English with native tone wrapper
+    // ── Play: use Web Speech API ──────────────────────────────────────────────
+    const handlePlay = () => {
+        if (isPlaying) {
+            window.speechSynthesis.cancel();
+            setIsPlaying(false);
+            return;
         }
-      }
-    }
 
-    let result: string;
-    if (langId === "english") {
-      const wrapper = TONE_WRAPPERS.english[toneId];
-      result = wrapper ? wrapper(text) : text;
-    } else {
-      const wrapper = TONE_WRAPPERS[langId]?.[toneId];
-      result = wrapper ? wrapper(translatedInput) : translatedInput;
-    }
+        const text = generatedText;
+        if (!text) return;
 
-    const titleSnippet = text.length > 45 ? text.substring(0, 45) + "..." : text;
+        const cfg   = LANG_CONFIG[generatedLang];
+        const tcfg  = TONE_CONFIG[generatedTone];
+        const voice = voicesReady ? pickVoice(cfg.voiceLang, cfg.fallback) : null;
 
-    const newBroadcast = {
-      id:       Date.now(),
-      title:    titleSnippet,
-      fullText: result,
-      date:     new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }).toUpperCase(),
-      duration: "0:45",
-      lang:     langObj.label,
+        const utter = new SpeechSynthesisUtterance(text);
+        if (voice) utter.voice = voice;
+        utter.lang   = cfg.voiceLang;
+        utter.rate   = tcfg.rate;
+        utter.pitch  = tcfg.pitch;
+        utter.volume = tcfg.volume;
+
+        utter.onstart = () => setIsPlaying(true);
+        utter.onend   = () => setIsPlaying(false);
+        utter.onerror = () => setIsPlaying(false);
+
+        utterRef.current = utter;
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utter);
     };
 
-    setBroadcasts(prev => [newBroadcast, ...prev]);
-    setExpandedId(newBroadcast.id);
-    setIsGenerating(false);
-    setJustGenerated(true);
-  }
+    // ── Download: create .txt file ────────────────────────────────────────────
+    const handleDownload = () => {
+        const blob = new Blob([generatedText], { type: "text/plain;charset=utf-8" });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement("a");
+        a.href     = url;
+        a.download = `announcement_${generatedLang}_${generatedTone}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+        setAction("downloaded");
+        setTimeout(() => setAction(null), 2000);
+    };
 
+    const handleLangChange = (lang: string) => { setSelectedLang(lang);   setGenerated(false); setIsPlaying(false); window.speechSynthesis.cancel(); };
+    const handleToneChange = (t: ToneKey)   => { setSelectedTone(t);      setGenerated(false); setIsPlaying(false); window.speechSynthesis.cancel(); };
 
-  return (
-    <DashboardLayout
-      title="Speech AI"
-      subtitle="Create spoken announcements for citizens in any Indian language"
-    >
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    const ToneIcon    = toneCfg.icon;
+    const GenToneIcon = TONE_CONFIG[generatedTone].icon;
 
-        {/* ── LEFT PANEL: Input ── */}
-        <div className="lg:col-span-7 bg-white rounded-3xl p-8 shadow-xl flex flex-col border border-gray-100 gap-7">
-          
-          {/* Header */}
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-[#C81D25]" />
-            <h2 className="text-base font-black text-gray-500 tracking-widest uppercase">Create New Announcement</h2>
-          </div>
+    return (
+        <DashboardLayout title="Speech AI" subtitle="Create spoken announcements for citizens in any Indian language">
+            <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
 
-          {/* Language Selection */}
-          <div>
-            <h3 className="text-sm font-black text-gray-400 tracking-widest uppercase mb-3 flex items-center gap-2">
-              <Settings className="w-3 h-3" /> Select Language
-            </h3>
-            <div className="flex flex-wrap gap-2 mb-3">
-              {LANGUAGES.map(lang => (
-                <button
-                  key={lang.id}
-                  onClick={() => setSelectedLangId(lang.id)}
-                  className={`px-4 py-2 rounded-full text-base font-bold transition-all flex items-center gap-2 ${
-                    selectedLangId === lang.id
-                      ? "bg-[#C81D25] text-white shadow-md"
-                      : "bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200"
-                  }`}
-                >
-                  {lang.label}
-                  <span className={`text-sm ${selectedLangId === lang.id ? "text-red-200" : "text-gray-400"}`}>{lang.code}</span>
-                </button>
-              ))}
-            </div>
-            <div className="bg-blue-50 text-blue-700 text-base font-bold px-4 py-2.5 rounded-lg border border-blue-100 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-blue-500 shrink-0" />
-              Selected {activeLang.label} ({activeLang.code}) — announcement will be fully spoken in {activeLang.label.toLowerCase()}
-            </div>
-          </div>
+                {/* ── Main Generator ── */}
+                <div className="xl:col-span-3 space-y-6">
+                    <div className="bg-white border border-gray-100 rounded-[2.5rem] p-10 shadow-sm relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/5 blur-[40px] pointer-events-none" />
+                        <h3 className="text-[10px] font-black text-gray-400 mb-8 flex items-center gap-3 uppercase tracking-[0.2em]">
+                            <div className="w-1.5 h-1.5 rounded-full bg-[#B91C1C]" /> Create New Announcement
+                        </h3>
 
-          {/* Text Area */}
-          <div>
-            <h3 className="text-sm font-black text-gray-400 tracking-widest uppercase mb-3 flex items-center gap-2">
-              <Volume2 className="w-3 h-3" /> Write Your Announcement
-            </h3>
-            <textarea
-              value={inputText}
-              onChange={e => setInputText(e.target.value)}
-              placeholder={activeLang.placeholder}
-              rows={5}
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 text-lg text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-red-300 focus:ring-4 focus:ring-red-50 transition-all resize-none"
-            />
-            <div className="mt-1.5 text-right text-sm text-gray-400 font-bold">{inputText.length} characters</div>
-          </div>
+                        {/* ── Language Selector ── */}
+                        <div className="mb-6 space-y-3">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">① Select Language</label>
+                            <div className="flex flex-wrap gap-2">
+                                {Object.entries(LANG_CONFIG).map(([key, cfg]) => (
+                                    <button key={key} onClick={() => handleLangChange(key)}
+                                        className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all flex items-center gap-2 ${
+                                            selectedLang === key
+                                                ? "bg-[#B91C1C] text-white shadow-lg shadow-red-900/20 scale-105"
+                                                : "bg-gray-50 text-gray-500 hover:bg-white hover:text-gray-900 border border-gray-100"
+                                        }`}>
+                                        {cfg.label}
+                                        <span className={`text-[9px] px-1.5 py-0.5 rounded-md ${selectedLang === key ? "bg-white/20 text-white" : "bg-gray-200 text-gray-500"}`}>
+                                            {cfg.native}
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
+                            <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-100 rounded-xl">
+                                <Languages className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                                <p className="text-[10px] font-black text-blue-700">
+                                    Selected: <span className="text-blue-900">{langCfg.label} ({langCfg.native})</span> — announcement will be spoken in this language
+                                </p>
+                            </div>
+                        </div>
 
-          {/* Tone Selection */}
-          <div>
-            <h3 className="text-sm font-black text-gray-400 tracking-widest uppercase mb-3 flex items-center gap-2">
-              <Settings className="w-3 h-3" /> Select Tone of Voice
-            </h3>
-            <div className="grid grid-cols-2 gap-2 mb-3">
-              {TONES.map(tone => {
-                const Icon = tone.Icon;
-                const active = selectedToneId === tone.id;
-                return (
-                  <button
-                    key={tone.id}
-                    onClick={() => setSelectedToneId(tone.id)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base font-bold transition-all border ${
-                      active
-                        ? "bg-gray-100 border-gray-300 text-gray-900 shadow-sm"
-                        : "bg-gray-50 border-gray-100 text-gray-500 hover:bg-gray-100"
-                    }`}
-                  >
-                    <Icon className={`w-4 h-4 ${active ? "text-gray-700" : "text-gray-400"}`} />
-                    {tone.label}
-                  </button>
-                );
-              })}
-            </div>
-            <div className="bg-gray-100 text-gray-700 text-base font-bold px-4 py-2.5 rounded-lg border border-gray-200 flex items-center gap-2 uppercase tracking-wide">
-              <activeTone.Icon className="w-4 h-4 text-gray-500 shrink-0" />
-              {activeTone.label} : {activeTone.desc}
-            </div>
-          </div>
+                        {/* ── Textarea ── */}
+                        <div className="mb-6">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1 mb-2 block">② Write your announcement</label>
+                            <textarea
+                                value={inputText}
+                                onChange={e => setInputText(e.target.value)}
+                                placeholder={langCfg.placeholder}
+                                className="w-full h-36 p-6 bg-gray-50 border border-transparent rounded-[2rem] text-sm font-medium text-gray-900 resize-none focus:outline-none focus:ring-4 focus:ring-red-500/5 focus:bg-white focus:border-red-100 transition-all placeholder:text-gray-300 shadow-inner leading-relaxed"
+                            />
+                        </div>
 
-          {/* Generate Button */}
-          <button
-            type="button"
-            onClick={handleGenerate}
-            disabled={isGenerating || inputText.trim().length === 0}
-            className={`w-full py-4 rounded-xl font-black tracking-widest text-lg flex items-center justify-center gap-3 transition-all shadow-lg ${
-              inputText.trim().length > 0 && !isGenerating
-                ? "bg-[#C81D25] hover:bg-[#a01520] text-white shadow-red-900/30 cursor-pointer"
-                : "bg-gray-200 text-gray-400 cursor-not-allowed"
-            }`}
-          >
-            {isGenerating
-              ? <><Loader2 className="w-5 h-5 animate-spin" /> GENERATING AUDIO...</>
-              : justGenerated
-              ? <><CheckCircle2 className="w-5 h-5" /> GENERATE AGAIN</>
-              : <><Mic className="w-5 h-5" /> GENERATE — {activeLang.label} ({activeLang.code}) · {activeTone.label} TONE</>
-            }
-          </button>
+                        {/* ── Tone Selector ── */}
+                        <div className="space-y-3">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">③ Select Tone of Voice</label>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                {toneOptions.map(t => {
+                                    const tc   = TONE_CONFIG[t];
+                                    const Icon = tc.icon;
+                                    const active = selectedTone === t;
+                                    return (
+                                        <button key={t} onClick={() => handleToneChange(t)}
+                                            className={`px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-tight transition-all flex items-center gap-2 border ${
+                                                active ? `${tc.bg} ${tc.color} ${tc.border} shadow-md scale-[1.03]`
+                                                       : "bg-gray-50 text-gray-400 border-transparent hover:bg-white hover:border-gray-100"
+                                            }`}>
+                                            <Icon className={`w-3.5 h-3.5 shrink-0 ${active ? tc.color : "text-gray-300"}`} />
+                                            {tc.label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                            <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border ${toneCfg.bg} ${toneCfg.border}`}>
+                                <ToneIcon className={`w-3.5 h-3.5 shrink-0 ${toneCfg.color}`} />
+                                <p className={`text-[10px] font-black ${toneCfg.color}`}>
+                                    <span className="uppercase tracking-widest">{toneCfg.label}:</span> {toneCfg.desc}
+                                </p>
+                            </div>
+                        </div>
 
-        </div>
-
-        {/* ── RIGHT PANEL: Output ── */}
-        <div className="lg:col-span-5 bg-white rounded-3xl p-8 shadow-xl flex flex-col border border-gray-100">
-          <div className="flex items-center gap-2 mb-6">
-            <Clock className="w-4 h-4 text-gray-400" />
-            <h2 className="text-base font-black text-gray-500 tracking-widest uppercase">Recent Broadcasts</h2>
-            <span className="ml-auto text-sm font-black text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{broadcasts.length}</span>
-          </div>
-
-          <div className="flex-1 overflow-y-auto space-y-4 pr-1" style={{ maxHeight: "calc(100vh - 280px)" }}>
-            {broadcasts.map(broadcast => (
-              <div key={broadcast.id} className="border border-gray-100 rounded-2xl overflow-hidden">
-                
-                {/* Broadcast Header Row */}
-                <div
-                  className="flex items-start justify-between gap-3 p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-                  onClick={() => setExpandedId(expandedId === broadcast.id ? null : broadcast.id)}
-                >
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-gray-900 text-lg leading-tight mb-1.5 hover:text-[#C81D25] transition-colors line-clamp-2">
-                      {broadcast.title}
-                    </h3>
-                    <div className="flex items-center gap-3 text-sm font-black text-gray-400 uppercase tracking-widest mb-2">
-                      <span>{broadcast.date}</span>
-                      <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{broadcast.duration}</span>
+                        {/* ── Generate Button ── */}
+                        <button onClick={handleGenerate}
+                            disabled={isGenerating || !inputText.trim()}
+                            className="btn-primary mt-8 w-full !py-5 disabled:opacity-40">
+                            {isGenerating
+                                ? <><RefreshCw className="w-4 h-4 animate-spin" /> Generating {langCfg.label} · {toneCfg.label} voice…</>
+                                : <><Mic className="w-4 h-4" /> Generate — {langCfg.label} ({langCfg.native}) · {toneCfg.label} Tone</>
+                            }
+                        </button>
                     </div>
-                    <div className="flex items-center gap-1.5 text-sm font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded w-fit">
-                      <Sparkles className="w-3 h-3 text-blue-500" />{broadcast.lang}
-                    </div>
-                  </div>
 
-                  <div className="flex gap-1.5 shrink-0 mt-0.5">
-                    <button
-                      onClick={e => handlePlay(broadcast.fullText, broadcast.lang, broadcast.id, e)}
-                      title={isSpeaking && speakingId === broadcast.id ? "Stop Audio" : "Play Audio"}
-                      className={`w-9 h-9 rounded-full border flex items-center justify-center transition-all ${
-                        isSpeaking && speakingId === broadcast.id
-                          ? "border-[#C81D25] text-white bg-[#C81D25] shadow-md"
-                          : "border-gray-200 text-gray-500 hover:border-[#C81D25] hover:text-[#C81D25] hover:bg-red-50"
-                      }`}
-                    >
-                      {isSpeaking && speakingId === broadcast.id
-                        ? <Square className="w-3 h-3" />
-                        : <Play className="w-3.5 h-3.5 ml-0.5" />
-                      }
-                    </button>
-                    <button
-                      onClick={e => handleDownload(broadcast.fullText, broadcast.lang, broadcast.title, e)}
-                      title="Download MP3"
-                      className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:border-[#C81D25] hover:text-[#C81D25] hover:bg-red-50 transition-all"
-                    >
-                      <Download className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                    {/* ── Generated Output ── */}
+                    {generated && (
+                        <div className="bg-[#111827] border border-white/10 rounded-[2.5rem] p-10 shadow-2xl text-white animate-fade-in">
+                            {/* Header */}
+                            <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+                                <h3 className="text-[10px] font-black flex items-center gap-3 uppercase tracking-[0.2em] text-white/40">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                                    Ready to Play
+                                </h3>
+                                <div className="flex gap-3">
+                                    {/* PLAY / STOP — uses real Web Speech API */}
+                                    <button onClick={handlePlay}
+                                        className={`flex items-center gap-3 px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ${
+                                            isPlaying
+                                                ? "bg-red-600 text-white hover:bg-red-700"
+                                                : "bg-white/5 border border-white/10 hover:bg-white/10"
+                                        }`}>
+                                        {isPlaying
+                                            ? <><Square className="w-4 h-4 fill-current" /> Stop</>
+                                            : <><Play className="w-4 h-4" /> Play Now</>
+                                        }
+                                    </button>
+                                    {/* DOWNLOAD — saves .txt */}
+                                    <button onClick={handleDownload}
+                                        className="flex items-center gap-3 px-6 py-3 bg-[#B91C1C] rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-red-700 transition-all shadow-xl shadow-red-500/20">
+                                        {action === "downloaded" ? <><CheckCircle2 className="w-4 h-4" /> Saved!</> : <><Download className="w-4 h-4" /> Download</>}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Tone + Lang badge */}
+                            <div className={`flex items-center gap-2 px-4 py-2 rounded-2xl border mb-5 w-fit ${TONE_CONFIG[generatedTone].bg} ${TONE_CONFIG[generatedTone].border}`}>
+                                <GenToneIcon className={`w-3.5 h-3.5 ${TONE_CONFIG[generatedTone].color}`} />
+                                <span className={`text-[10px] font-black uppercase tracking-widest ${TONE_CONFIG[generatedTone].color}`}>
+                                    {TONE_CONFIG[generatedTone].label} Tone · {LANG_CONFIG[generatedLang].label} ({LANG_CONFIG[generatedLang].native})
+                                </span>
+                            </div>
+
+                            {/* Text output */}
+                            <div className="bg-white/5 rounded-[2rem] p-8 text-base leading-relaxed text-white/90 border border-white/10 shadow-inner font-medium">
+                                {generatedText}
+                            </div>
+
+                            {isPlaying && (
+                                <div className="mt-4 flex items-center gap-3 px-4 py-3 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl">
+                                    <Volume2 className="w-4 h-4 text-emerald-400 animate-pulse shrink-0" />
+                                    <p className="text-[11px] font-black text-emerald-400 uppercase tracking-widest">
+                                        Speaking in {LANG_CONFIG[generatedLang].label} · {TONE_CONFIG[generatedTone].label} tone…
+                                    </p>
+                                </div>
+                            )}
+
+                            <div className="mt-6 flex flex-wrap gap-6 text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">
+                                <span className="flex items-center gap-2"><Clock className="w-4 h-4" /> Approx. 1–3 min</span>
+                                <span className="flex items-center gap-2 text-blue-400">
+                                    <Languages className="w-4 h-4" /> {LANG_CONFIG[generatedLang].label} · {LANG_CONFIG[generatedLang].native}
+                                </span>
+                                <span className="flex items-center gap-2 text-emerald-400">
+                                    <CheckCircle2 className="w-4 h-4" /> Ready for Broadcast
+                                </span>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
-                {/* Expanded Full Text */}
-                {expandedId === broadcast.id && (
-                  <div className="border-t border-gray-100 bg-gray-50 p-4">
-                    <p className="text-lg text-gray-700 leading-relaxed font-medium whitespace-pre-wrap">
-                      {broadcast.fullText}
-                    </p>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
+                {/* ── Recent Broadcasts ── */}
+                <div className="xl:col-span-2 bg-white border border-gray-100 rounded-[2.5rem] shadow-sm overflow-hidden h-fit">
+                    <div className="px-10 py-8 border-b border-gray-100 bg-gray-50/50">
+                        <h3 className="text-[10px] font-black text-gray-900 flex items-center gap-3 uppercase tracking-[0.2em]">
+                            <Clock className="w-4 h-4 text-gray-400" /> Recent Broadcasts
+                        </h3>
+                    </div>
+                    <div className="divide-y divide-gray-50">
+                        {recentSpeeches.map((s, i) => (
+                            <div key={i} className="p-8 hover:bg-gray-50 transition-all cursor-pointer group relative">
+                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-0 bg-[#B91C1C] group-hover:h-full transition-all duration-500" />
+                                <div className="flex items-start justify-between gap-6 relative z-10">
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-black text-gray-900 group-hover:text-[#B91C1C] transition-colors leading-tight mb-2">{s.title}</p>
+                                        <div className="flex flex-wrap items-center gap-4 text-[10px] text-gray-400 font-black uppercase tracking-widest">
+                                            <span>{s.date}</span>
+                                            <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" />{s.duration}</span>
+                                            <span className="flex items-center gap-1.5 text-blue-500"><Languages className="w-3.5 h-3.5" />{s.lang}</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3 shrink-0">
+                                        <button className="h-12 w-12 rounded-2xl bg-gray-50 hover:bg-[#B91C1C] hover:text-white flex items-center justify-center transition-all hover:shadow-xl active:scale-90">
+                                            <Play className="w-5 h-5" />
+                                        </button>
+                                        <button className="h-12 w-12 rounded-2xl bg-gray-50 hover:bg-[#B91C1C] hover:text-white flex items-center justify-center transition-all hover:shadow-xl active:scale-90">
+                                            <Download className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
 
-      </div>
-    </DashboardLayout>
-  );
+            </div>
+        </DashboardLayout>
+    );
 }

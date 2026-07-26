@@ -81,7 +81,7 @@ export default function AIAssistant() {
                             <BrainCircuit className="w-5 h-5 text-white" />
                         </div>
                         <div className="flex-1">
-                            <p className="text-lg font-black text-white">GovPilot AI Assistant</p>
+                            <p className="text-sm font-black text-white">GovPilot AI Assistant</p>
                             <div className="flex items-center gap-1.5">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                                 <p className="text-[9px] text-white/40 font-black uppercase tracking-widest">Online · 98.2% accuracy</p>
@@ -101,11 +101,11 @@ export default function AIAssistant() {
                     <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/50" style={{ maxHeight: 380 }}>
                         {messages.map((msg, i) => (
                             <div key={i} className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
-                                <div className={`w-7 h-7 rounded-xl shrink-0 flex items-center justify-center text-white text-base font-black ${msg.role === "ai" ? "bg-[#B91C1C]" : "bg-gray-700"}`}>
+                                <div className={`w-7 h-7 rounded-xl shrink-0 flex items-center justify-center text-white text-xs font-black ${msg.role === "ai" ? "bg-[#B91C1C]" : "bg-gray-700"}`}>
                                     {msg.role === "ai" ? <Bot className="w-4 h-4" /> : <User2 className="w-4 h-4" />}
                                 </div>
                                 <div className={`max-w-[80%] ${msg.role === "user" ? "items-end" : "items-start"} flex flex-col gap-1`}>
-                                    <div className={`px-4 py-3 rounded-2xl text-lg leading-relaxed ${msg.role === "ai"
+                                    <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed ${msg.role === "ai"
                                         ? "bg-white border border-gray-100 text-gray-800 shadow-sm rounded-tl-sm"
                                         : "bg-[#B91C1C] text-white rounded-tr-sm"
                                         }`}>
@@ -136,7 +136,7 @@ export default function AIAssistant() {
                             <button
                                 key={s}
                                 onClick={() => send(s)}
-                                className="px-3 py-1.5 bg-gray-50 hover:bg-red-50 hover:text-[#B91C1C] rounded-xl text-sm font-black text-gray-400 whitespace-nowrap transition-all border border-transparent hover:border-red-100"
+                                className="px-3 py-1.5 bg-gray-50 hover:bg-red-50 hover:text-[#B91C1C] rounded-xl text-[10px] font-black text-gray-400 whitespace-nowrap transition-all border border-transparent hover:border-red-100"
                             >
                                 {s}
                             </button>
@@ -150,7 +150,7 @@ export default function AIAssistant() {
                             onChange={e => setInput(e.target.value)}
                             onKeyDown={e => e.key === "Enter" && send(input)}
                             placeholder="Ask about grievances, alerts, analytics..."
-                            className="flex-1 text-lg px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-red-500/5 focus:bg-white focus:border-red-100 transition-all font-medium text-gray-700"
+                            className="flex-1 text-sm px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-red-500/5 focus:bg-white focus:border-red-100 transition-all font-medium text-gray-700"
                         />
                         <button
                             onClick={() => send(input)}

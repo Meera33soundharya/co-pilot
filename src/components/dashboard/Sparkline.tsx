@@ -8,7 +8,7 @@ interface SparklineProps {
 export function Sparkline({ data, color }: SparklineProps) {
     return (
         <div className="h-10 w-24">
-            <ResponsiveContainer width="99%" height="100%" minWidth={1} minHeight={1}>
+            <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={data}>
                     <Line
                         type="monotone"

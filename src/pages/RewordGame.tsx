@@ -1,4 +1,4 @@
-import DashboardLayout from "@/components/DashboardLayout";
+import { DashboardLayout } from "@/components/DashboardLayout";
 import { Gamepad2, Trophy, Clock, Zap, Star, RefreshCw, ArrowRight, Brain, AlertCircle, CheckCircle2 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -21,15 +21,13 @@ export default function RewordGame() {
     const current = gameChallenges[index];
 
     useEffect(() => {
-        let timer: number | undefined;
+        let timer: number;
         if (isActive && timeLeft > 0) {
-            timer = window.setInterval(() => setTimeLeft(t => t - 1), 1000);
+            timer = setInterval(() => setTimeLeft(t => t - 1), 1000);
         } else if (timeLeft === 0) {
             setIsActive(false);
         }
-        return () => {
-            if (timer) clearInterval(timer);
-        };
+        return () => clearInterval(timer);
     }, [isActive, timeLeft]);
 
     const handleCheck = () => {
@@ -92,10 +90,10 @@ export default function RewordGame() {
                                 <Gamepad2 className="w-10 h-10 text-white" />
                             </div>
                             <h2 className="text-3xl font-black mb-4 tracking-tight">Governance Lexicon Training</h2>
-                            <p className="text-white/40 text-lg mb-10 max-w-sm mx-auto">Correct the misspelled governance terms as fast as you can. Boost your AI co-pilot's confidence level.</p>
+                            <p className="text-white/40 text-sm mb-10 max-w-sm mx-auto">Correct the misspelled governance terms as fast as you can. Boost your AI co-pilot's confidence level.</p>
                             <button
                                 onClick={() => { setIsActive(true); setTimeLeft(30); }}
-                                className="px-10 py-5 bg-blue-600 rounded-2xl text-base font-black uppercase tracking-[0.2em] hover:bg-blue-700 transition-all shadow-xl shadow-blue-600/20 active:scale-95"
+                                className="px-10 py-5 bg-blue-600 rounded-2xl text-xs font-black uppercase tracking-[0.2em] hover:bg-blue-700 transition-all shadow-xl shadow-blue-600/20 active:scale-95"
                             >
                                 Start Training Session
                             </button>
@@ -111,7 +109,7 @@ export default function RewordGame() {
                             <h2 className="text-5xl font-black tracking-[0.15em] mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">
                                 {current.word}
                             </h2>
-                            <p className="text-white/40 text-base italic mb-12">Hint: {current.hint}</p>
+                            <p className="text-white/40 text-xs italic mb-12">Hint: {current.hint}</p>
 
                             <div className="max-w-md mx-auto relative mb-8">
                                 <input
@@ -140,7 +138,7 @@ export default function RewordGame() {
                             <div className="flex items-center justify-center gap-4">
                                 <button
                                     onClick={handleCheck}
-                                    className="px-8 py-4 bg-white text-gray-900 rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-blue-50 transition-all shadow-lg"
+                                    className="px-8 py-4 bg-white text-gray-900 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-50 transition-all shadow-lg"
                                 >
                                     Verify Input
                                 </button>
@@ -159,14 +157,14 @@ export default function RewordGame() {
                             <Brain className="w-5 h-5 text-violet-500" /> Training Impact
                         </h3>
                         <div className="space-y-4">
-                            <div className="flex items-center justify-between text-base">
+                            <div className="flex items-center justify-between text-xs">
                                 <span className="text-gray-500 font-bold uppercase tracking-widest">Cognitive Load</span>
                                 <span className="font-black text-gray-900">Moderate</span>
                             </div>
                             <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                                 <div className="h-full bg-violet-500 rounded-full" style={{ width: '65%' }} />
                             </div>
-                            <div className="flex items-center justify-between text-base">
+                            <div className="flex items-center justify-between text-xs">
                                 <span className="text-gray-500 font-bold uppercase tracking-widest">Precision Score</span>
                                 <span className="font-black text-gray-900">88%</span>
                             </div>
@@ -181,9 +179,9 @@ export default function RewordGame() {
                             <h3 className="font-black text-gray-900 mb-4 flex items-center gap-2">
                                 <RefreshCw className="w-5 h-5 text-emerald-500" /> Quick Reset
                             </h3>
-                            <p className="text-base text-gray-500 leading-relaxed">Want to try a different category? Reset your progress and start a new training session.</p>
+                            <p className="text-xs text-gray-500 leading-relaxed">Want to try a different category? Reset your progress and start a new training session.</p>
                         </div>
-                        <button className="w-full mt-6 py-4 border border-gray-200 rounded-2xl text-sm font-black uppercase tracking-widest text-gray-700 hover:bg-gray-50 transition-all flex items-center justify-center gap-3">
+                        <button className="w-full mt-6 py-4 border border-gray-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-700 hover:bg-gray-50 transition-all flex items-center justify-center gap-3">
                             Start New Game <ArrowRight className="w-4 h-4" />
                         </button>
                     </div>

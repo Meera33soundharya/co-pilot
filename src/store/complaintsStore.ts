@@ -18,11 +18,11 @@ export type Category =
 
 // Full workflow status
 export type Status =
-    | "New"
-    | "Categorized"
+    | "Pending"
+    | "Accepted"
+    | "Rejected"
     | "Assigned"
     | "In Progress"
-    | "Pending Verification"
     | "Resolved"
     | "Closed";
 
@@ -57,15 +57,7 @@ export interface Complaint {
     notifPref?: "SMS" | "Email" | "None";
     sentiment?: number;       // 0 to 100 scoring
     rating?: number;          // 1-5 stars citizen feedback
-    source?: "voice" | "web"; // Where the complaint originated
-    
-    // 🆕 Resolution Evidence
     resolutionProof?: string; // Base64 or URL of "after" photo
-    resolutionNotes?: string;
-    supportingDocs?: string[]; // URLs or Base64 of docs
-    adminRemarks?: string;
-    resolutionDate?: number;
-    officerDetails?: string;
 
     // Workflow
     status: Status;
@@ -117,9 +109,9 @@ export const CATEGORY_DEPT: Record<Category, string> = {
 };
 
 // ── Helpers ────────────────────────────────────────────────────
-let _nextId = 14;
+let _nextId = 8300;
 export function generateId(): string {
-    return `#${String(_nextId++).padStart(3, '0')}`;
+    return `GRV-${_nextId++}`;
 }
 
 export function timeAgo(ms: number): string {
@@ -144,28 +136,12 @@ function entry(actor: string, action: string, minsAgo = 0): AuditEntry {
 
 export const initialComplaints: Complaint[] = [
     {
-        id: "#001", citizen: "Ajoy Mukhopadhyay", phone: "+91 98765 12345",
-        ward: "Ward Number 1, Kolkata", citizenId: "citizen_ajoy",
-        category: "Sanitation", issue: "Severe waterlogging near Dum Dum Metro",
-        description: "The area near the metro station is completely waterlogged after a brief spell of rain. Drains are clogged with plastic waste.",
-        priority: "High", status: "New", assignedTo: "", dept: "Sanitation Department",
-        time: "Just now", timestamp: now - 1 * 60000, notified: false, source: "web",
-        coords: { lat: 22.6178, lng: 88.3704 },
-        location: "Dum Dum Metro Station, Kolkata, West Bengal",
-        evidence: [],
-        audit: [
-            entry("System", "Complaint submitted via Web Portal", 1),
-            entry("System", "Auto-categorized as Sanitation", 0),
-        ],
-    },
-    {
-        id: "#002", citizen: "Online Citizen", phone: "+91 90000 12345",
-        ward: "Ward 2", citizenId: "citizen_amit",
+        id: "GRV-8296", citizen: "Online Citizen", phone: "+91 90000 12345",
+        ward: "Ward 02", citizenId: "citizen_amit",
         category: "Water Supply", issue: "No water supply for 2 days – Sector 4",
         description: "The water supply has been completely cut off for 2 days in Sector 4. Residents are buying water at high cost. Urgent repair needed.",
-        priority: "High", status: "New", assignedTo: "", dept: "Water Supply Department",
-        time: "Just now", timestamp: now - 1 * 60000, notified: false, source: "voice",
-        evidence: ["/resolved_water_supply_1783660023711.png#name=Water_Pipe_Leak.png&type=image/png"],
+        priority: "High", status: "Pending", assignedTo: "", dept: "Water Supply Department",
+        time: "Just now", timestamp: now - 1 * 60000, notified: false,
         audit: [
             entry("Citizen", "Complaint submitted via Online Portal", 1),
             entry("System", "Auto-categorized as Water Supply", 0),
@@ -173,26 +149,24 @@ export const initialComplaints: Complaint[] = [
     },
     {
 
-        id: "#003", citizen: "Meera Soundarya", phone: "+91 63821 54321",
-        ward: "Ward 5", citizenId: "citizen_meera",
+        id: "GRV-8295", citizen: "Meera Soundarya", phone: "+91 63821 54321",
+        ward: "Ward 05", citizenId: "citizen_meera",
         category: "Electricity", issue: "Live wire dangling on street near Park West",
         description: "Extremely dangerous live wire hanging low after last night's wind. Needs immediate isolation before anyone gets hurt.",
-        priority: "High", status: "New", assignedTo: "", dept: "Electricity Board",
-        time: "Just now", timestamp: now - 5 * 60000, notified: false, source: "voice",
-        evidence: ["/resolved_electricity_1783660057433.png#name=Live_Wire.png&type=image/png"],
+        priority: "High", status: "Pending", assignedTo: "", dept: "Electricity Board",
+        time: "Just now", timestamp: now - 5 * 60000, notified: false,
         audit: [
             entry("System", "Complaint submitted via mobile app", 5),
             entry("System", "Auto-categorized as Electricity (CRITICAL)", 4),
         ],
     },
     {
-        id: "#004", citizen: "Amit Patel", phone: "+91 98765 43210",
-        ward: "Ward 3", citizenId: "citizen_amit",
+        id: "GRV-8294", citizen: "Amit Patel", phone: "+91 98765 43210",
+        ward: "Ward 03", citizenId: "citizen_amit",
         category: "Water Supply", issue: "Severe water leakage – Block C, Sector 7",
         description: "Water is leaking from the main pipeline near Block C and flooding the road, making it dangerous for pedestrians and vehicles.",
         priority: "High", status: "In Progress", assignedTo: "Rajiv Kumar (Water Dept)", dept: "Water Supply Department",
         time: "2 hours ago", timestamp: now - 2 * H, notified: false,
-        evidence: ["/resolved_road_infrastructure_1783660034470.png#name=Water_Flooding.png&type=image/png"],
         audit: [
             entry("System", "Complaint submitted by citizen", 120),
             entry("System", "Auto-categorized as Water Supply", 119),
@@ -201,7 +175,7 @@ export const initialComplaints: Complaint[] = [
         ],
     },
     {
-        id: "#005", citizen: "Sunita Rao", phone: "+91 87654 32109",
+        id: "GRV-8293", citizen: "Sunita Rao", phone: "+91 87654 32109",
         ward: "Ward 12", citizenId: "citizen_sunita",
         category: "Electricity", issue: "Street light not working near DAV School",
         description: "Three consecutive street lights have been non-functional for 5 days, creating serious safety issues for students at night.",
@@ -214,11 +188,11 @@ export const initialComplaints: Complaint[] = [
         ],
     },
     {
-        id: "#006", citizen: "Vikram Singh", phone: "+91 76543 21098",
-        ward: "Ward 6", citizenId: "citizen_vikram",
+        id: "GRV-8292", citizen: "Vikram Singh", phone: "+91 76543 21098",
+        ward: "Ward 06", citizenId: "citizen_vikram",
         category: "Roads & Infrastructure", issue: "Broken road causing accidents on Main Road",
         description: "A large pothole formed due to recent rain. Two accidents have already occurred. Urgent road repair is needed immediately.",
-        priority: "High", status: "New", assignedTo: "", dept: "Roads & PWD",
+        priority: "High", status: "Pending", assignedTo: "", dept: "Roads & PWD",
         time: "5 hours ago", timestamp: now - 5 * H, notified: false,
         audit: [
             entry("System", "Complaint submitted by citizen", 300),
@@ -226,12 +200,12 @@ export const initialComplaints: Complaint[] = [
         ],
     },
     {
-        id: "#007", citizen: "Ananya Iyer", phone: "+91 65432 10987",
-        ward: "Ward 9", citizenId: "citizen_ananya",
+        id: "GRV-8291", citizen: "Ananya Iyer", phone: "+91 65432 10987",
+        ward: "Ward 09", citizenId: "citizen_ananya",
         category: "Sanitation", issue: "Garbage not collected for 3 days",
         description: "No garbage collection truck has visited our area for 3 days. Waste is piling up near the main entrance gate.",
         priority: "Medium", status: "Resolved", assignedTo: "Sanitation Department", dept: "Sanitation Department",
-        time: "1 day ago", timestamp: now - 1 * D, notified: true, resolutionDate: now - 12 * H,
+        time: "1 day ago", timestamp: now - 1 * D, notified: true,
         audit: [
             entry("System", "Complaint submitted", 1440),
             entry("System", "Auto-categorized as Sanitation", 1438),
@@ -242,8 +216,8 @@ export const initialComplaints: Complaint[] = [
         ],
     },
     {
-        id: "#008", citizen: "Karan Mehta", phone: "+91 54321 09876",
-        ward: "Ward 3", citizenId: "citizen_karan",
+        id: "GRV-8290", citizen: "Karan Mehta", phone: "+91 54321 09876",
+        ward: "Ward 03", citizenId: "citizen_karan",
         category: "Drainage", issue: "Drain blocked after heavy rain",
         description: "The drainage outlet near the park is completely blocked, causing waterlogging inside 4 residential houses.",
         priority: "High", status: "In Progress", assignedTo: "Drainage & Sewerage", dept: "Drainage & Sewerage",
@@ -256,11 +230,11 @@ export const initialComplaints: Complaint[] = [
         ],
     },
     {
-        id: "#009", citizen: "Priya Sharma", phone: "+91 43210 98765",
-        ward: "Ward 7", citizenId: "citizen_priya",
+        id: "GRV-8289", citizen: "Priya Sharma", phone: "+91 43210 98765",
+        ward: "Ward 07", citizenId: "citizen_priya",
         category: "Parks & Recreation", issue: "Broken swings in community park",
         description: "The swing and slide in the community park are broken and sharp-edged. Children risk injury when using them.",
-        priority: "Low", status: "Categorized", assignedTo: "", dept: "Parks Department",
+        priority: "Low", status: "Accepted", assignedTo: "", dept: "Parks Department",
         time: "2 days ago", timestamp: now - 2 * D, notified: false,
         audit: [
             entry("System", "Complaint submitted", 2880),
@@ -268,12 +242,12 @@ export const initialComplaints: Complaint[] = [
         ],
     },
     {
-        id: "#010", citizen: "Rajesh Sharma", phone: "+91 32109 87654",
+        id: "GRV-8288", citizen: "Rajesh Sharma", phone: "+91 32109 87654",
         ward: "Ward 11", citizenId: "citizen_rajesh",
         category: "Enforcement", issue: "Loud construction work after 10 PM",
         description: "Construction work continues past 10 PM every night, violating municipal noise regulations and disturbing residents.",
         priority: "Medium", status: "Closed", assignedTo: "Municipal Enforcement", dept: "Municipal Enforcement",
-        time: "3 days ago", timestamp: now - 3 * D, notified: true, resolutionDate: now - 40 * H,
+        time: "3 days ago", timestamp: now - 3 * D, notified: true,
         audit: [
             entry("System", "Complaint submitted", 4320),
             entry("System", "Auto-categorized", 4319),
@@ -284,8 +258,8 @@ export const initialComplaints: Complaint[] = [
         ],
     },
     {
-        id: "#011", citizen: "Deepika Nair", phone: "+91 21098 76543",
-        ward: "Ward 4", citizenId: "citizen_deepika",
+        id: "GRV-8287", citizen: "Deepika Nair", phone: "+91 21098 76543",
+        ward: "Ward 04", citizenId: "citizen_deepika",
         category: "Roads & Infrastructure", issue: "Deep pothole damaging vehicles near temple",
         description: "A deep pothole near the temple entrance has damaged 3 vehicles this week. Urgent repair and warning signs needed.",
         priority: "High", status: "In Progress", assignedTo: "Roads & PWD", dept: "Roads & PWD",
@@ -298,11 +272,11 @@ export const initialComplaints: Complaint[] = [
         ],
     },
     {
-        id: "#012", citizen: "Mohammed Ali", phone: "+91 10987 65432",
-        ward: "Ward 2", citizenId: "citizen_ali",
+        id: "GRV-8286", citizen: "Mohammed Ali", phone: "+91 10987 65432",
+        ward: "Ward 02", citizenId: "citizen_ali",
         category: "Sanitation", issue: "Public toilet dirty near Ward Office",
         description: "The public toilet near the ward office has not been cleaned for over a week. Condition is extremely unhygienic.",
-        priority: "Medium", status: "New", assignedTo: "", dept: "Sanitation Department",
+        priority: "Medium", status: "Pending", assignedTo: "", dept: "Sanitation Department",
         time: "4 days ago", timestamp: now - 4 * D, notified: false,
         audit: [
             entry("System", "Complaint submitted", 5760),
@@ -310,12 +284,12 @@ export const initialComplaints: Complaint[] = [
         ],
     },
     {
-        id: "#013", citizen: "Suresh Babu", phone: "+91 09876 54321",
-        ward: "Ward 8", citizenId: "citizen_suresh",
+        id: "GRV-8285", citizen: "Suresh Babu", phone: "+91 09876 54321",
+        ward: "Ward 08", citizenId: "citizen_suresh",
         category: "Enforcement", issue: "Footpath blocked by vendor stall near market",
         description: "A vendor has set up a permanent stall blocking the footpath near the main market, preventing pedestrian movement.",
         priority: "Low", status: "Resolved", assignedTo: "Municipal Enforcement", dept: "Municipal Enforcement",
-        time: "5 days ago", timestamp: now - 5 * D, notified: true, resolutionDate: now - 100 * H,
+        time: "5 days ago", timestamp: now - 5 * D, notified: true,
         audit: [
             entry("System", "Complaint submitted", 7200),
             entry("System", "Auto-categorized", 7199),

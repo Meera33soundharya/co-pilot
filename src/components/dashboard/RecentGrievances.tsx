@@ -29,7 +29,7 @@ export function StatusBadge({ status }: StatusBadgeProps) {
     const style = styles[status] ?? styles["Open"];
     const dot = dotColors[status] ?? "bg-gray-400";
     return (
-        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-black uppercase tracking-[0.1em] border shadow-sm ${style}`}>
+        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.1em] border shadow-sm ${style}`}>
             <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
             {status}
         </span>
@@ -65,23 +65,23 @@ export function RecentGrievances() {
                 <div className="flex items-center gap-3">
                     <div className="h-5 w-1 rounded-full bg-[#B91C1C]" />
                     <h2 className="text-base font-bold text-gray-950 tracking-tight">Recent Activity</h2>
-                    <span className="text-sm font-black uppercase tracking-[0.2em] text-[#B91C1C] bg-red-50 px-3 py-1 rounded-xl">Live Feed</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B91C1C] bg-red-50 px-3 py-1 rounded-xl">Live Feed</span>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button onClick={() => navigate("/grievances")} className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-base font-bold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm active:scale-95 group">
+                    <button onClick={() => navigate("/grievances")} className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm active:scale-95 group">
                         <Filter className="w-4 h-4 text-gray-400 group-hover:text-red-700 transition-colors" />
                         Filter
                     </button>
                     <button
                         onClick={() => setModalOpen(true)}
-                        className="flex items-center gap-2 px-5 py-2 bg-[#B91C1C] rounded-xl text-base font-black uppercase tracking-widest text-white hover:opacity-90 transition-all shadow-lg shadow-red-500/20 active:scale-95 group"
+                        className="flex items-center gap-2 px-5 py-2 bg-[#B91C1C] rounded-xl text-xs font-black uppercase tracking-widest text-white hover:opacity-90 transition-all shadow-lg shadow-red-500/20 active:scale-95 group"
                     >
                         <Plus className="w-4.5 h-4.5 group-hover:rotate-90 transition-transform" />
                         Add New
                     </button>
                     <button
                         onClick={() => navigate("/grievances")}
-                        className="flex items-center gap-2 text-base font-black text-[#B91C1C] uppercase tracking-widest hover:text-red-800 transition-all hover:gap-3 group ml-2"
+                        className="flex items-center gap-2 text-xs font-black text-[#B91C1C] uppercase tracking-widest hover:text-red-800 transition-all hover:gap-3 group ml-2"
                     >
                         View All <ArrowUpRight className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                     </button>
@@ -98,7 +98,7 @@ export function RecentGrievances() {
                 ].map(s => (
                     <div key={s.label} className={`flex flex-col gap-0.5 px-5 py-3 rounded-2xl border ${s.color} shadow-sm min-w-[120px] transition-transform hover:-translate-y-0.5`}>
                         <span className="text-xl font-black tracking-tighter">{s.value}</span>
-                        <span className="text-sm font-black uppercase tracking-widest opacity-60 overflow-hidden whitespace-nowrap">{s.label}</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest opacity-60 overflow-hidden whitespace-nowrap">{s.label}</span>
                     </div>
                 ))}
             </div>
@@ -109,13 +109,13 @@ export function RecentGrievances() {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-gray-50/50 border-b border-gray-100">
-                                <th className="px-6 py-5 text-base font-bold uppercase tracking-widest text-gray-400">ID</th>
-                                <th className="px-6 py-5 text-base font-bold uppercase tracking-widest text-gray-400">Citizen</th>
-                                <th className="px-6 py-5 text-base font-bold uppercase tracking-widest text-gray-400">Problem</th>
-                                <th className="px-6 py-5 text-base font-bold uppercase tracking-widest text-gray-400">Area</th>
-                                <th className="px-6 py-5 text-base font-bold uppercase tracking-widest text-gray-400">Priority</th>
-                                <th className="px-6 py-5 text-base font-bold uppercase tracking-widest text-gray-400">Status</th>
-                                <th className="px-6 py-5 text-base font-bold uppercase tracking-widest text-gray-400 text-right">Time</th>
+                                <th className="px-6 py-5 text-[11px] font-bold uppercase tracking-widest text-gray-400">ID</th>
+                                <th className="px-6 py-5 text-[11px] font-bold uppercase tracking-widest text-gray-400">Citizen</th>
+                                <th className="px-6 py-5 text-[11px] font-bold uppercase tracking-widest text-gray-400">Problem</th>
+                                <th className="px-6 py-5 text-[11px] font-bold uppercase tracking-widest text-gray-400">Area</th>
+                                <th className="px-6 py-5 text-[11px] font-bold uppercase tracking-widest text-gray-400">Priority</th>
+                                <th className="px-6 py-5 text-[11px] font-bold uppercase tracking-widest text-gray-400">Status</th>
+                                <th className="px-6 py-5 text-[11px] font-bold uppercase tracking-widest text-gray-400 text-right">Time</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -127,21 +127,21 @@ export function RecentGrievances() {
                                     className={`border-b border-gray-50 last:border-0 transition-all cursor-pointer ${hovered === g.id ? "bg-red-50/30" : "hover:bg-gray-50/30"}`}
                                 >
                                     <td className="px-6 py-5">
-                                        <span className="text-sm font-black text-red-700 tracking-wider font-mono bg-red-50 px-2 py-1 rounded-lg border border-red-100/50">{g.id}</span>
+                                        <span className="text-[10px] font-black text-red-700 tracking-wider font-mono bg-red-50 px-2 py-1 rounded-lg border border-red-100/50">{g.id}</span>
                                     </td>
                                     <td className="px-6 py-5">
                                         <div className="flex items-center gap-3">
-                                            <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm font-extrabold shrink-0 shadow-sm ${avatarColors[idx % avatarColors.length]}`}>
+                                            <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-[10px] font-extrabold shrink-0 shadow-sm ${avatarColors[idx % avatarColors.length]}`}>
                                                 {g.citizen.split(" ").map(n => n[0]).join("")}
                                             </div>
-                                            <span className="text-lg font-bold text-gray-950">{g.citizen}</span>
+                                            <span className="text-sm font-bold text-gray-950">{g.citizen}</span>
                                         </div>
                                     </td>
                                     <td className="px-6 py-5">
-                                        <span className="text-lg text-gray-600 line-clamp-1 max-w-[280px] leading-relaxed">{g.issue}</span>
+                                        <span className="text-sm text-gray-600 line-clamp-1 max-w-[280px] leading-relaxed">{g.issue}</span>
                                     </td>
                                     <td className="px-6 py-5">
-                                        <span className="text-base font-bold text-gray-500 uppercase tracking-widest bg-gray-50 px-2 py-1 rounded-lg border border-gray-100">{g.ward}</span>
+                                        <span className="text-[11px] font-bold text-gray-500 uppercase tracking-widest bg-gray-50 px-2 py-1 rounded-lg border border-gray-100">{g.ward}</span>
                                     </td>
                                     <td className="px-6 py-5">
                                         <StatusBadge status={g.priority} />
@@ -150,7 +150,7 @@ export function RecentGrievances() {
                                         <StatusBadge status={g.status} />
                                     </td>
                                     <td className="px-6 py-5 text-right">
-                                        <span className="text-base font-semibold text-gray-400 tabular-nums">{g.time}</span>
+                                        <span className="text-xs font-semibold text-gray-400 tabular-nums">{g.time}</span>
                                     </td>
                                 </tr>
                             ))}

@@ -2,280 +2,391 @@ import { useNavigate } from "react-router-dom";
 import { 
     User, Building2, 
     BrainCircuit, Sparkles, 
-    ArrowRight, CheckCircle2, Zap, LayoutDashboard, Shield, Mic
+    ArrowRight, CheckCircle2, Zap, LayoutDashboard,
+    Activity, Shield, Users, Timer, Globe, Play, Languages, Trophy
 } from "lucide-react";
-import HolographicRing from "../components/HolographicRing";
-import SegmentedRing from "../components/SegmentedRing";
-import { useComplaints } from "@/context/ComplaintsContext";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function Landing() {
     const navigate = useNavigate();
-    const { currentUser, logout } = useComplaints();
+    const { t, lang, setLang } = useLanguage();
+
+    const stats = [
+        { label: t("landing_stat_districts"), val: "24/28", change: "+12% MoM", icon: Globe, color: "text-blue-500" },
+        { label: t("landing_stat_accuracy"), val: "99.4%", change: "+0.8%", icon: Shield, color: "text-emerald-500" },
+        { label: t("landing_stat_time"), val: "2.4 Hrs", change: "-45% Time", icon: Timer, color: "text-amber-500" },
+        { label: t("landing_stat_citizens"), val: "182K+", change: "+24k New", icon: Users, color: "text-red-500" },
+    ];
 
     const portals = [
         {
             id: "citizen",
-            title: "Citizen Portal",
-            desc: "File public grievances and track resolution status in real time with our secure digital portal.",
+            title: t("portal_citizen_title"),
+            desc: t("portal_citizen_desc"),
             icon: User,
-            color: "text-emerald-500",
-            bg: "bg-emerald-50",
-            border: "border-emerald-100",
-            count: "10k+ Citizens",
+            color: "from-emerald-500 to-teal-600",
+            bg: "bg-emerald-500/10",
+            border: "border-emerald-500/20 hover:border-emerald-500/50",
+            stat: "98.2% Satisfaction",
+            actionText: t("portal_citizen_action"),
             link: "/submit-complaint"
         },
         {
             id: "officer",
-            title: "Field Officer",
-            desc: "Access field assignments, report resolution progress, and upload verification photographs directly.",
+            title: t("portal_officer_title"),
+            desc: t("portal_officer_desc"),
             icon: Building2,
-            color: "text-blue-500",
-            bg: "bg-blue-50",
-            border: "border-blue-100",
-            count: "124 Officers",
+            color: "from-blue-500 to-indigo-600",
+            bg: "bg-blue-500/10",
+            border: "border-blue-500/20 hover:border-blue-500/50",
+            stat: "14 Min Avg Response",
+            actionText: t("portal_officer_action"),
             link: "/field-portal"
         },
         {
             id: "admin",
-            title: "Administrator",
-            desc: "Predictive AI dashboards. District health score analysis 0–100 real-time.",
+            title: t("portal_admin_title"),
+            desc: t("portal_admin_desc"),
             icon: LayoutDashboard,
-            color: "text-red-600",
-            bg: "bg-red-50",
-            border: "border-red-100",
-            count: "Admin Control",
+            color: "from-red-500 to-rose-600",
+            bg: "bg-red-500/10",
+            border: "border-red-500/20 hover:border-red-500/50",
+            stat: "Live Health Index: 92/100",
+            actionText: t("portal_admin_action"),
             link: "/dashboard"
         },
         {
-            id: "voice",
-            title: "Citizen Voice (Speech Portal)",
-            desc: "Simplified audio-first complaint lodging for differently-abled or illiterate citizens. Support for English & Tamil speech.",
-            icon: Mic,
-            color: "text-amber-600",
-            bg: "bg-amber-50",
-            border: "border-amber-100",
-            count: "100% Voice Operated",
-            link: "/village-voice"
+            id: "politician",
+            title: "PoliticoAI",
+            desc: "Election analytics, voter CRM, AI speech generation, media intelligence and campaign tools for elected representatives.",
+            icon: Trophy,
+            color: "from-amber-500 to-yellow-600",
+            bg: "bg-amber-500/10",
+            border: "border-amber-500/20 hover:border-amber-500/50",
+            stat: "AI Win Probability: 73%",
+            actionText: "Open Politician Hub",
+            link: "/election-analytics"
         }
     ];
 
     return (
-        <div className="min-h-screen bg-[#F4F2EE] selection:bg-[#B91C1C]/20" style={{ fontFamily: "'Outfit', sans-serif" }}>
+        <div className="min-h-screen bg-[#080912] text-gray-100 selection:bg-red-500/30 selection:text-white relative overflow-hidden" style={{ fontFamily: "'Outfit', sans-serif" }}>
+            
+            {/* Ambient Background Glows */}
+            <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-blue-900/10 blur-[150px] pointer-events-none" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-red-900/10 blur-[150px] pointer-events-none" />
+            <div className="absolute top-[30%] right-[10%] w-[40%] h-[40%] rounded-full bg-indigo-950/20 blur-[180px] pointer-events-none" />
+
             {/* Header */}
-            <header className="fixed top-0 inset-x-0 h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 z-[100] px-6 lg:px-20 flex items-center justify-between">
+            <header className="fixed top-0 inset-x-0 h-20 bg-[#080912]/80 backdrop-blur-md border-b border-gray-800/40 z-[100] px-4 md:px-12 flex items-center justify-between">
                 <div className="flex items-center gap-3 group cursor-pointer" onClick={() => navigate("/")}>
-                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#B91C1C] to-[#7F1D1D] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#B91C1C] to-[#7F1D1D] flex items-center justify-center shadow-lg shadow-red-900/20 group-hover:scale-105 transition-transform duration-300">
                         <BrainCircuit className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                        <h1 className="text-lg font-black text-gray-900 tracking-tight leading-none">GovPilot</h1>
+                        <h1 className="text-lg font-black text-white tracking-tight leading-none">GovPilot</h1>
                         <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#B91C1C] mt-1 leading-none">District Governance AI</p>
                     </div>
                 </div>
 
-                {/* Live Ribbon (Hidden on small screens) */}
-                <div className="hidden lg:flex items-center gap-4 bg-gray-50/50 px-5 py-2 rounded-2xl border border-gray-100">
-                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                {/* Live Ribbon */}
+                <div className="hidden lg:flex items-center gap-4 bg-gray-900/40 px-5 py-2 rounded-2xl border border-gray-800/60 max-w-sm overflow-hidden">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                     <div className="overflow-hidden w-64">
-                        <div className="text-sm font-black uppercase tracking-widest text-gray-400 whitespace-nowrap animate-marquee">
+                        <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 whitespace-nowrap animate-marquee">
                             Ward 07: Water leak fixed • Ward 03: Streetlights repaired • New AI Cluster in Sector 4
                         </div>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-4">
+                    <button
+                        onClick={() => setLang(lang === "en" ? "ta" : "en")}
+                        className="hidden lg:flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-700 bg-gray-900/60 text-gray-300 hover:text-white hover:border-gray-500 transition-all text-xs font-bold uppercase tracking-widest"
+                    >
+                        <Languages className="w-4 h-4" />
+                        {t("language")}
+                    </button>
                     <button onClick={() => navigate("/login")} 
-                        className="px-6 py-2.5 bg-gray-900 text-white rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl active:scale-95">
-                        Login
+                        className="px-6 py-2.5 bg-gradient-to-r from-red-600 to-red-800 text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-red-900/30">
+                        {t("landing_systemLogin")}
                     </button>
                 </div>
             </header>
 
-            {/* Hero Section */}
-            <main className="pt-40 pb-20 px-6 lg:px-20 max-w-7xl mx-auto">
-                <div className="text-left space-y-10 max-w-4xl mb-24 animate-in fade-in slide-in-from-top-4 duration-700">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#B91C1C]/5 border border-[#B91C1C]/10 text-sm font-bold uppercase tracking-widest text-[#B91C1C]">
-                        <Sparkles className="w-3.5 h-3.5" /> Smarter Governance for a Better District
-                    </div>
-                    <h1 className="text-7xl lg:text-[7.5rem] font-black text-gray-900 leading-[1.05] tracking-tight">
-                        One Platform.<br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#B91C1C] via-[#D97706] to-[#B91C1C] bg-[length:200%_auto] animate-gradient">Total Accountability.</span>
-                    </h1>
-                    <p className="text-gray-500 text-xl lg:text-2xl font-medium leading-relaxed max-w-2xl">
-                        GovPilot bridges the gap between citizens, officers, and admins using predictive AI 
-                        to solve local problems before they become crises.
-                    </p>
-                    <div className="flex items-center gap-6 pt-4">
-                        <button onClick={() => navigate("/login")} className="px-8 py-4 bg-gray-900 text-white rounded-[2rem] text-sm font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl flex items-center gap-3">
-                            Get Started <ArrowRight className="w-5 h-5" />
-                        </button>
-                        <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">Joined by 5,000+ residents this month</p>
-                    </div>
-                </div>
+            <main className="w-[88%] max-w-[1400px] mx-auto pt-32 pb-24 space-y-24 relative z-10">
+                
+                {/* Hero Section */}
+                <section className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center min-h-[70vh]">
+                    <div className="lg:col-span-7 space-y-8 text-left animate-in fade-in slide-in-from-left-6 duration-700">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-500/10 border border-red-500/20 text-xs font-bold uppercase tracking-widest text-red-400">
+                            <Sparkles className="w-4 h-4 text-red-500 animate-pulse" /> {t("landing_tagline")}
+                        </div>
+                        <h1 className="text-5xl md:text-6xl xl:text-7xl font-black text-white leading-[1.08] tracking-tight">
+                            {t("landing_hero_title_1")} <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-amber-500 to-rose-600">{t("landing_hero_title_2")}</span>
+                        </h1>
+                        <p className="text-gray-400 text-base md:text-lg font-medium leading-relaxed max-w-2xl">
+                            {t("landing_hero_desc")}
+                        </p>
+                        
+                        <div className="flex flex-wrap items-center gap-4 pt-2">
+                            <button onClick={() => navigate("/login")}
+                                className="px-8 py-4 bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 text-white font-bold rounded-2xl flex items-center gap-2 group shadow-xl shadow-red-950/40 transition-all hover:-translate-y-0.5">
+                                {t("landing_getStarted")} <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                            </button>
+                            <button onClick={() => navigate("/login")}
+                                className="px-8 py-4 bg-gray-900 hover:bg-gray-800 text-gray-200 border border-gray-800 hover:border-gray-700 font-bold rounded-2xl flex items-center gap-2 transition-all hover:-translate-y-0.5">
+                                <Play className="w-4 h-4 text-red-500 fill-current" /> {t("landing_watchDemo")}
+                            </button>
+                        </div>
 
-                {/* Entry Points Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {portals.map((portal, idx) => (
-                        <div key={portal.id} 
-                            onClick={() => navigate(portal.link)}
-                            style={{ animationDelay: `${idx * 150}ms` }}
-                            className={`group bg-white border border-gray-100 rounded-[3.5rem] p-8 flex flex-col justify-between h-full hover:shadow-2xl hover:-translate-y-2 transition-all cursor-pointer relative overflow-hidden animate-in fade-in zoom-in-95 duration-700`}
-                        >
-                            <div className={`absolute top-0 right-0 w-64 h-64 ${portal.id === 'admin' ? 'bg-red-500/5' : portal.id === 'officer' ? 'bg-blue-500/5' : portal.id === 'voice' ? 'bg-amber-500/5' : 'bg-emerald-500/5'} blur-[80px] pointer-events-none group-hover:scale-150 transition-transform duration-700`} />
-                            
-                            <div>
-                                <div className={`w-16 h-16 rounded-3xl ${portal.bg} flex items-center justify-center mb-6 border ${portal.border} shadow-sm group-hover:scale-110 group-hover:rotate-6 transition-transform`}>
-                                    <portal.icon className={`w-8 h-8 ${portal.color}`} />
-                                </div>
-                                <h3 className="text-2xl lg:text-3xl font-black text-gray-900 mb-4 leading-tight tracking-tight">{portal.title}</h3>
-                                <p className="text-base lg:text-lg font-medium text-gray-500 leading-relaxed italic mb-8">
-                                    {portal.desc}
-                                </p>
-                            </div>
-
-                            <div className="space-y-4 mt-auto">
-                                <div className="flex flex-wrap items-center gap-2">
-                                    <span className="flex items-center gap-1.5 px-2.5 py-1 bg-gray-50 rounded-lg text-[10px] font-black uppercase tracking-widest text-gray-400 border border-gray-100 shrink-0">
-                                        <Zap className="w-3 h-3 text-amber-500" /> AI
-                                    </span>
-                                    <span className="text-xs font-black uppercase text-gray-400 max-w-[100px] leading-tight truncate">{portal.count}</span>
-                                </div>
-                                <button className="w-full py-4 px-6 bg-gray-900 group-hover:bg-[#B91C1C] text-white rounded-[1.5rem] text-sm font-black uppercase tracking-[0.2em] transition-all shadow-xl flex items-center justify-between">
-                                    <div className="text-left leading-tight">
-                                        <div>ENTER</div>
-                                        <div>PORTAL</div>
+                        {/* Social proof */}
+                        <div className="flex items-center gap-4 pt-4 border-t border-gray-800/40 max-w-md">
+                            <div className="flex -space-x-3">
+                                {[1, 2, 3, 4].map((i) => (
+                                    <div key={i} className="w-9 h-9 rounded-full border-2 border-[#080912] bg-gray-800 flex items-center justify-center text-[10px] font-bold text-gray-400">
+                                        USR
                                     </div>
-                                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                                </button>
+                                ))}
                             </div>
+                            <p className="text-xs text-gray-500 font-semibold tracking-wide">{t("landing_users")}</p>
                         </div>
-                    ))}
-                </div>
+                    </div>
 
-                {/* Features Section */}
-                <div className="mt-32 max-w-4xl mx-auto">
-                    <div className="space-y-10">
-                        <div className="space-y-4 text-center">
-                            <h2 className="text-4xl font-black text-gray-900 tracking-tight leading-tight">
-                                Built for Transparency.<br />
-                                Powered by <span className="text-[#B91C1C]">Explainable AI.</span>
-                            </h2>
-                            <p className="text-gray-500 font-medium leading-relaxed max-w-2xl mx-auto">
-                                District governance should not be a "lost in system" experience. 
-                                GovPilot ensures every action has a reason and every voice has a trace.
-                            </p>
+                    {/* Stats Grid inside Hero area */}
+                    <div className="lg:col-span-5 grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-right-6 duration-700 delay-100">
+                        {stats.map((stat, i) => (
+                            <div key={i} className="bg-gray-950/60 backdrop-blur-sm border border-gray-850 p-6 rounded-3xl space-y-4 hover:border-gray-800 transition-all hover:bg-gray-900/40">
+                                <div className="flex justify-between items-start">
+                                    <div className={`p-3 rounded-2xl bg-gray-900 border border-gray-800`}>
+                                        <stat.icon className={`w-5 h-5 ${stat.color}`} />
+                                    </div>
+                                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-bold border border-emerald-500/10">
+                                        {stat.change}
+                                    </span>
+                                </div>
+                                <div>
+                                    <h4 className="text-2xl font-black text-white">{stat.val}</h4>
+                                    <p className="text-xs font-semibold tracking-wide text-gray-500 mt-1 uppercase">{stat.label}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+
+                {/* Portals Grid */}
+                <section className="space-y-12">
+                    <div className="text-center max-w-3xl mx-auto space-y-4">
+                        <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight">{t("landing_accessPortals")}</h2>
+                        <p className="text-gray-400 text-sm md:text-base font-medium">{t("landing_portalDesc")}</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {portals.map((portal) => (
+                            <div key={portal.id} 
+                                onClick={() => navigate(portal.link)}
+                                className={`group bg-gray-950/40 backdrop-blur-md border ${portal.border} rounded-[2.5rem] p-8 md:p-10 flex flex-col justify-between hover:shadow-2xl hover:shadow-red-950/5 hover:-translate-y-2 transition-all duration-300 cursor-pointer relative overflow-hidden`}
+                            >
+                                {/* Glow element */}
+                                <div className={`absolute top-0 right-0 w-36 h-36 bg-gradient-to-br ${portal.color} opacity-[0.03] group-hover:opacity-10 blur-3xl rounded-full transition-opacity duration-300`} />
+                                
+                                <div>
+                                    <div className={`w-14 h-14 rounded-2xl ${portal.bg} flex items-center justify-center mb-8 border border-white/5 group-hover:scale-105 transition-transform duration-300`}>
+                                        <portal.icon className={`w-7 h-7 text-white`} />
+                                    </div>
+                                    <h3 className="text-xl md:text-2xl font-black text-white mb-3 tracking-tight">{portal.title}</h3>
+                                    <p className="text-gray-400 text-sm leading-relaxed mb-6 font-medium">
+                                        {portal.desc}
+                                    </p>
+                                </div>
+
+                                <div className="space-y-6 pt-4 border-t border-gray-900">
+                                    <div className="flex justify-between items-center text-xs font-semibold">
+                                        <span className="flex items-center gap-1.5 text-gray-400 uppercase tracking-widest">
+                                            <Zap className="w-3.5 h-3.5 text-red-500 fill-red-500/20" /> Active System
+                                        </span>
+                                        <span className="text-red-400 tracking-wide font-black">{portal.stat}</span>
+                                    </div>
+                                    <button className="w-full py-3.5 bg-gray-900 border border-gray-800 hover:border-red-500/30 group-hover:bg-gradient-to-r group-hover:from-red-600 group-hover:to-rose-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl flex items-center justify-center gap-2">
+                                        {portal.actionText} <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+
+                {/* Dashboard Command Center Preview */}
+                <section className="space-y-12">
+                    <div className="text-center max-w-3xl mx-auto space-y-4">
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] font-bold uppercase tracking-widest text-blue-400">
+                            <Activity className="w-3.5 h-3.5" /> Command Center Telemetry
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-10">
-                            {[
-                                { title: "XAI Transparency", desc: "Know EXACTLY why AI categorized your complaint." },
-                                { title: "Predictive Health", desc: "Constituency scores based on resolution & urgency." },
-                                { title: "Direct Hubs", desc: "No manual routing. Complaints go straight to Field units." }
-                            ].map((feat, i) => (
-                                <div key={i} className="flex flex-col items-center text-center gap-6 bg-white p-10 rounded-[2.5rem] shadow-xl hover:-translate-y-2 hover:shadow-2xl transition-all duration-300 border border-gray-100 cursor-default">
-                                    <div className="w-16 h-16 rounded-[1.5rem] bg-emerald-50 flex items-center justify-center shrink-0 border border-emerald-100">
-                                        <CheckCircle2 className="w-8 h-8 text-emerald-500" />
+                        <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight">Administrative Intelligence Preview</h2>
+                        <p className="text-gray-400 text-sm md:text-base font-medium">Get real-time updates and view deep metrics showing AI resolution cycles and district performance parameters.</p>
+                    </div>
+
+                    {/* Interactive Mock Dashboard View */}
+                    <div className="relative group rounded-[2.5rem] border border-gray-850 bg-gray-950/60 p-6 md:p-8 backdrop-blur-md overflow-hidden shadow-2xl">
+                        {/* Interactive overlay glow */}
+                        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-red-950/5 to-blue-950/10 pointer-events-none" />
+                        
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 relative z-10">
+                            {/* System Status Panel */}
+                            <div className="lg:col-span-4 space-y-4">
+                                <div className="p-5 rounded-2xl bg-gray-900/60 border border-gray-800 space-y-4">
+                                    <div className="flex justify-between items-center pb-2 border-b border-gray-800/60">
+                                        <span className="text-xs font-bold uppercase text-gray-400 tracking-wider">AI Pipeline status</span>
+                                        <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
                                     </div>
                                     <div className="space-y-3">
-                                        <p className="text-2xl font-black text-gray-900 uppercase tracking-tight">{feat.title}</p>
-                                        <p className="text-lg font-medium text-gray-500 leading-relaxed">{feat.desc}</p>
+                                        <div className="flex justify-between items-center text-xs">
+                                            <span className="text-gray-500">Active Queue</span>
+                                            <span className="font-bold text-white">42 Jobs</span>
+                                        </div>
+                                        <div className="w-full bg-gray-850 h-2 rounded-full overflow-hidden">
+                                            <div className="w-[70%] bg-gradient-to-r from-red-500 to-rose-500 h-full rounded-full" />
+                                        </div>
+                                        <div className="flex justify-between items-center text-xs">
+                                            <span className="text-gray-500">Dispatch Speed</span>
+                                            <span className="font-bold text-white">0.8s avg</span>
+                                        </div>
+                                        <div className="w-full bg-gray-850 h-2 rounded-full overflow-hidden">
+                                            <div className="w-[90%] bg-gradient-to-r from-blue-500 to-cyan-500 h-full rounded-full" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="p-5 rounded-2xl bg-gray-900/60 border border-gray-800 space-y-3">
+                                    <span className="text-xs font-bold uppercase text-gray-400 tracking-wider block">Real-time alerts</span>
+                                    <div className="space-y-2">
+                                        <div className="p-2.5 rounded-lg bg-red-950/20 border border-red-500/20 text-[11px] flex items-center justify-between">
+                                            <span className="text-red-300 font-medium">Critical Water Leak - Sector 2</span>
+                                            <span className="text-red-400 font-bold">Dispatched</span>
+                                        </div>
+                                        <div className="p-2.5 rounded-lg bg-emerald-950/20 border border-emerald-500/20 text-[11px] flex items-center justify-between">
+                                            <span className="text-emerald-300 font-medium">Power Line Restored - Ward 4</span>
+                                            <span className="text-emerald-400 font-bold">Resolved</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Chart Telemetry Panel */}
+                            <div className="lg:col-span-8 p-5 md:p-6 rounded-2xl bg-gray-900/40 border border-gray-800 flex flex-col justify-between gap-6">
+                                <div className="flex justify-between items-center">
+                                    <div>
+                                        <h4 className="text-sm font-bold text-white">District Health Analytics</h4>
+                                        <p className="text-[11px] text-gray-500">Weekly resolution metrics versus incoming complaints</p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <span className="inline-flex items-center gap-1.5 text-[10px] text-gray-400 font-bold bg-gray-800 px-2.5 py-1 rounded-md">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-red-500" /> Complaints
+                                        </span>
+                                        <span className="inline-flex items-center gap-1.5 text-[10px] text-gray-400 font-bold bg-gray-800 px-2.5 py-1 rounded-md">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" /> Resolved
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Graph Mock */}
+                                <div className="h-40 flex items-end justify-between gap-3 pt-4 border-b border-gray-800 pb-2">
+                                    {[
+                                        { complaints: 60, resolved: 80, label: "Mon" },
+                                        { complaints: 40, resolved: 70, label: "Tue" },
+                                        { complaints: 80, resolved: 90, label: "Wed" },
+                                        { complaints: 50, resolved: 85, label: "Thu" },
+                                        { complaints: 90, resolved: 95, label: "Fri" },
+                                        { complaints: 30, resolved: 60, label: "Sat" },
+                                        { complaints: 20, resolved: 50, label: "Sun" },
+                                    ].map((day, idx) => (
+                                        <div key={idx} className="flex-1 flex flex-col items-center gap-2 group/bar">
+                                            <div className="w-full flex items-end gap-1.5 h-32 justify-center">
+                                                <div style={{ height: `${day.complaints}%` }} className="w-2 md:w-3 bg-red-500/80 rounded-t-sm group-hover/bar:bg-red-500 transition-colors" />
+                                                <div style={{ height: `${day.resolved}%` }} className="w-2 md:w-3 bg-blue-500/80 rounded-t-sm group-hover/bar:bg-blue-500 transition-colors" />
+                                            </div>
+                                            <span className="text-[9px] font-bold text-gray-500 uppercase">{day.label}</span>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="flex justify-between items-center text-xs">
+                                    <span className="text-gray-500 font-medium">Predictive Resolution Score</span>
+                                    <span className="text-emerald-400 font-bold flex items-center gap-1">
+                                        <Activity className="w-3.5 h-3.5" /> Optimal (98.4%)
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Features Checklist */}
+                <section className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                    <div className="space-y-8">
+                        <div className="space-y-4">
+                            <h2 className="text-3xl md:text-4xl font-black text-white leading-tight tracking-tight">
+                                Built for Transparency. <br/>Powered by <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-rose-500">Explainable AI.</span>
+                            </h2>
+                            <p className="text-gray-400 text-sm md:text-base font-medium leading-relaxed">
+                                Avoid the black-box effect. GovPilot breaks down automated classification workflows and optimization parameters clearly, offering transparent governance models to administrators and citizens alike.
+                            </p>
+                        </div>
+                        <div className="space-y-5">
+                            {[
+                                { title: "XAI-Driven Validation", desc: "Instantly audits incoming grievances for duplicate checks and validation routing." },
+                                { title: "Telemetry Command Centers", desc: "Integrate multiple live telemetry metrics and responsive performance monitors directly." },
+                                { title: "Optimized Field Dispatching", desc: "Utilizes advanced heuristics to match dispatch orders with field officer routes instantly." }
+                            ].map((feat, i) => (
+                                <div key={i} className="flex gap-4">
+                                    <div className="w-10 h-10 rounded-xl bg-gray-900 border border-gray-800 flex items-center justify-center shrink-0">
+                                        <CheckCircle2 className="w-5 h-5 text-red-500" />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-sm font-black text-white uppercase tracking-tight">{feat.title}</h4>
+                                        <p className="text-xs font-semibold text-gray-500 mt-1">{feat.desc}</p>
                                     </div>
                                 </div>
                             ))}
                         </div>
                     </div>
-                </div>
-                {/* Platform Strategic Manual: Master Edition */}
-                <div className="mt-40 bg-white border border-gray-100 rounded-[4rem] p-20 shadow-sm relative overflow-hidden group/manual">
-                    <div className="absolute top-0 right-0 w-[50rem] h-[50rem] bg-[#B91C1C]/5 blur-[180px] pointer-events-none group-hover/manual:bg-[#B91C1C]/10 transition-all duration-1000" />
-                    
-                    <div className="max-w-5xl mx-auto">
-                        <div className="flex flex-col items-center text-center mb-20 space-y-6">
-                            <div className="inline-flex items-center gap-3 px-6 py-2 bg-red-50 text-[#B91C1C] rounded-full text-base font-black uppercase tracking-[0.4em] border border-red-100 shadow-sm">
-                                <Shield className="w-4 h-4" /> System Standard v2.4
+                    <div className="relative flex justify-center items-center">
+                        <div className="absolute -inset-4 bg-gradient-to-tr from-red-500 to-blue-500 rounded-[3rem] blur-[80px] opacity-10 animate-pulse" />
+                        <div className="relative bg-gray-950/60 p-10 rounded-[3rem] border border-gray-850 shadow-2xl overflow-hidden aspect-square w-full max-w-[400px] flex flex-col justify-between items-center text-center">
+                            <div className="p-4 rounded-3xl bg-red-500/10 border border-red-500/20 mt-4 animate-bounce">
+                                <Sparkles className="w-12 h-12 text-red-500" />
                             </div>
-                            <h2 className="text-5xl font-black text-gray-900 tracking-tighter italic uppercase">GovPilot Strategic Manual</h2>
-                            <p className="text-lg text-gray-400 font-black uppercase tracking-[0.3em] max-w-lg">Master Protocol for Triple-Tier Governance Infrastructure</p>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-16 relative z-10">
-                            {[
-                                { 
-                                    tier: "Tier 01", 
-                                    title: "Citizen Deployment", 
-                                    desc: "Grievances are logged via secure geofenced portals. AI auto-triages issues into the Governance Core in <2 seconds.",
-                                    icon: User
-                                },
-                                { 
-                                    tier: "Tier 02", 
-                                    title: "Officer Execution", 
-                                    desc: "Field units receive high-priority alerts on mobile grids. Site evidence must be uploaded to confirm resolution integrity.",
-                                    icon: Building2
-                                },
-                                { 
-                                    tier: "Tier 03", 
-                                    title: "Admin Oversight", 
-                                    desc: "Administrators use 'War Room' telemetry to monitor district health scores and simulate policy impacts in real-time.",
-                                    icon: LayoutDashboard
-                                },
-                            ].map((s, i) => {
-                                const Icon = s.icon;
-                                return (
-                                    <div key={i} className="space-y-8 group/step text-center">
-                                        <div className="flex flex-col items-center gap-6">
-                                            <div className="text-5xl font-black text-gray-900/5 italic tracking-tighter group-hover/step:text-[#B91C1C]/10 transition-colors uppercase leading-none">{s.tier}</div>
-                                            <div className="w-16 h-16 rounded-[2rem] bg-gray-50 flex items-center justify-center border border-gray-100 group-hover/step:bg-[#B91C1C] transition-all duration-500 shadow-sm">
-                                                <Icon className="w-8 h-8 text-gray-300 group-hover/step:text-white transition-colors" />
-                                            </div>
-                                        </div>
-                                        <div className="space-y-4">
-                                            <h4 className="text-lg font-black text-gray-900 uppercase tracking-tighter group-hover/step:text-[#B91C1C] transition-colors italic leading-tight">{s.title}</h4>
-                                            <p className="text-base text-gray-400 font-bold leading-relaxed tracking-tight group-hover/step:text-gray-500 transition-colors">{s.desc}</p>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-
-                        <div className="mt-28 pt-20 border-t border-gray-50 flex flex-col md:flex-row items-center justify-between gap-12">
-                            <div className="flex items-center gap-8">
-                                <div className="w-24 h-24 bg-gray-900 rounded-[3rem] flex items-center justify-center border-[6px] border-white shadow-2xl group-hover/manual:rotate-[15deg] transition-transform duration-700">
-                                    <BrainCircuit className="w-12 h-12 text-red-500" />
-                                </div>
-                                <div className="space-y-1">
-                                    <p className="text-base font-black uppercase text-gray-400 tracking-[0.3em] italic">System Integrity</p>
-                                    <p className="text-lg font-black text-gray-900 uppercase tracking-tight">Predictive Core Synchronized</p>
-                                </div>
+                            <div className="space-y-2">
+                                <p className="text-2xl font-black text-white tracking-tight">GovPilot Platform</p>
+                                <p className="text-[10px] font-black uppercase tracking-[0.5em] text-gray-500">Live AI Environment</p>
                             </div>
-                            <button onClick={() => navigate("/login")} className="px-12 py-6 bg-gray-900 text-white rounded-[2rem] text-base font-black uppercase tracking-[0.4em] hover:bg-[#B91C1C] transition-all shadow-2xl shadow-gray-950/20 active:scale-95 group/btn">
-                                Access Full Command Hub <ArrowRight className="w-4 h-4 ml-3 inline group-hover:translate-x-2 transition-transform" />
-                            </button>
+                            <div className="px-5 py-2.5 rounded-2xl bg-gray-900/80 border border-gray-800 text-xs font-semibold text-emerald-400">
+                                Dispatch status: Active
+                            </div>
                         </div>
                     </div>
-                </div>
+                </section>
             </main>
 
-            <footer className="mt-32 pt-20 pb-10 border-t border-gray-100 bg-white/50 text-center">
-                <p className="text-sm font-black uppercase tracking-widest text-gray-300 mb-2">GovPilot District AI · Open Infrastructure</p>
-                <div className="flex items-center justify-center gap-6">
-                    {["API Documentation", "Transparency Report", "Public Ledger"].map(l => (
-                        <a key={l} href="#" className="text-[9px] font-bold uppercase tracking-widest text-gray-400 hover:text-gray-900 transition-colors">{l}</a>
+            {/* Footer */}
+            <footer className="border-t border-gray-900 bg-gray-950/80 pt-16 pb-12 text-center relative z-10">
+                <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-3">GovPilot District AI · Open Infrastructure</p>
+                <div className="flex flex-wrap items-center justify-center gap-6 text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                    {["API Documentation", "Transparency Report", "Public Ledger", "Terms of Service"].map(l => (
+                        <a key={l} href="#" className="hover:text-white transition-colors">{l}</a>
                     ))}
                 </div>
             </footer>
 
+            {/* Global Keyframes & Animations */}
             <style>{`
-                @keyframes gradient {
-                    0% { background-position: 0% 50%; }
-                    50% { background-position: 100% 50%; }
-                    100% { background-position: 0% 50%; }
-                }
                 @keyframes marquee {
                     0% { transform: translateX(100%); }
                     100% { transform: translateX(-100%); }
                 }
-                .animate-gradient { background-size: 200% auto; animation: gradient 4s ease infinite; }
-                .animate-marquee { animation: marquee 15s linear infinite; }
+                .animate-marquee { animation: marquee 18s linear infinite; }
             `}</style>
         </div>
     );
 }
+

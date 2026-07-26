@@ -47,12 +47,12 @@ export function IntelligencePanel() {
                 <div className="flex items-center gap-3">
                     <div className="h-5 w-1 rounded-full bg-gradient-to-b from-rose-500 to-orange-600 shadow-sm" />
                     <h2 className="text-base font-bold text-gray-950 tracking-tight">Critical Issues</h2>
-                    <span className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-rose-600 bg-rose-50 border border-rose-100 px-3 py-1 rounded-xl shadow-sm">
+                    <span className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-rose-600 bg-rose-50 border border-rose-100 px-3 py-1 rounded-xl shadow-sm">
                         <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.4)]" />
                         7 Issues Found
                     </span>
                 </div>
-                <button onClick={() => navigate("/ai-alerts")} className="flex items-center gap-1.5 text-base font-bold text-rose-600 uppercase tracking-widest hover:text-rose-800 transition-all hover:gap-2">
+                <button onClick={() => navigate("/ai-alerts")} className="flex items-center gap-1.5 text-xs font-bold text-rose-600 uppercase tracking-widest hover:text-rose-800 transition-all hover:gap-2">
                     View All Alerts <ArrowUpRight className="w-4 h-4" />
                 </button>
             </div>
@@ -75,22 +75,22 @@ export function IntelligencePanel() {
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2.5 flex-wrap mb-2.5">
-                                            <span className="text-lg font-extrabold text-[#0B1221] tracking-tight">{a.ward}</span>
-                                            <span className="text-sm font-bold uppercase tracking-widest text-gray-400 px-2.5 py-0.5 bg-gray-100 border border-gray-200/50 rounded-lg">{a.dept}</span>
-                                            <span className={`text-sm font-bold uppercase tracking-widest px-3 py-1 rounded-lg shadow-sm ${a.severityStyle}`}>
+                                            <span className="text-sm font-extrabold text-[#0B1221] tracking-tight">{a.ward}</span>
+                                            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 px-2.5 py-0.5 bg-gray-100 border border-gray-200/50 rounded-lg">{a.dept}</span>
+                                            <span className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-lg shadow-sm ${a.severityStyle}`}>
                                                 {a.severity}
                                             </span>
                                         </div>
-                                        <p className="text-base text-gray-600 leading-relaxed mb-3">{a.description}</p>
+                                        <p className="text-xs text-gray-600 leading-relaxed mb-3">{a.description}</p>
                                         <div className="flex items-center gap-3">
                                             <div className="flex-1">
                                                 <RiskMeter value={a.risk} label="Risk Score" />
                                             </div>
                                             <div className="flex gap-2 shrink-0">
-                                                <button onClick={(e) => { e.stopPropagation(); setDismissed(prev => [...prev, a.id]); }} className="px-4 py-2 text-base font-bold text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95 shadow-sm group">
+                                                <button onClick={(e) => { e.stopPropagation(); setDismissed(prev => [...prev, a.id]); }} className="px-4 py-2 text-[11px] font-bold text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95 shadow-sm group">
                                                     Ignore
                                                 </button>
-                                                <button onClick={(e) => { e.stopPropagation(); navigate("/ai-alerts"); }} className={`px-5 py-2 text-base font-bold text-white rounded-xl transition-all hover:scale-[1.05] active:scale-95 shadow-lg group ${a.dot === 'bg-rose-500' ? 'bg-rose-600 shadow-rose-500/30' : a.dot === 'bg-orange-500' ? 'bg-orange-600 shadow-orange-500/30' : 'bg-amber-600 shadow-amber-500/30'}`}>
+                                                <button onClick={(e) => { e.stopPropagation(); navigate("/ai-alerts"); }} className={`px-5 py-2 text-[11px] font-bold text-white rounded-xl transition-all hover:scale-[1.05] active:scale-95 shadow-lg group ${a.dot === 'bg-rose-500' ? 'bg-rose-600 shadow-rose-500/30' : a.dot === 'bg-orange-500' ? 'bg-orange-600 shadow-orange-500/30' : 'bg-amber-600 shadow-amber-500/30'}`}>
                                                     Done →
                                                 </button>
                                             </div>
@@ -109,12 +109,12 @@ export function IntelligencePanel() {
                         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#D4AF37]/40 to-transparent" />
                         <div className="flex items-center gap-3 mb-6">
                             <Brain className="w-5 h-5 text-[#D4AF37] shadow-[0_0_10px_rgba(212,175,55,0.3)]" />
-                            <span className="text-lg font-bold text-white tracking-tight">AI Ideas</span>
-                            <span className="ml-auto text-sm font-bold text-white/30 uppercase tracking-[0.2em]">Online</span>
+                            <span className="text-sm font-bold text-white tracking-tight">AI Ideas</span>
+                            <span className="ml-auto text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Online</span>
                         </div>
 
                         <div className="text-5xl font-extrabold text-white text-center mb-1 tabular-nums tracking-tighter shadow-sm">82</div>
-                        <p className="text-sm font-bold text-white/30 uppercase tracking-[0.2em] text-center mb-6">Public Confidence Index</p>
+                        <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] text-center mb-6">Public Confidence Index</p>
 
                         <div className="space-y-4">
                             <RiskMeter value={14} label="System Failure Probability" />
@@ -129,7 +129,7 @@ export function IntelligencePanel() {
                             <div className="p-2 rounded-lg bg-violet-50 border border-violet-100 shadow-sm">
                                 <Brain className="w-4 h-4 text-violet-600" />
                             </div>
-                            <span className="text-lg font-bold text-[#0B1221] tracking-tight">AI Notes</span>
+                            <span className="text-sm font-bold text-[#0B1221] tracking-tight">AI Notes</span>
                             <span className="ml-auto w-2 h-2 rounded-full bg-violet-500 animate-pulse shadow-[0_0_8px_rgba(139,92,246,0.4)]" />
                         </div>
                         <div className="space-y-2.5">
@@ -139,8 +139,8 @@ export function IntelligencePanel() {
                                         <ins.icon className="w-4 h-4" />
                                     </div>
                                     <div className="min-w-0">
-                                        <p className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-1">{ins.type}</p>
-                                        <p className="text-lg text-gray-700 leading-relaxed font-medium">{ins.text}</p>
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">{ins.type}</p>
+                                        <p className="text-sm text-gray-700 leading-relaxed font-medium">{ins.text}</p>
                                     </div>
                                 </div>
                             ))}

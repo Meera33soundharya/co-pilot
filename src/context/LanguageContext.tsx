@@ -1,67 +1,443 @@
-import React, { createContext, useContext, useState } from "react";
-import { listenOnce } from "@/utils/speech";
+import { createContext, useContext, useState, type ReactNode } from "react";
 
-type Lang = 'en' | 'ta';
+export type Lang = "en" | "ta";
 
-interface LangCtx {
-  lang: Lang;
-  langTag: string;
-  setLang: (l: Lang) => void;
-  detectAndSetLanguage: () => Promise<Lang>;
-  t: (key: string) => string;
-}
+// ── Translation dictionary ────────────────────────────────────────────────────
+export const translations = {
+    en: {
+        // --- Common ---
+        language: "தமிழ்",
+        langToggleLabel: "Switch to Tamil",
+        signOut: "Sign Out",
+        back: "Back",
+        next: "Next",
+        submit: "Submit",
+        search: "Search",
+        close: "Close",
+        viewAll: "View All",
+        loading: "Loading…",
+        or: "or",
 
-const translations: Record<string, Record<Lang, string>> = {
-  'tap_microphone': { en: 'Tap the microphone and tell us your complaint.', ta: 'மைக்ரோஃபோன் பொத்தானை அழுத்தி உங்கள் புகாரை தெரிவிக்கவும்.' },
-  'speak_name': { en: 'Hello. Please say your full name.', ta: 'வணக்கம். உங்கள் பெயரை சொல்லுங்கள்.' },
-  'speak_phone': { en: 'Please say your phone number or say skip.', ta: 'உங்கள் தொலைபேசி எண்ணை சொல்லுங்கள், அல்லது பாஸிட் சொல்வதற்கு' },
-  'speak_issue': { en: 'Now describe the problem you want to report.', ta: 'பயன்பாட்டிற்கான பிரச்சினையை சொல்லுங்கள்.' },
-  'complaint_submitted': { en: 'Your complaint has been submitted. Case ID', ta: 'உங்கள் புகார் சமர்ப்பிக்கப்பட்டது. வழக்கு ஐடி' },
+        // --- Landing ---
+        landing_tagline: "Next-Generation Public Infrastructure",
+        landing_hero_title_1: "AI-Powered Governance for",
+        landing_hero_title_2: "Smarter Public Services",
+        landing_hero_desc: "GovPilot transforms city administration by closing the loop between citizens, field officers, and administrative hubs.",
+        landing_getStarted: "Get Started",
+        landing_watchDemo: "Watch Demo",
+        landing_users: "Empowering over 120,000+ citizens and officials daily",
+        landing_accessPortals: "Access Portals",
+        landing_portalDesc: "Select your portal to connect directly with the district's autonomous governance suite.",
+        landing_systemLogin: "System Login",
+        landing_stat_districts: "Active Districts",
+        landing_stat_accuracy: "AI Dispatch Accuracy",
+        landing_stat_time: "Avg. Resolution Time",
+        landing_stat_citizens: "Citizens Engaged",
+
+        // --- Portals ---
+        portal_citizen_title: "Citizen Portal",
+        portal_citizen_desc: "Report localized grievances, upload geotagged media proof, and receive real-time tracking.",
+        portal_citizen_action: "Report Grievance",
+        portal_officer_title: "Field Officer Portal",
+        portal_officer_desc: "Smart field operations with automated dispatching, route optimization, and instant updates.",
+        portal_officer_action: "Access Field Hub",
+        portal_admin_title: "Administrator Control",
+        portal_admin_desc: "District health monitoring, predictive AI risk alerts, and resource allocation models.",
+        portal_admin_action: "Launch Dashboard",
+
+        // --- Login ---
+        login_welcome: "Welcome back",
+        login_subtitle: "Sign in to access your portal",
+        login_quickAccess: "Quick Access — Select Your Role",
+        login_tapRole: "Tap a role to auto-fill credentials, then click Sign In",
+        login_officialEmail: "Official Email",
+        login_password: "Password",
+        login_signIn: "Sign In Securely",
+        login_submitComplaint: "Submit a Complaint — Public Portal",
+        login_admin_label: "Administrator",
+        login_admin_desc: "Full system access & analytics",
+        login_officer_label: "Field Officer",
+        login_officer_desc: "Manage & resolve complaints",
+        login_citizen_label: "Citizen",
+        login_citizen_desc: "Submit & track your complaints",
+        login_error_empty: "Please enter your email and password.",
+        login_error_invalid: "Invalid credentials — use quick access below to auto-fill.",
+
+        // --- Sidebar Nav ---
+        nav_overview: "Overview",
+        nav_dashboard: "Dashboard",
+        nav_heatmap: "Heatmap",
+        nav_people: "People",
+        nav_fieldPortal: "Field Portal",
+        nav_complaints: "Complaints",
+        nav_analytics: "Analytics",
+        nav_reports: "Reports",
+        nav_commsAI: "Comms & AI",
+        nav_announcements: "Announcements",
+        nav_speechAI: "Speech AI",
+        nav_warRoom: "War Room",
+        nav_impactSim: "Impact Sim",
+        nav_documents: "Documents",
+        nav_schedule: "Schedule",
+        nav_account: "Account",
+        nav_myProfile: "My Profile",
+        nav_settings: "Settings",
+        nav_myAccount: "My Account",
+        nav_submitComplaint: "Submit Complaint",
+        nav_trackComplaint: "Track Complaint",
+        nav_main: "Main",
+        nav_assignedComplaints: "Assigned Complaints",
+        nav_work: "Work",
+        nav_citizenPortal: "Citizen Portal",
+        nav_pendingComplaints: "Pending Complaint",
+        nav_pendingComplaintsPlural: "Pending Complaints",
+        nav_notifications: "Notifications",
+        nav_noNotifications: "No notifications",
+        nav_unread: "Unread",
+        nav_trackComplaints: "Track My Complaints",
+        nav_openFieldPortal: "Open Field Portal",
+        nav_viewAllComplaints: "View All Complaints",
+        nav_takeAction: "Take Action",
+        nav_searchPlaceholder: "Search complaints, wards, officers…",
+        nav_politicoAI: "PoliticoAI",
+        nav_electionAnalytics: "Election Analytics",
+        nav_voterCRM: "Voter CRM",
+        nav_modules: "MODULES",
+        nav_commandCenter: "Command Center",
+        nav_grievances: "Grievances",
+        nav_meetings: "Meetings",
+        nav_speechStudio: "Speech Studio",
+        nav_mediaQueue: "Media Queue",
+        nav_constituency: "Constituency",
+        nav_aiCoPilot: "AI Co-Pilot",
+
+        // --- Citizen Module ---
+        citizen_title: "Citizen Portal",
+        citizen_subtitle: "Welcome",
+        citizen_gotProblem: "Got a Problem?",
+        citizen_gotProblem_sub: "Tap to report issues in your ward.",
+        citizen_raiseComplaint: "Raise Complaint",
+        citizen_totalSubmitted: "Total Submitted",
+        citizen_reports: "Reports",
+        citizen_currentlyPending: "Currently Pending",
+        citizen_live: "Live",
+        citizen_liveTracking: "Live Tracking Center",
+        citizen_searchPlaceholder: "Search by ID or Issue...",
+        citizen_allStatus: "All Status",
+        citizen_pending: "Pending",
+        citizen_accepted: "Accepted",
+        citizen_assigned: "Assigned",
+        citizen_inProgress: "In Progress",
+        citizen_resolved: "Resolved",
+        citizen_closed: "Closed",
+        citizen_noRecords: "No matching records",
+        citizen_communityPull: "Community Pull",
+        citizen_liveTimeline: "Live Timeline & Updates",
+        citizen_evidenceVerification: "Evidence & Verification",
+        citizen_mySubmission: "My Submission",
+        citizen_resolutionProof: "Resolution Proof",
+        citizen_rateResolution: "Rate the Resolution",
+        citizen_feedbackHelps: "Your feedback helps us improve governance",
+        citizen_stillProblem: "Still have a problem?",
+        citizen_reopenCase: "Reopen Case",
+        citizen_liveNotifications: "Live Notifications",
+        citizen_smsAlerts: "SMS Alerts",
+        citizen_emailUpdates: "Email Updates",
+        citizen_citizenSupport: "Citizen Support",
+        citizen_supportDesc: "Need help with your report? Our AI is available 24/7.",
+        citizen_askAI: "Ask AI Assistant",
+        citizen_officialAnnouncements: "Official Announcements",
+
+        // --- Citizen Portal (Submit Complaint) ---
+        portal_title: "Governance Co-Pilot",
+        portal_subtitle: "Citizen Submission Portal",
+        portal_backDash: "Back to Dashboard",
+        portal_step_identity: "Identity",
+        portal_step_problem: "Problem & Evidence",
+        portal_step_location: "Confirm Location",
+        portal_step_confirm: "Confirm",
+        portal_identity_title: "Identify Yourself",
+        portal_identity_desc: "We need this so officers can contact you for updates.",
+        portal_fullName: "Full Name",
+        portal_phone: "Contact Phone",
+        portal_dataSecure: "Your data is secured by district governance protocols. Only assigned officers can access your phone number.",
+        portal_nextIssue: "Next: Issue Details",
+        portal_problemTitle: "Problem & Evidence Proof",
+        portal_problemDesc: "Tell us what needs fixing and provide any supporting media or documents.",
+        portal_speakComplaint: "Speak Your Complaint",
+        portal_listening: "Listening… Tap to stop",
+        portal_orType: "or type below",
+        portal_problemTitle_label: "Problem Title",
+        portal_urgency: "Urgency Selector",
+        portal_low: "Low",
+        portal_medium: "Medium",
+        portal_high: "High",
+        portal_fullDescription: "Full Description",
+        portal_descPlaceholder: "Provide more context — how long has this been happening?",
+        portal_evidence: "Supporting Evidence (Audio / Docs / Media)",
+        portal_highSensitivity: "High Sensitivity",
+        portal_uploadDoc: "Upload Document",
+        portal_audioIntelligence: "Audio / Voice Intelligence",
+        portal_recording: "Recording...",
+        portal_recordVoice: "Record Live Voice",
+        portal_stopRecording: "Stop Recording",
+        portal_uploadAudio: "Upload Audio",
+        portal_camera: "Camera",
+        portal_nextLocation: "Next: Confirm Location Area",
+        portal_location_title: "Confirm Location",
+        portal_location_desc: "Help officers find the exact spot using GPS and interactive mapping.",
+        portal_searchLocation: "Search locality, street or landmark...",
+        portal_detectLocation: "Detect My Location",
+        portal_ward: "Ward",
+        portal_locality: "Locality",
+        portal_notifPref: "Update Notifications Preference",
+        portal_sms: "SMS",
+        portal_email: "Email",
+        portal_none: "None",
+        portal_review_title: "Review & Submit",
+        portal_review_desc: "Please confirm all details before submitting.",
+        portal_citizen_label: "Citizen",
+        portal_ward_label: "Ward / Location",
+        portal_priority_label: "Priority",
+        portal_issue_label: "Issue",
+        portal_aiRouting: "AI is routing your complaint…",
+        portal_submit: "Submit Complaint",
+        portal_success_title: "Complaint Submitted!",
+        portal_success_desc: "Your complaint has been registered and will be acted upon by your local governance team.",
+        portal_ticketId: "Ticket ID",
+        portal_trackNow: "Track Status Now",
+        portal_backHome: "Back to Home",
+    },
+    ta: {
+        // --- Common ---
+        language: "English",
+        langToggleLabel: "Switch to English",
+        signOut: "வெளியேறு",
+        back: "பின்னால்",
+        next: "அடுத்து",
+        submit: "சமர்ப்பி",
+        search: "தேடு",
+        close: "மூடு",
+        viewAll: "அனைத்தும் பார்க்க",
+        loading: "ஏற்றுகிறது…",
+        or: "அல்லது",
+
+        // --- Landing ---
+        landing_tagline: "அடுத்த தலைமுறை பொது உள்கட்டமைப்பு",
+        landing_hero_title_1: "செயற்கை நுண்ணறிவு ஆட்சி",
+        landing_hero_title_2: "சிறந்த பொது சேவைகளுக்கு",
+        landing_hero_desc: "GovPilot நகர நிர்வாகத்தை குடிமக்கள், கள அலுவலர்கள் மற்றும் நிர்வாக மையங்களை இணைக்கிறது.",
+        landing_getStarted: "தொடங்குக",
+        landing_watchDemo: "டெமோ பார்க்க",
+        landing_users: "தினமும் 1,20,000+ குடிமக்கள் மற்றும் அதிகாரிகள் பயன்படுத்துகின்றனர்",
+        landing_accessPortals: "போர்ட்டல்களை அணுகவும்",
+        landing_portalDesc: "மாவட்ட ஆட்சி தொகுப்போடு நேரடியாக இணைவதற்கு உங்கள் போர்ட்டலை தேர்ந்தெடுக்கவும்.",
+        landing_systemLogin: "உள்நுழைவு",
+        landing_stat_districts: "செயலில் உள்ள மாவட்டங்கள்",
+        landing_stat_accuracy: "AI அனுப்பல் துல்லியம்",
+        landing_stat_time: "சராசரி தீர்வு நேரம்",
+        landing_stat_citizens: "குடிமக்கள் ஈடுபட்டனர்",
+
+        // --- Portals ---
+        portal_citizen_title: "குடிமக்கள் போர்ட்டல்",
+        portal_citizen_desc: "உங்கள் பகுதியில் உள்ள பிரச்சனைகளை புகாரளிக்கவும், ஆதாரங்கள் பதிவேற்றவும், நிலவரத்தை கண்காணிக்கவும்.",
+        portal_citizen_action: "புகார் அளிக்கவும்",
+        portal_officer_title: "கள அலுவலர் போர்ட்டல்",
+        portal_officer_desc: "தானியங்கி அனுப்பல், பாதை உகப்பாக்கம் மற்றும் உடனடி புதுப்பிப்புகளுடன் கள நடவடிக்கைகள்.",
+        portal_officer_action: "கள மையம் திற",
+        portal_admin_title: "நிர்வாக கட்டுப்பாடு",
+        portal_admin_desc: "மாவட்ட நல கண்காணிப்பு, AI அபாய எச்சரிக்கைகள் மற்றும் வளப்பகிர்வு மாதிரிகள்.",
+        portal_admin_action: "டாஷ்போர்டு தொடங்கு",
+
+        // --- Login ---
+        login_welcome: "மீண்டும் வரவேற்கிறோம்",
+        login_subtitle: "உங்கள் போர்ட்டலை அணுக உள்நுழையுங்கள்",
+        login_quickAccess: "விரைவு அணுகல் — உங்கள் பாத்திரத்தை தேர்ந்தெடுக்கவும்",
+        login_tapRole: "நற்சான்றிதழ்களை தானாக நிரப்ப ஒரு பாத்திரத்தை தட்டவும், பின்னர் உள்நுழை கிளிக் செய்யவும்",
+        login_officialEmail: "அலுவலக மின்னஞ்சல்",
+        login_password: "கடவுச்சொல்",
+        login_signIn: "பாதுகாப்பாக உள்நுழைக",
+        login_submitComplaint: "புகார் சமர்ப்பிக்கவும் — பொது போர்ட்டல்",
+        login_admin_label: "நிர்வாகி",
+        login_admin_desc: "முழு கணினி அணுகல் மற்றும் பகுப்பாய்வு",
+        login_officer_label: "கள அலுவலர்",
+        login_officer_desc: "புகார்களை நிர்வகித்து தீர்க்கவும்",
+        login_citizen_label: "குடிமகன்",
+        login_citizen_desc: "புகார்களை சமர்ப்பிக்கவும் மற்றும் கண்காணிக்கவும்",
+        login_error_empty: "உங்கள் மின்னஞ்சல் மற்றும் கடவுச்சொல்லை உள்ளிடவும்.",
+        login_error_invalid: "தவறான நற்சான்றிதழ்கள் — கீழே உள்ள விரைவு அணுகலை பயன்படுத்தவும்.",
+
+        // --- Sidebar Nav ---
+        nav_overview: "கண்ணோட்டம்",
+        nav_dashboard: "டாஷ்போர்டு",
+        nav_heatmap: "வெப்ப வரைபடம்",
+        nav_people: "நபர்கள்",
+        nav_fieldPortal: "கள போர்ட்டல்",
+        nav_complaints: "புகார்கள்",
+        nav_analytics: "பகுப்பாய்வு",
+        nav_reports: "அறிக்கைகள்",
+        nav_commsAI: "தகவல்தொடர்பு & AI",
+        nav_announcements: "அறிவிப்புகள்",
+        nav_speechAI: "பேச்சு AI",
+        nav_warRoom: "போர் அறை",
+        nav_impactSim: "தாக்க உருவகம்",
+        nav_documents: "ஆவணங்கள்",
+        nav_schedule: "அட்டவணை",
+        nav_account: "கணக்கு",
+        nav_myProfile: "என் சுயவிவரம்",
+        nav_settings: "அமைப்புகள்",
+        nav_myAccount: "என் கணக்கு",
+        nav_submitComplaint: "புகார் சமர்ப்பி",
+        nav_trackComplaint: "புகாரை கண்காணி",
+        nav_main: "முகப்பு",
+        nav_assignedComplaints: "ஒதுக்கப்பட்ட புகார்கள்",
+        nav_work: "பணி",
+        nav_citizenPortal: "குடிமக்கள் போர்ட்டல்",
+        nav_pendingComplaints: "நிலுவையில் உள்ள புகார்",
+        nav_pendingComplaintsPlural: "நிலுவையில் உள்ள புகார்கள்",
+        nav_notifications: "அறிவிப்புகள்",
+        nav_noNotifications: "அறிவிப்புகள் இல்லை",
+        nav_unread: "படிக்காதது",
+        nav_trackComplaints: "என் புகார்களை கண்காணி",
+        nav_openFieldPortal: "கள போர்ட்டல் திற",
+        nav_viewAllComplaints: "அனைத்து புகார்களையும் பார்",
+        nav_takeAction: "நடவடிக்கை எடு",
+        nav_searchPlaceholder: "புகார்கள், வார்டுகள், அலுவலர்களை தேடுங்கள்…",
+        nav_politicoAI: "PoliticoAI",
+        nav_electionAnalytics: "தேர்தல் பகுப்பாய்வு",
+        nav_voterCRM: "வாக்காளர் CRM",
+        nav_modules: "தொகுதிகள்",
+        nav_commandCenter: "கட்டளை மையம்",
+        nav_grievances: "குறைகள்",
+        nav_meetings: "கூட்டங்கள்",
+        nav_speechStudio: "பேச்சு ஸ்டுடியோ",
+        nav_mediaQueue: "ஊடக வரிசை",
+        nav_constituency: "தொகுதி",
+        nav_aiCoPilot: "AI துணை பைலட்",
+
+        // --- Citizen Module ---
+        citizen_title: "குடிமக்கள் போர்ட்டல்",
+        citizen_subtitle: "வரவேற்கிறோம்",
+        citizen_gotProblem: "பிரச்சனை உள்ளதா?",
+        citizen_gotProblem_sub: "உங்கள் வார்டில் உள்ள பிரச்சனைகளை தெரிவிக்கவும்.",
+        citizen_raiseComplaint: "புகார் அளிக்கவும்",
+        citizen_totalSubmitted: "மொத்தம் சமர்ப்பிக்கப்பட்டது",
+        citizen_reports: "அறிக்கைகள்",
+        citizen_currentlyPending: "தற்போது நிலுவையில் உள்ளது",
+        citizen_live: "நேரடி",
+        citizen_liveTracking: "நேரடி கண்காணிப்பு மையம்",
+        citizen_searchPlaceholder: "ID அல்லது பிரச்சனை மூலம் தேடுங்கள்...",
+        citizen_allStatus: "அனைத்து நிலைகளும்",
+        citizen_pending: "நிலுவையில்",
+        citizen_accepted: "ஏற்றுக்கொள்ளப்பட்டது",
+        citizen_assigned: "ஒதுக்கப்பட்டது",
+        citizen_inProgress: "செயல்பாட்டில்",
+        citizen_resolved: "தீர்க்கப்பட்டது",
+        citizen_closed: "மூடப்பட்டது",
+        citizen_noRecords: "பொருந்தும் பதிவுகள் இல்லை",
+        citizen_communityPull: "சமூக ஆதரவு",
+        citizen_liveTimeline: "நேரடி காலவரிசை & புதுப்பிப்புகள்",
+        citizen_evidenceVerification: "சான்றுகள் & சரிபார்ப்பு",
+        citizen_mySubmission: "என் சமர்ப்பிப்பு",
+        citizen_resolutionProof: "தீர்வு சான்று",
+        citizen_rateResolution: "தீர்வை மதிப்பிடுக",
+        citizen_feedbackHelps: "உங்கள் கருத்து ஆட்சியை மேம்படுத்த உதவுகிறது",
+        citizen_stillProblem: "இன்னும் பிரச்சனை உள்ளதா?",
+        citizen_reopenCase: "வழக்கை மீண்டும் திற",
+        citizen_liveNotifications: "நேரடி அறிவிப்புகள்",
+        citizen_smsAlerts: "SMS எச்சரிக்கைகள்",
+        citizen_emailUpdates: "மின்னஞ்சல் புதுப்பிப்புகள்",
+        citizen_citizenSupport: "குடிமக்கள் ஆதரவு",
+        citizen_supportDesc: "உங்கள் அறிக்கையில் உதவி வேண்டுமா? எங்கள் AI 24/7 கிடைக்கிறது.",
+        citizen_askAI: "AI உதவியாளரிடம் கேளுங்கள்",
+        citizen_officialAnnouncements: "அரசு அறிவிப்புகள்",
+
+        // --- Citizen Portal (Submit Complaint) ---
+        portal_title: "ஆட்சி கோ-பைலட்",
+        portal_subtitle: "குடிமக்கள் சமர்ப்பிப்பு போர்ட்டல்",
+        portal_backDash: "டாஷ்போர்டுக்கு திரும்பு",
+        portal_step_identity: "அடையாளம்",
+        portal_step_problem: "பிரச்சனை & சான்று",
+        portal_step_location: "இடத்தை உறுதிப்படுத்து",
+        portal_step_confirm: "உறுதிப்படுத்து",
+        portal_identity_title: "உங்களை அடையாளம் காணுங்கள்",
+        portal_identity_desc: "புதுப்பிப்புகளுக்கு அலுவலர்கள் உங்களை தொடர்பு கொள்ள இது தேவை.",
+        portal_fullName: "முழு பெயர்",
+        portal_phone: "தொடர்பு தொலைபேசி",
+        portal_dataSecure: "உங்கள் தரவு மாவட்ட ஆட்சி நெறிமுறைகளால் பாதுகாக்கப்படுகிறது. ஒதுக்கப்பட்ட அலுவலர்களுக்கு மட்டுமே உங்கள் தொலைபேசி எண் கிடைக்கும்.",
+        portal_nextIssue: "அடுத்து: பிரச்சனை விவரங்கள்",
+        portal_problemTitle: "பிரச்சனை & சான்று ஆதாரம்",
+        portal_problemDesc: "என்ன சரிசெய்ய வேண்டும் என்று கூறுங்கள், ஆதார ஊடகம் அல்லது ஆவணங்களை வழங்குங்கள்.",
+        portal_speakComplaint: "புகாரை பேசுங்கள்",
+        portal_listening: "கேட்கிறோம்… நிறுத்த தட்டவும்",
+        portal_orType: "அல்லது கீழே தட்டச்சு செய்யவும்",
+        portal_problemTitle_label: "பிரச்சனையின் தலைப்பு",
+        portal_urgency: "அவசர நிலை தேர்வு",
+        portal_low: "குறைவு",
+        portal_medium: "நடுத்தரம்",
+        portal_high: "அதிகம்",
+        portal_fullDescription: "முழு விவரம்",
+        portal_descPlaceholder: "மேலும் சூழலை தெரிவிக்கவும் — இது எவ்வளவு காலமாக நடக்கிறது?",
+        portal_evidence: "ஆதார சான்றுகள் (ஆடியோ / ஆவணங்கள் / ஊடகம்)",
+        portal_highSensitivity: "அதிக உணர்திறன்",
+        portal_uploadDoc: "ஆவணம் பதிவேற்றவும்",
+        portal_audioIntelligence: "ஆடியோ / குரல் நுண்ணறிவு",
+        portal_recording: "பதிவு செய்கிறது...",
+        portal_recordVoice: "நேரடி குரல் பதிவு செய்யவும்",
+        portal_stopRecording: "பதிவை நிறுத்துக",
+        portal_uploadAudio: "ஆடியோ பதிவேற்றவும்",
+        portal_camera: "கேமரா",
+        portal_nextLocation: "அடுத்து: இடத்தை உறுதிப்படுத்து",
+        portal_location_title: "இடத்தை உறுதிப்படுத்துங்கள்",
+        portal_location_desc: "GPS மற்றும் ஊடாடும் வரைபடம் மூலம் துல்லியமான இடத்தை கண்டறிய அலுவலர்களுக்கு உதவுங்கள்.",
+        portal_searchLocation: "பகுதி, தெரு அல்லது அடையாளத்தை தேடுங்கள்...",
+        portal_detectLocation: "என் இடத்தை கண்டறி",
+        portal_ward: "வார்டு",
+        portal_locality: "பகுதி",
+        portal_notifPref: "புதுப்பிப்பு அறிவிப்பு விருப்பம்",
+        portal_sms: "SMS",
+        portal_email: "மின்னஞ்சல்",
+        portal_none: "இல்லை",
+        portal_review_title: "மதிப்பாய்வு & சமர்ப்பி",
+        portal_review_desc: "சமர்ப்பிக்கும் முன் அனைத்து விவரங்களையும் உறுதிப்படுத்தவும்.",
+        portal_citizen_label: "குடிமகன்",
+        portal_ward_label: "வார்டு / இடம்",
+        portal_priority_label: "முன்னுரிமை",
+        portal_issue_label: "பிரச்சனை",
+        portal_aiRouting: "AI உங்கள் புகாரை திசை திருப்புகிறது…",
+        portal_submit: "புகார் சமர்ப்பிக்கவும்",
+        portal_success_title: "புகார் சமர்ப்பிக்கப்பட்டது!",
+        portal_success_desc: "உங்கள் புகார் பதிவு செய்யப்பட்டுள்ளது மற்றும் உங்கள் உள்ளூர் ஆட்சிக் குழுவால் நடவடிக்கை எடுக்கப்படும்.",
+        portal_ticketId: "டிக்கெட் ID",
+        portal_trackNow: "நிலவரத்தை இப்போது கண்காணி",
+        portal_backHome: "முகப்பிற்கு திரும்பு",
+    }
 };
 
-const Ctx = createContext<LangCtx | null>(null);
+// ── Context ───────────────────────────────────────────────────────────────────
+interface LanguageContextType {
+    lang: Lang;
+    setLang: (l: Lang) => void;
+    t: (key: keyof typeof translations.en) => string;
+}
 
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [lang, setLangState] = useState<Lang>('en');
+const LanguageContext = createContext<LanguageContextType>({
+    lang: "en",
+    setLang: () => {},
+    t: (key) => translations.en[key],
+});
 
-  const setLang = (l: Lang) => setLangState(l);
-
-  async function detectAndSetLanguage(): Promise<Lang> {
-    // Try Tamil first with a short timeout, then English fallback
-    try {
-      const ta = await listenOnce('ta-IN', 4000);
-      if (/[\u0B80-\u0BFF]/.test(ta) || ta.trim().length > 0 && ta.split(' ').length <= 20 && /[\u0B80-\u0BFF]/.test(ta)) {
-        setLangState('ta');
-        return 'ta';
-      }
-      const en = await listenOnce('en-IN', 4000);
-      if (en && en.trim().length > 0) {
-        setLangState('en');
-        return 'en';
-      }
-    } catch (e) {
-      // ignore
-    }
-    // fallback to browser locale
-    const nav = typeof navigator !== 'undefined' ? (navigator.language || 'en').toLowerCase() : 'en';
-    const detected: Lang = nav.startsWith('ta') ? 'ta' : 'en';
-    setLangState(detected);
-    return detected;
-  }
-
-  const ctx: LangCtx = {
-    lang,
-    langTag: lang === 'ta' ? 'ta-IN' : 'en-IN',
-    setLang,
-    detectAndSetLanguage,
-    t: (key: string) => (translations[key] ? translations[key][lang] : key),
-  };
-
-  return <Ctx.Provider value={ctx}>{children}</Ctx.Provider>;
+export function LanguageProvider({ children }: { children: ReactNode }) {
+    const [lang, setLang] = useState<Lang>("en");
+    const t = (key: keyof typeof translations.en): string =>
+        (translations[lang] as any)[key] ?? translations.en[key];
+    return (
+        <LanguageContext.Provider value={{ lang, setLang, t }}>
+            {children}
+        </LanguageContext.Provider>
+    );
 }
 
 export function useLanguage() {
-  const c = useContext(Ctx);
-  if (!c) throw new Error('useLanguage must be used within LanguageProvider');
-  return c;
+    return useContext(LanguageContext);
 }

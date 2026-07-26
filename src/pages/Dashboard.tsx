@@ -1,4 +1,4 @@
-import DashboardLayout from "@/components/DashboardLayout";
+import { DashboardLayout } from "@/components/DashboardLayout";
 import { useComplaints } from "@/context/ComplaintsContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState, useMemo } from "react";
@@ -110,16 +110,11 @@ export default function Dashboard() {
     const recentNotifs = notifications.slice(0, 4);
 
     return (
-        <DashboardLayout 
-            title="Dashboard" 
-            subtitle={
-                isAdmin ? "Live overview — all complaints" :
-                    isOfficer ? `Your dept: ${currentUser?.dept}` :
-                        "Your complaint status"
-            }
-            isDark={true}
-            bgImage="/images/dashboard_bg.png"
-        >
+        <DashboardLayout title="Dashboard" subtitle={
+            isAdmin ? "Live overview — all complaints" :
+                isOfficer ? `Your dept: ${currentUser?.dept}` :
+                    "Your complaint status"
+        }>
             <div className="space-y-8 pb-10 relative">
                 
                 {/* ── GRIEVANCE DETAIL SIDE-TRAY ────────────────── */}

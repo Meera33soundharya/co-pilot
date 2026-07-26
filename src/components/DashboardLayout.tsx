@@ -1,15 +1,15 @@
 import type { ReactNode } from "react";
-import { NavLink, useNavigate, useLocation } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
     LayoutDashboard, MessageSquare, Settings,
     Calendar, X, Menu, Search, Bell, LogOut,
-    ChevronRight, Shield, FolderOpen, Layers, Zap, FileBarChart2, Volume2,
-    User, Building2, PlusCircle, Activity, ArrowRight, BarChart2, Megaphone,
-    Map, Users2, Mic
+    ChevronRight, Shield, Zap, Volume2,
+    User, Building2, PlusCircle, Activity, ArrowRight,
+    Map, Users2, Languages, FileBarChart2, Megaphone, FolderOpen
 } from "lucide-react";
-import AdminSlide from "./AdminSlide";
 import { useState, useEffect } from "react";
 import { useComplaints } from "@/context/ComplaintsContext";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface DashboardLayoutProps {
     children: ReactNode;
@@ -17,7 +17,6 @@ interface DashboardLayoutProps {
     subtitle?: string;
     bgImage?: string;
     actions?: ReactNode;
-    isDark?: boolean;
 }
 
 interface NavItem {
@@ -32,88 +31,64 @@ interface NavGroup {
     items: NavItem[];
 }
 
-// ── Nav definitions per role ─────────────────────────────────
+// ── Nav definitions per role — labels are translation keys ───────────────────
 const ADMIN_NAV: NavGroup[] = [
     {
-        group: "Overview", items: [
-            { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
+        group: "nav_modules", items: [
+            { icon: LayoutDashboard, label: "nav_commandCenter", path: "/dashboard" },
+            { icon: Users2, label: "nav_grievances", path: "/grievances" },
+            { icon: Calendar, label: "nav_meetings", path: "/meetings" },
+            { icon: Volume2, label: "nav_speechStudio", path: "/speech-ai" },
+            { icon: MessageSquare, label: "nav_mediaQueue", path: "/mentions" },
+            { icon: Calendar, label: "nav_schedule", path: "/schedule" },
+            { icon: Map, label: "nav_constituency", path: "/constituency" },
+            { icon: Zap, label: "nav_aiCoPilot", path: "/ai-copilot" },
         ]
-    },
-    {
-        group: "People", items: [
-            { icon: LayoutDashboard, label: "Field Portal", path: "/field-portal" },
-            { icon: Users2, label: "People", path: "/people" },
-        ]
-    },
-    {
-        group: "Complaints", items: [
-            { icon: MessageSquare, label: "Complaints", path: "/grievances", badge: "live" },
-            { icon: FileBarChart2, label: "Reports", path: "/reports" },
-            { icon: FolderOpen, label: "Resolution Reports", path: "/resolution-reports" },
-        ]
-    },
-    {
-        group: "Comms & AI", items: [
-            { icon: Megaphone, label: "Announcements", path: "/announcements" },
-            { icon: Volume2, label: "Speech AI", path: "/speech-ai" },
-            { icon: Calendar, label: "Meetings", path: "/meetings" },
-            { icon: Megaphone, label: "Media Queue", path: "/media-queue" },
-            { icon: Zap, label: "AI Co-Pilot", path: "/ai-copilot" },
-            { icon: FolderOpen, label: "Documents", path: "/documents" },
-            { icon: Calendar, label: "Schedule", path: "/schedule" },
-        ]
-    },
-    {
-        group: "Account", items: [
-            { icon: User, label: "My Profile", path: "/profile" },
-            { icon: Settings, label: "Settings", path: "/settings" },
-        ]
-    },
+    }
 ];
 
 const OFFICER_NAV: NavGroup[] = [
     {
-        group: "Main", items: [
-            { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-            { icon: MessageSquare, label: "Assigned Complaints", path: "/grievances", badge: "live" },
+        group: "nav_main", items: [
+            { icon: LayoutDashboard, label: "nav_dashboard", path: "/dashboard" },
+            { icon: MessageSquare, label: "nav_assignedComplaints", path: "/grievances", badge: "live" },
         ]
     },
     {
-        group: "Work", items: [
-            { icon: LayoutDashboard, label: "Field Portal", path: "/field-portal", badge: "new" },
-            { icon: FileBarChart2, label: "Reports", path: "/reports" },
-            { icon: FolderOpen, label: "Resolution Reports", path: "/resolution-reports" },
-            { icon: Megaphone, label: "Announcements", path: "/announcements" },
-            { icon: Calendar, label: "Schedule", path: "/schedule" },
-            { icon: FolderOpen, label: "Documents", path: "/documents" },
+        group: "nav_work", items: [
+            { icon: LayoutDashboard, label: "nav_fieldPortal", path: "/field-portal", badge: "new" },
+            { icon: FileBarChart2, label: "nav_reports", path: "/reports" },
+            { icon: Megaphone, label: "nav_announcements", path: "/announcements" },
+            { icon: Calendar, label: "nav_schedule", path: "/schedule" },
+            { icon: FolderOpen, label: "nav_documents", path: "/documents" },
         ]
     },
     {
-        group: "Account", items: [
-            { icon: User, label: "My Profile", path: "/profile" },
-            { icon: Settings, label: "Settings", path: "/settings" },
+        group: "nav_account", items: [
+            { icon: User, label: "nav_myProfile", path: "/profile" },
+            { icon: Settings, label: "nav_settings", path: "/settings" },
         ]
     },
 ];
 
 const CITIZEN_NAV: NavGroup[] = [
     {
-        group: "My Account", items: [
-            { icon: LayoutDashboard, label: "Dashboard", path: "/citizen" },
-            { icon: PlusCircle, label: "Submit Complaint", path: "/submit-complaint" },
-            { icon: MessageSquare, label: "Track Complaint", path: "/citizen#track-complaint" },
-            { icon: Megaphone, label: "Announcements", path: "/announcements" },
-            { icon: User, label: "My Profile", path: "/profile" },
+        group: "nav_myAccount", items: [
+            { icon: LayoutDashboard, label: "nav_dashboard", path: "/citizen" },
+            { icon: PlusCircle, label: "nav_submitComplaint", path: "/submit-complaint" },
+            { icon: MessageSquare, label: "nav_trackComplaint", path: "/track-complaint" },
+            { icon: Megaphone, label: "nav_announcements", path: "/announcements" },
+            { icon: User, label: "nav_myProfile", path: "/profile" },
         ]
     },
 ];
 
-export default function DashboardLayout({ children, title, subtitle, bgImage, actions, isDark = true }: DashboardLayoutProps) {
+
+export function DashboardLayout({ children, title, subtitle, bgImage, actions }: DashboardLayoutProps) {
     const navigate = useNavigate();
-    const location = useLocation();
     const { currentUser, logout, complaints, notifications, readNotification } = useComplaints();
+    const { t, lang, setLang } = useLanguage();
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [adminSlideOpen, setAdminSlideOpen] = useState(false);
     const [showNotifs, setShowNotifs] = useState(false);
     const [lastNotif, setLastNotif] = useState<any>(null);
     const [showToast, setShowToast] = useState(false);
@@ -144,41 +119,39 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
     const role = currentUser?.role ?? "admin";
     const navGroups = role === "citizen" ? CITIZEN_NAV : role === "officer" ? OFFICER_NAV : ADMIN_NAV;
     const unreadCount = notifications.filter(n => !n.read).length;
-    const newCount = complaints.filter(c => c.status === "New" && c.source !== "voice").length;
-    const assignedCount = complaints.filter(c => c.status === "Assigned" && (role === "admin" || c.dept === currentUser?.dept)).length;
+    const newCount = complaints.filter(c => c.status === "Pending").length;
 
     const roleCfg = {
-        admin: { color: "#B91C1C", label: "Administrator", abbr: "AD" },
-        officer: { color: "#2563EB", label: "Field Officer", abbr: "OF" },
+        admin: { color: "#3B82F6", label: "Administrator", abbr: "AD" },
+        officer: { color: "#059669", label: "Field Officer", abbr: "FO" },
         citizen: { color: "#059669", label: "Citizen", abbr: currentUser?.name?.slice(0, 2).toUpperCase() ?? "CT" },
-    }[role] || { color: "#6B7280", label: "Observer", abbr: "OB" };
+    }[role];
 
     function handleLogout() {
         logout();
-        navigate("/login");
+        navigate("/");
     }
 
     return (
-        <div className="flex h-screen overflow-hidden" style={{ backgroundColor: isDark ? "#0A0F1C" : "#F9FAFB", fontFamily: "'Inter', sans-serif" }}>
+        <div className="flex h-screen overflow-hidden" style={{ backgroundColor: role !== "citizen" ? "#0B1221" : "#F5F0E8", fontFamily: "'Inter', sans-serif" }}>
 
             {/* Mobile overlay */}
             {sidebarOpen && (
-                <div className="fixed inset-0 bg-black/60 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
+                <div className="fixed inset-0 bg-black/40 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
             )}
 
             {/* ── Sidebar ──────────────────────────────────────────── */}
-            <aside
-                className={`fixed lg:relative inset-y-0 left-0 z-[130] lg:z-[5] flex flex-col w-[280px] border-r border-gray-200 bg-white transform transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
-            >
+            <aside className={`fixed lg:relative inset-y-0 left-0 z-50 lg:z-auto flex flex-col w-56 ${role !== "citizen" ? "bg-[#0B1221] border-gray-800" : "bg-white border-gray-200"} border-r transform transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
 
                 {/* Brand */}
-                <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                <div className={`px-5 py-4 border-b flex items-center justify-between ${role !== "citizen" ? "border-gray-800" : "border-gray-100"}`}>
                     <div className="flex items-center gap-2.5">
-                        <div className="w-9 h-9 rounded-xl flex items-center justify-center relative shadow-lg shadow-red-900/10" style={{ backgroundColor: "#B91C1C" }}>
-                            <Shield className="w-5 h-5 text-white" />
+                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center relative shadow-lg bg-[#B91C1C] shadow-red-900/10`}>
+                            {role !== "citizen" ? <Map className="w-5 h-5 text-white" /> : <Shield className="w-5 h-5 text-white" />}
                             <div className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white animate-pulse" />
                         </div>
                         <div>
+                            {role !== "citizen" ? (
                             <span className="font-black text-lg text-gray-900 block leading-none tracking-tight">GovPilot</span>
                             <span className="text-[9px] font-bold uppercase tracking-widest leading-none block mt-1 flex items-center gap-1" style={{ color: roleCfg.color }}>
                                 <div className="w-1.5 h-1.5 rounded-full bg-current animate-ping" /> {roleCfg.label}
@@ -218,15 +191,15 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
                 <nav className="flex-1 py-3 px-2 space-y-4 overflow-y-auto">
                     {navGroups.map(({ group, items }) => (
                         <div key={group}>
-                            <p className="px-3 mb-2 text-[11px] font-black uppercase tracking-[0.15em] text-gray-400">{group}</p>
+                            <p className="px-3 mb-2 text-[11px] font-black uppercase tracking-[0.15em] text-gray-400">{t(group as any)}</p>
                             <div className="space-y-0.5">
                                 {items.map(({ icon: Icon, label, path, badge }) => {
-                                    const isAssignedComplaints = label === "Assigned Complaints";
-                                    const isComplaints = label === "Complaints";
+                                    const isAssignedComplaints = label === "nav_assignedComplaints";
+                                    const isComplaints = label === "nav_grievances";
                                     const liveCnt = badge === "new" ? newCount : isAssignedComplaints ? assignedCount : badge === "live" ? newCount : 0;
                                     const navTo = isAssignedComplaints
                                         ? `${path}?status=Assigned`
-                                        : isComplaints && newCount > 0 ? `${path}?status=New` : path;
+                                        : isComplaints && newCount > 0 ? `${path}?status=Pending` : path;
                                     const isActiveCustom = isAssignedComplaints
                                         ? location.pathname === path && location.search.includes("status=Assigned")
                                         : location.pathname === path || (isComplaints && location.pathname === "/grievances");
@@ -247,7 +220,7 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
                                                 <>
                                                     <div className="flex items-center gap-3">
                                                         <Icon className={`w-4 h-4 ${isActiveCustom ? "text-white" : "text-gray-400 group-hover:text-[#B91C1C]"}`} />
-                                                        <span className="font-bold">{label}</span>
+                                                        <span className="font-bold">{t(label as any)}</span>
                                                     </div>
                                                     {liveCnt > 0 && (
                                                         <span className={`text-xs font-black px-2 py-0.5 rounded-md ${
@@ -288,106 +261,131 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
                 </div>
             </aside>
 
-            {/* ── Main Content Area ──────────────────────────────────────────── */}
-            <div className="relative z-10 flex-1 flex flex-col min-w-0 overflow-hidden">
+            {/* ── Main Content ─────────────────────────────────────── */}
+            <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
                 {/* Header */}
-                <header className={`h-14 flex items-center justify-between px-6 shrink-0 border-b border-white/5`}>
+                <header className={`h-14 border-b flex items-center justify-between px-6 shrink-0 ${role !== "citizen" ? "bg-[#0D1628] border-gray-800" : "bg-white border-gray-200"}`}>
                     <div className="flex items-center gap-4">
-                        <button className="lg:hidden p-1.5 text-gray-400 hover:bg-white/5 rounded-lg" onClick={() => setSidebarOpen(true)}>
+                        <button className="lg:hidden p-1.5 text-gray-400 hover:bg-gray-50 rounded-lg" onClick={() => setSidebarOpen(true)}>
                             <Menu className="w-5 h-5" />
                         </button>
 
-                        {role === 'admin' && (
-                            <button title="Admin Menu" onClick={() => setAdminSlideOpen(true)} className="hidden md:inline-flex items-center gap-2 px-3 py-1 rounded-lg hover:bg-white/5">
-                                <Layers className="w-5 h-5 text-gray-500" />
-                                <span className="text-lg text-gray-300">Admin</span>
-                            </button>
-                        )}
-
                         {role !== "citizen" ? (
                             <div className="relative hidden md:block">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
                                 <input
                                     type="text"
-                                    placeholder="Search complaints, wards, officers…"
+                                    placeholder="Search modules…"
+                                    className="pl-9 pr-4 py-1.5 bg-gray-900 border border-gray-700 rounded-lg text-sm w-56 focus:outline-none focus:border-blue-600 font-medium text-gray-300 placeholder:text-gray-600 transition-all"
+                                />
+                            </div>
+                        ) : role !== "citizen" ? (
+                            <div className="relative hidden md:block">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <input
+                                    type="text"
+                                    placeholder={t("nav_searchPlaceholder")}
                                     onKeyDown={e => {
                                         if (e.key === "Enter") {
                                             navigate(`/grievances?q=${encodeURIComponent(e.currentTarget.value)}`);
                                             e.currentTarget.value = "";
                                         }
                                     }}
-                                    className="pl-9 pr-4 py-1.5 bg-white/5 border border-white/10 rounded-lg text-lg w-64 focus:outline-none focus:border-[#B91C1C]/50 focus:ring-2 focus:ring-[#B91C1C]/20 font-medium text-white placeholder:text-gray-600 transition-all"
+                                    className="pl-9 pr-4 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-sm w-64 focus:outline-none focus:border-[#B91C1C]/30 focus:ring-2 focus:ring-[#B91C1C]/10 font-medium text-gray-700 placeholder:text-gray-400 transition-all"
                                 />
                             </div>
                         ) : (
-                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-950/30 border border-emerald-900/50">
-                                <User className="w-3.5 h-3.5 text-emerald-500" />
-                                <span className="text-base font-bold text-emerald-400">Citizen Portal</span>
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-100">
+                                <User className="w-3.5 h-3.5 text-emerald-600" />
+                                <span className="text-xs font-black text-emerald-700">{t("nav_citizenPortal")}</span>
                             </div>
                         )}
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <span className="hidden sm:block text-lg font-bold text-gray-300 tabular-nums">{time}</span>
-                        <div className="w-px h-5 bg-white/10 hidden sm:block" />
+                        <span className={`hidden sm:block text-sm font-bold tabular-nums text-gray-500`}>{time}</span>
+                        <div className={`w-px h-5 hidden sm:block bg-gray-200`} />
+
+                        {/* Language Toggle */}
+                        <button
+                            onClick={() => setLang(lang === "en" ? "ta" : "en")}
+                            title={t("langToggleLabel")}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border transition-all text-xs font-black uppercase tracking-wide ${
+                                role !== "citizen"
+                                    ? "border-gray-700 bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white"
+                                    : "border-gray-200 bg-white hover:bg-red-50 hover:border-red-300 hover:text-[#B91C1C] text-gray-500"
+                            }`}
+                        >
+                            <Languages className="w-4 h-4" />
+                            <span className="hidden sm:block">{t("language")}</span>
+                        </button>
 
                         {/* Notification bell */}
                         <div className="relative">
                             <button
                                 onClick={() => setShowNotifs(!showNotifs)}
-                                className={`p-2.5 rounded-xl border transition-all ${showNotifs ? "bg-red-950/50 border-red-900 text-red-400" : "bg-white/5 border-white/5 text-gray-300 hover:bg-white/10"
-                                    }`}
+                                className={`p-2.5 rounded-xl border transition-all ${
+                                    role !== "citizen"
+                                        ? showNotifs ? "bg-blue-900/30 border-blue-700 text-blue-400" : "bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700"
+                                        : showNotifs ? "bg-red-50 border-red-200 text-[#B91C1C]" : "bg-white/50 border-gray-100 text-gray-400 hover:bg-white"
+                                }`}
                             >
                                 <Bell className="w-5 h-5" />
                                 {unreadCount > 0 && (
-                                    <span className="absolute top-2 right-2 w-2 h-2 bg-[#B91C1C] rounded-full border-2 border-[#0A0F1C] shadow-sm" />
+                                    <span className={`absolute top-2 right-2 w-2 h-2 rounded-full border-2 border-white shadow-sm bg-[#B91C1C]`} />
                                 )}
                             </button>
 
                             {showNotifs && (
                                 <>
                                     <div className="fixed inset-0 z-40" onClick={() => setShowNotifs(false)} />
-                                    <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-[#161B2E] rounded-3xl shadow-2xl border border-white/10 z-50 overflow-hidden animate-fade-in">
-                                        <div className="px-6 py-5 border-b border-white/5 flex items-center justify-between bg-white/5">
-                                            <h3 className="text-lg font-bold text-white uppercase tracking-wide flex items-center gap-2">
-                                                <Bell className="w-4 h-4 text-[#B91C1C]" /> Notifications
+                                    <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-white rounded-3xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-fade-in">
+                                        <div className="px-6 py-5 border-b border-gray-50 flex items-center justify-between bg-gray-50/50">
+                                            <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
+                                                <Bell className="w-4 h-4 text-[#B91C1C]" /> {t("nav_notifications")}
                                             </h3>
                                             {unreadCount > 0 && (
-                                                <span className="text-base font-bold bg-red-950 text-red-400 px-2.5 py-0.5 rounded-full uppercase">{unreadCount} New</span>
+                                                <span className="text-xs font-black bg-red-100 text-[#B91C1C] px-2.5 py-0.5 rounded-full uppercase">{unreadCount} New</span>
                                             )}
                                         </div>
 
                                         <div className="max-h-[400px] overflow-y-auto">
                                             {notifications.length === 0 ? (
                                                 <div className="p-12 text-center">
-                                                    <Bell className="w-8 h-8 text-gray-700 mx-auto mb-3" />
-                                                    <p className="text-sm font-bold text-gray-500 uppercase tracking-wide">No notifications</p>
+                                                    <Bell className="w-8 h-8 text-gray-200 mx-auto mb-3" />
+                                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t("nav_noNotifications")}</p>
                                                 </div>
                                             ) : (
-                                                <div className="divide-y divide-white/5">
+                                                <div className="divide-y divide-gray-50">
                                                     {notifications.map(n => (
                                                         <div
                                                             key={n.id}
                                                             onClick={() => {
                                                                 readNotification(n.id);
-                                                                navigate(`/dashboard?notificationId=${n.id}`);
+                                                                if (n.announcementId) {
+                                                                    navigate(`/announcements?id=${n.announcementId}`);
+                                                                } else if (n.complaintId) {
+                                                                    if (role === "citizen") navigate("/citizen");
+                                                                    else if (role === "officer") navigate("/field-portal");
+                                                                    else navigate("/grievances");
+                                                                }
                                                                 setShowNotifs(false);
                                                             }}
-                                                            className={`p-5 hover:bg-white/5 transition-all cursor-pointer group flex gap-4 ${!n.read ? "bg-red-950/10" : ""}`}
+                                                            className={`p-5 hover:bg-gray-50 transition-all cursor-pointer group flex gap-4 ${!n.read ? "bg-red-50/30" : ""}`}
                                                         >
-                                                            <div className={`w-10 h-10 rounded-2xl shrink-0 flex items-center justify-center ${n.type === "new_complaint" ? "bg-red-950/50 text-red-400" : "bg-blue-950/50 text-blue-400"}`}>
+                                                            <div className={`w-10 h-10 rounded-2xl shrink-0 flex items-center justify-center ${n.type === "new_complaint" ? "bg-red-100 text-[#B91C1C]" : "bg-blue-100 text-blue-600"}`}>
                                                                 {n.type === "new_complaint" ? <PlusCircle className="w-5 h-5" /> : <Activity className="w-5 h-5" />}
                                                             </div>
                                                             <div className="flex-1 min-w-0">
                                                                 <div className="flex justify-between items-start mb-1">
-                                                                    <p className={`text-base font-bold uppercase  ${!n.read ? "text-white" : "text-gray-500"}`}>{n.title}</p>
-                                                                    <span className="text-sm font-bold text-gray-600 uppercase">{n.time}</span>
+                                                                    <p className={`text-xs font-black uppercase tracking-tight ${!n.read ? "text-gray-900" : "text-gray-500"}`}>{n.title}</p>
+                                                                    <span className="text-[10px] font-black text-gray-400 uppercase">{n.time}</span>
                                                                 </div>
-                                                                <p className="text-base text-gray-400 line-clamp-2 leading-relaxed">{n.message}</p>
+                                                                <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">{n.message}</p>
                                                                 {!n.read && (
                                                                     <div className="mt-2 flex items-center gap-1.5">
                                                                         <div className="w-1.5 h-1.5 rounded-full bg-[#B91C1C]" />
-                                                                        <span className="text-sm font-bold text-[#B91C1C] uppercase tracking-wide">Unread</span>
+                                                                        <span className="text-[10px] font-black text-[#B91C1C] uppercase tracking-widest">{t("nav_unread")}</span>
                                                                     </div>
                                                                 )}
                                                             </div>
@@ -397,7 +395,7 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
                                             )}
                                         </div>
 
-                                        <div className="p-4 bg-white/5 border-t border-white/5 text-center">
+                                        <div className="p-4 bg-gray-50 border-t border-gray-100 text-center">
                                             <button
                                                 onClick={() => {
                                                     if (role === "citizen") navigate("/citizen");
@@ -405,9 +403,9 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
                                                     else navigate("/grievances");
                                                     setShowNotifs(false);
                                                 }}
-                                                className="text-base font-bold text-gray-400 hover:text-white uppercase tracking-wide flex items-center justify-center gap-2 mx-auto"
+                                                className="text-xs font-black text-gray-500 hover:text-gray-900 uppercase tracking-widest flex items-center justify-center gap-2 mx-auto"
                                             >
-                                                {role === "citizen" ? "Track My Complaints" : role === "officer" ? "Open Field Portal" : "View All Complaints"} <ArrowRight className="w-3.5 h-3.5" />
+                                                {role === "citizen" ? t("nav_trackComplaints") : role === "officer" ? t("nav_openFieldPortal") : t("nav_viewAllComplaints")} <ArrowRight className="w-3.5 h-3.5" />
                                             </button>
                                         </div>
                                     </div>
@@ -417,96 +415,106 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
 
                         <button
                             onClick={() => { if (role === "citizen") navigate("/citizen"); else navigate("/settings"); }}
-                            className="flex items-center gap-2 pl-2 pr-3 py-1.5 hover:bg-gray-100 rounded-lg transition-all border border-transparent hover:border-gray-200"
+                            className={`flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-lg transition-all border border-transparent ${
+                                "hover:bg-gray-50 hover:border-gray-200"
+                            }`}
                         >
                             <div
-                                className="w-7 h-7 rounded-full text-white flex items-center justify-center text-sm font-bold"
+                                className="w-7 h-7 rounded-full text-white flex items-center justify-center text-[10px] font-black"
                                 style={{ backgroundColor: roleCfg.color }}
                             >
                                 {roleCfg.abbr}
                             </div>
-                            <span className="hidden lg:block text-lg font-bold text-gray-900">{currentUser?.name?.split(" ")[0] ?? roleCfg.label}</span>
-                            <ChevronRight className="w-3.5 h-3.5 text-gray-600 rotate-90" />
+                            <span className={`hidden lg:block text-sm font-bold text-gray-800`}>{currentUser?.name?.split(" ")[0] ?? roleCfg.label}</span>
+                            <ChevronRight className={`w-3.5 h-3.5 rotate-90 text-gray-400`} />
                         </button>
 
-                        <div className="w-px h-5 bg-gray-300 hidden sm:block" />
+                        <div className={`w-px h-5 hidden sm:block bg-gray-200`} />
 
                         <button
                             onClick={handleLogout}
-                            className="p-2 text-gray-900 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                            title="Sign Out"
+                            className={`p-2 rounded-lg transition-all ${
+                                "text-gray-400 hover:text-red-600 hover:bg-red-50"
+                            }`}
+                            title={t("signOut")}
                         >
                             <LogOut className="w-5 h-5" />
                         </button>
                     </div>
                 </header>
 
-                {/* Admin left slide */}
-                <AdminSlide open={adminSlideOpen} onClose={() => setAdminSlideOpen(false)} navGroups={navGroups} />
-
                 {/* Page Content */}
-                <div className={`flex-1 overflow-y-auto scroll-smooth relative ${isDark ? "bg-[#0A0F1C]" : "bg-[#F9FAFB]"}`}>
-                    {/* Theme Background Image - global */}
-                    {isDark && (
-                        <div className="fixed inset-0 z-0 pointer-events-none opacity-40 overflow-hidden">
-                            <img
-                                key={bgImage || "/images/login_bg.png"}
-                                src={bgImage || "/images/login_bg.png"}
-                                alt="Dashboard Theme"
-                                onError={e => (e.currentTarget.style.display = "none")}
-                                className="w-full h-full object-cover filter brightness-[0.7] contrast-[1.2]"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-b from-[#0A0F1C] via-transparent to-[#0A0F1C]/90" />
-                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,transparent_0%,#0A0F1C_100%)] opacity-60" />
+                {role !== "citizen" ? (
+                    <div className="flex-1 overflow-y-auto scroll-smooth" style={{ background: "#0B1221" }}>
+                        <div className="p-6 lg:p-8 max-w-[1400px] mx-auto">
+                            <div className="mb-6 flex items-start justify-between gap-4 animate-fade-in">
+                                <div>
+                                    <h1 className="text-3xl font-black text-white tracking-tight">{title}</h1>
+                                    {subtitle && <p className="text-base text-gray-500 font-medium mt-0.5">{subtitle}</p>}
+                                </div>
+                                {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
+                            </div>
+                            {children}
                         </div>
-                    )}
+                    </div>
+                ) : (
+                <div className="flex-1 overflow-y-auto scroll-smooth relative bg-[#060912]">
+                    <div className="absolute inset-0 z-0 pointer-events-none opacity-40 overflow-hidden">
+                        <img
+                            key={bgImage || "/images/dashboard_bg.png"}
+                            src={bgImage || "/images/dashboard_bg.png"}
+                            alt="Dashboard Theme"
+                            onError={e => (e.currentTarget.style.display = "none")}
+                            className="w-full h-full object-cover filter brightness-[0.7] contrast-[1.2]"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-b from-[#060912] via-transparent to-[#060912]/90" />
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,transparent_0%,#060912_100%)] opacity-60" />
+                    </div>
 
-                    <div className="relative z-10 p-6 lg:p-10 max-w-[2200px] mx-auto">
+                    <div className="relative z-10 p-6 lg:p-8 max-w-[1400px] mx-auto">
                         <div className="mb-6 flex items-start justify-between gap-4">
                             <div className="animate-fade-in">
-                                <h1 className={`text-3xl font-bold tracking-wide ${isDark ? "text-white drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]" : "text-gray-900"}`}>{title}</h1>
-                                {subtitle && <p className={`text-base font-medium mt-0.5 ${isDark ? "text-white/50" : "text-gray-500"}`}>{subtitle}</p>}
+                                <h1 className="text-3xl font-black text-white tracking-tight">{title}</h1>
+                                {subtitle && <p className="text-base text-white/50 font-medium mt-0.5">{subtitle}</p>}
                             </div>
                             {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
                         </div>
                         {children}
                     </div>
                 </div>
+                )}
 
                 {/* ── LIVE TOAST NOTIFICATION ────────────────────────── */}
                 {showToast && lastNotif && (
                     <div className="fixed bottom-8 right-8 z-[300] animate-in slide-in-from-right-8 fade-in duration-500">
-                        <div className="bg-white rounded-2xl shadow-[0_8px_30px_rgba(37,99,235,0.2)] border border-blue-100 p-4 w-[320px] relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 blur-2xl pointer-events-none group-hover:bg-blue-500/20 transition-all" />
-                            <div className="flex gap-3 relative z-10">
-                                <div className="p-2.5 bg-blue-50 rounded-xl h-fit border border-blue-100 shrink-0">
-                                    <Activity className="w-5 h-5 text-blue-600" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex justify-between items-start mb-1">
-                                        <p className="text-base font-bold uppercase text-gray-900">{lastNotif.title}</p>
-                                        <button onClick={() => setShowToast(false)} className="text-gray-300 hover:text-gray-500">
-                                            <X className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                    <p className="text-base text-gray-500 line-clamp-2 leading-relaxed mb-2">{lastNotif.message}</p>
-                                    <button
-                                        onClick={() => {
-                                            if (role === "citizen") navigate("/citizen");
-                                            else navigate("/grievances");
-                                            setShowToast(false);
-                                        }}
-                                        className="text-sm font-bold text-blue-600 uppercase tracking-wide hover:underline flex items-center gap-1"
-                                    >
-                                        Take Action <ChevronRight className="w-3 h-3" />
+                        <div className="bg-white rounded-[2rem] shadow-2xl border border-gray-100 p-6 flex items-start gap-4 min-w-[320px] max-w-sm">
+                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${lastNotif.type === "new_complaint" ? "bg-red-100 text-[#B91C1C]" : "bg-blue-100 text-blue-600"
+                                }`}>
+                                {lastNotif.type === "new_complaint" ? <PlusCircle className="w-6 h-6" /> : <Activity className="w-6 h-6" />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <div className="flex justify-between items-start mb-1">
+                                    <p className="text-xs font-black uppercase tracking-tight text-gray-900">{lastNotif.title}</p>
+                                    <button onClick={() => setShowToast(false)} className="text-gray-300 hover:text-gray-500">
+                                        <X className="w-4 h-4" />
                                     </button>
                                 </div>
+                                <p className="text-sm text-gray-500 line-clamp-2 leading-tight mb-2">{lastNotif.message}</p>
+                                <button
+                                    onClick={() => {
+                                        if (role === "citizen") navigate("/citizen");
+                                        else navigate("/grievances");
+                                        setShowToast(false);
+                                    }}
+                                    className="text-[10px] font-black text-[#B91C1C] uppercase tracking-widest hover:underline flex items-center gap-1"
+                                >
+                                    {t("nav_takeAction")} <ChevronRight className="w-3 h-3" />
+                                </button>
                             </div>
                         </div>
                     </div>
                 )}
-            </div>
+            </main>
         </div>
     );
 }
-

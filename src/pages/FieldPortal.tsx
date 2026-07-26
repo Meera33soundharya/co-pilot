@@ -1,227 +1,398 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Mic, MicOff, CheckCircle, Loader2, Send, X } from 'lucide-react';
-import { useVoiceAssistant } from '@/hooks/useVoiceAssistant';
-import { analyzeComplaint } from '@/services/aiService';
-import { useComplaints } from '@/context/ComplaintsContext';
+import { useState, useMemo } from "react";
+import { DashboardLayout } from "@/components/DashboardLayout";
+import { useComplaints } from "@/context/ComplaintsContext";
+import { 
+    CheckCircle2, Clock, MapPin, Phone, 
+    Camera, Sparkles, Navigation,
+    Search, Loader2, Play, Activity,
+    X, Mic, Volume2
+} from "lucide-react";
+import type { Complaint } from "@/services/api";
+import type { Status } from "@/store/complaintsStore";
+
+type VoiceFilterTab = "New" | "Assigned" | "In Progress" | "Resolved" | "All";
 
 export default function FieldPortal() {
-    const navigate = useNavigate();
-    const [step, setStep] = useState<'idle' | 'recording' | 'waiting_1min' | 'processing' | 'confirm' | 'success'>('idle');
-    const [voiceMode, setVoiceMode] = useState<'name' | 'complaint'>('name');
-    const [userName, setUserName] = useState('');
-    const [transcript, setTranscript] = useState('');
-    const [parsedData, setParsedData] = useState<any>(null);
-    const [complaintId, setComplaintId] = useState('');
-    
-    const { addComplaint } = useComplaints();
+    const { complaints, currentUser, updateStatus } = useComplaints();
+    const [filterTab, setFilterTab] = useState<VoiceFilterTab>("All");
+    const [searchQuery, setSearchQuery] = useState("");
+    const [selectedTask, setSelectedTask] = useState<Complaint | null>(null);
+    const [isUpdating, setIsUpdating] = useState(false);
+    const [proofNote, setProofNote] = useState("");
+    const [proofImg, setProofImg] = useState<string | null>(null);
+    const [showAllDepts, setShowAllDepts] = useState(false);
 
-    const handleVoiceResult = async (text: string) => {
-        if (!text.trim()) {
-            setStep('idle');
-            return;
-        }
+    // ── Only show VOICE complaints ────────────────────────────────
+    const voiceComplaints = useMemo(() => {
+        return complaints.filter(c => {
+            const isVoice = (c as any).source === "voice" || 
+                            c.citizen === "Voice User" || 
+                            c.notifPref === "None" && c.location === "From Voice Portal";
+            if (!isVoice) return false;
 
-        if (voiceMode === 'name') {
-            setUserName(text);
-            setStep('waiting_1min');
-            setTimeout(() => {
-                setVoiceMode('complaint');
-                setStep('idle');
-            }, 60000); // 1 minute wait
-            return;
-        }
+            const matchesRole = currentUser?.role === "admin" || showAllDepts
+                || c.dept === currentUser?.dept
+                || (!c.dept || c.dept === "");
 
-        setTranscript(text);
-        setStep('processing');
-        try {
-            const result = await analyzeComplaint(text, "");
-            setParsedData(result);
-            setStep('confirm');
-        } catch (error) {
-            console.error(error);
-            setStep('idle');
-            alert('Failed to analyze audio. Please try again.');
-        }
+            const matchesTab = (() => {
+                if (filterTab === "All") return true;
+                if (filterTab === "New") return c.status === "Pending";
+                if (filterTab === "Assigned") return c.status === "Assigned";
+                if (filterTab === "In Progress") return c.status === "In Progress";
+                if (filterTab === "Resolved") return c.status === "Resolved" || c.status === "Closed";
+                return true;
+            })();
+
+            const matchesSearch = c.issue.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                c.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                c.ward.toLowerCase().includes(searchQuery.toLowerCase());
+
+            return matchesRole && matchesTab && matchesSearch;
+        });
+    }, [complaints, currentUser, filterTab, searchQuery, showAllDepts]);
+
+    const newCount = useMemo(() => complaints.filter(c => (c as any).source === "voice" || c.citizen === "Voice User").filter(c => c.status === "Pending").length, [complaints]);
+
+    const handleStatusUpdate = async (id: string, nextStatus: Status, note: string) => {
+        setIsUpdating(true);
+        await new Promise(r => setTimeout(r, 1500));
+        updateStatus(id, nextStatus, note, proofImg || undefined);
+        setIsUpdating(false);
+        setSelectedTask(null);
+        setProofNote("");
+        setProofImg(null);
     };
 
-    const { isListening, toggleListening, isSupported } = useVoiceAssistant({
-        onResult: handleVoiceResult,
-        lang: 'ta-IN'
-    });
-
-    const handleMicClick = () => {
-        if (step === 'idle' || step === 'recording') {
-            toggleListening();
-            setStep(!isListening ? 'recording' : 'idle');
-        }
+    const handleCapture = () => {
+        const demoImgs = [
+            "https://images.unsplash.com/photo-1541888946425-d81bb19480c5?auto=format&fit=crop&q=80&w=800",
+            "https://images.unsplash.com/photo-1581094288338-2314dddb7bc3?auto=format&fit=crop&q=80&w=800",
+            "https://images.unsplash.com/photo-1590060417631-017606e30907?auto=format&fit=crop&q=80&w=800"
+        ];
+        setProofImg(demoImgs[Math.floor(Math.random() * demoImgs.length)]);
     };
 
-    const handleSubmit = () => {
-        const newComplaint = {
-            id: `CMPL-${Math.floor(10000 + Math.random() * 90000)}`,
-            citizen: userName || parsedData?.name || 'Anonymous Voice',
-            phone: parsedData?.phone || 'N/A',
-            ward: parsedData?.location || 'Unknown',
-            citizenId: 'voice_user',
-            issue: parsedData?.title || transcript.substring(0, 50),
-            description: transcript,
-            category: parsedData?.category || 'Other',
-            status: 'New' as any,
-            priority: parsedData?.priority || 'Medium',
-            assignedTo: 'Unassigned',
-            dept: parsedData?.dept || 'General Administration',
-            time: 'Just now',
-            timestamp: Date.now(),
-            notified: false,
-            source: 'voice' as const,
-            audit: [{ time: 'Just now', actor: 'System', action: 'Complaint submitted via Voice Portal' }]
-        };
-        addComplaint(newComplaint as any);
-        setComplaintId(newComplaint.id);
-        setStep('success');
-    };
-
-    const reset = () => {
-        setStep('idle');
-        setVoiceMode('name');
-        setUserName('');
-        setTranscript('');
-        setParsedData(null);
-    };
-
-    if (!isSupported) {
-        return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-                <div className="bg-white p-8 rounded-3xl shadow-lg text-center max-w-md w-full">
-                    <p className="text-xl text-red-600 font-bold">Your browser does not support voice recording.</p>
-                </div>
-            </div>
-        );
-    }
+    const TABS: { key: VoiceFilterTab; label: string }[] = [
+        { key: "New", label: "NEW" },
+        { key: "Assigned", label: "ASSIGNED" },
+        { key: "In Progress", label: "IN PROGRESS" },
+        { key: "Resolved", label: "RESOLVED" },
+        { key: "All", label: "ALL" },
+    ];
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
-            <header className="bg-blue-600 text-white p-5 shadow-md flex items-center justify-between shrink-0">
-                <div className="w-10"></div> {/* Spacer for centering */}
-                <div className="text-center">
-                    <h1 className="text-3xl font-black mb-1">மக்கள் குரல் பதிவு</h1>
-                    <p className="text-sm font-bold opacity-90 uppercase tracking-widest">Voice Complaint Registration</p>
-                </div>
-                <button 
-                    onClick={() => navigate('/dashboard')}
-                    className="w-10 h-10 flex items-center justify-center bg-blue-700 hover:bg-blue-800 rounded-full transition-colors"
-                    title="Exit"
-                >
-                    <X className="w-6 h-6 text-white" />
-                </button>
-            </header>
-
-            <main className="flex-1 flex flex-col items-center justify-center p-6 w-full max-w-lg mx-auto">
-                {(step === 'idle' || step === 'recording') && (
-                    <div className="flex flex-col items-center justify-center gap-12 w-full">
+        <DashboardLayout 
+            title="Field Officer Portal" 
+            subtitle="Managing Voice Assistant Tasks (Uneducated Citizens Portal)"
+        >
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                {/* ── Left Side: Voice Complaint List ── */}
+                <div className="lg:col-span-2 space-y-6">
+                    
+                    {/* Top Control Bar */}
+                    <div className="flex flex-wrap items-center gap-3">
+                        {/* Search Input */}
+                        <div className="relative flex-1 min-w-[200px]">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <input 
+                                type="text"
+                                placeholder="Search"
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                className="w-full pl-11 pr-4 py-3 bg-white rounded-full text-xs font-bold text-gray-900 focus:outline-none shadow-sm"
+                            />
+                        </div>
+                        
+                        {/* Dept Console Button */}
                         <button 
-                            onClick={handleMicClick}
-                            className={`relative flex items-center justify-center w-56 h-56 rounded-full shadow-2xl transition-all duration-300 ${isListening ? 'bg-red-500 scale-105 shadow-red-500/50' : 'bg-blue-500 hover:bg-blue-600 shadow-blue-500/40 hover:scale-105'}`}
+                            onClick={() => setShowAllDepts(!showAllDepts)}
+                            className="flex items-center gap-2 px-5 py-3 bg-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm text-gray-500 hover:text-gray-900 transition-colors"
                         >
-                            {isListening && <div className="absolute inset-0 bg-red-400 rounded-full animate-ping opacity-60" />}
-                            {isListening ? <MicOff className="w-24 h-24 text-white z-10" /> : <Mic className="w-24 h-24 text-white z-10" />}
+                            <Activity className="w-3.5 h-3.5" />
+                            DEPT CONSOLE
                         </button>
-                        <div className="text-center space-y-4 px-4">
-                            <h2 className="text-4xl font-black text-gray-800 leading-tight">
-                                {isListening 
-                                    ? 'கவனிக்கப்படுகிறது...' 
-                                    : voiceMode === 'name' 
-                                        ? 'உங்கள் பெயரை கூறவும்' 
-                                        : 'உங்கள் புகாரை பதிவு செய்ய அழுத்தவும்'}
-                            </h2>
-                            <p className="text-xl font-bold text-gray-500 uppercase tracking-wider">
-                                {isListening 
-                                    ? 'Listening...' 
-                                    : voiceMode === 'name'
-                                        ? '(Press to speak your name)'
-                                        : '(Press to Record)'}
-                            </p>
-                        </div>
-                    </div>
-                )}
 
-                {step === 'waiting_1min' && (
-                    <div className="flex flex-col items-center gap-6 w-full animate-in fade-in zoom-in duration-500">
-                        <Loader2 className="w-24 h-24 text-blue-600 animate-spin" />
-                        <h2 className="text-3xl font-black text-gray-800 text-center leading-tight">1 நிமிடம் காத்திருக்கவும்...</h2>
-                        <p className="text-xl font-bold text-gray-500 uppercase tracking-wide">Please wait 1 minute for representative connection...</p>
+                        {/* Filter Tabs */}
+                        {TABS.map(tab => {
+                            const isAll = tab.key === "All";
+                            const isActive = filterTab === tab.key;
+                            return (
+                                <button
+                                    key={tab.key}
+                                    onClick={() => setFilterTab(tab.key)}
+                                    className={`px-5 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all shadow-sm flex items-center gap-2 ${
+                                        isActive || isAll 
+                                            ? "bg-[#B91C1C] text-white" 
+                                            : "bg-white text-gray-500 hover:text-gray-900"
+                                    }`}
+                                >
+                                    {tab.label}
+                                    {tab.key === "New" && (
+                                        <div className="w-2 h-2 rounded-full bg-red-200" />
+                                    )}
+                                </button>
+                            );
+                        })}
                     </div>
-                )}
 
-                {step === 'processing' && (
-                    <div className="flex flex-col items-center gap-6 w-full animate-in fade-in zoom-in duration-500">
-                        <Loader2 className="w-24 h-24 text-blue-600 animate-spin" />
-                        <h2 className="text-3xl font-black text-gray-800 text-center leading-tight">AI பகுப்பாய்வு செய்கிறது...</h2>
-                        <p className="text-xl font-bold text-gray-500 uppercase tracking-wide">Analyzing Complaint...</p>
-                    </div>
-                )}
-
-                {step === 'confirm' && parsedData && (
-                    <div className="w-full bg-white rounded-[2rem] p-6 sm:p-8 shadow-xl border border-gray-100 flex flex-col gap-8 animate-in slide-in-from-bottom-8 fade-in duration-500">
-                        <h2 className="text-2xl font-black text-gray-800 border-b border-gray-100 pb-4 text-center">
-                            உறுதிப்படுத்தவும் <span className="text-gray-400 text-lg ml-2 font-bold uppercase">(Confirm)</span>
-                        </h2>
-                        
-                        <div className="space-y-6">
-                            <div className="bg-blue-50/50 border border-blue-100 p-5 rounded-2xl">
-                                <p className="text-sm text-blue-600 font-bold uppercase tracking-wider mb-2">உங்கள் உரை (Transcript)</p>
-                                <p className="text-xl text-gray-800 font-bold leading-relaxed">{transcript}</p>
-                            </div>
-                            
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="bg-gray-50 border border-gray-100 p-5 rounded-2xl">
-                                    <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">பிரிவு (Category)</p>
-                                    <p className="text-lg font-black text-gray-900 line-clamp-1">{parsedData.category}</p>
+                    {/* Task List */}
+                    <div className="space-y-4">
+                        {voiceComplaints.length === 0 ? (
+                            <div className="bg-white/5 border border-dashed border-white/10 rounded-[2.5rem] p-20 text-center">
+                                <div className="w-16 h-16 rounded-3xl bg-white flex items-center justify-center mx-auto mb-4">
+                                    <Volume2 className="w-8 h-8 text-gray-400" />
                                 </div>
-                                <div className="bg-gray-50 border border-gray-100 p-5 rounded-2xl">
-                                    <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">முன்னுரிமை (Priority)</p>
-                                    <p className="text-lg font-black text-gray-900 line-clamp-1">{parsedData.priority}</p>
+                                <p className="text-white font-black uppercase tracking-[0.2em] text-sm">No voice complaints found</p>
+                            </div>
+                        ) : (
+                            voiceComplaints.map(task => (
+                                <div 
+                                    key={task.id}
+                                    className={`bg-white transition-all cursor-pointer rounded-[2rem] p-6 hover:translate-x-1 group/card shadow-sm ${
+                                        selectedTask?.id === task.id ? "ring-4 ring-purple-500/20" : ""
+                                    }`}
+                                >
+                                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                                        <div className="flex-1 min-w-0" onClick={() => setSelectedTask(task)}>
+                                            <div className="flex items-center gap-2 mb-3 flex-wrap">
+                                                {/* ID Tag */}
+                                                <span className="text-[10px] font-black text-red-500 px-3 py-1.5 bg-red-50 rounded-full tracking-widest">
+                                                    {task.id}
+                                                </span>
+                                                {/* Status Tag */}
+                                                <span className={`text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest ${
+                                                    task.status === "Pending" ? "bg-purple-100 text-purple-600" :
+                                                    task.status === "In Progress" ? "bg-amber-100 text-amber-600" :
+                                                    "bg-gray-100 text-gray-600"
+                                                }`}>
+                                                    {task.status === "Pending" ? "NEW" : task.status}
+                                                </span>
+                                                {/* Live Tag */}
+                                                <div className="flex items-center gap-1.5 bg-emerald-50 px-3 py-1.5 rounded-full">
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                                    <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">LIVE</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <h3 className="text-xl font-black text-gray-900 mb-4">{task.issue}</h3>
+                                            
+                                            <div className="flex items-center gap-6 text-gray-400 text-[10px] font-black uppercase tracking-widest">
+                                                <div className="flex items-center gap-1.5">
+                                                    <MapPin className="w-3.5 h-3.5 text-red-500" /> {task.ward}
+                                                </div>
+                                                <div className="flex items-center gap-1.5">
+                                                    <Clock className="w-3.5 h-3.5 text-gray-300" /> {task.time}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Quick Action Side Buttons */}
+                                        <div className="flex items-center gap-3 shrink-0">
+                                            {task.status === "Pending" ? (
+                                                <button 
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleStatusUpdate(task.id, "Accepted", "Complaint accepted by field officer.");
+                                                    }}
+                                                    className="px-6 py-3.5 rounded-2xl bg-[#a855f7] hover:bg-purple-600 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-purple-500/30 transition-all active:scale-95 flex items-center gap-2"
+                                                >
+                                                    <CheckCircle2 className="w-4 h-4" /> ACCEPT
+                                                </button>
+                                            ) : task.status === "Assigned" || task.status === "In Progress" ? (
+                                                <button 
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setSelectedTask(task);
+                                                    }}
+                                                    className="px-6 py-3.5 rounded-2xl bg-[#B91C1C] hover:bg-red-700 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-red-500/30 transition-all active:scale-95 flex items-center gap-2"
+                                                >
+                                                    <CheckCircle2 className="w-4 h-4" /> RESOLVE
+                                                </button>
+                                            ) : null}
+                                            <button 
+                                                onClick={(e) => { e.stopPropagation(); setSelectedTask(task); }}
+                                                className="w-12 h-12 rounded-2xl bg-white border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-all text-gray-400 hover:text-gray-900"
+                                            >
+                                                <Navigation className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
+
+                {/* ── Right Side: Task Execution ── */}
+                <div className="lg:col-span-1">
+                    <div className="sticky top-8 space-y-6">
+                        {selectedTask ? (
+                            <div className="bg-white rounded-[2.5rem] shadow-2xl overflow-hidden animate-in slide-in-from-right-8 duration-500">
+                                <div className="bg-gray-900 p-8 text-white relative">
+                                    <button 
+                                        onClick={() => setSelectedTask(null)}
+                                        className="absolute top-6 right-6 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-all"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Mic className="w-4 h-4 text-purple-400" />
+                                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-purple-300">Voice Complaint Console</p>
+                                    </div>
+                                    <h2 className="text-2xl font-black leading-tight mb-4">{selectedTask.issue}</h2>
+                                    <div className="flex items-center gap-4">
+                                        <a href={`tel:${selectedTask.phone}`} className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-xl text-xs font-black border border-white/10 hover:bg-white/20 transition-all">
+                                            <Phone className="w-3.5 h-3.5" /> Call Citizen
+                                        </a>
+                                        <button className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-xl text-xs font-black border border-white/10 hover:bg-white/20 transition-all">
+                                            <Navigation className="w-3.5 h-3.5" /> Navigate
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Voice transcript preview */}
+                                {selectedTask.description && (
+                                    <div className="mx-6 mt-6 bg-purple-50 border border-purple-100 rounded-3xl p-5 flex gap-4">
+                                        <div className="w-10 h-10 rounded-2xl bg-purple-100 flex items-center justify-center shrink-0">
+                                            <Volume2 className="w-5 h-5 text-purple-600" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-black uppercase tracking-widest text-purple-700 mb-1">Voice Transcript</p>
+                                            <p className="text-sm font-bold text-purple-800 leading-relaxed line-clamp-3">{selectedTask.description}</p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="p-8 space-y-8">
+                                    {/* AI Insight */}
+                                    <div className="bg-amber-50 border border-amber-100 rounded-3xl p-5 flex gap-4">
+                                        <div className="w-10 h-10 rounded-2xl bg-amber-100 flex items-center justify-center shrink-0">
+                                            <Sparkles className="w-5 h-5 text-amber-600" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-black uppercase tracking-widest text-amber-700 mb-1">Field Intelligence</p>
+                                            <p className="text-sm font-bold text-amber-800 leading-relaxed">Based on the voice complaint, prioritize safety checks before proceeding with repair.</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Action Form */}
+                                    <div className="space-y-6">
+                                        <div>
+                                            <label className="text-xs font-black uppercase tracking-widest text-gray-400 mb-3 block">1. Capture Proof (Before/After)</label>
+                                            {proofImg ? (
+                                                <div className="relative aspect-video rounded-3xl overflow-hidden group">
+                                                    <img src={proofImg} alt="Proof" className="w-full h-full object-cover" />
+                                                    <button 
+                                                        onClick={() => setProofImg(null)}
+                                                        className="absolute top-4 right-4 p-2 bg-black/50 text-white rounded-full hover:bg-red-600 transition-all opacity-0 group-hover:opacity-100"
+                                                    >
+                                                        <X className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <button 
+                                                    onClick={handleCapture}
+                                                    className="w-full aspect-video border-2 border-dashed border-gray-100 rounded-3xl flex flex-col items-center justify-center gap-3 hover:bg-gray-50 hover:border-[#B91C1C]/20 transition-all group"
+                                                >
+                                                    <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                                        <Camera className="w-6 h-6 text-gray-300 group-hover:text-[#B91C1C]" />
+                                                    </div>
+                                                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Open Field Camera</p>
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        <div>
+                                            <label className="text-xs font-black uppercase tracking-widest text-gray-400 mb-3 block">2. Resolution Summary</label>
+                                            <textarea 
+                                                rows={4}
+                                                value={proofNote}
+                                                onChange={e => setProofNote(e.target.value)}
+                                                placeholder="What action was taken? (e.g. Pipe welded and pressure tested)"
+                                                className="w-full px-5 py-4 bg-gray-50 border border-transparent rounded-3xl text-sm font-bold focus:bg-white focus:border-red-200 outline-none transition-all resize-none shadow-inner"
+                                            />
+                                        </div>
+
+                                        <div className="flex gap-4">
+                                            {selectedTask.status === "Pending" && (
+                                                <button 
+                                                    onClick={() => handleStatusUpdate(selectedTask.id, "Accepted", "Complaint accepted by field officer")}
+                                                    disabled={isUpdating}
+                                                    className="flex-1 flex items-center justify-center gap-3 py-4 rounded-3xl bg-[#B91C1C] hover:bg-red-700 text-white text-xs font-black uppercase tracking-widest shadow-xl shadow-red-200 transition-all active:scale-95 disabled:opacity-50"
+                                                >
+                                                    {isUpdating ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
+                                                    Accept
+                                                </button>
+                                            )}
+                                            {selectedTask.status === "Assigned" && (
+                                                <button 
+                                                    onClick={() => handleStatusUpdate(selectedTask.id, "In Progress", "Officer started work on-site")}
+                                                    disabled={isUpdating}
+                                                    className="flex-1 flex items-center justify-center gap-3 py-4 rounded-3xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-black uppercase tracking-widest shadow-xl shadow-amber-200 transition-all active:scale-95 disabled:opacity-50"
+                                                >
+                                                    {isUpdating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5" />}
+                                                    Start Work
+                                                </button>
+                                            )}
+                                            {(selectedTask.status === "Assigned" || selectedTask.status === "In Progress" || selectedTask.status === "Accepted") && (
+                                                <button 
+                                                    onClick={() => handleStatusUpdate(selectedTask.id, "Resolved", proofNote || "Resolved on-site by officer")}
+                                                    disabled={isUpdating || !proofImg}
+                                                    className="flex-[2] flex items-center justify-center gap-3 py-4 rounded-3xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-widest shadow-xl shadow-emerald-200 transition-all active:scale-95 disabled:opacity-50"
+                                                >
+                                                    {isUpdating ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
+                                                    Mark Resolved
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        ) : (
+                            <div className="bg-white/5 border border-dashed border-white/10 rounded-[3rem] p-12 text-center">
+                                <div className="w-16 h-16 rounded-3xl bg-purple-500/10 flex items-center justify-center mx-auto mb-4">
+                                    <Mic className="w-8 h-8 text-purple-400/40" />
+                                </div>
+                                <h3 className="text-lg font-black text-white mb-2 uppercase tracking-wide">No Selection</h3>
+                                <p className="text-xs text-white/40 leading-relaxed uppercase font-bold tracking-widest">Select a voice complaint to start field operations.</p>
+                            </div>
+                        )}
 
-                        <div className="flex flex-col gap-3 mt-4">
-                            <button 
-                                onClick={handleSubmit}
-                                className="w-full py-5 bg-green-600 hover:bg-green-700 text-white rounded-2xl text-2xl font-black flex items-center justify-center gap-3 shadow-lg shadow-green-600/30 transition-all hover:scale-[1.02]"
-                            >
-                                <Send className="w-7 h-7" /> சமர்ப்பிக்கவும்
-                            </button>
-                            <button onClick={reset} className="w-full py-4 text-gray-500 font-bold hover:bg-gray-50 rounded-2xl text-lg transition-colors">
-                                ரத்து செய் (Cancel)
-                            </button>
+                        {/* Summary Card */}
+                        <div className="bg-gradient-to-br from-[#B91C1C]/40 to-red-900/40 backdrop-blur-md border border-red-500/20 rounded-[3rem] p-8 text-white relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-red-500/20 transition-all" />
+                            <div className="flex items-center justify-between mb-8 relative">
+                                <div>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-1">Voice Complaints</p>
+                                    <p className="text-3xl font-black tabular-nums">
+                                        {complaints.filter(c => (c as any).source === "voice" || c.citizen === "Voice User").length}
+                                        <span className="text-sm font-bold opacity-50 ml-2">Total</span>
+                                    </p>
+                                </div>
+                                <div className="w-14 h-14 rounded-3xl bg-purple-500/20 flex items-center justify-center border border-purple-500/20">
+                                    <Mic className="w-8 h-8 text-purple-400 animate-pulse" />
+                                </div>
+                            </div>
+                            <div className="space-y-4 relative">
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="bg-white/5 rounded-2xl p-3 text-center">
+                                        <p className="text-2xl font-black tabular-nums text-yellow-400">{newCount}</p>
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mt-1">New</p>
+                                    </div>
+                                    <div className="bg-white/5 rounded-2xl p-3 text-center">
+                                        <p className="text-2xl font-black tabular-nums text-emerald-400">
+                                            {complaints.filter(c => ((c as any).source === "voice" || c.citizen === "Voice User") && c.status === "Resolved").length}
+                                        </p>
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mt-1">Resolved</p>
+                                    </div>
+                                </div>
+                                <p className="text-[10px] text-white/60 font-medium leading-relaxed italic">"Citizens can now file complaints in their own language via voice."</p>
+                            </div>
                         </div>
                     </div>
-                )}
-
-                {step === 'success' && (
-                    <div className="w-full bg-white rounded-[2rem] p-8 shadow-xl border border-green-100 flex flex-col items-center gap-8 text-center animate-in slide-in-from-bottom-8 fade-in duration-500">
-                        <div className="w-28 h-28 bg-green-50 rounded-full flex items-center justify-center shadow-inner">
-                            <CheckCircle className="w-14 h-14 text-green-500" />
-                        </div>
-                        
-                        <div className="space-y-3">
-                            <h2 className="text-3xl sm:text-4xl font-black text-gray-800 leading-tight">வெற்றிகரமாக சமர்ப்பிக்கப்பட்டது!</h2>
-                            <p className="text-xl text-green-600 font-bold uppercase tracking-wide">Complaint Submitted</p>
-                        </div>
-                        
-                        <div className="w-full bg-gray-50 rounded-3xl p-6 border border-gray-100 shadow-sm">
-                            <p className="text-sm text-gray-500 font-bold uppercase tracking-widest mb-2">புகார் எண் (Complaint ID)</p>
-                            <p className="text-4xl font-black text-gray-900 tracking-widest font-mono">{complaintId}</p>
-                        </div>
-
-                        <button onClick={reset} className="w-full py-5 mt-2 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-xl font-black shadow-lg shadow-blue-600/30 transition-all hover:scale-[1.02]">
-                            புதிய புகார் (New Complaint)
-                        </button>
-                    </div>
-                )}
-            </main>
-        </div>
+                </div>
+            </div>
+        </DashboardLayout>
     );
 }
