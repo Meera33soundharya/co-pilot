@@ -31,6 +31,7 @@ export interface Complaint {
   sentiment: number;
   rating?: number;
   resolutionProof?: string;
+  source?: "voice" | "online" | "field";
   audit: {
     time: string;
     actor: string;

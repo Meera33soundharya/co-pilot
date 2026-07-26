@@ -5,13 +5,16 @@ import {
     CheckCircle2, Clock, MapPin, Phone, 
     Camera, Sparkles, Navigation,
     Search, Loader2, Play, Activity,
-    AlertCircle, X
+    X, Mic, Volume2
 } from "lucide-react";
-import type { Complaint, Status } from "@/store/complaintsStore";
+import type { Complaint } from "@/services/api";
+import type { Status } from "@/store/complaintsStore";
+
+type VoiceFilterTab = "New" | "Assigned" | "In Progress" | "Resolved" | "All";
 
 export default function FieldPortal() {
     const { complaints, currentUser, updateStatus } = useComplaints();
-    const [filterStatus, setFilterStatus] = useState<Status | "All">("All");
+    const [filterTab, setFilterTab] = useState<VoiceFilterTab>("All");
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedTask, setSelectedTask] = useState<Complaint | null>(null);
     const [isUpdating, setIsUpdating] = useState(false);
@@ -19,24 +22,39 @@ export default function FieldPortal() {
     const [proofImg, setProofImg] = useState<string | null>(null);
     const [showAllDepts, setShowAllDepts] = useState(false);
 
-    // Filter complaints for this officer and department
-    const myTasks = useMemo(() => {
+    // ── Only show VOICE complaints ────────────────────────────────
+    const voiceComplaints = useMemo(() => {
         return complaints.filter(c => {
-            // Show if: admin, showAllDepts toggled, dept matches, or complaint has no dept yet (newly filed, Pending)
-            const matchesRole = currentUser?.role === "admin" || showAllDepts 
+            const isVoice = (c as any).source === "voice" || 
+                            c.citizen === "Voice User" || 
+                            c.notifPref === "None" && c.location === "From Voice Portal";
+            if (!isVoice) return false;
+
+            const matchesRole = currentUser?.role === "admin" || showAllDepts
                 || c.dept === currentUser?.dept
-                || (!c.dept || c.dept === ""); // show unassigned/pending complaints to all officers
-            const matchesStatus = filterStatus === "All" || c.status === filterStatus;
-            const matchesSearch = c.issue.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                                 c.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                 c.ward.toLowerCase().includes(searchQuery.toLowerCase());
-            return matchesRole && matchesStatus && matchesSearch;
+                || (!c.dept || c.dept === "");
+
+            const matchesTab = (() => {
+                if (filterTab === "All") return true;
+                if (filterTab === "New") return c.status === "Pending";
+                if (filterTab === "Assigned") return c.status === "Assigned";
+                if (filterTab === "In Progress") return c.status === "In Progress";
+                if (filterTab === "Resolved") return c.status === "Resolved" || c.status === "Closed";
+                return true;
+            })();
+
+            const matchesSearch = c.issue.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                c.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                c.ward.toLowerCase().includes(searchQuery.toLowerCase());
+
+            return matchesRole && matchesTab && matchesSearch;
         });
-    }, [complaints, currentUser, filterStatus, searchQuery, showAllDepts]);
+    }, [complaints, currentUser, filterTab, searchQuery, showAllDepts]);
+
+    const newCount = useMemo(() => complaints.filter(c => (c as any).source === "voice" || c.citizen === "Voice User").filter(c => c.status === "Pending").length, [complaints]);
 
     const handleStatusUpdate = async (id: string, nextStatus: Status, note: string) => {
         setIsUpdating(true);
-        // Simulate network delay
         await new Promise(r => setTimeout(r, 1500));
         updateStatus(id, nextStatus, note, proofImg || undefined);
         setIsUpdating(false);
@@ -46,7 +64,6 @@ export default function FieldPortal() {
     };
 
     const handleCapture = () => {
-        // Demo: select a random resolution image
         const demoImgs = [
             "https://images.unsplash.com/photo-1541888946425-d81bb19480c5?auto=format&fit=crop&q=80&w=800",
             "https://images.unsplash.com/photo-1581094288338-2314dddb7bc3?auto=format&fit=crop&q=80&w=800",
@@ -55,25 +72,49 @@ export default function FieldPortal() {
         setProofImg(demoImgs[Math.floor(Math.random() * demoImgs.length)]);
     };
 
+    const TABS: { key: VoiceFilterTab; label: string }[] = [
+        { key: "New", label: "NEW" },
+        { key: "Assigned", label: "ASSIGNED" },
+        { key: "In Progress", label: "IN PROGRESS" },
+        { key: "Resolved", label: "RESOLVED" },
+        { key: "All", label: "ALL" },
+    ];
+
     return (
         <DashboardLayout 
             title="Field Officer Portal" 
-            subtitle={`Managing tasks for ${currentUser?.dept || "General Operations"}`}
+            subtitle="Managing Voice Assistant Tasks (Uneducated Citizens Portal)"
         >
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 
-                {/* ── Left Side: Task List ── */}
+                {/* ── Left Side: Voice Complaint List ── */}
                 <div className="lg:col-span-2 space-y-6">
                     
+                    {/* Voice Badge Banner */}
+                    <div className="flex items-center gap-3 bg-gradient-to-r from-purple-900/40 to-violet-900/30 border border-purple-500/20 rounded-2xl px-5 py-3.5">
+                        <div className="w-8 h-8 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                            <Mic className="w-4 h-4 text-purple-400 animate-pulse" />
+                        </div>
+                        <div className="flex-1">
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-purple-300">Voice AI Complaints Only</p>
+                            <p className="text-[10px] text-purple-400/60 font-medium">Filed by uneducated citizens via Voice Assistant</p>
+                        </div>
+                        <div className="flex items-center gap-1.5 bg-purple-500/10 px-3 py-1.5 rounded-lg border border-purple-500/20">
+                            <div className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-ping" />
+                            <span className="text-[9px] font-black text-purple-300 uppercase tracking-widest">{newCount} New</span>
+                        </div>
+                    </div>
+
+                    {/* Search + Dept Toggle */}
                     <div className="bg-white/10 backdrop-blur-md border border-white/10 rounded-3xl p-4 flex flex-col md:flex-row gap-4 items-center">
                         <div className="relative flex-1">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
                             <input 
                                 type="text"
-                                placeholder="Search tasks by ID or location..."
+                                placeholder="Search voice complaints..."
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
-                                className="w-full pl-11 pr-4 py-3 bg-white/5 border border-transparent rounded-2xl text-sm font-bold text-white focus:bg-white/10 focus:border-white/20 focus:outline-none transition-all"
+                                className="w-full pl-11 pr-4 py-3 bg-white/5 border border-transparent rounded-2xl text-sm font-bold text-white focus:bg-white/10 focus:border-white/20 focus:outline-none transition-all placeholder:text-white/30"
                             />
                         </div>
                         <button 
@@ -85,118 +126,163 @@ export default function FieldPortal() {
                             }`}
                         >
                             <Activity className={`w-3.5 h-3.5 ${showAllDepts ? "animate-pulse" : ""}`} />
-                            {showAllDepts ? "Global Intelligence" : "Dept Console"}
+                            {showAllDepts ? "Global View" : "Dept Console"}
                         </button>
-                        
-                        <div className="flex gap-2.5 flex-wrap">
-                            {(["Pending", "Accepted", "Assigned", "In Progress", "Resolved", "Closed", "All"] as const).map(s => (
+                    </div>
+
+                    {/* Status Filter Tabs */}
+                    <div className="flex gap-2 flex-wrap">
+                        {TABS.map(tab => {
+                            const count = tab.key === "All"
+                                ? complaints.filter(c => (c as any).source === "voice" || c.citizen === "Voice User").length
+                                : complaints.filter(c => {
+                                    const isVoice = (c as any).source === "voice" || c.citizen === "Voice User";
+                                    if (!isVoice) return false;
+                                    if (tab.key === "New") return c.status === "Pending";
+                                    if (tab.key === "Assigned") return c.status === "Assigned";
+                                    if (tab.key === "In Progress") return c.status === "In Progress";
+                                    if (tab.key === "Resolved") return c.status === "Resolved" || c.status === "Closed";
+                                    return false;
+                                }).length;
+
+                            return (
                                 <button
-                                    key={s}
-                                    onClick={() => setFilterStatus(s)}
-                                    className={`px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border duration-300 ${
-                                        filterStatus === s 
+                                    key={tab.key}
+                                    onClick={() => setFilterTab(tab.key)}
+                                    className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border duration-300 flex items-center gap-2 ${
+                                        filterTab === tab.key 
                                             ? "bg-[#B91C1C] text-white border-[#B91C1C] shadow-2xl shadow-red-900/50 scale-105" 
                                             : "bg-white/5 text-white/30 border-white/5 hover:bg-white/10 hover:text-white/60 hover:border-white/10"
                                     }`}
                                 >
-                                    {s} 
-                                    {s === "Assigned" && complaints.filter(c => c.status === "Assigned" && (currentUser?.role === "admin" || showAllDepts || c.dept === currentUser?.dept)).length > 0 && (
-                                        <span className="ml-2 w-1.5 h-1.5 rounded-full bg-white animate-ping inline-block" />
+                                    {tab.label}
+                                    {count > 0 && (
+                                        <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-md ${
+                                            filterTab === tab.key ? "bg-white/20 text-white" : "bg-white/10 text-white/40"
+                                        }`}>
+                                            {count}
+                                        </span>
+                                    )}
+                                    {tab.key === "New" && count > 0 && filterTab !== tab.key && (
+                                        <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-ping" />
                                     )}
                                 </button>
-                            ))}
-                        </div>
+                            );
+                        })}
                     </div>
 
-                    {/* Tasks */}
+                    {/* Task List */}
                     <div className="space-y-4">
-                        {myTasks.length === 0 ? (
+                        {voiceComplaints.length === 0 ? (
                             <div className="bg-white/5 border border-dashed border-white/10 rounded-[2.5rem] p-20 text-center">
-                                <Clock className="w-12 h-12 text-white/10 mx-auto mb-4" />
-                                <p className="text-white/40 font-black uppercase tracking-[0.2em]">No tasks found</p>
+                                <div className="w-16 h-16 rounded-3xl bg-purple-500/10 flex items-center justify-center mx-auto mb-4">
+                                    <Volume2 className="w-8 h-8 text-purple-400/40" />
+                                </div>
+                                <p className="text-white/40 font-black uppercase tracking-[0.2em] text-sm">No voice complaints found</p>
+                                <p className="text-white/20 text-xs mt-1 font-medium">Voice AI complaints will appear here</p>
                             </div>
                         ) : (
-                            myTasks.map(task => (
-                                    <div 
-                                        key={task.id}
-                                        className={`bg-white/5 border transition-all cursor-pointer rounded-[2.5rem] p-8 hover:translate-x-1 group/card ${
-                                            selectedTask?.id === task.id 
-                                                ? "border-[#B91C1C] bg-white/10 shadow-2xl shadow-red-900/20" 
-                                                : "border-white/10 hover:bg-white/10"
-                                        }`}
-                                    >
-                                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-                                            <div className="flex-1 min-w-0" onClick={() => setSelectedTask(task)}>
-                                                <div className="flex items-center gap-3 mb-3 flex-wrap">
-                                                    <span className="font-mono text-[10px] font-black text-[#B91C1C] px-2.5 py-1 bg-red-900/30 rounded-lg border border-red-900/40 tracking-widest">
-                                                        {task.id}
-                                                    </span>
-                                                    <span className={`text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-[0.2em] ${
-                                                        task.status === "Pending" ? "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20" :
-                                                        task.status === "Accepted" ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20" :
-                                                        task.status === "Rejected" ? "bg-red-500/10 text-red-400 border border-red-500/20" :
-                                                        task.status === "Assigned" ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" :
-                                                        task.status === "In Progress" ? "bg-amber-500/10 text-amber-500 border border-amber-500/20" :
-                                                        task.status === "Resolved" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" :
-                                                        "bg-gray-500/10 text-gray-400 border border-gray-500/20"
-                                                    }`}>
-                                                        {task.status}
-                                                    </span>
-                                                    <div className="flex items-center gap-1.5 bg-emerald-500/5 px-2.5 py-1.5 rounded-lg border border-emerald-500/10">
-                                                        <div className="w-1 h-1 rounded-full bg-emerald-500 animate-ping" />
-                                                        <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Live</span>
-                                                    </div>
-                                                </div>
-                                                <h3 className="text-2xl font-black text-white mb-3 tracking-tight group-hover/card:text-[#B91C1C] transition-colors">{task.issue}</h3>
-                                                <div className="flex items-center gap-6 text-white/40 text-[10px] font-black uppercase tracking-widest">
-                                                    <div className="flex items-center gap-2">
-                                                        <MapPin className="w-4 h-4 text-[#B91C1C]" /> {task.ward}
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <Clock className="w-4 h-4 text-white/20" /> {task.time}
-                                                    </div>
+                            voiceComplaints.map(task => (
+                                <div 
+                                    key={task.id}
+                                    className={`bg-white/5 border transition-all cursor-pointer rounded-[2.5rem] p-8 hover:translate-x-1 group/card ${
+                                        selectedTask?.id === task.id 
+                                            ? "border-[#B91C1C] bg-white/10 shadow-2xl shadow-red-900/20" 
+                                            : "border-white/10 hover:bg-white/10"
+                                    }`}
+                                >
+                                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                                        <div className="flex-1 min-w-0" onClick={() => setSelectedTask(task)}>
+                                            <div className="flex items-center gap-3 mb-3 flex-wrap">
+                                                <span className="font-mono text-[10px] font-black text-[#B91C1C] px-2.5 py-1 bg-red-900/30 rounded-lg border border-red-900/40 tracking-widest">
+                                                    {task.id}
+                                                </span>
+                                                {/* Voice badge */}
+                                                <span className="flex items-center gap-1.5 text-[9px] font-black px-2.5 py-1.5 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20 uppercase tracking-widest">
+                                                    <Mic className="w-3 h-3" /> Voice
+                                                </span>
+                                                <span className={`text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-[0.2em] ${
+                                                    task.status === "Pending" ? "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20" :
+                                                    task.status === "Accepted" ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20" :
+                                                    task.status === "Rejected" ? "bg-red-500/10 text-red-400 border border-red-500/20" :
+                                                    task.status === "Assigned" ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" :
+                                                    task.status === "In Progress" ? "bg-amber-500/10 text-amber-500 border border-amber-500/20" :
+                                                    task.status === "Resolved" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" :
+                                                    "bg-gray-500/10 text-gray-400 border border-gray-500/20"
+                                                }`}>
+                                                    {task.status}
+                                                </span>
+                                                <div className="flex items-center gap-1.5 bg-emerald-500/5 px-2.5 py-1.5 rounded-lg border border-emerald-500/10">
+                                                    <div className="w-1 h-1 rounded-full bg-emerald-500 animate-ping" />
+                                                    <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Live</span>
                                                 </div>
                                             </div>
-
-                                            {/* Quick Action Side Buttons */}
-                                            <div className="flex items-center gap-3 shrink-0">
-                                                {task.status === "Assigned" && !selectedTask && (
-                                                    <span className="h-14 px-8 rounded-2xl bg-blue-600/20 text-blue-300 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 border border-blue-500/20">
-                                                        <Play className="w-4 h-4 rotate-90" /> Awaiting Start
-                                                    </span>
-                                                )}
-                                                {task.status === "Assigned" && (
-                                                    <button 
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleStatusUpdate(task.id, "In Progress", "Strategic deployment started.");
-                                                        }}
-                                                        className="h-14 px-8 rounded-2xl bg-amber-500 hover:bg-amber-400 text-white text-[10px] font-black uppercase tracking-widest shadow-xl shadow-amber-900/20 transition-all active:scale-95 flex items-center gap-2"
-                                                    >
-                                                        <Play className="w-4 h-4" /> Start
-                                                    </button>
-                                                )}
-                                                {task.status === "In Progress" && (
-                                                    <button 
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setSelectedTask(task);
-                                                            // Scrolling to proof section logic could go here
-                                                        }}
-                                                        className="h-14 px-8 rounded-2xl bg-[#B91C1C] hover:bg-red-600 text-white text-[10px] font-black uppercase tracking-widest shadow-xl shadow-red-900/30 transition-all active:scale-95 flex items-center gap-2"
-                                                    >
-                                                        <CheckCircle2 className="w-4 h-4" /> Resolve
-                                                    </button>
-                                                )}
-                                                <button 
-                                                    onClick={(e) => { e.stopPropagation(); setSelectedTask(task); }}
-                                                    className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all text-white/20 hover:text-[#B91C1C]"
-                                                >
-                                                    <Navigation className="w-6 h-6" />
-                                                </button>
+                                            <h3 className="text-2xl font-black text-white mb-3 tracking-tight group-hover/card:text-[#B91C1C] transition-colors">{task.issue}</h3>
+                                            {/* Description preview — voice transcript */}
+                                            {task.description && (
+                                                <p className="text-white/40 text-xs font-medium mb-3 line-clamp-2 leading-relaxed italic">
+                                                    "{task.description}"
+                                                </p>
+                                            )}
+                                            <div className="flex items-center gap-6 text-white/40 text-[10px] font-black uppercase tracking-widest">
+                                                <div className="flex items-center gap-2">
+                                                    <MapPin className="w-4 h-4 text-[#B91C1C]" /> {task.ward}
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <Clock className="w-4 h-4 text-white/20" /> {task.time}
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <Mic className="w-3.5 h-3.5 text-purple-400" />
+                                                    <span className="text-purple-300/60">{task.citizen}</span>
+                                                </div>
                                             </div>
                                         </div>
+
+                                        {/* Quick Action Side Buttons */}
+                                        <div className="flex items-center gap-3 shrink-0">
+                                            {/* Accept button for new/pending voice complaints */}
+                                            {task.status === "Pending" && (
+                                                <button 
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleStatusUpdate(task.id, "Accepted", "Complaint accepted by field officer.");
+                                                    }}
+                                                    className="h-14 px-8 rounded-2xl bg-[#B91C1C] hover:bg-red-600 text-white text-[10px] font-black uppercase tracking-widest shadow-xl shadow-red-900/30 transition-all active:scale-95 flex items-center gap-2"
+                                                >
+                                                    <CheckCircle2 className="w-4 h-4" /> Accept
+                                                </button>
+                                            )}
+                                            {task.status === "Assigned" && (
+                                                <button 
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleStatusUpdate(task.id, "In Progress", "Strategic deployment started.");
+                                                    }}
+                                                    className="h-14 px-8 rounded-2xl bg-amber-500 hover:bg-amber-400 text-white text-[10px] font-black uppercase tracking-widest shadow-xl shadow-amber-900/20 transition-all active:scale-95 flex items-center gap-2"
+                                                >
+                                                    <Play className="w-4 h-4" /> Start Work
+                                                </button>
+                                            )}
+                                            {task.status === "In Progress" && (
+                                                <button 
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setSelectedTask(task);
+                                                    }}
+                                                    className="h-14 px-8 rounded-2xl bg-[#B91C1C] hover:bg-red-600 text-white text-[10px] font-black uppercase tracking-widest shadow-xl shadow-red-900/30 transition-all active:scale-95 flex items-center gap-2"
+                                                >
+                                                    <CheckCircle2 className="w-4 h-4" /> Resolve
+                                                </button>
+                                            )}
+                                            <button 
+                                                onClick={(e) => { e.stopPropagation(); setSelectedTask(task); }}
+                                                className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all text-white/20 hover:text-[#B91C1C]"
+                                            >
+                                                <Navigation className="w-6 h-6" />
+                                            </button>
+                                        </div>
                                     </div>
+                                </div>
                             ))
                         )}
                     </div>
@@ -214,7 +300,10 @@ export default function FieldPortal() {
                                     >
                                         <X className="w-4 h-4" />
                                     </button>
-                                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 mb-2">Resolution Console</p>
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Mic className="w-4 h-4 text-purple-400" />
+                                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-purple-300">Voice Complaint Console</p>
+                                    </div>
                                     <h2 className="text-2xl font-black leading-tight mb-4">{selectedTask.issue}</h2>
                                     <div className="flex items-center gap-4">
                                         <a href={`tel:${selectedTask.phone}`} className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-xl text-xs font-black border border-white/10 hover:bg-white/20 transition-all">
@@ -226,6 +315,19 @@ export default function FieldPortal() {
                                     </div>
                                 </div>
 
+                                {/* Voice transcript preview */}
+                                {selectedTask.description && (
+                                    <div className="mx-6 mt-6 bg-purple-50 border border-purple-100 rounded-3xl p-5 flex gap-4">
+                                        <div className="w-10 h-10 rounded-2xl bg-purple-100 flex items-center justify-center shrink-0">
+                                            <Volume2 className="w-5 h-5 text-purple-600" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-black uppercase tracking-widest text-purple-700 mb-1">Voice Transcript</p>
+                                            <p className="text-sm font-bold text-purple-800 leading-relaxed line-clamp-3">{selectedTask.description}</p>
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div className="p-8 space-y-8">
                                     {/* AI Insight */}
                                     <div className="bg-amber-50 border border-amber-100 rounded-3xl p-5 flex gap-4">
@@ -234,7 +336,7 @@ export default function FieldPortal() {
                                         </div>
                                         <div>
                                             <p className="text-xs font-black uppercase tracking-widest text-amber-700 mb-1">Field Intelligence</p>
-                                            <p className="text-sm font-bold text-amber-800 leading-relaxed">Based on sensors, this issue might require extra insulation due to moisture.</p>
+                                            <p className="text-sm font-bold text-amber-800 leading-relaxed">Based on the voice complaint, prioritize safety checks before proceeding with repair.</p>
                                         </div>
                                     </div>
 
@@ -277,7 +379,16 @@ export default function FieldPortal() {
                                         </div>
 
                                         <div className="flex gap-4">
-
+                                            {selectedTask.status === "Pending" && (
+                                                <button 
+                                                    onClick={() => handleStatusUpdate(selectedTask.id, "Accepted", "Complaint accepted by field officer")}
+                                                    disabled={isUpdating}
+                                                    className="flex-1 flex items-center justify-center gap-3 py-4 rounded-3xl bg-[#B91C1C] hover:bg-red-700 text-white text-xs font-black uppercase tracking-widest shadow-xl shadow-red-200 transition-all active:scale-95 disabled:opacity-50"
+                                                >
+                                                    {isUpdating ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
+                                                    Accept
+                                                </button>
+                                            )}
                                             {selectedTask.status === "Assigned" && (
                                                 <button 
                                                     onClick={() => handleStatusUpdate(selectedTask.id, "In Progress", "Officer started work on-site")}
@@ -288,7 +399,7 @@ export default function FieldPortal() {
                                                     Start Work
                                                 </button>
                                             )}
-                                            {(selectedTask.status === "Assigned" || selectedTask.status === "In Progress") && (
+                                            {(selectedTask.status === "Assigned" || selectedTask.status === "In Progress" || selectedTask.status === "Accepted") && (
                                                 <button 
                                                     onClick={() => handleStatusUpdate(selectedTask.id, "Resolved", proofNote || "Resolved on-site by officer")}
                                                     disabled={isUpdating || !proofImg}
@@ -304,9 +415,11 @@ export default function FieldPortal() {
                             </div>
                         ) : (
                             <div className="bg-white/5 border border-dashed border-white/10 rounded-[3rem] p-12 text-center">
-                                <AlertCircle className="w-12 h-12 text-white/10 mx-auto mb-4" />
+                                <div className="w-16 h-16 rounded-3xl bg-purple-500/10 flex items-center justify-center mx-auto mb-4">
+                                    <Mic className="w-8 h-8 text-purple-400/40" />
+                                </div>
                                 <h3 className="text-lg font-black text-white mb-2 uppercase tracking-wide">No Selection</h3>
-                                <p className="text-xs text-white/40 leading-relaxed uppercase font-bold tracking-widest">Select a task from the list to start field operations.</p>
+                                <p className="text-xs text-white/40 leading-relaxed uppercase font-bold tracking-widest">Select a voice complaint to start field operations.</p>
                             </div>
                         )}
 
@@ -315,25 +428,30 @@ export default function FieldPortal() {
                             <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-red-500/20 transition-all" />
                             <div className="flex items-center justify-between mb-8 relative">
                                 <div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-1">Quick Insight</p>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-1">Voice Complaints</p>
                                     <p className="text-3xl font-black tabular-nums">
-                                        {complaints.filter(c => c.status === "Assigned" && (currentUser?.role === "admin" || showAllDepts || c.dept === currentUser?.dept)).length}
-                                        <span className="text-sm font-bold opacity-50 ml-2">Assigned</span>
+                                        {complaints.filter(c => (c as any).source === "voice" || c.citizen === "Voice User").length}
+                                        <span className="text-sm font-bold opacity-50 ml-2">Total</span>
                                     </p>
                                 </div>
-                                <div className="w-14 h-14 rounded-3xl bg-white/10 flex items-center justify-center border border-white/20">
-                                    <Activity className="w-8 h-8 text-white animate-pulse" />
+                                <div className="w-14 h-14 rounded-3xl bg-purple-500/20 flex items-center justify-center border border-purple-500/20">
+                                    <Mic className="w-8 h-8 text-purple-400 animate-pulse" />
                                 </div>
                             </div>
                             <div className="space-y-4 relative">
-                                <div className="flex justify-between items-end">
-                                    <p className="text-[9px] font-black uppercase tracking-widest opacity-50">Response Readiness</p>
-                                    <p className="text-[9px] font-black uppercase tracking-widest">Active</p>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="bg-white/5 rounded-2xl p-3 text-center">
+                                        <p className="text-2xl font-black tabular-nums text-yellow-400">{newCount}</p>
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mt-1">New</p>
+                                    </div>
+                                    <div className="bg-white/5 rounded-2xl p-3 text-center">
+                                        <p className="text-2xl font-black tabular-nums text-emerald-400">
+                                            {complaints.filter(c => ((c as any).source === "voice" || c.citizen === "Voice User") && c.status === "Resolved").length}
+                                        </p>
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mt-1">Resolved</p>
+                                    </div>
                                 </div>
-                                <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-                                    <div className="h-full bg-white w-[100%] rounded-full shadow-[0_0_12px_rgba(255,255,255,0.4)]" />
-                                </div>
-                                <p className="text-[10px] text-white/60 font-medium leading-relaxed italic">"Officers are notified instantly when a citizen files a report online."</p>
+                                <p className="text-[10px] text-white/60 font-medium leading-relaxed italic">"Citizens can now file complaints in their own language via voice."</p>
                             </div>
                         </div>
                     </div>

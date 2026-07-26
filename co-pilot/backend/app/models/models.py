@@ -43,6 +43,7 @@ class DbComplaint(Base):
     sentiment = Column(Integer, default=75)
     rating = Column(Integer, nullable=True)
     resolutionProof = Column(Text, nullable=True)
+    source = Column(String, default="online")  # "voice" | "online" | "field"
 
     audit = relationship("DbAuditEntry", back_populates="complaint", cascade="all, delete-orphan")
 

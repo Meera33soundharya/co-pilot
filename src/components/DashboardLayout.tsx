@@ -108,7 +108,7 @@ const CITIZEN_NAV: NavGroup[] = [
     },
 ];
 
-export default function DashboardLayout({ children, title, subtitle, bgImage, actions, isDark = false }: DashboardLayoutProps) {
+export default function DashboardLayout({ children, title, subtitle, bgImage, actions, isDark = true }: DashboardLayoutProps) {
     const navigate = useNavigate();
     const location = useLocation();
     const { currentUser, logout, complaints, notifications, readNotification } = useComplaints();
@@ -168,19 +168,19 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
 
             {/* ── Sidebar ──────────────────────────────────────────── */}
             <aside
-                className={`fixed lg:relative inset-y-0 left-0 z-[130] lg:z-[5] flex flex-col w-[520px] border-r border-gray-200 transform transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
-                style={{ backgroundColor: "#FFFFFF", isolation: "isolate" }}
+                className={`fixed lg:relative inset-y-0 left-0 z-[130] lg:z-[5] flex flex-col w-[520px] border-r border-gray-200/20 transform transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
+                style={{ backgroundColor: isDark ? "rgba(10,15,28,0.7)" : "#FFFFFF", backdropFilter: "blur(24px)", isolation: "isolate" }}
             >
 
                 {/* Brand */}
-                <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+                <div className="px-6 py-5 border-b border-white/10 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-2xl flex items-center justify-center relative shadow-lg shadow-red-900/10" style={{ backgroundColor: "#B91C1C" }}>
                             <Shield className="w-6 h-6 text-white" />
                             <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white animate-pulse" />
                         </div>
                         <div>
-                            <span className="font-black text-2xl text-gray-900 block leading-none tracking-tight">GovPilot</span>
+                            <span className={`font-black text-2xl ${isDark ? "text-white" : "text-gray-900"} block leading-none tracking-tight`}>GovPilot</span>
                             <span className="text-[11px] font-bold uppercase tracking-widest leading-none block mt-1.5 flex items-center gap-1.5" style={{ color: roleCfg.color }}>
                                 <div className="w-1.5 h-1.5 rounded-full bg-current animate-ping" /> {roleCfg.label}
                             </span>
@@ -240,7 +240,7 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
                                                 `flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-150 group ${
                                                     isActiveCustom
                                                         ? "text-white shadow-lg shadow-red-900/20"
-                                                        : "text-gray-600 hover:bg-red-50/70 hover:text-[#B91C1C]"
+                                                        : `${isDark ? "text-gray-300 hover:text-white" : "text-gray-600 hover:text-[#B91C1C]"} hover:bg-red-50/10`
                                                 }`
                                             }
                                             style={() => isActiveCustom ? { backgroundColor: "#B91C1C" } : {}}
@@ -253,7 +253,7 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
                                                                 ? "bg-white/20"
                                                                 : "bg-gray-100 group-hover:bg-red-100"
                                                         }`}>
-                                                            <Icon className={`w-5 h-5 ${isActiveCustom ? "text-white" : "text-gray-500 group-hover:text-[#B91C1C]"}`} />
+                                                            <Icon className={`w-5 h-5 ${isActiveCustom ? "text-white" : "text-gray-500 group-hover:text-current"}`} />
                                                         </div>
                                                         <span className={`text-[20px] font-bold whitespace-nowrap tracking-tight ${isActiveCustom ? "text-white" : ""}`}>{label}</span>
                                                     </div>
@@ -274,10 +274,10 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
                     ))}
                 </nav>
 
-                <div className="px-4 py-4 border-t border-gray-100">
+                <div className="px-4 py-4 border-t border-white/10">
                     <button
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl hover:bg-gray-50 transition-all group border border-transparent hover:border-gray-100"
+                        className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all group border border-transparent ${isDark ? "hover:bg-white/5" : "hover:bg-gray-50"} hover:border-white/10`}
                     >
                         <div
                             className="w-11 h-11 rounded-2xl flex items-center justify-center text-base font-black text-white shrink-0"
@@ -294,25 +294,25 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
                 </div>
             </aside>
 
-            {/* ── Main Content ─────────────────────────────────────── */}
-            <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+            {/* ── Main Content Area ──────────────────────────────────────────── */}
+            <div className="relative z-10 flex-1 flex flex-col min-w-0 overflow-hidden">
                 {/* Header */}
-                <header className="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0">
+                <header className={`h-14 flex items-center justify-between px-6 shrink-0 border-b border-white/5`}>
                     <div className="flex items-center gap-4">
-                        <button className="lg:hidden p-1.5 text-gray-900 hover:bg-gray-50 rounded-lg" onClick={() => setSidebarOpen(true)}>
+                        <button className="lg:hidden p-1.5 text-gray-400 hover:bg-white/5 rounded-lg" onClick={() => setSidebarOpen(true)}>
                             <Menu className="w-5 h-5" />
                         </button>
 
                         {role === 'admin' && (
-                            <button title="Admin Menu" onClick={() => setAdminSlideOpen(true)} className="hidden md:inline-flex items-center gap-2 px-3 py-1 rounded-lg hover:bg-gray-50">
-                                <Layers className="w-5 h-5 text-gray-400" />
-                                <span className="text-lg text-gray-600">Admin</span>
+                            <button title="Admin Menu" onClick={() => setAdminSlideOpen(true)} className="hidden md:inline-flex items-center gap-2 px-3 py-1 rounded-lg hover:bg-white/5">
+                                <Layers className="w-5 h-5 text-gray-500" />
+                                <span className="text-lg text-gray-300">Admin</span>
                             </button>
                         )}
 
                         {role !== "citizen" ? (
                             <div className="relative hidden md:block">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                                 <input
                                     type="text"
                                     placeholder="Search complaints, wards, officers…"
@@ -322,55 +322,55 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
                                             e.currentTarget.value = "";
                                         }
                                     }}
-                                    className="pl-9 pr-4 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-lg w-64 focus:outline-none focus:border-[#B91C1C]/30 focus:ring-2 focus:ring-[#B91C1C]/10 font-medium text-gray-700 placeholder:text-gray-400 transition-all"
+                                    className="pl-9 pr-4 py-1.5 bg-white/5 border border-white/10 rounded-lg text-lg w-64 focus:outline-none focus:border-[#B91C1C]/50 focus:ring-2 focus:ring-[#B91C1C]/20 font-medium text-white placeholder:text-gray-600 transition-all"
                                 />
                             </div>
                         ) : (
-                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-100">
-                                <User className="w-3.5 h-3.5 text-emerald-600" />
-                                <span className="text-base font-bold text-emerald-700">Citizen Portal</span>
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-950/30 border border-emerald-900/50">
+                                <User className="w-3.5 h-3.5 text-emerald-500" />
+                                <span className="text-base font-bold text-emerald-400">Citizen Portal</span>
                             </div>
                         )}
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <span className="hidden sm:block text-lg font-bold text-gray-900 tabular-nums">{time}</span>
-                        <div className="w-px h-5 bg-gray-300 hidden sm:block" />
+                        <span className="hidden sm:block text-lg font-bold text-gray-300 tabular-nums">{time}</span>
+                        <div className="w-px h-5 bg-white/10 hidden sm:block" />
 
                         {/* Notification bell */}
                         <div className="relative">
                             <button
                                 onClick={() => setShowNotifs(!showNotifs)}
-                                className={`p-2.5 rounded-xl border transition-all ${showNotifs ? "bg-red-50 border-red-200 text-[#B91C1C]" : "bg-white/50 border-gray-100 text-gray-900 hover:bg-white"
+                                className={`p-2.5 rounded-xl border transition-all ${showNotifs ? "bg-red-950/50 border-red-900 text-red-400" : "bg-white/5 border-white/5 text-gray-300 hover:bg-white/10"
                                     }`}
                             >
                                 <Bell className="w-5 h-5" />
                                 {unreadCount > 0 && (
-                                    <span className="absolute top-2 right-2 w-2 h-2 bg-[#B91C1C] rounded-full border-2 border-white shadow-sm" />
+                                    <span className="absolute top-2 right-2 w-2 h-2 bg-[#B91C1C] rounded-full border-2 border-[#0A0F1C] shadow-sm" />
                                 )}
                             </button>
 
                             {showNotifs && (
                                 <>
                                     <div className="fixed inset-0 z-40" onClick={() => setShowNotifs(false)} />
-                                    <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-white rounded-3xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-fade-in">
-                                        <div className="px-6 py-5 border-b border-gray-50 flex items-center justify-between bg-gray-50/50">
-                                            <h3 className="text-lg font-bold text-gray-900 uppercase tracking-wide flex items-center gap-2">
+                                    <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-[#161B2E] rounded-3xl shadow-2xl border border-white/10 z-50 overflow-hidden animate-fade-in">
+                                        <div className="px-6 py-5 border-b border-white/5 flex items-center justify-between bg-white/5">
+                                            <h3 className="text-lg font-bold text-white uppercase tracking-wide flex items-center gap-2">
                                                 <Bell className="w-4 h-4 text-[#B91C1C]" /> Notifications
                                             </h3>
                                             {unreadCount > 0 && (
-                                                <span className="text-base font-bold bg-red-100 text-[#B91C1C] px-2.5 py-0.5 rounded-full uppercase">{unreadCount} New</span>
+                                                <span className="text-base font-bold bg-red-950 text-red-400 px-2.5 py-0.5 rounded-full uppercase">{unreadCount} New</span>
                                             )}
                                         </div>
 
                                         <div className="max-h-[400px] overflow-y-auto">
                                             {notifications.length === 0 ? (
                                                 <div className="p-12 text-center">
-                                                    <Bell className="w-8 h-8 text-gray-200 mx-auto mb-3" />
-                                                    <p className="text-sm font-bold text-gray-400 uppercase tracking-wide">No notifications</p>
+                                                    <Bell className="w-8 h-8 text-gray-700 mx-auto mb-3" />
+                                                    <p className="text-sm font-bold text-gray-500 uppercase tracking-wide">No notifications</p>
                                                 </div>
                                             ) : (
-                                                <div className="divide-y divide-gray-50">
+                                                <div className="divide-y divide-white/5">
                                                     {notifications.map(n => (
                                                         <div
                                                             key={n.id}
@@ -379,17 +379,17 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
                                                                 navigate(`/dashboard?notificationId=${n.id}`);
                                                                 setShowNotifs(false);
                                                             }}
-                                                            className={`p-5 hover:bg-gray-50 transition-all cursor-pointer group flex gap-4 ${!n.read ? "bg-red-50/30" : ""}`}
+                                                            className={`p-5 hover:bg-white/5 transition-all cursor-pointer group flex gap-4 ${!n.read ? "bg-red-950/10" : ""}`}
                                                         >
-                                                            <div className={`w-10 h-10 rounded-2xl shrink-0 flex items-center justify-center ${n.type === "new_complaint" ? "bg-red-100 text-[#B91C1C]" : "bg-blue-100 text-blue-600"}`}>
+                                                            <div className={`w-10 h-10 rounded-2xl shrink-0 flex items-center justify-center ${n.type === "new_complaint" ? "bg-red-950/50 text-red-400" : "bg-blue-950/50 text-blue-400"}`}>
                                                                 {n.type === "new_complaint" ? <PlusCircle className="w-5 h-5" /> : <Activity className="w-5 h-5" />}
                                                             </div>
                                                             <div className="flex-1 min-w-0">
                                                                 <div className="flex justify-between items-start mb-1">
-                                                                    <p className={`text-base font-bold uppercase  ${!n.read ? "text-gray-900" : "text-gray-500"}`}>{n.title}</p>
-                                                                    <span className="text-sm font-bold text-gray-400 uppercase">{n.time}</span>
+                                                                    <p className={`text-base font-bold uppercase  ${!n.read ? "text-white" : "text-gray-500"}`}>{n.title}</p>
+                                                                    <span className="text-sm font-bold text-gray-600 uppercase">{n.time}</span>
                                                                 </div>
-                                                                <p className="text-base text-gray-500 line-clamp-2 leading-relaxed">{n.message}</p>
+                                                                <p className="text-base text-gray-400 line-clamp-2 leading-relaxed">{n.message}</p>
                                                                 {!n.read && (
                                                                     <div className="mt-2 flex items-center gap-1.5">
                                                                         <div className="w-1.5 h-1.5 rounded-full bg-[#B91C1C]" />
@@ -403,7 +403,7 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
                                             )}
                                         </div>
 
-                                        <div className="p-4 bg-gray-50 border-t border-gray-100 text-center">
+                                        <div className="p-4 bg-white/5 border-t border-white/5 text-center">
                                             <button
                                                 onClick={() => {
                                                     if (role === "citizen") navigate("/citizen");
@@ -411,7 +411,7 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
                                                     else navigate("/grievances");
                                                     setShowNotifs(false);
                                                 }}
-                                                className="text-base font-bold text-gray-500 hover:text-gray-900 uppercase tracking-wide flex items-center justify-center gap-2 mx-auto"
+                                                className="text-base font-bold text-gray-400 hover:text-white uppercase tracking-wide flex items-center justify-center gap-2 mx-auto"
                                             >
                                                 {role === "citizen" ? "Track My Complaints" : role === "officer" ? "Open Field Portal" : "View All Complaints"} <ArrowRight className="w-3.5 h-3.5" />
                                             </button>
@@ -452,9 +452,9 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
 
                 {/* Page Content */}
                 <div className={`flex-1 overflow-y-auto scroll-smooth relative ${isDark ? "bg-[#0A0F1C]" : "bg-[#F9FAFB]"}`}>
-                    {/* Theme Background Image - fixed to main content only */}
+                    {/* Theme Background Image - global */}
                     {isDark && (
-                        <div className="fixed top-0 left-[520px] right-0 bottom-0 z-0 pointer-events-none opacity-40 overflow-hidden">
+                        <div className="fixed inset-0 z-0 pointer-events-none opacity-40 overflow-hidden">
                             <img
                                 key={bgImage || "/images/ai_hands_bg.png"}
                                 src={bgImage || "/images/ai_hands_bg.png"}

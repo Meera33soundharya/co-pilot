@@ -29,6 +29,7 @@ class ComplaintCreate(BaseModel):
     coords: Optional[Coords] = None
     notifPref: Optional[str] = "SMS"
     evidence: Optional[List[str]] = []
+    source: Optional[str] = "online"  # "voice" | "online" | "field"
 
 class StatusUpdate(BaseModel):
     status: str
@@ -125,6 +126,7 @@ def get_complaints(db: Session = Depends(get_db)):
             "sentiment": c.sentiment,
             "rating": c.rating,
             "resolutionProof": c.resolutionProof,
+            "source": c.source or "online",
             "audit": audit_list
         })
     return res
@@ -172,7 +174,8 @@ def create_complaint(req: ComplaintCreate, db: Session = Depends(get_db)):
         longitude=req.coords.lng if req.coords else None,
         notifPref=req.notifPref,
         evidence=json.dumps(req.evidence or []),
-        sentiment=random.randint(60, 100)
+        sentiment=random.randint(60, 100),
+        source=req.source or "online"
     )
     
     db.add(db_comp)

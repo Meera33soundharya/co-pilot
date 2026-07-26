@@ -83,7 +83,6 @@ export default function ElderlyPortal() {
                         citizen: "Voice User",
                         phone: "Not Provided",
                         ward: "Ward 01",
-                        area: "Unknown Area",
                         priority: analysis.priority || "Medium",
                         issue: analysis.category || "Voice Complaint",
                         description: finalTranscript,
@@ -92,7 +91,8 @@ export default function ElderlyPortal() {
                         evidence: [],
                         notifPref: "None",
                         category: analysis.category,
-                        dept: analysis.dept
+                        dept: analysis.dept,
+                        source: "voice"
                     });
                     
                     setTicketId(id);
@@ -104,7 +104,6 @@ export default function ElderlyPortal() {
                         citizen: "Voice User",
                         phone: "Not Provided",
                         ward: "Ward 01",
-                        area: "Unknown Area",
                         priority: "Medium",
                         issue: "Voice Complaint",
                         description: finalTranscript,
@@ -112,6 +111,7 @@ export default function ElderlyPortal() {
                         coords: { lat: 12.9716, lng: 77.5946 },
                         evidence: [],
                         notifPref: "None",
+                        source: "voice"
                     });
                     setTicketId(id);
                     setStep("success");

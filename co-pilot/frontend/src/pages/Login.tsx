@@ -104,8 +104,31 @@ export default function Login() {
         style={{ background: "#f0efed", padding: "2rem" }}
       >
 
+        {/* ── 0. Header Text ─────────────────────────────────────── */}
+        <div style={{ width: "100%", maxWidth: "380px", marginBottom: "24px" }}>
+          <h1 style={{ fontSize: "32px", fontWeight: "600", color: "#111", margin: "0 0 4px 0", letterSpacing: "-0.02em" }}>
+            Welcome back
+          </h1>
+          <p style={{ fontSize: "12px", color: "#666", margin: 0, fontWeight: "500" }}>
+            Sign in to access your portal
+          </p>
+        </div>
+
         {/* ── 1. Role Selector Cards ─────────────────────────────── */}
-        <div style={{ display: "flex", gap: "12px", marginBottom: "14px" }}>
+        <div style={{ width: "100%", maxWidth: "380px" }}>
+          <p
+            style={{
+              fontSize:      "9px",
+              fontWeight:    "700",
+              color:         "#aaa",
+              textTransform: "uppercase",
+              letterSpacing: "0.15em",
+              marginBottom:  "12px",
+            }}
+          >
+            SELECT YOUR PORTAL
+          </p>
+          <div style={{ display: "flex", gap: "12px", marginBottom: "14px", width: "100%" }}>
           {ACCOUNTS.map((acct) => {
             const Icon = acct.icon;
             const active = selectedRole === acct.role;
@@ -159,13 +182,14 @@ export default function Login() {
             color:         "#888",
             textAlign:     "center",
             marginBottom:  "20px",
-            maxWidth:      "260px",
+            width:         "100%",
             lineHeight:    "1.6",
             fontWeight:    "500",
           }}
         >
           Tap a role to auto-fill credentials, then click Sign In
         </p>
+        </div>
 
         {/* ── 3. Form Card ───────────────────────────────────────── */}
         <div
