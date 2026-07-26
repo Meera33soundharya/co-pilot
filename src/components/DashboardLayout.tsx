@@ -456,8 +456,8 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
                     {isDark && (
                         <div className="fixed inset-0 z-0 pointer-events-none opacity-40 overflow-hidden">
                             <img
-                                key={bgImage || "/images/ai_hands_bg.png"}
-                                src={bgImage || "/images/ai_hands_bg.png"}
+                                key={bgImage || "/images/login_bg.png"}
+                                src={bgImage || "/images/login_bg.png"}
                                 alt="Dashboard Theme"
                                 onError={e => (e.currentTarget.style.display = "none")}
                                 className="w-full h-full object-cover filter brightness-[0.7] contrast-[1.2]"

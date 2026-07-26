@@ -169,7 +169,7 @@ export default function Login() {
 
 
     return (
-        <div className="min-h-screen flex overflow-hidden" style={{ fontFamily: "'Inter', sans-serif" }}>
+        <div className="min-h-screen flex overflow-hidden bg-[#030810]" style={{ fontFamily: "'Inter', sans-serif" }}>
             {booting && <BootOverlay onDone={handleDone} />}
 
             {/* ── LEFT — Live Holographic Ring Panel ─────────────── */}
