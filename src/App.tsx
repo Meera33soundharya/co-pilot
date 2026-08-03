@@ -65,7 +65,8 @@ function App() {
       <BrowserRouter>
         <Routes>
           {/* Public pages */}
-          <Route path="/" element={<Landing />} />
+          <Route path="/" element={<Login />} />
+          <Route path="/landing" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/submit-complaint" element={<CitizenPortal />} />
           <Route path="/voice-portal" element={<ElderlyPortal />} />
