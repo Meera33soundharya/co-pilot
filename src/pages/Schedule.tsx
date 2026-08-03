@@ -51,25 +51,25 @@ export default function Schedule() {
             <div className="space-y-8 max-w-6xl pb-12">
                 
                 {/* Weekly Calendar */}
-                <div className="bg-white border border-gray-200 rounded-[2rem] p-8 shadow-sm">
-                    <div className="flex items-center justify-between mb-8">
-                        <h2 className="text-gray-900 text-lg font-black tracking-tight">Week of June 8, 2026</h2>
-                        <div className="flex items-center gap-3">
-                            <button className="p-2 rounded-xl border border-gray-200 text-gray-400 hover:bg-gray-50 hover:text-gray-900 transition-colors">
-                                <ChevronLeft className="w-5 h-5" />
+                <div className="bg-[#111827] border border-gray-800 rounded-2xl p-6 shadow-2xl">
+                    <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-white text-base font-bold">Week of June 8, 2026</h2>
+                        <div className="flex items-center gap-2">
+                            <button className="p-2 rounded-lg border border-gray-700 text-gray-400 hover:bg-gray-800 hover:text-white transition-colors">
+                                <ChevronLeft className="w-4 h-4" />
                             </button>
-                            <button className="px-5 py-2.5 rounded-xl border border-gray-200 text-xs font-black text-gray-600 hover:bg-gray-50 hover:text-gray-900 uppercase tracking-widest transition-colors">
+                            <button className="px-4 py-2 rounded-lg border border-gray-700 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-colors">
                                 Today
                             </button>
-                            <button className="p-2 rounded-xl border border-gray-200 text-gray-400 hover:bg-gray-50 hover:text-gray-900 transition-colors">
-                                <ChevronRight className="w-5 h-5" />
+                            <button className="p-2 rounded-lg border border-gray-700 text-gray-400 hover:bg-gray-800 hover:text-white transition-colors">
+                                <ChevronRight className="w-4 h-4" />
                             </button>
                         </div>
                     </div>
-                    <div className="grid grid-cols-7 gap-px bg-gray-100 rounded-2xl overflow-hidden border border-gray-200">
+                    <div className="grid grid-cols-7 gap-px bg-gray-800/50 rounded-xl overflow-hidden border border-gray-800/50">
                         {Array.from({ length: 7 }).map((_, i) => (
-                            <div key={i} className="bg-white h-32 p-4 hover:bg-gray-50/50 transition-colors cursor-pointer">
-                                {/* Empty boxes */}
+                            <div key={i} className="bg-[#111827] h-32 p-3 hover:bg-gray-800/30 transition-colors cursor-pointer">
+                                {/* Empty boxes to match the screenshot */}
                             </div>
                         ))}
                     </div>
@@ -77,25 +77,25 @@ export default function Schedule() {
 
                 {/* All Events List */}
                 <div>
-                    <h3 className="text-white text-base font-bold mb-4 px-2">All Events</h3>
-                    <div className="bg-white border border-gray-200 rounded-[2rem] overflow-hidden shadow-sm">
-                        <div className="divide-y divide-gray-100">
+                    <h3 className="text-white text-base font-bold mb-4">All Events</h3>
+                    <div className="bg-[#111827] border border-gray-800 rounded-2xl overflow-hidden shadow-2xl">
+                        <div className="divide-y divide-gray-800/50">
                             {EVENTS.map((evt) => (
-                                <div key={evt.id} className="p-6 md:p-8 flex items-center gap-6 hover:bg-gray-50/80 transition-all cursor-pointer group">
+                                <div key={evt.id} className="p-6 flex items-center gap-6 hover:bg-gray-800/40 transition-colors cursor-pointer">
                                     <div className="w-40 flex-shrink-0">
-                                        <span className={`px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] rounded-full ${TYPE_COLORS[evt.type] || "bg-gray-100 text-gray-600"}`}>
+                                        <span className={`px-3 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-lg ${TYPE_COLORS[evt.type] || "bg-gray-800 text-gray-300"}`}>
                                             {evt.type}
                                         </span>
                                     </div>
                                     <div>
-                                        <h4 className="text-lg font-black text-gray-900 mb-2 group-hover:text-[#B91C1C] transition-colors">{evt.title}</h4>
-                                        <div className="flex items-center gap-6 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                                        <h4 className="text-sm font-bold text-gray-200 mb-1">{evt.title}</h4>
+                                        <div className="flex items-center gap-4 text-xs text-gray-500 font-medium">
                                             <span className="flex items-center gap-1.5">
-                                                <Clock className="w-4 h-4 text-gray-300" />
+                                                <Clock className="w-3.5 h-3.5" />
                                                 {evt.time}
                                             </span>
                                             <span className="flex items-center gap-1.5">
-                                                <MapPin className="w-4 h-4 text-red-400" />
+                                                <MapPin className="w-3.5 h-3.5" />
                                                 {evt.location}
                                             </span>
                                         </div>

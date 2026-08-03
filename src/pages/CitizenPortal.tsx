@@ -58,8 +58,8 @@ export default function CitizenPortal() {
 
     const autoTranslate = async (field: "issue" | "description" | "citizen", text: string) => {
         if (lang !== "ta" || !text.trim()) return;
-        if (/[\u0B80-\u0BFF]/.test(text)) return; 
-        
+        if (/[\u0B80-\u0BFF]/.test(text)) return;
+
         setIsTranslating(true);
         try {
             const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ta&dt=t&q=${encodeURIComponent(text)}`;
@@ -93,18 +93,18 @@ export default function CitizenPortal() {
         e.preventDefault();
         setStep("submitting");
         setIsAnalyzing(true);
-        
+
         try {
             const analysis = await analyzeComplaint(form.issue, form.description);
             setAiResult(analysis);
-            
-            const id = await addComplaint({ 
-                ...form, 
+
+            const id = await addComplaint({
+                ...form,
                 category: analysis.category,
                 priority: analysis.priority,
                 dept: analysis.dept
             });
-            
+
             setTicketId(id);
             setStep("success");
         } catch (err) {
@@ -223,12 +223,12 @@ export default function CitizenPortal() {
                     <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-xl space-y-6">
                         <div className="space-y-2 relative">
                             <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">{t("portal_fullName")}</label>
-                            <input 
-                                value={form.citizen} 
-                                onChange={e => set("citizen", e.target.value)} 
+                            <input
+                                value={form.citizen}
+                                onChange={e => set("citizen", e.target.value)}
                                 onBlur={e => autoTranslate("citizen", e.target.value)}
-                                className="input-field w-full" 
-                                placeholder={t("portal_fullName")} 
+                                className="input-field w-full"
+                                placeholder={t("portal_fullName")}
                             />
                             {isTranslating && <Loader2 className="w-4 h-4 text-gray-400 absolute right-4 top-9 animate-spin" />}
                         </div>
@@ -246,23 +246,23 @@ export default function CitizenPortal() {
                             {isRecording ? t("portal_stopRecording") : t("portal_recordVoice")}
                         </button>
                         <div className="relative">
-                            <input 
-                                value={form.issue} 
-                                onChange={e => set("issue", e.target.value)} 
+                            <input
+                                value={form.issue}
+                                onChange={e => set("issue", e.target.value)}
                                 onBlur={e => autoTranslate("issue", e.target.value)}
-                                className="input-field w-full" 
-                                placeholder={t("portal_problemTitle_label")} 
+                                className="input-field w-full"
+                                placeholder={t("portal_problemTitle_label")}
                             />
                             {isTranslating && <Loader2 className="w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 animate-spin" />}
                         </div>
                         <div className="relative">
-                            <textarea 
-                                value={form.description} 
-                                onChange={e => set("description", e.target.value)} 
+                            <textarea
+                                value={form.description}
+                                onChange={e => set("description", e.target.value)}
                                 onBlur={e => autoTranslate("description", e.target.value)}
-                                rows={4} 
-                                className="input-field w-full" 
-                                placeholder={t("portal_descPlaceholder")} 
+                                rows={4}
+                                className="input-field w-full"
+                                placeholder={t("portal_descPlaceholder")}
                             />
                             {isTranslating && <Loader2 className="w-4 h-4 text-gray-400 absolute right-4 top-4 animate-spin" />}
                         </div>
@@ -281,7 +281,7 @@ export default function CitizenPortal() {
                         <button onClick={detectLocation} className="btn-secondary w-full">{t("portal_detectLocation")}</button>
                         <div className="flex gap-4">
                             <button onClick={back} className="btn-secondary flex-1">{t("back")}</button>
-                            <button onClick={next} className="btn-primary flex-[2]">{t("portal_nextLocation")}</button>
+                            <button onClick={next} className="btn-primary flex-[2]">{t("next")}</button>
                         </div>
                     </div>
                 )}

@@ -86,13 +86,12 @@ export default function ElderlyPortal() {
                         priority: analysis.priority || "Medium",
                         issue: analysis.category || "Voice Complaint",
                         description: finalTranscript,
-                        location: "From Voice Portal",
+                        location: "Unknown Area",
                         coords: { lat: 12.9716, lng: 77.5946 },
                         evidence: [],
                         notifPref: "None",
                         category: analysis.category,
-                        dept: analysis.dept,
-                        source: "voice"
+                        dept: analysis.dept
                     });
                     
                     setTicketId(id);
@@ -107,11 +106,10 @@ export default function ElderlyPortal() {
                         priority: "Medium",
                         issue: "Voice Complaint",
                         description: finalTranscript,
-                        location: "From Voice Portal",
+                        location: "Unknown Area",
                         coords: { lat: 12.9716, lng: 77.5946 },
                         evidence: [],
                         notifPref: "None",
-                        source: "voice"
                     });
                     setTicketId(id);
                     setStep("success");

@@ -25,7 +25,7 @@ export class RealTimeService {
   };
   
   private subscribers: Map<string, (data: any) => void> = new Map();
-  private intervals: Map<string, NodeJS.Timeout> = new Map();
+  private intervals: Map<string, ReturnType<typeof setTimeout>> = new Map();
   private websocket: WebSocket | null = null;
   private retryCount = 0;
 
@@ -304,7 +304,7 @@ export function useRealTimeData<T>(channel: string, initialData: T) {
 // Automated report generation service
 export class AutomatedReportService {
   private static instance: AutomatedReportService;
-  private schedules: Map<string, NodeJS.Timeout> = new Map();
+  private schedules: Map<string, ReturnType<typeof setTimeout>> = new Map();
   private reports: Map<string, any> = new Map();
 
   private constructor() {}

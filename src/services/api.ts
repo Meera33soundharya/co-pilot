@@ -31,7 +31,7 @@ export interface Complaint {
   sentiment: number;
   rating?: number;
   resolutionProof?: string;
-  source?: "voice" | "online" | "field";
+  source?: string;
   audit: {
     time: string;
     actor: string;
@@ -125,7 +125,7 @@ export const api = {
       return res.json();
     },
 
-    create: async (data: Omit<Complaint, "id" | "status" | "assignedTo" | "dept" | "time" | "timestamp" | "notified" | "sentiment" | "audit" | "category"> & { category?: Category; dept?: string }): Promise<{ id: string }> => {
+    create: async (data: Omit<Complaint, "id" | "status" | "assignedTo" | "dept" | "time" | "timestamp" | "notified" | "sentiment" | "audit" | "category"> & { category?: Category; dept?: string; source?: string }): Promise<{ id: string }> => {
       const res = await fetch("/api/complaints", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

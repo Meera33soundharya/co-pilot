@@ -38,11 +38,14 @@ export interface AuditEntry {
 
 export interface Complaint {
     id: string;
+
     // Citizen info
     citizen: string;
     phone: string;
     ward: string;
     citizenId: string;
+
+    // Problem info
 
     // Problem info
     category: Category;
@@ -58,6 +61,7 @@ export interface Complaint {
     sentiment?: number;       // 0 to 100 scoring
     rating?: number;          // 1-5 stars citizen feedback
     resolutionProof?: string; // Base64 or URL of "after" photo
+    source?: string;          // Source of complaint
 
     // Workflow
     status: Status;

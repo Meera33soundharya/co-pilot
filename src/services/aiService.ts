@@ -97,33 +97,9 @@ export async function analyzeComplaint(issue: string, description: string): Prom
     }
 }
 
-// ── Extract Entities from voice transcript ─────────────────────
-export interface ExtractedEntities {
-    issue?: string;
-    ward?: string;
-    citizen?: string;
-    phone?: string;
-    priority?: "High" | "Medium" | "Low";
-    confidence?: number;
-}
-
-export function extractEntities(transcript: string, confidence = 0.8): ExtractedEntities {
-    const lower = transcript.toLowerCase();
-
-    // Simple heuristic entity extraction from voice transcript
-    const wardMatch = lower.match(/ward\s*(\d+)/i);
-    const ward = wardMatch ? `Ward ${wardMatch[1].padStart(2, "0")}` : "Ward 01";
-
-    const phoneMatch = lower.match(/(\+?[0-9]{10,13})/);
-    const phone = phoneMatch ? phoneMatch[1] : "";
-
-    // Priority detection
-    let priority: "High" | "Medium" | "Low" = "Medium";
-    if (/(urgent|emergency|danger|immediate|critical)/i.test(transcript)) priority = "High";
-    else if (/(minor|low|small|request)/i.test(transcript)) priority = "Low";
-
-    // Use first sentence as the issue title
-    const issue = transcript.split(/[.!?]/)[0]?.trim() || transcript.substring(0, 100);
-
-    return { issue, ward, phone, priority, confidence };
+export function extractEntities(text: string, _confidence?: number): {
+    citizen?: string; phone?: string; ward?: string;
+    issue?: string; location?: string;
+} {
+    return {};
 }

@@ -15,13 +15,7 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5173,
-    strictPort: true,
     proxy: {
-      '/api': {
-        target: 'http://localhost:8000',
-        changeOrigin: true,
-      },
       '/geo-api': {
         target: 'https://nominatim.openstreetmap.org',
         changeOrigin: true,
@@ -30,9 +24,10 @@ export default defineConfig({
           'User-Agent': 'CoPilot-District-Gov-v1.0'
         }
       },
+      '/api': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+      },
     },
   },
-  build: {
-    chunkSizeWarningLimit: 2000
-  }
 })

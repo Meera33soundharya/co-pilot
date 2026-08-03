@@ -146,14 +146,14 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
                 {/* Brand */}
                 <div className={`px-5 py-4 border-b flex items-center justify-between ${role !== "citizen" ? "border-gray-800" : "border-gray-100"}`}>
                     <div className="flex items-center gap-2.5">
-                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center relative shadow-lg bg-[#B91C1C] shadow-red-900/10`}>
+                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center relative shadow-lg ${role !== "citizen" ? "bg-blue-500 shadow-blue-500/20" : "bg-[#B91C1C] shadow-red-900/10"}`}>
                             {role !== "citizen" ? <Map className="w-5 h-5 text-white" /> : <Shield className="w-5 h-5 text-white" />}
                             <div className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white animate-pulse" />
                         </div>
                         <div>
-                            {role !== "citizen" ? (
+                            {(role as string) !== "citizen" ? (
                                 <>
-                                    <span className="font-black text-lg tracking-tight block leading-none text-white">GovPilot</span>
+                                    <span className="font-black text-lg text-white tracking-tight block leading-none">POLITICO AI</span>
                                     <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 leading-none block mt-1">OPERATIONS</span>
                                 </>
                             ) : (
@@ -172,7 +172,7 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
                 </div>
 
                 {/* Role strip */}
-                <div className={`mx-3 mt-3 px-4 py-2.5 rounded-2xl border flex items-center gap-2 text-sm font-black `} style={role !== "admin" ? {
+                <div className={`mx-3 mt-3 px-4 py-2.5 rounded-2xl border flex items-center gap-2 text-sm font-black ${role !== "citizen" ? "bg-gray-800/50 border-gray-800 text-blue-500" : ""}`} style={role !== "admin" ? {
                     borderColor: `${roleCfg.color}30`,
                     backgroundColor: `${roleCfg.color}10`,
                     color: roleCfg.color,
@@ -184,7 +184,7 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
                 </div>
 
                 {/* Live new complaints banner */}
-                {role !== "citizen" && newCount > 0 && (
+                {(role as string) !== "citizen" && newCount > 0 && (
                     <button
                         onClick={() => navigate("/grievances?status=Pending")}
                         className="mx-3 mt-2 flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-black uppercase tracking-wide text-red-700 bg-red-50 border border-red-100 hover:bg-red-100 transition-colors group"
@@ -199,7 +199,7 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
                 <nav className="flex-1 py-3 px-2 space-y-4 overflow-y-auto">
                     {navGroups.map(({ group, items }) => (
                         <div key={group}>
-                            <p className="px-3 mb-2 text-xs font-black uppercase tracking-[0.2em] text-gray-500">{t(group as any)}</p>
+                            <p className={`px-3 mb-2 text-xs font-black uppercase tracking-[0.2em] ${role !== "citizen" ? "text-gray-600" : "text-gray-400"}`}>{t(group as any)}</p>
                             <div className="space-y-0.5">
                                 {items.map(({ icon: Icon, label, path, badge }) => {
                                     const liveCnt = badge === "live" ? newCount : 0;
@@ -211,15 +211,16 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
                                             onClick={() => setSidebarOpen(false)}
                                             className={({ isActive }) =>
                                                 `flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-150 group text-sm font-medium ${isActive
-                                                    ? "bg-[#B91C1C] text-white shadow-lg shadow-red-900/20"
-                                                    : role !== "citizen" ? "text-gray-400 hover:bg-white/5 hover:text-white" : "text-gray-600 hover:bg-red-50 hover:text-[#B91C1C]"
+                                                    ? role !== "citizen" ? "bg-blue-900/30 text-white border border-blue-700" : "bg-[#B91C1C] text-white shadow-lg shadow-red-900/20"
+                                                    : role !== "citizen" ? "text-gray-400 hover:bg-gray-800 hover:text-white" : "text-gray-600 hover:bg-red-50 hover:text-[#B91C1C]"
                                                 }`
                                             }
+                                            style={({ isActive }) => (isActive && role !== "admin") ? { backgroundColor: "#B91C1C" } : {}}
                                         >
                                             {({ isActive }) => (
                                                 <>
                                                     <div className="flex items-center gap-3">
-                                                        <Icon className={`w-4 h-4 ${isActive ? "text-white" : "text-gray-400 group-hover:text-[#B91C1C]"}`} />
+                                                        <Icon className={`w-4 h-4 ${isActive ? "text-white" : role !== "citizen" ? "text-gray-500 group-hover:text-white" : "text-gray-400 group-hover:text-[#B91C1C]"}`} />
                                                         <span className="font-bold">{translatedLabel}</span>
                                                     </div>
                                                     {liveCnt > 0 && (
@@ -241,7 +242,7 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
                     <div className="mt-2 px-1">
                         <button
                             onClick={handleLogout}
-                            className={`w-full flex items-center gap-3 px-3 py-3 rounded-2xl transition-all group border border-transparent shadow-sm ${role !== "citizen" ? "hover:bg-white/5 hover:border-white/10" : "hover:bg-gray-50 hover:border-gray-100"}`}
+                            className={`w-full flex items-center gap-3 px-3 py-3 rounded-2xl transition-all group border border-transparent shadow-sm ${role !== "citizen" ? "hover:bg-gray-800 hover:border-gray-700" : "hover:bg-gray-50 hover:border-gray-100"}`}
                         >
                             <div
                                 className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black text-white shrink-0"
@@ -250,10 +251,10 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
                                 {roleCfg.abbr}
                             </div>
                             <div className="flex-1 text-left min-w-0">
-                                <p className={`text-sm font-black truncate transition-colors ${role !== "citizen" ? "text-gray-200 group-hover:text-white" : "text-gray-900 group-hover:text-[#B91C1C]"}`}>{currentUser?.name ?? roleCfg.label}</p>
-                                <p className={`text-[11px] font-bold capitalize ${role !== "citizen" ? "text-gray-500" : "text-gray-500"}`}>{role !== "citizen" ? (currentUser?.dept ?? "admin@govpilot.in") : (lang === "ta" ? "குடிமகன்" : "Citizen")}</p>
+                                <p className={`text-sm font-black truncate ${role !== "citizen" ? "text-white" : "text-gray-900"}`}>{currentUser?.name ?? roleCfg.label}</p>
+                                <p className={`text-[11px] font-bold capitalize ${(role as string) !== "citizen" ? "text-gray-500" : "text-gray-400"}`}>{(role as string) !== "citizen" ? (currentUser?.dept ?? roleCfg.label) : (lang === "ta" ? "குடிமகன்" : "Citizen")}</p>
                             </div>
-                            <LogOut className={`w-4 h-4 transition-colors ${role !== "citizen" ? "text-gray-500 group-hover:text-white" : "text-gray-400 group-hover:text-[#B91C1C]"}`} />
+                            <LogOut className={`w-3.5 h-3.5 transition-colors ${role !== "citizen" ? "text-gray-600 group-hover:text-red-400" : "text-gray-300 group-hover:text-[#B91C1C]"}`} />
                         </button>
                     </div>
                 </div>
@@ -262,7 +263,7 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
             {/* ── Main Content ─────────────────────────────────────── */}
             <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
                 {/* Header */}
-                <header className={`h-14 border-b flex items-center justify-between px-6 shrink-0 ${role !== "citizen" ? "bg-[#0D1628] border-gray-800" : "bg-white border-gray-200"}`}>
+                <header className={`h-14 border-b flex items-center justify-between px-6 shrink-0 ${role !== "citizen" ? "bg-[#0D1829] border-gray-800" : "bg-white border-gray-200"}`}>
                     <div className="flex items-center gap-4">
                         <button className="lg:hidden p-1.5 text-gray-400 hover:bg-gray-50 rounded-lg" onClick={() => setSidebarOpen(true)}>
                             <Menu className="w-5 h-5" />
@@ -301,8 +302,8 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <span className={`hidden sm:block text-sm font-bold tabular-nums text-gray-500`}>{time}</span>
-                        <div className={`w-px h-5 hidden sm:block bg-gray-200`} />
+                        <span className={`hidden sm:block text-sm font-bold tabular-nums ${role !== "citizen" ? "text-gray-500" : "text-gray-500"}`}>{time}</span>
+                        <div className={`w-px h-5 hidden sm:block ${role !== "citizen" ? "bg-gray-700" : "bg-gray-200"}`} />
 
                         {/* Language Toggle */}
                         <button
@@ -330,7 +331,7 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
                             >
                                 <Bell className="w-5 h-5" />
                                 {unreadCount > 0 && (
-                                    <span className={`absolute top-2 right-2 w-2 h-2 rounded-full border-2 border-white shadow-sm bg-[#B91C1C]`} />
+                                    <span className={`absolute top-2 right-2 w-2 h-2 rounded-full border-2 border-white shadow-sm ${role !== "citizen" ? "bg-blue-400" : "bg-[#B91C1C]"}`} />
                                 )}
                             </button>
 
@@ -414,7 +415,7 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
                         <button
                             onClick={() => { if (role === "citizen") navigate("/citizen"); else navigate("/settings"); }}
                             className={`flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-lg transition-all border border-transparent ${
-                                "hover:bg-gray-50 hover:border-gray-200"
+                                role !== "citizen" ? "hover:bg-gray-800 hover:border-gray-700" : "hover:bg-gray-50 hover:border-gray-200"
                             }`}
                         >
                             <div
@@ -423,16 +424,16 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
                             >
                                 {roleCfg.abbr}
                             </div>
-                            <span className={`hidden lg:block text-sm font-bold text-gray-800`}>{currentUser?.name?.split(" ")[0] ?? roleCfg.label}</span>
-                            <ChevronRight className={`w-3.5 h-3.5 rotate-90 text-gray-400`} />
+                            <span className={`hidden lg:block text-sm font-bold ${role !== "citizen" ? "text-gray-300" : "text-gray-800"}`}>{currentUser?.name?.split(" ")[0] ?? roleCfg.label}</span>
+                            <ChevronRight className={`w-3.5 h-3.5 rotate-90 ${role !== "citizen" ? "text-gray-600" : "text-gray-400"}`} />
                         </button>
 
-                        <div className={`w-px h-5 hidden sm:block bg-gray-200`} />
+                        <div className={`w-px h-5 hidden sm:block ${role !== "citizen" ? "bg-gray-700" : "bg-gray-200"}`} />
 
                         <button
                             onClick={handleLogout}
                             className={`p-2 rounded-lg transition-all ${
-                                "text-gray-400 hover:text-red-600 hover:bg-red-50"
+                                role !== "citizen" ? "text-gray-500 hover:text-red-400 hover:bg-gray-800" : "text-gray-400 hover:text-red-600 hover:bg-red-50"
                             }`}
                             title={t("signOut")}
                         >

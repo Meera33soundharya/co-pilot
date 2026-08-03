@@ -68,7 +68,7 @@ interface ComplaintsCtx {
         location?: string;
         evidence?: string[]; coords?: { lat: number; lng: number };
         notifPref?: "SMS" | "Email" | "None";
-        source?: "voice" | "online" | "field";
+        source?: string;
     }) => Promise<string>;
     updateStatus: (id: string, newStatus: Status, actorNote?: string, proofImg?: string) => void;
     assignComplaint: (id: string, dept: string, assignedTo: string) => void;
@@ -284,7 +284,7 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
         location?: string;
         evidence?: string[]; coords?: { lat: number; lng: number };
         notifPref?: "SMS" | "Email" | "None";
-        source?: "voice" | "online" | "field";
+        source?: string;
     }): Promise<string> {
         const citizenId = currentUser?.citizenId || `citizen_${data.citizen.toLowerCase().replace(/\s+/g, "_")}`;
         
@@ -302,7 +302,7 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
             coords: data.coords,
             notifPref: data.notifPref ?? "SMS",
             evidence: data.evidence ?? [],
-            source: data.source ?? "online"
+            source: data.source
         });
 
         // Re-fetch and broadcast to all open tabs instantly
