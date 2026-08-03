@@ -128,7 +128,7 @@ export default function SpeechStudio() {
     setWorkflowState((prev) => ({ ...prev, ai: true }));
 
     const complaintId = await addComplaint({
-      citizen: entities.name || "Citizen",
+      citizen: entities.citizen || "Citizen",
       phone: entities.phone || "Not provided",
       ward: entities.ward || "Ward 28",
       issue: entities.issue || cleaned,
@@ -144,7 +144,7 @@ export default function SpeechStudio() {
     setWorkflowState((prev) => ({ ...prev, registration: true, assignment: true }));
     const confirmationText = `Complaint ${complaintId} has been registered. ${aiResult.summary}. Routed to ${aiResult.dept}.`;
     setOutputText(confirmationText);
-    setSessionSummary({ complaintId, dept: aiResult.dept, category: aiResult.category, priority: aiResult.priority });
+    setSessionSummary({ complaintId: String(complaintId), dept: aiResult.dept, category: aiResult.category, priority: aiResult.priority });
     setStatus("Citizen complaint auto-registered and routed");
     setWorkflowState((prev) => ({ ...prev, confirmation: true, notification: true }));
     speakText(confirmationText);

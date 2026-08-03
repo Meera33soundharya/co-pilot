@@ -215,7 +215,7 @@ export default function VoiceAssistant() {
         notifPref: "None",
         source: "voice",
         estimatedTime: preview.estimatedTime,
-      });
+      } as any);
 
       setTicketId(id as string);
       setFabState("done");

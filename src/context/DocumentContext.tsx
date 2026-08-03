@@ -76,7 +76,8 @@ interface DocumentContextProps {
 const DocCtx = createContext<DocumentContextProps | null>(null);
 
 export function DocumentProvider({ children }: { children: ReactNode }) {
-    const { closedDocs, allComplaints } = useComplaints();
+    const { allComplaints } = useComplaints();
+    const closedDocs = (useComplaints() as any).closedDocs || [];
     const documentsRef = useRef<DocumentRecord[]>([]);
     const allDocumentsRef = useRef<DocumentRecord[]>([]);
     const [documentUpdates, setDocumentUpdates] = useState<Record<string, Partial<DocumentRecord>>>({});
@@ -251,14 +252,14 @@ export function DocumentProvider({ children }: { children: ReactNode }) {
                         name: `Resolution_Proof_${comp.id}.jpg`,
                         type: "JPG",
                         size: "2.1 MB",
-                        date: new Date(comp.resolutionDate || Date.now()).toLocaleDateString("en-IN", { day: 'numeric', month: 'short', year: 'numeric' }),
-                        uploadTimestamp: comp.resolutionDate ? new Date(comp.resolutionDate).getTime() : Date.now(),
+                        date: new Date((comp as any).resolutionDate || Date.now()).toLocaleDateString("en-IN", { day: 'numeric', month: 'short', year: 'numeric' }),
+                        uploadTimestamp: (comp as any).resolutionDate ? new Date((comp as any).resolutionDate).getTime() : Date.now(),
                         category: "Field Officer Reports",
                         status: "approved",
                         access: "public",
                         dept: comp.dept || "Unassigned",
-                        summary: `Photographic proof of resolution for complaint ${comp.id}. Officer notes: ${comp.resolutionNotes || 'None'}`,
-                        uploader: comp.officerDetails || "Field Officer",
+                        summary: `Photographic proof of resolution for complaint ${comp.id}. Officer notes: ${(comp as any).resolutionNotes || 'None'}`,
+                        uploader: (comp as any).officerDetails || "Field Officer",
                         complaintId: comp.id,
                         versions: [],
                         fileData: comp.resolutionProof,
@@ -272,7 +273,7 @@ export function DocumentProvider({ children }: { children: ReactNode }) {
 
     // Merge closedDocs from ComplaintsContext (Resolution Reports PDF)
     if (closedDocs) {
-        closedDocs.forEach(cd => {
+        (closedDocs as any[]).forEach((cd: any) => {
             if (!allDocuments.find(d => d.id === cd.assetId)) {
             allDocuments.push({
                 id: cd.assetId,

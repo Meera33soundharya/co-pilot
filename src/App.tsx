@@ -35,7 +35,6 @@ import Meetings from "./pages/Meetings";
 import Constituency from "./pages/Constituency";
 import AICoPilot from "./pages/AICoPilot";
 import ElderlyPortal from "./pages/ElderlyPortal";
-import VillageVoicePortal from "./pages/VillageVoicePortal";
 import AIAssistant from "./components/AIAssistant";
 import CommandPalette from "./components/CommandPalette";
 import { Toaster } from 'sonner';
@@ -71,7 +70,6 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/submit-complaint" element={<CitizenPortal />} />
           <Route path="/voice-portal" element={<ElderlyPortal />} />
-          <Route path="/village-voice" element={<VillageVoicePortal />} />
 
           {/* Protected pages */}
           <Route path="/citizen" element={<ProtectedRoute><CitizenModule /></ProtectedRoute>} />

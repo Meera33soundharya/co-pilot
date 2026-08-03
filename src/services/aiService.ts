@@ -17,9 +17,7 @@ export interface AIResult {
     dept: string;
     summary: string;
     actionPlan: string[];
-    reasoning: string;
-    estimatedTime: string;
-    suggestedOfficer: string;
+    reasoning: string; // ✨ Explainable AI (XAI) Reasoning
 }
 
 export async function analyzeComplaint(issue: string, description: string): Promise<AIResult> {
@@ -47,9 +45,7 @@ export async function analyzeComplaint(issue: string, description: string): Prom
                             "priority": "String matching one of the priorities",
                             "summary": "Short 1-sentence summary",
                             "actionPlan": ["Step 1", "Step 2", "Step 3"],
-                            "reasoning": "A 2-sentence explanation of why you chose this category and priority. Be specific about keywords found.",
-                            "estimatedTime": "Estimated resolution time (e.g., '24 Hours', '3 Days', '1 Week')",
-                            "suggestedOfficer": "Suggested officer role to handle this (e.g., 'Junior Engineer', 'Sanitation Inspector')"
+                            "reasoning": "A 2-sentence explanation of why you chose this category and priority. Be specific about keywords found."
                         }
                     `}]
                 }],
@@ -79,9 +75,7 @@ export async function analyzeComplaint(issue: string, description: string): Prom
             dept: dept,
             summary: aiResponse.summary,
             actionPlan: aiResponse.actionPlan,
-            reasoning: aiResponse.reasoning,
-            estimatedTime: aiResponse.estimatedTime || "24 Hours",
-            suggestedOfficer: aiResponse.suggestedOfficer || "Field Officer"
+            reasoning: aiResponse.reasoning
         };
 
     } catch (error) {
@@ -98,33 +92,38 @@ export async function analyzeComplaint(issue: string, description: string): Prom
             dept: dept,
             summary: "AI fallback (Offline Mode): Auto-categorized based on departmental keywords.",
             actionPlan: [`Forward to ${dept} Unit`, "Initial assessment by field team"],
-            reasoning: `AI encountered an issue communicating with the core models, but locally identified this as ${cat} based on district protocols.`,
-            estimatedTime: "24 Hours",
-            suggestedOfficer: "Field Officer"
+            reasoning: `AI encountered an issue communicating with the core models, but locally identified this as ${cat} based on district protocols.`
         };
     }
 }
 
-/**
- * extractEntities — Stub for compatibility with older components.
- * Extracts basic named entities from text using simple heuristics.
- */
+// ── Extract Entities from voice transcript ─────────────────────
 export interface ExtractedEntities {
-    citizen?: string;
-    name?: string;
-    phone?: string;
-    ward?: string;
-    location?: string;
     issue?: string;
+    ward?: string;
+    citizen?: string;
+    phone?: string;
+    priority?: "High" | "Medium" | "Low";
+    confidence?: number;
 }
 
-export function extractEntities(text: string, confidenceThreshold?: number): ExtractedEntities {
-    const phoneMatch = text.match(/(\+91[\s-]?\d{5}[\s-]?\d{5}|\d{10})/);
-    const wardMatch = text.match(/ward\s*(\d+)/i);
-    return {
-        phone: phoneMatch?.[0],
-        ward: wardMatch ? `Ward ${wardMatch[1]}` : undefined,
-        issue: text.length > 10 ? text.substring(0, 100) : undefined,
-    };
-}
+export function extractEntities(transcript: string, confidence = 0.8): ExtractedEntities {
+    const lower = transcript.toLowerCase();
 
+    // Simple heuristic entity extraction from voice transcript
+    const wardMatch = lower.match(/ward\s*(\d+)/i);
+    const ward = wardMatch ? `Ward ${wardMatch[1].padStart(2, "0")}` : "Ward 01";
+
+    const phoneMatch = lower.match(/(\+?[0-9]{10,13})/);
+    const phone = phoneMatch ? phoneMatch[1] : "";
+
+    // Priority detection
+    let priority: "High" | "Medium" | "Low" = "Medium";
+    if (/(urgent|emergency|danger|immediate|critical)/i.test(transcript)) priority = "High";
+    else if (/(minor|low|small|request)/i.test(transcript)) priority = "Low";
+
+    // Use first sentence as the issue title
+    const issue = transcript.split(/[.!?]/)[0]?.trim() || transcript.substring(0, 100);
+
+    return { issue, ward, phone, priority, confidence };
+}

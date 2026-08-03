@@ -277,12 +277,13 @@ async function downloadPDF(doc: any, complaint: any) {
 
 export default function ResolutionReports() {
     const { 
-        closedDocs = [], 
         allComplaints = [], 
         currentUser, 
-        clearClosedDocs = () => {}, 
-        deleteClosedDoc = () => {} 
     } = useComplaints();
+    const ctx = useComplaints() as any;
+    const closedDocs: any[] = ctx.closedDocs || [];
+    const clearClosedDocs: () => void = ctx.clearClosedDocs || (() => {});
+    const deleteClosedDoc: (id: string) => void = ctx.deleteClosedDoc || (() => {});
     const [search, setSearch] = useState("");
     const [deptFilter, setDeptFilter] = useState("All");
     const [selectedDoc, setSelectedDoc] = useState<any>(null);
@@ -520,13 +521,13 @@ export default function ResolutionReports() {
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                                                 <div className="p-5 bg-blue-50 rounded-2xl border border-blue-100">
                                                     <p className="text-sm font-black text-blue-600 uppercase mb-2">Resolution Notes</p>
-                                                    <p className="text-blue-900 font-medium">{complaint.resolutionNotes || selectedDoc.summary}</p>
+                                                    <p className="text-blue-900 font-medium">{(complaint as any).resolutionNotes || selectedDoc.summary}</p>
                                                 </div>
                                                 
-                                                {complaint.adminRemarks ? (
+                                                {(complaint as any).adminRemarks ? (
                                                     <div className="p-5 bg-purple-50 rounded-2xl border border-purple-100">
                                                         <p className="text-sm font-black text-purple-600 uppercase mb-2">Admin Remarks</p>
-                                                        <p className="text-purple-900 font-medium">{complaint.adminRemarks}</p>
+                                                        <p className="text-purple-900 font-medium">{(complaint as any).adminRemarks}</p>
                                                     </div>
                                                 ) : (
                                                     <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100 flex items-center gap-3">
@@ -590,11 +591,11 @@ export default function ResolutionReports() {
 
 
                                         {/* Attachments */}
-                                        {complaint.supportingDocs && complaint.supportingDocs.length > 0 && (
+                                        {(complaint as any).supportingDocs && (complaint as any).supportingDocs.length > 0 && (
                                             <div>
                                                 <h4 className="text-lg font-black uppercase tracking-widest text-gray-400 mb-4 border-b border-gray-50 pb-2">Supporting Documents</h4>
                                                 <div className="flex flex-wrap gap-3">
-                                                    {complaint.supportingDocs.map((docUrl, idx) => {
+                                                    {((complaint as any).supportingDocs as any[]).map((docUrl: string, idx: number) => {
                                                         const fragment = docUrl.split('#')[1] || "";
                                                         const params = new URLSearchParams(fragment);
                                                         const name = params.get("name") || `Document_${idx+1}`;

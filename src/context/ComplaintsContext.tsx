@@ -52,9 +52,6 @@ export interface AppNotification {
 
 // ── Context shape ──────────────────────────────────────────────
 interface ComplaintsCtx {
-    closedDocs?: any[];
-    clearClosedDocs?: () => void;
-    deleteClosedDoc?: (doc: any) => void;
     currentUser: CurrentUser | null;
     login: (user: CurrentUser) => void;
     logout: () => void;
@@ -72,8 +69,6 @@ interface ComplaintsCtx {
         evidence?: string[]; coords?: { lat: number; lng: number };
         notifPref?: "SMS" | "Email" | "None";
         source?: "voice" | "online" | "field";
-        estimatedTime?: string;
-        suggestedOfficer?: string;
     }) => Promise<string>;
     updateStatus: (id: string, newStatus: Status, actorNote?: string, proofImg?: string) => void;
     assignComplaint: (id: string, dept: string, assignedTo: string) => void;
@@ -290,12 +285,9 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
         evidence?: string[]; coords?: { lat: number; lng: number };
         notifPref?: "SMS" | "Email" | "None";
         source?: "voice" | "online" | "field";
-        estimatedTime?: string;
-        suggestedOfficer?: string;
     }): Promise<string> {
         const citizenId = currentUser?.citizenId || `citizen_${data.citizen.toLowerCase().replace(/\s+/g, "_")}`;
-        const resolvedDept = data.dept ?? CATEGORY_DEPT[data.category ?? "Other"];
-
+        
         const res = await api.complaints.create({
             citizen: data.citizen,
             phone: data.phone,
@@ -305,44 +297,41 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
             description: data.description,
             priority: data.priority,
             category: data.category,
-            dept: resolvedDept,
+            dept: data.dept,
             location: data.location,
             coords: data.coords,
             notifPref: data.notifPref ?? "SMS",
             evidence: data.evidence ?? [],
-            source: data.source ?? "online",
-            estimatedTime: data.estimatedTime,
-            suggestedOfficer: data.suggestedOfficer
+            source: data.source ?? "online"
         });
-        const newId = res.id;
 
         // Re-fetch and broadcast to all open tabs instantly
         const updated = await api.complaints.getAll();
         setAll(updated as any[]);
-        complaintsChannel.send({ type: "new_complaint", id: newId });
-
-        // Trigger in-app notifications
+        complaintsChannel.send({ type: "new_complaint", id: res.id });
+        
+        // Trigger notifications
         pushNotif({
             type: "new_complaint",
-            title: "🚨 புதிய புகார் பதிவு / New Complaint",
+            title: "🚨 New Complaint Filed",
             message: `${data.citizen} (${data.ward}): ${data.issue}`,
-            complaintId: newId,
+            complaintId: res.id,
             priority: data.priority,
-            dept: resolvedDept,
+            dept: data.dept ?? CATEGORY_DEPT[data.category ?? "Other"],
             target: "admin"
         });
 
         pushNotif({
             type: "new_complaint",
-            title: "📋 புதிய பணி ஒதுக்கப்பட்டது",
-            message: `புகார்: "${data.issue}" · ${data.ward}`,
-            complaintId: newId,
+            title: "📋 New Online Task Assigned",
+            message: `New complaint assigned to department: "${data.issue}" · ${data.ward}`,
+            complaintId: res.id,
             priority: data.priority,
-            dept: resolvedDept,
+            dept: data.dept ?? CATEGORY_DEPT[data.category ?? "Other"],
             target: "officer"
         });
 
-        return newId;
+        return res.id;
     }
 
     function updateStatus(id: string, newStatus: Status, actorNote?: string, proofImg?: string) {

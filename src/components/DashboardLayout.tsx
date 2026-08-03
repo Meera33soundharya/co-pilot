@@ -133,7 +133,7 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
     }
 
     return (
-        <div className="flex h-screen overflow-hidden" style={{ backgroundColor: "#0F172A", fontFamily: "'Inter', sans-serif" }}>
+        <div className="flex h-screen overflow-hidden" style={{ backgroundColor: role !== "citizen" ? "#0B1221" : "#F5F0E8", fontFamily: "'Inter', sans-serif" }}>
 
             {/* Mobile overlay */}
             {sidebarOpen && (
@@ -141,20 +141,29 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
             )}
 
             {/* ── Sidebar ──────────────────────────────────────────── */}
-            <aside className={`fixed lg:relative inset-y-0 left-0 z-50 lg:z-auto flex flex-col w-56 border-r transform transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`} style={{ background: "rgba(15,23,42,0.98)", borderColor: "rgba(255,255,255,0.06)" }}>
+            <aside className={`fixed lg:relative inset-y-0 left-0 z-50 lg:z-auto flex flex-col w-56 ${role !== "citizen" ? "bg-[#0B1221] border-gray-800" : "bg-white border-gray-200"} border-r transform transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
 
                 {/* Brand */}
-                <div className="px-5 py-4 border-b flex items-center justify-between" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+                <div className={`px-5 py-4 border-b flex items-center justify-between ${role !== "citizen" ? "border-gray-800" : "border-gray-100"}`}>
                     <div className="flex items-center gap-2.5">
                         <div className={`w-8 h-8 rounded-xl flex items-center justify-center relative shadow-lg bg-[#B91C1C] shadow-red-900/10`}>
                             {role !== "citizen" ? <Map className="w-5 h-5 text-white" /> : <Shield className="w-5 h-5 text-white" />}
                             <div className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white animate-pulse" />
                         </div>
                         <div>
-                            <span className="font-black text-lg text-white block leading-none tracking-tight">GovPilot</span>
-                            <span className="text-[9px] font-bold uppercase tracking-widest leading-none block mt-1 flex items-center gap-1" style={{ color: roleCfg.color }}>
-                                <div className="w-1.5 h-1.5 rounded-full bg-current animate-ping" /> {roleCfg.label}
-                            </span>
+                            {role !== "citizen" ? (
+                                <>
+                                    <span className="font-black text-lg tracking-tight block leading-none text-white">GovPilot</span>
+                                    <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 leading-none block mt-1">OPERATIONS</span>
+                                </>
+                            ) : (
+                                <>
+                                    <span className="font-black text-lg text-gray-900 tracking-tight block leading-none">GovPilot</span>
+                                    <span className="text-[9px] font-black uppercase tracking-widest leading-none block mt-1 flex items-center gap-1" style={{ color: roleCfg.color }}>
+                                        <div className="w-1 h-1 rounded-full bg-current animate-ping" /> {roleCfg.label}
+                                    </span>
+                                </>
+                            )}
                         </div>
                     </div>
                     <button className="lg:hidden text-gray-400 hover:text-gray-700" onClick={() => setSidebarOpen(false)}>
@@ -163,25 +172,25 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
                 </div>
 
                 {/* Role strip */}
-                <div className="mx-3 mt-3 px-4 py-2.5 rounded-2xl border flex items-center gap-2 text-sm font-bold" style={{
+                <div className={`mx-3 mt-3 px-4 py-2.5 rounded-2xl border flex items-center gap-2 text-sm font-black `} style={role !== "admin" ? {
                     borderColor: `${roleCfg.color}30`,
-                    backgroundColor: `${roleCfg.color}08`,
+                    backgroundColor: `${roleCfg.color}10`,
                     color: roleCfg.color,
-                }}>
-                    {role === "admin" && <Shield className="w-4 h-4 shrink-0" />}
+                } : {}}>
+                    {role !== "citizen" && <Shield className="w-4 h-4 shrink-0" />}
                     {role === "officer" && <Building2 className="w-4 h-4 shrink-0" />}
                     {role === "citizen" && <User className="w-4 h-4 shrink-0" />}
-                    <span className="truncate font-black">{currentUser?.name ?? roleCfg.label}</span>
+                    <span className="truncate">{currentUser?.name ?? roleCfg.label}</span>
                 </div>
 
                 {/* Live new complaints banner */}
-                {(role === "admin" || role === "officer") && newCount > 0 && (
+                {role !== "citizen" && newCount > 0 && (
                     <button
-                        onClick={() => navigate(role === "officer" ? "/field-portal?status=New" : "/grievances?status=New")}
-                        className="mx-3 mt-2 flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wide text-red-700 bg-red-50 border border-red-100 hover:bg-red-100 transition-colors group"
+                        onClick={() => navigate("/grievances?status=Pending")}
+                        className="mx-3 mt-2 flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-black uppercase tracking-wide text-red-700 bg-red-50 border border-red-100 hover:bg-red-100 transition-colors group"
                     >
                         <span className="live-dot w-2.5 h-2.5 shrink-0" />
-                        {newCount} New Complaint{newCount > 1 ? "s" : ""}
+                        {newCount} {newCount > 1 ? t("nav_pendingComplaintsPlural") : t("nav_pendingComplaints")}
                         <ChevronRight className="w-3.5 h-3.5 ml-auto text-red-400 group-hover:translate-x-0.5 transition-transform" />
                     </button>
                 )}
@@ -190,41 +199,31 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
                 <nav className="flex-1 py-3 px-2 space-y-4 overflow-y-auto">
                     {navGroups.map(({ group, items }) => (
                         <div key={group}>
-                            <p className="px-3 mb-2 text-[11px] font-black uppercase tracking-[0.15em] text-gray-400">{t(group as any)}</p>
+                            <p className="px-3 mb-2 text-xs font-black uppercase tracking-[0.2em] text-gray-500">{t(group as any)}</p>
                             <div className="space-y-0.5">
                                 {items.map(({ icon: Icon, label, path, badge }) => {
-                                    const isAssignedComplaints = label === "nav_assignedComplaints";
-                                    const isComplaints = label === "nav_grievances";
-                                    const liveCnt = badge === "new" ? newCount : isAssignedComplaints ? 0 : badge === "live" ? newCount : 0;
-                                    const navTo = isAssignedComplaints
-                                        ? `${path}?status=Assigned`
-                                        : isComplaints && newCount > 0 ? `${path}?status=Pending` : path;
-                                    const isActiveCustom = isAssignedComplaints
-                                        ? location.pathname === path && location.search.includes("status=Assigned")
-                                        : location.pathname === path || (isComplaints && location.pathname === "/grievances");
+                                    const liveCnt = badge === "live" ? newCount : 0;
+                                    const translatedLabel = t(label as any);
                                     return (
                                         <NavLink
-                                            key={label}
-                                            to={navTo}
+                                            key={path}
+                                            to={label === "nav_complaints" && liveCnt > 0 ? `${path}?status=Pending` : path}
                                             onClick={() => setSidebarOpen(false)}
-                                            className={() =>
-                                                `flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-150 group text-sm font-medium ${
-                                                    isActiveCustom
-                                                        ? "bg-[#B91C1C] text-white shadow-lg shadow-red-900/20"
-                                                        : "text-gray-600 hover:bg-red-50 hover:text-[#B91C1C]"
+                                            className={({ isActive }) =>
+                                                `flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-150 group text-sm font-medium ${isActive
+                                                    ? "bg-[#B91C1C] text-white shadow-lg shadow-red-900/20"
+                                                    : role !== "citizen" ? "text-gray-400 hover:bg-white/5 hover:text-white" : "text-gray-600 hover:bg-red-50 hover:text-[#B91C1C]"
                                                 }`
                                             }
                                         >
-                                            {() => (
+                                            {({ isActive }) => (
                                                 <>
                                                     <div className="flex items-center gap-3">
-                                                        <Icon className={`w-4 h-4 ${isActiveCustom ? "text-white" : "text-gray-400 group-hover:text-[#B91C1C]"}`} />
-                                                        <span className="font-bold">{t(label as any)}</span>
+                                                        <Icon className={`w-4 h-4 ${isActive ? "text-white" : "text-gray-400 group-hover:text-[#B91C1C]"}`} />
+                                                        <span className="font-bold">{translatedLabel}</span>
                                                     </div>
                                                     {liveCnt > 0 && (
-                                                        <span className={`text-xs font-black px-2 py-0.5 rounded-md ${
-                                                            isActiveCustom ? "bg-white/20 text-white" : isAssignedComplaints ? "bg-blue-50 text-blue-700" : "bg-red-50 text-[#B91C1C]"
-                                                        }`}>
+                                                        <span className={`text-xs font-black px-2 py-0.5 rounded-md ${isActive ? "bg-white/20 text-white" : "bg-red-50 text-[#B91C1C]"}`}>
                                                             {liveCnt}
                                                         </span>
                                                     )}
@@ -238,23 +237,23 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
                     ))}
                 </nav>
 
-                <div className="px-2 py-3 border-t" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-                    <div className="px-1">
+                <div className={`px-2 py-3 border-t space-y-0.5 ${role !== "citizen" ? "border-gray-800" : "border-gray-100"}`}>
+                    <div className="mt-2 px-1">
                         <button
                             onClick={handleLogout}
-                            className="w-full flex items-center gap-3 px-3 py-3 rounded-2xl hover:bg-white/5 transition-all group border border-transparent hover:border-white/10"
+                            className={`w-full flex items-center gap-3 px-3 py-3 rounded-2xl transition-all group border border-transparent shadow-sm ${role !== "citizen" ? "hover:bg-white/5 hover:border-white/10" : "hover:bg-gray-50 hover:border-gray-100"}`}
                         >
                             <div
-                                className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-black text-white shrink-0"
+                                className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black text-white shrink-0"
                                 style={{ backgroundColor: roleCfg.color }}
                             >
                                 {roleCfg.abbr}
                             </div>
                             <div className="flex-1 text-left min-w-0">
-                                <p className="text-sm font-black text-white truncate">{currentUser?.name ?? roleCfg.label}</p>
-                                <p className="text-[11px] font-semibold text-white/30 capitalize uppercase tracking-wide">{role}</p>
+                                <p className={`text-sm font-black truncate transition-colors ${role !== "citizen" ? "text-gray-200 group-hover:text-white" : "text-gray-900 group-hover:text-[#B91C1C]"}`}>{currentUser?.name ?? roleCfg.label}</p>
+                                <p className={`text-[11px] font-bold capitalize ${role !== "citizen" ? "text-gray-500" : "text-gray-500"}`}>{role !== "citizen" ? (currentUser?.dept ?? "admin@govpilot.in") : (lang === "ta" ? "குடிமகன்" : "Citizen")}</p>
                             </div>
-                            <LogOut className="w-4 h-4 text-gray-300 group-hover:text-[#B91C1C] transition-colors" />
+                            <LogOut className={`w-4 h-4 transition-colors ${role !== "citizen" ? "text-gray-500 group-hover:text-white" : "text-gray-400 group-hover:text-[#B91C1C]"}`} />
                         </button>
                     </div>
                 </div>
@@ -263,7 +262,7 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
             {/* ── Main Content ─────────────────────────────────────── */}
             <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
                 {/* Header */}
-                <header className="h-14 border-b flex items-center justify-between px-6 shrink-0" style={{ background: "rgba(15,23,42,0.98)", borderColor: "rgba(255,255,255,0.06)", backdropFilter: "blur(16px)" }}>
+                <header className={`h-14 border-b flex items-center justify-between px-6 shrink-0 ${role !== "citizen" ? "bg-[#0D1628] border-gray-800" : "bg-white border-gray-200"}`}>
                     <div className="flex items-center gap-4">
                         <button className="lg:hidden p-1.5 text-gray-400 hover:bg-gray-50 rounded-lg" onClick={() => setSidebarOpen(true)}>
                             <Menu className="w-5 h-5" />
@@ -443,38 +442,45 @@ export function DashboardLayout({ children, title, subtitle, bgImage, actions }:
                 </header>
 
                 {/* Page Content */}
-                <div className="flex-1 overflow-y-auto scroll-smooth relative" style={{ background: "#0F172A" }}>
-
-                    {/* Premium fixed background layers */}
-                    <div className="fixed inset-0 z-0 pointer-events-none" style={{ background: "#0F172A" }}>
-                        {/* Subtle radial glow top-left */}
-                        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full" style={{ background: "radial-gradient(circle, rgba(37,99,235,0.08) 0%, transparent 70%)", filter: "blur(60px)" }} />
-                        {/* Subtle radial glow bottom-right */}
-                        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] rounded-full" style={{ background: "radial-gradient(circle, rgba(139,92,246,0.06) 0%, transparent 70%)", filter: "blur(60px)" }} />
-                        {/* Grid pattern */}
-                        <div className="absolute inset-0 opacity-[0.025]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
-                        {/* Dark overlay */}
-                        <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.55)" }} />
+                {role !== "citizen" ? (
+                    <div className="flex-1 overflow-y-auto scroll-smooth" style={{ background: "#0B1221" }}>
+                        <div className="p-6 lg:p-8 max-w-[1400px] mx-auto">
+                            <div className="mb-6 flex items-start justify-between gap-4 animate-fade-in">
+                                <div>
+                                    <h1 className="text-3xl font-black text-white tracking-tight">{title}</h1>
+                                    {subtitle && <p className="text-base text-gray-500 font-medium mt-0.5">{subtitle}</p>}
+                                </div>
+                                {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
+                            </div>
+                            {children}
+                        </div>
+                    </div>
+                ) : (
+                <div className="flex-1 overflow-y-auto scroll-smooth relative bg-[#060912]">
+                    <div className="absolute inset-0 z-0 pointer-events-none opacity-40 overflow-hidden">
+                        <img
+                            key={bgImage || "/images/dashboard_bg.png"}
+                            src={bgImage || "/images/dashboard_bg.png"}
+                            alt="Dashboard Theme"
+                            onError={e => (e.currentTarget.style.display = "none")}
+                            className="w-full h-full object-cover filter brightness-[0.7] contrast-[1.2]"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-b from-[#060912] via-transparent to-[#060912]/90" />
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,transparent_0%,#060912_100%)] opacity-60" />
                     </div>
 
-                    <div className="relative z-10 p-6 lg:p-8 max-w-[1400px] mx-auto" style={{ animation: "fadeInPage 0.5s ease both" }}>
+                    <div className="relative z-10 p-6 lg:p-8 max-w-[1400px] mx-auto">
                         <div className="mb-6 flex items-start justify-between gap-4">
-                            <div>
+                            <div className="animate-fade-in">
                                 <h1 className="text-3xl font-black text-white tracking-tight">{title}</h1>
-                                {subtitle && <p className="text-base font-medium mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>{subtitle}</p>}
+                                {subtitle && <p className="text-base text-white/50 font-medium mt-0.5">{subtitle}</p>}
                             </div>
                             {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
                         </div>
                         {children}
                     </div>
-
-                    <style>{`
-                        @keyframes fadeInPage {
-                            from { opacity: 0; transform: translateY(10px); }
-                            to   { opacity: 1; transform: translateY(0); }
-                        }
-                    `}</style>
                 </div>
+                )}
 
                 {/* ── LIVE TOAST NOTIFICATION ────────────────────────── */}
                 {showToast && lastNotif && (

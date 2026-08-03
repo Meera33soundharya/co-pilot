@@ -1,5 +1,4 @@
 import type { Status, Category } from "@/store/complaintsStore";
-import { db } from "./db";
 
 export interface LoginResponse {
   id: string;
@@ -33,13 +32,6 @@ export interface Complaint {
   rating?: number;
   resolutionProof?: string;
   source?: "voice" | "online" | "field";
-  estimatedTime?: string;
-  suggestedOfficer?: string;
-  resolutionDate?: string;
-  resolutionNotes?: string;
-  officerDetails?: string;
-  adminRemarks?: string;
-  supportingDocs?: string[];
   audit: {
     time: string;
     actor: string;
@@ -70,7 +62,7 @@ const LOCAL_ACCOUNTS: Record<string, LoginResponse & { password: string }> = {
   },
   "officer@govpilot.in": {
     id: "officer_1", name: "Rajiv Kumar", role: "officer",
-    dept: "Water Supply", password: "Officer@2026",
+    dept: "Water Supply Department", password: "Officer@2026",
   },
   "citizen@govpilot.in": {
     id: "citizen_amit", name: "Amit Patel", role: "citizen",
@@ -81,7 +73,32 @@ const LOCAL_ACCOUNTS: Record<string, LoginResponse & { password: string }> = {
 export const api = {
   auth: {
     login: async (email: string, password: string): Promise<LoginResponse> => {
-      // Offline / local fallback
+      // Try real backend first
+      try {
+        const res = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+        if (res.ok) {
+          const text = await res.text();
+          if (text) return JSON.parse(text);
+        }
+        if (res.status !== 502 && res.status !== 503 && res.status !== 504) {
+          // Backend is up but rejected credentials
+          let detail = "Authentication failed";
+          try { detail = (JSON.parse(await res.text()))?.detail || detail; } catch {}
+          throw new Error(detail);
+        }
+      } catch (err: any) {
+        // If it's an auth rejection (not a network error), re-throw
+        if (err.message && !err.message.includes("fetch") && !err.message.includes("JSON") && !err.message.includes("network")) {
+          throw err;
+        }
+        // Otherwise fall through to local auth
+      }
+
+      // ── Offline / local fallback ────────────────────────────────────────────
       const account = LOCAL_ACCOUNTS[email.toLowerCase().trim()];
       if (account && account.password === password) {
         const { password: _pwd, ...user } = account;
@@ -93,55 +110,29 @@ export const api = {
 
   complaints: {
     getAll: async (): Promise<Complaint[]> => {
-      return db.getAllComplaints();
+      const res = await fetch(`/api/complaints?t=${Date.now()}`, {
+        headers: { "Cache-Control": "no-store, no-cache, must-revalidate" }
+      });
+      if (!res.ok) throw new Error("Failed to fetch complaints");
+      return res.json();
     },
 
     getStats: async (): Promise<DashboardStats> => {
-      const all = await db.getAllComplaints();
-      const resolved = all.filter(c => c.status === "Resolved" || c.status === "Closed").length;
-      const pending = all.length - resolved;
-      const highPriority = all.filter(c => c.priority === "High" || (c.priority as any) === "Critical").length;
-
-      // Mock other stats for now, these can be derived
-      return {
-        kpis: {
-          total: all.length,
-          resolved,
-          pending,
-          highPriority
-        },
-        categoryData: [],
-        statusData: [],
-        monthlyTrend: [],
-        wardData: {}
-      };
+      const res = await fetch(`/api/complaints/stats?t=${Date.now()}`, {
+        headers: { "Cache-Control": "no-store, no-cache, must-revalidate" }
+      });
+      if (!res.ok) throw new Error("Failed to fetch stats");
+      return res.json();
     },
 
     create: async (data: Omit<Complaint, "id" | "status" | "assignedTo" | "dept" | "time" | "timestamp" | "notified" | "sentiment" | "audit" | "category"> & { category?: Category; dept?: string }): Promise<{ id: string }> => {
-      const now = new Date();
-      const id = `VCE-${Date.now().toString(36).toUpperCase()}`;
-      
-      const complaint: Complaint = {
-        ...data,
-        id,
-        category: data.category ?? "Other",
-        dept: data.dept ?? "General Administration",
-        status: "Pending",
-        assignedTo: "Unassigned",
-        time: now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
-        timestamp: now.getTime(),
-        notified: false,
-        sentiment: 0,
-        evidence: data.evidence ?? [],
-        audit: [{
-          time: now.toISOString(),
-          actor: data.citizen,
-          action: "Complaint Filed"
-        }]
-      };
-
-      await db.addComplaint(complaint);
-      return { id };
+      const res = await fetch("/api/complaints", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to file complaint");
+      return res.json();
     },
 
     updateStatus: async (
@@ -151,22 +142,12 @@ export const api = {
       image?: string,
       actor?: string
     ): Promise<void> => {
-      const c = await db.getComplaint(id);
-      if (!c) throw new Error("Complaint not found");
-      
-      const auditEvent = {
-        time: new Date().toISOString(),
-        actor: actor || "System",
-        action: `Status updated to ${status}`,
-        note,
-        image
-      };
-
-      await db.updateComplaint(id, {
-        status: status as Status,
-        audit: [...c.audit, auditEvent],
-        ...(image ? { resolutionProof: image } : {})
+      const res = await fetch(`/api/complaints/${id}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status, note, image, actor }),
       });
+      if (!res.ok) throw new Error("Failed to update status");
     },
 
     assign: async (
@@ -175,54 +156,55 @@ export const api = {
       assignedTo: string,
       actor?: string
     ): Promise<void> => {
-      const c = await db.getComplaint(id);
-      if (!c) throw new Error("Complaint not found");
-
-      const auditEvent = {
-        time: new Date().toISOString(),
-        actor: actor || "Admin",
-        action: `Assigned to ${assignedTo} in ${dept}`,
-      };
-
-      await db.updateComplaint(id, {
-        dept,
-        assignedTo,
-        status: "Assigned",
-        audit: [...c.audit, auditEvent]
+      const res = await fetch(`/api/complaints/${id}/assign`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dept, assignedTo, actor }),
       });
+      if (!res.ok) throw new Error("Failed to assign complaint");
     },
 
     rate: async (id: string, rating: number): Promise<void> => {
-      await db.updateComplaint(id, { rating });
+      const res = await fetch(`/api/complaints/${id}/rate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rating }),
+      });
+      if (!res.ok) throw new Error("Failed to submit rating");
     },
 
     reopen: async (id: string, note: string): Promise<void> => {
-      const c = await db.getComplaint(id);
-      if (!c) throw new Error("Complaint not found");
-
-      const auditEvent = {
-        time: new Date().toISOString(),
-        actor: "Citizen",
-        action: "Reopened complaint",
-        note,
-      };
-
-      await db.updateComplaint(id, {
-        status: "Pending" as const,
-        audit: [...c.audit, auditEvent]
+      const res = await fetch(`/api/complaints/${id}/reopen`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ note }),
       });
+      if (!res.ok) throw new Error("Failed to reopen complaint");
     },
   },
 
   documents: {
     upload: async (file: File): Promise<{ fileName: string; summary: string[] }> => {
-      return { fileName: file.name, summary: ["Document processed locally"] };
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/documents/upload", {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) throw new Error("Document upload failed");
+      return res.json();
     },
   },
 
   speech: {
     generate: async (topic: string, language: string): Promise<{ script: string }> => {
-      return { script: "Speech generated locally" };
+      const res = await fetch("/api/speech/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic, language }),
+      });
+      if (!res.ok) throw new Error("Speech script generation failed");
+      return res.json();
     },
   },
 };

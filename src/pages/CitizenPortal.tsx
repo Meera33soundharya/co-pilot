@@ -33,7 +33,7 @@ const LOCALITIES: Record<string, string[]> = {
 
 export default function CitizenPortal() {
     const { addComplaint, currentUser, logout } = useComplaints();
-    const { t, language } = useLanguage();
+    const { t, lang } = useLanguage();
     const navigate = useNavigate();
     const [step, setStep] = useState<Step>("details");
     const [ticketId, setTicketId] = useState("");
@@ -57,7 +57,7 @@ export default function CitizenPortal() {
     const [isTranslating, setIsTranslating] = useState(false);
 
     const autoTranslate = async (field: "issue" | "description" | "citizen", text: string) => {
-        if (language !== "ta" || !text.trim()) return;
+        if (lang !== "ta" || !text.trim()) return;
         if (/[\u0B80-\u0BFF]/.test(text)) return; 
         
         setIsTranslating(true);
@@ -102,9 +102,7 @@ export default function CitizenPortal() {
                 ...form, 
                 category: analysis.category,
                 priority: analysis.priority,
-                dept: analysis.dept,
-                estimatedTime: analysis.estimatedTime,
-                suggestedOfficer: analysis.suggestedOfficer
+                dept: analysis.dept
             });
             
             setTicketId(id);
@@ -271,7 +269,7 @@ export default function CitizenPortal() {
                         <button onClick={() => fileInputRef.current?.click()} className="btn-secondary w-full">{t("portal_uploadDoc")}</button>
                         <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} />
                         <div className="flex gap-4">
-                            <button onClick={back} className="btn-secondary flex-1">{t("portal_back" as any)}</button>
+                            <button onClick={back} className="btn-secondary flex-1">{t("back")}</button>
                             <button onClick={next} className="btn-primary flex-[2]">{t("portal_nextLocation")}</button>
                         </div>
                     </div>
@@ -282,8 +280,8 @@ export default function CitizenPortal() {
                         <input value={mapQuery} onChange={e => setMapQuery(e.target.value)} className="input-field" placeholder={t("portal_searchLocation")} />
                         <button onClick={detectLocation} className="btn-secondary w-full">{t("portal_detectLocation")}</button>
                         <div className="flex gap-4">
-                            <button onClick={back} className="btn-secondary flex-1">{t("portal_back" as any)}</button>
-                            <button onClick={next} className="btn-primary flex-[2]">{t("portal_nextReview" as any)}</button>
+                            <button onClick={back} className="btn-secondary flex-1">{t("back")}</button>
+                            <button onClick={next} className="btn-primary flex-[2]">{t("portal_nextLocation")}</button>
                         </div>
                     </div>
                 )}
@@ -311,17 +309,12 @@ export default function CitizenPortal() {
                             <p className="text-xs uppercase font-black mb-1">{t("portal_ticketId")}</p>
                             <p className="text-4xl font-mono font-black">{ticketId}</p>
                         </div>
-                        <div className="mt-8">
-                            <button onClick={() => navigate("/track-complaint")} className="px-8 py-3 bg-[#B91C1C] text-white rounded-full font-black uppercase text-sm tracking-widest hover:bg-red-800 transition-all">
-                                Track Complaint Status
-                            </button>
-                        </div>
                     </div>
                 )}
             </main>
 
             <footer className="py-10 text-center border-t border-gray-100 bg-white/50">
-                <p className="text-[10px] font-black uppercase tracking-widest text-gray-300">{language === "ta" ? "மாவட்ட மின் ஆளுமை போர்ட்டல் · 2026" : "District e-Governance Portal · 2026"}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-gray-300">{lang === "ta" ? "மாவட்ட மின் ஆளுமை போர்ட்டல் · 2026" : "District e-Governance Portal · 2026"}</p>
             </footer>
 
             <style>{`

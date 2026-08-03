@@ -1,92 +1,61 @@
 import { useState, useMemo } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useComplaints } from "@/context/ComplaintsContext";
-import {
-    CheckCircle2, Clock, MapPin, Phone,
+import { 
+    CheckCircle2, Clock, MapPin, Phone, 
     Camera, Sparkles, Navigation,
     Search, Loader2, Play, Activity,
-    X, AlertTriangle, User, Building2,
-    FileText, Filter, RefreshCw, Eye,
-    ChevronRight, Hash, Calendar
+    X, Mic, Volume2
 } from "lucide-react";
 import type { Complaint } from "@/services/api";
 import type { Status } from "@/store/complaintsStore";
 
-type FilterTab = "All" | "New" | "Assigned" | "In Progress" | "Resolved" | "High Priority";
-
-const PRIORITY_CONFIG = {
-    High:   { bg: "bg-red-500/20",    text: "text-red-300",    border: "border-red-500/30",    dot: "bg-red-400"    },
-    Medium: { bg: "bg-amber-500/20",  text: "text-amber-300",  border: "border-amber-500/30",  dot: "bg-amber-400"  },
-    Low:    { bg: "bg-emerald-500/20",text: "text-emerald-300",border: "border-emerald-500/30",dot: "bg-emerald-400" },
-};
-
-const STATUS_CONFIG: Record<string, { bg: string; text: string; border: string; label: string }> = {
-    Pending:     { bg: "bg-yellow-500/20",  text: "text-yellow-300",  border: "border-yellow-500/30",  label: "New" },
-    Accepted:    { bg: "bg-blue-500/20",    text: "text-blue-300",    border: "border-blue-500/30",    label: "Accepted" },
-    Assigned:    { bg: "bg-purple-500/20",  text: "text-purple-300",  border: "border-purple-500/30",  label: "Assigned" },
-    "In Progress":{ bg: "bg-orange-500/20", text: "text-orange-300",  border: "border-orange-500/30",  label: "In Progress" },
-    Resolved:    { bg: "bg-emerald-500/20", text: "text-emerald-300", border: "border-emerald-500/30", label: "Resolved" },
-    Closed:      { bg: "bg-gray-500/20",    text: "text-gray-300",    border: "border-gray-500/30",    label: "Closed" },
-    Rejected:    { bg: "bg-red-500/20",     text: "text-red-300",     border: "border-red-500/30",     label: "Rejected" },
-};
-
-function formatDate(ts: number) {
-    return new Date(ts).toLocaleDateString("en-IN", {
-        day: "2-digit", month: "short", year: "numeric",
-        hour: "2-digit", minute: "2-digit",
-    });
-}
+type VoiceFilterTab = "New" | "Assigned" | "In Progress" | "Resolved" | "All";
 
 export default function FieldPortal() {
     const { complaints, currentUser, updateStatus } = useComplaints();
-    const [filterTab, setFilterTab] = useState<FilterTab>("All");
+    const [filterTab, setFilterTab] = useState<VoiceFilterTab>("All");
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedTask, setSelectedTask] = useState<Complaint | null>(null);
     const [isUpdating, setIsUpdating] = useState(false);
     const [proofNote, setProofNote] = useState("");
     const [proofImg, setProofImg] = useState<string | null>(null);
+    const [showAllDepts, setShowAllDepts] = useState(false);
 
-    // Show ALL complaints for this officer's dept (or all if admin)
-    const filteredComplaints = useMemo(() => {
+    // ── Only show VOICE complaints ────────────────────────────────
+    const voiceComplaints = useMemo(() => {
         return complaints.filter(c => {
-            const matchesRole = currentUser?.role === "admin"
+            const isVoice = (c as any).source === "voice" || 
+                            c.citizen === "Voice User" || 
+                            c.notifPref === "None" && c.location === "From Voice Portal";
+            if (!isVoice) return false;
+
+            const matchesRole = currentUser?.role === "admin" || showAllDepts
                 || c.dept === currentUser?.dept
-                || !c.dept || c.dept === "";
+                || (!c.dept || c.dept === "");
 
             const matchesTab = (() => {
                 if (filterTab === "All") return true;
                 if (filterTab === "New") return c.status === "Pending";
-                if (filterTab === "Assigned") return c.status === "Assigned" || c.status === "Accepted";
+                if (filterTab === "Assigned") return c.status === "Assigned";
                 if (filterTab === "In Progress") return c.status === "In Progress";
                 if (filterTab === "Resolved") return c.status === "Resolved" || c.status === "Closed";
-                if (filterTab === "High Priority") return c.priority === "High";
                 return true;
             })();
 
-            const q = searchQuery.toLowerCase();
-            const matchesSearch = !q
-                || c.issue.toLowerCase().includes(q)
-                || c.id.toLowerCase().includes(q)
-                || c.ward.toLowerCase().includes(q)
-                || c.citizen.toLowerCase().includes(q)
-                || (c.category || "").toLowerCase().includes(q);
+            const matchesSearch = c.issue.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                c.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                c.ward.toLowerCase().includes(searchQuery.toLowerCase());
 
             return matchesRole && matchesTab && matchesSearch;
         });
-    }, [complaints, currentUser, filterTab, searchQuery]);
+    }, [complaints, currentUser, filterTab, searchQuery, showAllDepts]);
 
-    // Stats
-    const stats = useMemo(() => ({
-        total:      complaints.length,
-        newCount:   complaints.filter(c => c.status === "Pending").length,
-        assigned:   complaints.filter(c => c.status === "Assigned" || c.status === "Accepted").length,
-        inProgress: complaints.filter(c => c.status === "In Progress").length,
-        resolved:   complaints.filter(c => c.status === "Resolved" || c.status === "Closed").length,
-    }), [complaints]);
+    const newCount = useMemo(() => complaints.filter(c => (c as any).source === "voice" || c.citizen === "Voice User").filter(c => c.status === "Pending").length, [complaints]);
 
     const handleStatusUpdate = async (id: string, nextStatus: Status, note: string) => {
         setIsUpdating(true);
-        await new Promise(r => setTimeout(r, 1200));
+        await new Promise(r => setTimeout(r, 1500));
         updateStatus(id, nextStatus, note, proofImg || undefined);
         setIsUpdating(false);
         setSelectedTask(null);
@@ -98,434 +67,332 @@ export default function FieldPortal() {
         const demoImgs = [
             "https://images.unsplash.com/photo-1541888946425-d81bb19480c5?auto=format&fit=crop&q=80&w=800",
             "https://images.unsplash.com/photo-1581094288338-2314dddb7bc3?auto=format&fit=crop&q=80&w=800",
-            "https://images.unsplash.com/photo-1590060417631-017606e30907?auto=format&fit=crop&q=80&w=800",
+            "https://images.unsplash.com/photo-1590060417631-017606e30907?auto=format&fit=crop&q=80&w=800"
         ];
         setProofImg(demoImgs[Math.floor(Math.random() * demoImgs.length)]);
     };
 
-    const TABS: { key: FilterTab; label: string; count?: number }[] = [
-        { key: "All",          label: "All",         count: stats.total },
-        { key: "New",          label: "New",         count: stats.newCount },
-        { key: "Assigned",     label: "Assigned",    count: stats.assigned },
-        { key: "In Progress",  label: "In Progress", count: stats.inProgress },
-        { key: "Resolved",     label: "Resolved",    count: stats.resolved },
-        { key: "High Priority",label: "High Priority" },
-    ];
-
-    const STAT_CARDS = [
-        { label: "Total",       value: stats.total,      color: "from-blue-600/30 to-blue-800/20",    border: "border-blue-500/20", text: "text-blue-300",    icon: FileText },
-        { label: "New",         value: stats.newCount,   color: "from-yellow-600/30 to-yellow-800/20",border: "border-yellow-500/20",text: "text-yellow-300",  icon: AlertTriangle },
-        { label: "Assigned",    value: stats.assigned,   color: "from-purple-600/30 to-purple-800/20",border: "border-purple-500/20",text: "text-purple-300",  icon: User },
-        { label: "In Progress", value: stats.inProgress, color: "from-orange-600/30 to-orange-800/20",border: "border-orange-500/20",text: "text-orange-300",  icon: Activity },
-        { label: "Resolved",    value: stats.resolved,   color: "from-emerald-600/30 to-emerald-800/20",border:"border-emerald-500/20",text:"text-emerald-300",icon: CheckCircle2 },
+    const TABS: { key: VoiceFilterTab; label: string }[] = [
+        { key: "New", label: "NEW" },
+        { key: "Assigned", label: "ASSIGNED" },
+        { key: "In Progress", label: "IN PROGRESS" },
+        { key: "Resolved", label: "RESOLVED" },
+        { key: "All", label: "ALL" },
     ];
 
     return (
-        <DashboardLayout
-            title="Field Officer Portal"
-            subtitle="Manage citizen complaints efficiently."
+        <DashboardLayout 
+            title="Field Officer Portal" 
+            subtitle="Managing Voice Assistant Tasks (Uneducated Citizens Portal)"
         >
-            <div className="space-y-6 animate-fade-in">
-
-                {/* ── Summary Stats Row ───────────────────────────────── */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-                    {STAT_CARDS.map(card => {
-                        const Icon = card.icon;
-                        return (
-                            <div
-                                key={card.label}
-                                className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${card.color} border ${card.border} p-5 backdrop-blur-sm transition-all hover:scale-[1.03] hover:shadow-lg`}
-                            >
-                                <div className="flex items-center justify-between mb-3">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-white/50">{card.label}</p>
-                                    <Icon className={`w-4 h-4 ${card.text}`} />
-                                </div>
-                                <p className={`text-3xl font-black tabular-nums ${card.text}`}>{card.value}</p>
-                                {/* subtle shimmer */}
-                                <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full hover:translate-x-full transition-transform duration-700" />
-                            </div>
-                        );
-                    })}
-                </div>
-
-                {/* ── Search + Filter Bar ─────────────────────────────── */}
-                <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                    {/* Search */}
-                    <div className="relative flex-1 min-w-0">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-                        <input
-                            type="text"
-                            placeholder="Search by complaint ID, citizen, ward, issue…"
-                            value={searchQuery}
-                            onChange={e => setSearchQuery(e.target.value)}
-                            className="w-full pl-11 pr-4 py-3 rounded-xl bg-white/8 border border-white/10 text-white text-sm font-medium placeholder:text-white/30 focus:outline-none focus:border-blue-500/50 focus:bg-white/12 transition-all backdrop-blur-sm"
-                            style={{ background: "rgba(255,255,255,0.05)" }}
-                        />
-                        {searchQuery && (
-                            <button onClick={() => setSearchQuery("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white transition-colors">
-                                <X className="w-4 h-4" />
-                            </button>
-                        )}
-                    </div>
-
-                    {/* Filter Tabs */}
-                    <div className="flex flex-wrap gap-2 shrink-0">
-                        {TABS.map(tab => (
-                            <button
-                                key={tab.key}
-                                onClick={() => setFilterTab(tab.key)}
-                                className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all border ${
-                                    filterTab === tab.key
-                                        ? "bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/25"
-                                        : "bg-white/5 border-white/10 text-white/50 hover:text-white hover:bg-white/10"
-                                }`}
-                            >
-                                <Filter className="w-3 h-3" />
-                                {tab.label}
-                                {tab.count !== undefined && (
-                                    <span className={`ml-1 px-1.5 py-0.5 rounded-md text-[9px] font-black ${
-                                        filterTab === tab.key ? "bg-white/20 text-white" : "bg-white/10 text-white/50"
-                                    }`}>
-                                        {tab.count}
-                                    </span>
-                                )}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                {/* ── Results Count ───────────────────────────────────── */}
-                <div className="flex items-center justify-between">
-                    <p className="text-xs font-black uppercase tracking-widest text-white/30">
-                        Showing <span className="text-white/60">{filteredComplaints.length}</span> complaints
-                    </p>
-                    <button
-                        onClick={() => { setSearchQuery(""); setFilterTab("All"); }}
-                        className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-white/30 hover:text-white/60 transition-colors"
-                    >
-                        <RefreshCw className="w-3 h-3" /> Reset
-                    </button>
-                </div>
-
-                {/* ── Complaint Cards Grid ────────────────────────────── */}
-                {filteredComplaints.length === 0 ? (
-                    <div
-                        className="flex flex-col items-center justify-center py-24 rounded-2xl border border-dashed border-white/10 text-center"
-                        style={{ background: "rgba(255,255,255,0.03)" }}
-                    >
-                        <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-4">
-                            <FileText className="w-8 h-8 text-white/20" />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                {/* ── Left Side: Voice Complaint List ── */}
+                <div className="lg:col-span-2 space-y-6">
+                    
+                    {/* Top Control Bar */}
+                    <div className="flex flex-wrap items-center gap-3">
+                        {/* Search Input */}
+                        <div className="relative flex-1 min-w-[200px]">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <input 
+                                type="text"
+                                placeholder="Search"
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                className="w-full pl-11 pr-4 py-3 bg-white rounded-full text-xs font-bold text-gray-900 focus:outline-none shadow-sm"
+                            />
                         </div>
-                        <p className="text-base font-black text-white/30 uppercase tracking-widest">No Complaints Found</p>
-                        <p className="text-xs text-white/20 mt-2 font-medium">Try adjusting your search or filter</p>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-                        {filteredComplaints.map(complaint => {
-                            const priorityCfg = PRIORITY_CONFIG[complaint.priority as keyof typeof PRIORITY_CONFIG] || PRIORITY_CONFIG.Low;
-                            const statusCfg   = STATUS_CONFIG[complaint.status] || STATUS_CONFIG.Closed;
-                            const isSelected  = selectedTask?.id === complaint.id;
+                        
+                        {/* Dept Console Button */}
+                        <button 
+                            onClick={() => setShowAllDepts(!showAllDepts)}
+                            className="flex items-center gap-2 px-5 py-3 bg-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm text-gray-500 hover:text-gray-900 transition-colors"
+                        >
+                            <Activity className="w-3.5 h-3.5" />
+                            DEPT CONSOLE
+                        </button>
 
+                        {/* Filter Tabs */}
+                        {TABS.map(tab => {
+                            const isAll = tab.key === "All";
+                            const isActive = filterTab === tab.key;
                             return (
-                                <div
-                                    key={complaint.id}
-                                    onClick={() => setSelectedTask(isSelected ? null : complaint)}
-                                    className={`relative group cursor-pointer rounded-2xl border transition-all duration-300 overflow-hidden hover:-translate-y-1 hover:shadow-2xl ${
-                                        isSelected
-                                            ? "border-blue-500/50 shadow-blue-500/20 shadow-xl"
-                                            : "border-white/8 hover:border-white/20"
+                                <button
+                                    key={tab.key}
+                                    onClick={() => setFilterTab(tab.key)}
+                                    className={`px-5 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all shadow-sm flex items-center gap-2 ${
+                                        isActive || isAll 
+                                            ? "bg-[#B91C1C] text-white" 
+                                            : "bg-white text-gray-500 hover:text-gray-900"
                                     }`}
-                                    style={{ background: "rgba(30,41,59,0.85)", backdropFilter: "blur(16px)" }}
                                 >
-                                    {/* Priority accent bar */}
-                                    <div className={`absolute top-0 left-0 right-0 h-0.5 ${
-                                        complaint.priority === "High" ? "bg-gradient-to-r from-red-500 to-red-400" :
-                                        complaint.priority === "Medium" ? "bg-gradient-to-r from-amber-500 to-amber-400" :
-                                        "bg-gradient-to-r from-emerald-500 to-emerald-400"
-                                    }`} />
-
-                                    {/* Hover glow */}
-                                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-500"
-                                        style={{ background: "radial-gradient(circle at 50% 0%, rgba(37,99,235,0.06) 0%, transparent 70%)" }} />
-
-                                    <div className="p-5">
-                                        {/* ── Header Row ── */}
-                                        <div className="flex items-start justify-between gap-3 mb-4">
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                {/* ID */}
-                                                <span className="flex items-center gap-1 text-[10px] font-black text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2.5 py-1 rounded-lg tracking-widest">
-                                                    <Hash className="w-2.5 h-2.5" />{complaint.id}
-                                                </span>
-                                                {/* Priority */}
-                                                <span className={`flex items-center gap-1.5 text-[10px] font-black px-2.5 py-1 rounded-lg border ${priorityCfg.bg} ${priorityCfg.text} ${priorityCfg.border} uppercase tracking-widest`}>
-                                                    <span className={`w-1.5 h-1.5 rounded-full ${priorityCfg.dot}`} />
-                                                    {complaint.priority}
-                                                </span>
-                                                {/* Status */}
-                                                <span className={`text-[10px] font-black px-2.5 py-1 rounded-lg border ${statusCfg.bg} ${statusCfg.text} ${statusCfg.border} uppercase tracking-widest`}>
-                                                    {statusCfg.label}
-                                                </span>
-                                            </div>
-                                            <ChevronRight className={`w-4 h-4 text-white/20 shrink-0 mt-0.5 transition-transform ${isSelected ? "rotate-90 text-blue-400" : "group-hover:translate-x-0.5"}`} />
-                                        </div>
-
-                                        {/* ── Complaint Issue ── */}
-                                        <h3 className="text-base font-black text-white leading-snug mb-3 line-clamp-2">{complaint.issue}</h3>
-
-                                        {/* ── Description ── */}
-                                        {complaint.description && (
-                                            <p className="text-xs text-white/40 leading-relaxed line-clamp-2 mb-4 font-medium">{complaint.description}</p>
-                                        )}
-
-                                        {/* ── Info Grid ── */}
-                                        <div className="grid grid-cols-2 gap-2 mb-4">
-                                            <div className="flex items-center gap-2">
-                                                <User className="w-3.5 h-3.5 text-white/25 shrink-0" />
-                                                <span className="text-xs text-white/50 font-semibold truncate">{complaint.citizen}</span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <Phone className="w-3.5 h-3.5 text-white/25 shrink-0" />
-                                                <a href={`tel:${complaint.phone}`} onClick={e => e.stopPropagation()}
-                                                    className="text-xs text-blue-400/80 font-semibold hover:text-blue-300 transition-colors truncate">{complaint.phone}</a>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <MapPin className="w-3.5 h-3.5 text-white/25 shrink-0" />
-                                                <span className="text-xs text-white/50 font-semibold truncate">{complaint.ward}</span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <Building2 className="w-3.5 h-3.5 text-white/25 shrink-0" />
-                                                <span className="text-xs text-white/50 font-semibold truncate">{complaint.category}</span>
-                                            </div>
-                                            {complaint.location && (
-                                                <div className="flex items-center gap-2 col-span-2">
-                                                    <Navigation className="w-3.5 h-3.5 text-white/25 shrink-0" />
-                                                    <span className="text-xs text-white/40 font-medium truncate">{complaint.location}</span>
-                                                </div>
-                                            )}
-                                            <div className="flex items-center gap-2 col-span-2">
-                                                <Calendar className="w-3.5 h-3.5 text-white/25 shrink-0" />
-                                                <span className="text-xs text-white/40 font-medium">{formatDate(complaint.timestamp)}</span>
-                                            </div>
-                                        </div>
-
-                                        {/* Assigned Officer */}
-                                        {complaint.assignedTo && (
-                                            <div className="mb-4 px-3 py-2 rounded-xl bg-white/5 border border-white/8 flex items-center gap-2">
-                                                <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
-                                                    <User className="w-3 h-3 text-blue-400" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-[9px] font-black uppercase tracking-widest text-white/25">Assigned Officer</p>
-                                                    <p className="text-xs font-bold text-white/60">{complaint.assignedTo}</p>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* ── Action Buttons ── */}
-                                        <div className="flex flex-wrap gap-2 pt-3 border-t border-white/5" onClick={e => e.stopPropagation()}>
-                                            {/* View Details */}
-                                            <button
-                                                onClick={() => setSelectedTask(isSelected ? null : complaint)}
-                                                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/8 border border-white/10 text-white/60 text-[10px] font-black uppercase tracking-wider hover:bg-white/15 hover:text-white transition-all"
-                                            >
-                                                <Eye className="w-3 h-3" /> View
-                                            </button>
-
-                                            {/* Accept if Pending */}
-                                            {complaint.status === "Pending" && (
-                                                <button
-                                                    onClick={() => handleStatusUpdate(complaint.id, "Accepted", "Complaint accepted by field officer.")}
-                                                    disabled={isUpdating}
-                                                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-blue-600/80 border border-blue-500/50 text-white text-[10px] font-black uppercase tracking-wider hover:bg-blue-600 transition-all disabled:opacity-50 shadow-sm shadow-blue-500/20"
-                                                >
-                                                    <CheckCircle2 className="w-3 h-3" /> Accept
-                                                </button>
-                                            )}
-
-                                            {/* Start Work if Assigned/Accepted */}
-                                            {(complaint.status === "Assigned" || complaint.status === "Accepted") && (
-                                                <button
-                                                    onClick={() => handleStatusUpdate(complaint.id, "In Progress", "Officer started work on-site.")}
-                                                    disabled={isUpdating}
-                                                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-600/80 border border-amber-500/50 text-white text-[10px] font-black uppercase tracking-wider hover:bg-amber-600 transition-all disabled:opacity-50 shadow-sm shadow-amber-500/20"
-                                                >
-                                                    <Play className="w-3 h-3" /> Start Work
-                                                </button>
-                                            )}
-
-                                            {/* Resolve if in progress */}
-                                            {(complaint.status === "In Progress" || complaint.status === "Assigned" || complaint.status === "Accepted") && (
-                                                <button
-                                                    onClick={() => setSelectedTask(complaint)}
-                                                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600/80 border border-emerald-500/50 text-white text-[10px] font-black uppercase tracking-wider hover:bg-emerald-600 transition-all shadow-sm shadow-emerald-500/20"
-                                                >
-                                                    <CheckCircle2 className="w-3 h-3" /> Resolve
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
+                                    {tab.label}
+                                    {tab.key === "New" && (
+                                        <div className="w-2 h-2 rounded-full bg-red-200" />
+                                    )}
+                                </button>
                             );
                         })}
                     </div>
-                )}
 
-                {/* ── Resolution Panel (slide-in when complaint selected) ── */}
-                {selectedTask && (
-                    <div className="fixed inset-0 z-[200] flex items-center justify-end p-4 lg:p-8">
-                        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSelectedTask(null)} />
-                        <div
-                            className="relative w-full max-w-md h-full overflow-y-auto rounded-2xl border border-white/10 shadow-2xl animate-slide-left"
-                            style={{ background: "rgba(15,23,42,0.97)", backdropFilter: "blur(24px)" }}
-                        >
-                            {/* Header */}
-                            <div className="sticky top-0 z-10 px-6 py-5 border-b border-white/8 flex items-start justify-between"
-                                style={{ background: "rgba(15,23,42,0.98)", backdropFilter: "blur(24px)" }}>
-                                <div>
-                                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-400 mb-1">Complaint Console</p>
-                                    <h2 className="text-lg font-black text-white leading-tight">{selectedTask.issue}</h2>
+                    {/* Task List */}
+                    <div className="space-y-4">
+                        {voiceComplaints.length === 0 ? (
+                            <div className="bg-white/5 border border-dashed border-white/10 rounded-[2.5rem] p-20 text-center">
+                                <div className="w-16 h-16 rounded-3xl bg-white flex items-center justify-center mx-auto mb-4">
+                                    <Volume2 className="w-8 h-8 text-gray-400" />
                                 </div>
-                                <button
-                                    onClick={() => setSelectedTask(null)}
-                                    className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/40 hover:text-white transition-all shrink-0 ml-3"
-                                >
-                                    <X className="w-5 h-5" />
-                                </button>
+                                <p className="text-white font-black uppercase tracking-[0.2em] text-sm">No voice complaints found</p>
                             </div>
-
-                            <div className="p-6 space-y-6">
-                                {/* Complaint Info */}
-                                <div className="space-y-3 p-4 rounded-xl border border-white/8" style={{ background: "rgba(255,255,255,0.03)" }}>
-                                    {[
-                                        { icon: Hash,      label: "Case ID",    value: selectedTask.id },
-                                        { icon: User,      label: "Citizen",    value: selectedTask.citizen },
-                                        { icon: Phone,     label: "Mobile",     value: selectedTask.phone },
-                                        { icon: MapPin,    label: "Ward",       value: selectedTask.ward },
-                                        { icon: Building2, label: "Category",   value: selectedTask.category },
-                                        { icon: Clock,     label: "Date",       value: formatDate(selectedTask.timestamp) },
-                                    ].map(row => (
-                                        <div key={row.label} className="flex items-center gap-3">
-                                            <row.icon className="w-3.5 h-3.5 text-white/25 shrink-0" />
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-white/30 w-20 shrink-0">{row.label}</span>
-                                            <span className="text-xs font-bold text-white/70 truncate">{row.value}</span>
+                        ) : (
+                            voiceComplaints.map(task => (
+                                <div 
+                                    key={task.id}
+                                    className={`bg-white transition-all cursor-pointer rounded-[2rem] p-6 hover:translate-x-1 group/card shadow-sm ${
+                                        selectedTask?.id === task.id ? "ring-4 ring-purple-500/20" : ""
+                                    }`}
+                                >
+                                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                                        <div className="flex-1 min-w-0" onClick={() => setSelectedTask(task)}>
+                                            <div className="flex items-center gap-2 mb-3 flex-wrap">
+                                                {/* ID Tag */}
+                                                <span className="text-[10px] font-black text-red-500 px-3 py-1.5 bg-red-50 rounded-full tracking-widest">
+                                                    {task.id}
+                                                </span>
+                                                {/* Status Tag */}
+                                                <span className={`text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest ${
+                                                    task.status === "Pending" ? "bg-purple-100 text-purple-600" :
+                                                    task.status === "In Progress" ? "bg-amber-100 text-amber-600" :
+                                                    "bg-gray-100 text-gray-600"
+                                                }`}>
+                                                    {task.status === "Pending" ? "NEW" : task.status}
+                                                </span>
+                                                {/* Live Tag */}
+                                                <div className="flex items-center gap-1.5 bg-emerald-50 px-3 py-1.5 rounded-full">
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                                    <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">LIVE</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <h3 className="text-xl font-black text-gray-900 mb-4">{task.issue}</h3>
+                                            
+                                            <div className="flex items-center gap-6 text-gray-400 text-[10px] font-black uppercase tracking-widest">
+                                                <div className="flex items-center gap-1.5">
+                                                    <MapPin className="w-3.5 h-3.5 text-red-500" /> {task.ward}
+                                                </div>
+                                                <div className="flex items-center gap-1.5">
+                                                    <Clock className="w-3.5 h-3.5 text-gray-300" /> {task.time}
+                                                </div>
+                                            </div>
                                         </div>
-                                    ))}
+
+                                        {/* Quick Action Side Buttons */}
+                                        <div className="flex items-center gap-3 shrink-0">
+                                            {task.status === "Pending" ? (
+                                                <button 
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleStatusUpdate(task.id, "Accepted", "Complaint accepted by field officer.");
+                                                    }}
+                                                    className="px-6 py-3.5 rounded-2xl bg-[#a855f7] hover:bg-purple-600 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-purple-500/30 transition-all active:scale-95 flex items-center gap-2"
+                                                >
+                                                    <CheckCircle2 className="w-4 h-4" /> ACCEPT
+                                                </button>
+                                            ) : task.status === "Assigned" || task.status === "In Progress" ? (
+                                                <button 
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setSelectedTask(task);
+                                                    }}
+                                                    className="px-6 py-3.5 rounded-2xl bg-[#B91C1C] hover:bg-red-700 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-red-500/30 transition-all active:scale-95 flex items-center gap-2"
+                                                >
+                                                    <CheckCircle2 className="w-4 h-4" /> RESOLVE
+                                                </button>
+                                            ) : null}
+                                            <button 
+                                                onClick={(e) => { e.stopPropagation(); setSelectedTask(task); }}
+                                                className="w-12 h-12 rounded-2xl bg-white border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-all text-gray-400 hover:text-gray-900"
+                                            >
+                                                <Navigation className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
+
+                {/* ── Right Side: Task Execution ── */}
+                <div className="lg:col-span-1">
+                    <div className="sticky top-8 space-y-6">
+                        {selectedTask ? (
+                            <div className="bg-white rounded-[2.5rem] shadow-2xl overflow-hidden animate-in slide-in-from-right-8 duration-500">
+                                <div className="bg-gray-900 p-8 text-white relative">
+                                    <button 
+                                        onClick={() => setSelectedTask(null)}
+                                        className="absolute top-6 right-6 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-all"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Mic className="w-4 h-4 text-purple-400" />
+                                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-purple-300">Voice Complaint Console</p>
+                                    </div>
+                                    <h2 className="text-2xl font-black leading-tight mb-4">{selectedTask.issue}</h2>
+                                    <div className="flex items-center gap-4">
+                                        <a href={`tel:${selectedTask.phone}`} className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-xl text-xs font-black border border-white/10 hover:bg-white/20 transition-all">
+                                            <Phone className="w-3.5 h-3.5" /> Call Citizen
+                                        </a>
+                                        <button className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-xl text-xs font-black border border-white/10 hover:bg-white/20 transition-all">
+                                            <Navigation className="w-3.5 h-3.5" /> Navigate
+                                        </button>
+                                    </div>
                                 </div>
 
-                                {/* Description */}
+                                {/* Voice transcript preview */}
                                 {selectedTask.description && (
-                                    <div className="p-4 rounded-xl border border-blue-500/20 bg-blue-500/5">
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-2">Description</p>
-                                        <p className="text-sm text-white/70 leading-relaxed font-medium">{selectedTask.description}</p>
+                                    <div className="mx-6 mt-6 bg-purple-50 border border-purple-100 rounded-3xl p-5 flex gap-4">
+                                        <div className="w-10 h-10 rounded-2xl bg-purple-100 flex items-center justify-center shrink-0">
+                                            <Volume2 className="w-5 h-5 text-purple-600" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-black uppercase tracking-widest text-purple-700 mb-1">Voice Transcript</p>
+                                            <p className="text-sm font-bold text-purple-800 leading-relaxed line-clamp-3">{selectedTask.description}</p>
+                                        </div>
                                     </div>
                                 )}
 
-                                {/* AI Field Intelligence */}
-                                <div className="p-4 rounded-xl border border-amber-500/20 bg-amber-500/5 flex gap-3">
-                                    <Sparkles className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                                    <div>
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-amber-400 mb-1">Field Intelligence</p>
-                                        <p className="text-xs text-white/60 leading-relaxed">Prioritize safety checks before proceeding. Ensure proper documentation before and after resolution.</p>
+                                <div className="p-8 space-y-8">
+                                    {/* AI Insight */}
+                                    <div className="bg-amber-50 border border-amber-100 rounded-3xl p-5 flex gap-4">
+                                        <div className="w-10 h-10 rounded-2xl bg-amber-100 flex items-center justify-center shrink-0">
+                                            <Sparkles className="w-5 h-5 text-amber-600" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-black uppercase tracking-widest text-amber-700 mb-1">Field Intelligence</p>
+                                            <p className="text-sm font-bold text-amber-800 leading-relaxed">Based on the voice complaint, prioritize safety checks before proceeding with repair.</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Action Form */}
+                                    <div className="space-y-6">
+                                        <div>
+                                            <label className="text-xs font-black uppercase tracking-widest text-gray-400 mb-3 block">1. Capture Proof (Before/After)</label>
+                                            {proofImg ? (
+                                                <div className="relative aspect-video rounded-3xl overflow-hidden group">
+                                                    <img src={proofImg} alt="Proof" className="w-full h-full object-cover" />
+                                                    <button 
+                                                        onClick={() => setProofImg(null)}
+                                                        className="absolute top-4 right-4 p-2 bg-black/50 text-white rounded-full hover:bg-red-600 transition-all opacity-0 group-hover:opacity-100"
+                                                    >
+                                                        <X className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <button 
+                                                    onClick={handleCapture}
+                                                    className="w-full aspect-video border-2 border-dashed border-gray-100 rounded-3xl flex flex-col items-center justify-center gap-3 hover:bg-gray-50 hover:border-[#B91C1C]/20 transition-all group"
+                                                >
+                                                    <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                                        <Camera className="w-6 h-6 text-gray-300 group-hover:text-[#B91C1C]" />
+                                                    </div>
+                                                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Open Field Camera</p>
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        <div>
+                                            <label className="text-xs font-black uppercase tracking-widest text-gray-400 mb-3 block">2. Resolution Summary</label>
+                                            <textarea 
+                                                rows={4}
+                                                value={proofNote}
+                                                onChange={e => setProofNote(e.target.value)}
+                                                placeholder="What action was taken? (e.g. Pipe welded and pressure tested)"
+                                                className="w-full px-5 py-4 bg-gray-50 border border-transparent rounded-3xl text-sm font-bold focus:bg-white focus:border-red-200 outline-none transition-all resize-none shadow-inner"
+                                            />
+                                        </div>
+
+                                        <div className="flex gap-4">
+                                            {selectedTask.status === "Pending" && (
+                                                <button 
+                                                    onClick={() => handleStatusUpdate(selectedTask.id, "Accepted", "Complaint accepted by field officer")}
+                                                    disabled={isUpdating}
+                                                    className="flex-1 flex items-center justify-center gap-3 py-4 rounded-3xl bg-[#B91C1C] hover:bg-red-700 text-white text-xs font-black uppercase tracking-widest shadow-xl shadow-red-200 transition-all active:scale-95 disabled:opacity-50"
+                                                >
+                                                    {isUpdating ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
+                                                    Accept
+                                                </button>
+                                            )}
+                                            {selectedTask.status === "Assigned" && (
+                                                <button 
+                                                    onClick={() => handleStatusUpdate(selectedTask.id, "In Progress", "Officer started work on-site")}
+                                                    disabled={isUpdating}
+                                                    className="flex-1 flex items-center justify-center gap-3 py-4 rounded-3xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-black uppercase tracking-widest shadow-xl shadow-amber-200 transition-all active:scale-95 disabled:opacity-50"
+                                                >
+                                                    {isUpdating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5" />}
+                                                    Start Work
+                                                </button>
+                                            )}
+                                            {(selectedTask.status === "Assigned" || selectedTask.status === "In Progress" || selectedTask.status === "Accepted") && (
+                                                <button 
+                                                    onClick={() => handleStatusUpdate(selectedTask.id, "Resolved", proofNote || "Resolved on-site by officer")}
+                                                    disabled={isUpdating || !proofImg}
+                                                    className="flex-[2] flex items-center justify-center gap-3 py-4 rounded-3xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-widest shadow-xl shadow-emerald-200 transition-all active:scale-95 disabled:opacity-50"
+                                                >
+                                                    {isUpdating ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
+                                                    Mark Resolved
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
+                            </div>
+                        ) : (
+                            <div className="bg-white/5 border border-dashed border-white/10 rounded-[3rem] p-12 text-center">
+                                <div className="w-16 h-16 rounded-3xl bg-purple-500/10 flex items-center justify-center mx-auto mb-4">
+                                    <Mic className="w-8 h-8 text-purple-400/40" />
+                                </div>
+                                <h3 className="text-lg font-black text-white mb-2 uppercase tracking-wide">No Selection</h3>
+                                <p className="text-xs text-white/40 leading-relaxed uppercase font-bold tracking-widest">Select a voice complaint to start field operations.</p>
+                            </div>
+                        )}
 
-                                {/* Quick Contact */}
-                                <a
-                                    href={`tel:${selectedTask.phone}`}
-                                    className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-blue-600/20 border border-blue-500/30 text-blue-300 text-xs font-black uppercase tracking-widest hover:bg-blue-600/40 transition-all"
-                                >
-                                    <Phone className="w-4 h-4" /> Call Citizen
-                                </a>
-
-                                {/* Proof Capture */}
+                        {/* Summary Card */}
+                        <div className="bg-gradient-to-br from-[#B91C1C]/40 to-red-900/40 backdrop-blur-md border border-red-500/20 rounded-[3rem] p-8 text-white relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-red-500/20 transition-all" />
+                            <div className="flex items-center justify-between mb-8 relative">
                                 <div>
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-3 block">Capture Proof (Before / After)</label>
-                                    {proofImg ? (
-                                        <div className="relative aspect-video rounded-xl overflow-hidden group">
-                                            <img src={proofImg} alt="Proof" className="w-full h-full object-cover" />
-                                            <button
-                                                onClick={() => setProofImg(null)}
-                                                className="absolute top-3 right-3 p-1.5 bg-black/60 text-white rounded-lg opacity-0 group-hover:opacity-100 hover:bg-red-600 transition-all"
-                                            >
-                                                <X className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <button
-                                            onClick={handleCapture}
-                                            className="w-full aspect-video border-2 border-dashed border-white/10 rounded-xl flex flex-col items-center justify-center gap-3 hover:border-blue-500/40 hover:bg-white/3 transition-all group"
-                                        >
-                                            <Camera className="w-8 h-8 text-white/20 group-hover:text-blue-400 transition-colors" />
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-white/30 group-hover:text-white/60">Open Field Camera</p>
-                                        </button>
-                                    )}
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-1">Voice Complaints</p>
+                                    <p className="text-3xl font-black tabular-nums">
+                                        {complaints.filter(c => (c as any).source === "voice" || c.citizen === "Voice User").length}
+                                        <span className="text-sm font-bold opacity-50 ml-2">Total</span>
+                                    </p>
                                 </div>
-
-                                {/* Resolution Note */}
-                                <div>
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-3 block">Resolution Summary</label>
-                                    <textarea
-                                        rows={3}
-                                        value={proofNote}
-                                        onChange={e => setProofNote(e.target.value)}
-                                        placeholder="What action was taken? (e.g. Pipe repaired and pressure tested)"
-                                        className="w-full px-4 py-3 rounded-xl border border-white/10 text-white text-sm font-medium placeholder:text-white/20 focus:outline-none focus:border-blue-500/40 transition-all resize-none"
-                                        style={{ background: "rgba(255,255,255,0.05)" }}
-                                    />
+                                <div className="w-14 h-14 rounded-3xl bg-purple-500/20 flex items-center justify-center border border-purple-500/20">
+                                    <Mic className="w-8 h-8 text-purple-400 animate-pulse" />
                                 </div>
-
-                                {/* Action Buttons */}
-                                <div className="space-y-3 pb-4">
-                                    {selectedTask.status === "Pending" && (
-                                        <button
-                                            onClick={() => handleStatusUpdate(selectedTask.id, "Accepted", "Complaint accepted by field officer")}
-                                            disabled={isUpdating}
-                                            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-500/25 transition-all active:scale-[0.98] disabled:opacity-50"
-                                        >
-                                            {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                                            Accept Complaint
-                                        </button>
-                                    )}
-                                    {(selectedTask.status === "Assigned" || selectedTask.status === "Accepted") && (
-                                        <button
-                                            onClick={() => handleStatusUpdate(selectedTask.id, "In Progress", "Officer started work on-site")}
-                                            disabled={isUpdating}
-                                            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-black uppercase tracking-widest shadow-lg shadow-amber-500/25 transition-all active:scale-[0.98] disabled:opacity-50"
-                                        >
-                                            {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-                                            Start Work
-                                        </button>
-                                    )}
-                                    {(selectedTask.status === "Assigned" || selectedTask.status === "Accepted" || selectedTask.status === "In Progress") && (
-                                        <button
-                                            onClick={() => handleStatusUpdate(selectedTask.id, "Resolved", proofNote || "Resolved on-site by officer")}
-                                            disabled={isUpdating || !proofImg}
-                                            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-widest shadow-lg shadow-emerald-500/25 transition-all active:scale-[0.98] disabled:opacity-50"
-                                        >
-                                            {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                                            Mark as Resolved
-                                        </button>
-                                    )}
-                                    <button
-                                        onClick={() => setSelectedTask(null)}
-                                        className="w-full py-3 rounded-xl border border-white/10 text-white/40 text-xs font-black uppercase tracking-widest hover:text-white/70 hover:border-white/20 transition-all"
-                                    >
-                                        Close Panel
-                                    </button>
+                            </div>
+                            <div className="space-y-4 relative">
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="bg-white/5 rounded-2xl p-3 text-center">
+                                        <p className="text-2xl font-black tabular-nums text-yellow-400">{newCount}</p>
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mt-1">New</p>
+                                    </div>
+                                    <div className="bg-white/5 rounded-2xl p-3 text-center">
+                                        <p className="text-2xl font-black tabular-nums text-emerald-400">
+                                            {complaints.filter(c => ((c as any).source === "voice" || c.citizen === "Voice User") && c.status === "Resolved").length}
+                                        </p>
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mt-1">Resolved</p>
+                                    </div>
                                 </div>
+                                <p className="text-[10px] text-white/60 font-medium leading-relaxed italic">"Citizens can now file complaints in their own language via voice."</p>
                             </div>
                         </div>
                     </div>
-                )}
+                </div>
             </div>
-
-            <style>{`
-                @keyframes slide-left {
-                    from { opacity: 0; transform: translateX(40px); }
-                    to   { opacity: 1; transform: translateX(0); }
-                }
-                .animate-slide-left { animation: slide-left 0.35s cubic-bezier(0.16,1,0.3,1) both; }
-            `}</style>
         </DashboardLayout>
     );
 }

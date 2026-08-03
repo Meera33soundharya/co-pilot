@@ -38,13 +38,10 @@ export interface AuditEntry {
 
 export interface Complaint {
     id: string;
-
     // Citizen info
     citizen: string;
-    author?: string;
     phone: string;
     ward: string;
-    area?: string;
     citizenId: string;
 
     // Problem info
@@ -53,26 +50,14 @@ export interface Complaint {
     description: string;
     priority: Priority;
 
-    // Evidence & location
-    evidence?: string[];
-    location?: string;
-    coords?: { lat: number; lng: number };
+    // 🆕 New Actionable Modules
+    evidence?: string[];      // URLs to photos/videos
+    location?: string;        // Text location
+    coords?: { lat: number; lng: number }; // Map pin
     notifPref?: "SMS" | "Email" | "None";
-    sentiment?: number;
-    rating?: number;
-    resolutionProof?: string;
-    source?: "voice" | "online" | "field";
-
-    // AI fields
-    estimatedTime?: string;
-    suggestedOfficer?: string;
-
-    // Extra document/report fields
-    resolutionNotes?: string;
-    adminRemarks?: string;
-    supportingDocs?: string[];
-    resolutionDate?: string;
-    officerDetails?: any;
+    sentiment?: number;       // 0 to 100 scoring
+    rating?: number;          // 1-5 stars citizen feedback
+    resolutionProof?: string; // Base64 or URL of "after" photo
 
     // Workflow
     status: Status;
@@ -163,6 +148,7 @@ export const initialComplaints: Complaint[] = [
         ],
     },
     {
+
         id: "GRV-8295", citizen: "Meera Soundarya", phone: "+91 63821 54321",
         ward: "Ward 05", citizenId: "citizen_meera",
         category: "Electricity", issue: "Live wire dangling on street near Park West",
