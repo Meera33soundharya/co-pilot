@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import DashboardLayout from "@/components/DashboardLayout";
+import { DashboardLayout } from "@/components/DashboardLayout";
 import {
   Search, FileText, FileImage, FileVideo, FileAudio,
   X, Eye, Download, RotateCcw, AlertCircle, Trash, Trash2,

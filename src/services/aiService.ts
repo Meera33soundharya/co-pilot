@@ -17,7 +17,9 @@ export interface AIResult {
     dept: string;
     summary: string;
     actionPlan: string[];
-    reasoning: string; // ✨ Explainable AI (XAI) Reasoning
+    reasoning: string;
+    estimatedTime: string;
+    suggestedOfficer: string;
 }
 
 export async function analyzeComplaint(issue: string, description: string): Promise<AIResult> {
@@ -45,7 +47,9 @@ export async function analyzeComplaint(issue: string, description: string): Prom
                             "priority": "String matching one of the priorities",
                             "summary": "Short 1-sentence summary",
                             "actionPlan": ["Step 1", "Step 2", "Step 3"],
-                            "reasoning": "A 2-sentence explanation of why you chose this category and priority. Be specific about keywords found."
+                            "reasoning": "A 2-sentence explanation of why you chose this category and priority. Be specific about keywords found.",
+                            "estimatedTime": "Estimated resolution time (e.g., '24 Hours', '3 Days', '1 Week')",
+                            "suggestedOfficer": "Suggested officer role to handle this (e.g., 'Junior Engineer', 'Sanitation Inspector')"
                         }
                     `}]
                 }],
@@ -75,7 +79,9 @@ export async function analyzeComplaint(issue: string, description: string): Prom
             dept: dept,
             summary: aiResponse.summary,
             actionPlan: aiResponse.actionPlan,
-            reasoning: aiResponse.reasoning
+            reasoning: aiResponse.reasoning,
+            estimatedTime: aiResponse.estimatedTime || "24 Hours",
+            suggestedOfficer: aiResponse.suggestedOfficer || "Field Officer"
         };
 
     } catch (error) {
@@ -92,7 +98,33 @@ export async function analyzeComplaint(issue: string, description: string): Prom
             dept: dept,
             summary: "AI fallback (Offline Mode): Auto-categorized based on departmental keywords.",
             actionPlan: [`Forward to ${dept} Unit`, "Initial assessment by field team"],
-            reasoning: `AI encountered an issue communicating with the core models, but locally identified this as ${cat} based on district protocols.`
+            reasoning: `AI encountered an issue communicating with the core models, but locally identified this as ${cat} based on district protocols.`,
+            estimatedTime: "24 Hours",
+            suggestedOfficer: "Field Officer"
         };
     }
 }
+
+/**
+ * extractEntities — Stub for compatibility with older components.
+ * Extracts basic named entities from text using simple heuristics.
+ */
+export interface ExtractedEntities {
+    citizen?: string;
+    name?: string;
+    phone?: string;
+    ward?: string;
+    location?: string;
+    issue?: string;
+}
+
+export function extractEntities(text: string, confidenceThreshold?: number): ExtractedEntities {
+    const phoneMatch = text.match(/(\+91[\s-]?\d{5}[\s-]?\d{5}|\d{10})/);
+    const wardMatch = text.match(/ward\s*(\d+)/i);
+    return {
+        phone: phoneMatch?.[0],
+        ward: wardMatch ? `Ward ${wardMatch[1]}` : undefined,
+        issue: text.length > 10 ? text.substring(0, 100) : undefined,
+    };
+}
+

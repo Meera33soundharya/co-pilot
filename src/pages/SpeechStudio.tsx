@@ -10,7 +10,7 @@ import {
   Sparkles,
   Volume2,
 } from "lucide-react";
-import DashboardLayout from "@/components/DashboardLayout";
+import { DashboardLayout } from "@/components/DashboardLayout";
 import { useComplaints } from "@/context/ComplaintsContext";
 import { analyzeComplaint, extractEntities } from "@/services/aiService";
 
@@ -127,7 +127,7 @@ export default function SpeechStudio() {
 
     setWorkflowState((prev) => ({ ...prev, ai: true }));
 
-    const complaintId = addComplaint({
+    const complaintId = await addComplaint({
       citizen: entities.name || "Citizen",
       phone: entities.phone || "Not provided",
       ward: entities.ward || "Ward 28",

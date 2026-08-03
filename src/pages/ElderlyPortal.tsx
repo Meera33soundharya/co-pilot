@@ -1,9 +1,10 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useComplaints } from "@/context/ComplaintsContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { analyzeComplaint } from "@/services/aiService";
-import { Mic, Loader2, CheckCircle2, ArrowLeft, Volume2 } from "lucide-react";
+import { Mic, Loader2, CheckCircle2, ArrowLeft, Volume2, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function ElderlyPortal() {
     const { addComplaint } = useComplaints();
@@ -19,6 +20,7 @@ export default function ElderlyPortal() {
     const recognitionRef = useRef<any>(null);
     // Use a ref to always have the latest transcript (avoids stale closure)
     const transcriptRef = useRef<string>("");
+    const stopAndSubmitRef = useRef<() => void>(() => {});
 
     const startVoiceRecording = () => {
         try {
@@ -35,12 +37,20 @@ export default function ElderlyPortal() {
 
             const recognition = new SpeechRecognition();
             recognition.lang = language === "ta" ? "ta-IN" : "en-IN";
-            recognition.continuous = true;
+            recognition.continuous = false;
             recognition.interimResults = true;
             
             recognition.onstart = () => {
                 setIsRecording(true);
                 setTranscript("");
+            };
+            
+            recognition.onend = () => {
+                if (transcriptRef.current.trim().length > 0) {
+                    stopAndSubmitRef.current();
+                } else {
+                    setIsRecording(false);
+                }
             };
             
             recognition.onresult = (event: any) => {
@@ -49,6 +59,7 @@ export default function ElderlyPortal() {
                     currentTranscript += event.results[i][0].transcript;
                 }
                 setTranscript(currentTranscript);
+                transcriptRef.current = currentTranscript;
             };
             
             recognition.onerror = (event: any) => {
@@ -65,17 +76,18 @@ export default function ElderlyPortal() {
     };
     
     const stopAndSubmit = async () => {
-        if (recognitionRef.current && isRecording) {
-            recognitionRef.current.stop();
-            setIsRecording(false);
-            setIsProcessing(true);
-            setStep("processing");
+        if (recognitionRef.current) {
+            try { recognitionRef.current.stop(); } catch(e) {}
+        }
+        setIsRecording(false);
+        setIsProcessing(true);
+        setStep("processing");
+        
+        // Wait a brief moment for final transcript if needed
+        setTimeout(async () => {
+            const finalTranscript = transcriptRef.current || transcript || "Voice complaint submitted without clear transcript.";
             
-            // Wait a brief moment for final transcript if needed
-            setTimeout(async () => {
-                const finalTranscript = transcript || "Voice complaint submitted without clear transcript.";
-                
-                try {
+            try {
                     // Send transcript to AI for routing
                     const analysis = await analyzeComplaint("Elderly Voice User Complaint", finalTranscript);
                     
@@ -119,106 +131,187 @@ export default function ElderlyPortal() {
                     setIsProcessing(false);
                 }
             }, 500);
-        }
     };
+
+    useEffect(() => {
+        stopAndSubmitRef.current = stopAndSubmit;
+    }, [stopAndSubmit]);
 
     const isTamil = language === "ta";
 
     return (
-        <div className="min-h-screen bg-[#F5F0E8] flex flex-col items-center justify-center p-6 relative overflow-hidden" style={{ fontFamily: "'Inter', sans-serif" }}>
-            
-            <button onClick={() => navigate("/")} className="absolute top-6 left-6 flex items-center gap-2 text-sm font-black text-gray-500 hover:text-gray-900 transition-colors bg-white/50 px-4 py-2 rounded-full shadow-sm">
+        <div className="min-h-screen bg-gradient-to-br from-[#f8fafc] via-[#e2e8f0] to-[#cbd5e1] flex flex-col items-center justify-center p-6 relative overflow-hidden" style={{ fontFamily: "'Inter', sans-serif" }}>
+            {/* Background Decorations */}
+            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-400/20 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-teal-400/20 rounded-full blur-3xl pointer-events-none" />
+
+            <button onClick={() => navigate("/")} className="absolute top-6 left-6 z-10 flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors bg-white/60 backdrop-blur-md border border-white/40 px-5 py-2.5 rounded-full shadow-sm hover:shadow-md">
                 <ArrowLeft className="w-5 h-5" /> {isTamil ? "திரும்பு" : "Back"}
             </button>
+
+            <button onClick={() => navigate("/village-voice")} className="absolute top-6 right-6 z-10 flex items-center gap-2 text-sm font-semibold text-indigo-700 hover:text-indigo-900 transition-colors bg-white/70 backdrop-blur-md px-5 py-2.5 rounded-full shadow-sm border border-indigo-200/50 hover:shadow-md hover:bg-white/90">
+                <Sparkles className="w-4 h-4 text-indigo-500" />
+                {isTamil ? "உரையாடல் உதவியாளர்" : "AI Assistant"}
+            </button>
             
-            {step === "record" && (
-                <div className="text-center w-full max-w-md animate-in fade-in zoom-in duration-500">
-                    <div className="mb-12">
-                        <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-4 tracking-tight">
-                            {isTamil ? "உங்களுக்கு என்ன உதவி வேண்டும்?" : "How can we help you?"}
-                        </h1>
-                        <p className="text-lg text-gray-600 font-medium">
-                            {isTamil ? "கீழே உள்ள பட்டனை அழுத்தி உங்கள் குறையை சொல்லுங்கள்." : "Tap the microphone below and speak your complaint."}
-                        </p>
-                    </div>
-                    
-                    <button 
-                        onClick={isRecording ? stopAndSubmit : startVoiceRecording}
-                        className={`relative w-48 h-48 md:w-64 md:h-64 rounded-full flex items-center justify-center transition-all duration-300 mx-auto shadow-2xl ${
-                            isRecording 
-                                ? "bg-red-600 hover:bg-red-700 shadow-red-600/40" 
-                                : "bg-[#059669] hover:bg-[#047857] shadow-[#059669]/40 hover:scale-105"
-                        }`}
+            <AnimatePresence mode="wait">
+                {step === "record" && (
+                    <motion.div 
+                        key="record"
+                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                        transition={{ duration: 0.4, ease: "easeOut" }}
+                        className="text-center w-full max-w-lg z-10"
                     >
-                        {isRecording && (
-                            <>
-                                <div className="absolute inset-0 rounded-full border-4 border-red-400 animate-ping opacity-75" />
-                                <div className="absolute -inset-4 rounded-full border-2 border-red-300 animate-pulse opacity-50" />
-                            </>
-                        )}
-                        <Mic className={`w-20 h-20 md:w-28 md:h-28 text-white ${isRecording ? "animate-pulse" : ""}`} />
-                    </button>
-                    
-                    <div className="mt-12 min-h-[60px]">
-                        {isRecording ? (
-                            <p className="text-xl md:text-2xl font-bold text-red-600 animate-pulse">
-                                {isTamil ? "கேட்டுக்கொண்டிருக்கிறோம்... நிறுத்த தட்டவும்" : "Listening... tap to stop"}
+                        <div className="mb-14">
+                            <h1 className="text-4xl md:text-5xl font-extrabold text-slate-800 mb-4 tracking-tight drop-shadow-sm">
+                                {isTamil ? "உங்களுக்கு என்ன உதவி வேண்டும்?" : "How can we help you?"}
+                            </h1>
+                            <p className="text-lg md:text-xl text-slate-600 font-medium max-w-md mx-auto">
+                                {isTamil ? "கீழே உள்ள பட்டனை அழுத்தி உங்கள் குறையை சொல்லுங்கள்." : "Tap the microphone below and speak your complaint naturally."}
                             </p>
-                        ) : (
-                            <p className="text-lg md:text-xl font-bold text-gray-500 flex items-center justify-center gap-2">
-                                <Volume2 className="w-6 h-6" /> {isTamil ? "பேச தொடங்க தட்டவும்" : "Tap to start speaking"}
-                            </p>
-                        )}
+                        </div>
                         
-                        {transcript && (
-                            <div className="mt-6 p-4 bg-white/80 rounded-2xl shadow-sm border border-gray-200">
-                                <p className="text-gray-800 text-lg">{transcript}</p>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
-            
-            {step === "processing" && (
-                <div className="text-center w-full max-w-md animate-in fade-in slide-in-from-bottom-8 duration-500">
-                    <div className="w-32 h-32 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-8 shadow-xl">
-                        <Loader2 className="w-16 h-16 text-blue-600 animate-spin" />
-                    </div>
-                    <h2 className="text-3xl font-black text-gray-900 mb-3">
-                        {isTamil ? "செயலாக்கப்படுகிறது..." : "Processing..."}
-                    </h2>
-                    <p className="text-lg text-gray-500 font-medium">
-                        {isTamil ? "உங்கள் குறையை பதிவு செய்கிறோம். காத்திருக்கவும்." : "We are filing your complaint. Please wait."}
-                    </p>
-                </div>
-            )}
-            
-            {step === "success" && (
-                <div className="text-center w-full max-w-md animate-in fade-in zoom-in duration-500">
-                    <div className="w-40 h-40 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl">
-                        <CheckCircle2 className="w-24 h-24 text-emerald-600" />
-                    </div>
-                    <h2 className="text-4xl font-black text-gray-900 mb-4 tracking-tight">
-                        {isTamil ? "புகார் பதிவு செய்யப்பட்டது!" : "Complaint Registered!"}
-                    </h2>
-                    <div className="bg-white p-6 rounded-3xl inline-block text-gray-900 shadow-xl border border-gray-100 mt-4 w-full">
-                        <p className="text-sm uppercase font-black mb-2 text-gray-500 tracking-widest">
-                            {isTamil ? "உங்கள் புகார் எண்" : "Your Ticket Number"}
-                        </p>
-                        <p className="text-5xl font-mono font-black text-[#059669]">{ticketId}</p>
-                    </div>
-                    
-                    <button 
-                        onClick={() => {
-                            setStep("record");
-                            setTranscript("");
-                        }}
-                        className="mt-12 bg-gray-900 hover:bg-gray-800 text-white font-bold py-4 px-8 rounded-full shadow-lg transition-colors text-lg"
+                        <div className="relative flex justify-center items-center h-72">
+                            {isRecording && (
+                                <motion.div 
+                                    initial={{ opacity: 0, scale: 0.8 }}
+                                    animate={{ opacity: 1, scale: 1.2 }}
+                                    className="absolute inset-0 bg-red-500/20 rounded-full blur-xl" 
+                                />
+                            )}
+                            <motion.button 
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={isRecording ? stopAndSubmit : startVoiceRecording}
+                                className={`relative w-48 h-48 md:w-56 md:h-56 rounded-full flex items-center justify-center transition-all duration-300 mx-auto shadow-2xl overflow-hidden ${
+                                    isRecording 
+                                        ? "bg-gradient-to-br from-red-500 to-rose-600 shadow-red-500/40" 
+                                        : "bg-gradient-to-br from-emerald-400 to-teal-600 shadow-teal-500/40"
+                                }`}
+                            >
+                                {isRecording && (
+                                    <>
+                                        <div className="absolute inset-0 rounded-full border-[6px] border-red-300 animate-ping opacity-60" />
+                                        <div className="absolute -inset-8 rounded-full border-2 border-red-200 animate-pulse opacity-40" />
+                                    </>
+                                )}
+                                <div className="absolute inset-0 bg-white/20 backdrop-blur-[2px] rounded-full pointer-events-none" />
+                                <Mic className={`w-20 h-20 md:w-24 md:h-24 text-white z-10 drop-shadow-md ${isRecording ? "animate-pulse" : ""}`} />
+                            </motion.button>
+                        </div>
+                        
+                        <div className="mt-10 min-h-[80px]">
+                            <AnimatePresence mode="wait">
+                                {isRecording ? (
+                                    <motion.p 
+                                        key="listening"
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        className="text-xl md:text-2xl font-bold text-red-500 tracking-wide"
+                                    >
+                                        <span className="animate-pulse">{isTamil ? "கேட்டுக்கொண்டிருக்கிறோம்..." : "Listening..."}</span>
+                                        <br />
+                                        <span className="text-sm font-medium text-slate-500 mt-2 block">
+                                            {isTamil ? "நிறுத்த மீண்டும் தட்டவும்" : "Tap again to stop"}
+                                        </span>
+                                    </motion.p>
+                                ) : (
+                                    <motion.p 
+                                        key="start"
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        className="text-lg md:text-xl font-semibold text-slate-500 flex items-center justify-center gap-2"
+                                    >
+                                        <Volume2 className="w-6 h-6 text-slate-400" /> {isTamil ? "பேச தொடங்க தட்டவும்" : "Tap to start speaking"}
+                                    </motion.p>
+                                )}
+                            </AnimatePresence>
+                            
+                            {transcript && (
+                                <motion.div 
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="mt-6 p-5 bg-white/60 backdrop-blur-xl rounded-2xl shadow-lg border border-white/50 max-w-lg mx-auto"
+                                >
+                                    <p className="text-slate-800 text-lg font-medium leading-relaxed">{transcript}</p>
+                                </motion.div>
+                            )}
+                        </div>
+                    </motion.div>
+                )}
+                
+                {step === "processing" && (
+                    <motion.div 
+                        key="processing"
+                        initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -20, scale: 0.9 }}
+                        transition={{ duration: 0.5 }}
+                        className="text-center w-full max-w-md z-10"
                     >
-                        {isTamil ? "புதிய புகார் அளிக்க" : "File Another Complaint"}
-                    </button>
-                </div>
-            )}
+                        <div className="relative w-36 h-36 mx-auto mb-8">
+                            <div className="absolute inset-0 bg-blue-400/20 rounded-full animate-ping blur-md" />
+                            <div className="relative w-full h-full bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-xl border border-white/50">
+                                <Loader2 className="w-16 h-16 text-blue-600 animate-spin" />
+                            </div>
+                        </div>
+                        <h2 className="text-3xl font-extrabold text-slate-800 mb-3 drop-shadow-sm">
+                            {isTamil ? "செயலாக்கப்படுகிறது..." : "Processing AI..."}
+                        </h2>
+                        <p className="text-lg text-slate-500 font-medium">
+                            {isTamil ? "உங்கள் குறையை பதிவு செய்கிறோம். காத்திருக்கவும்." : "Analyzing your voice and filing the ticket..."}
+                        </p>
+                    </motion.div>
+                )}
+                
+                {step === "success" && (
+                    <motion.div 
+                        key="success"
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ type: "spring", bounce: 0.4 }}
+                        className="text-center w-full max-w-md z-10"
+                    >
+                        <div className="w-40 h-40 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-emerald-500/30 border-4 border-white">
+                            <CheckCircle2 className="w-20 h-20 text-white drop-shadow-md" />
+                        </div>
+                        <h2 className="text-4xl font-extrabold text-slate-800 mb-4 tracking-tight">
+                            {isTamil ? "புகார் பதிவு செய்யப்பட்டது!" : "Complaint Registered!"}
+                        </h2>
+                        
+                        <motion.div 
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            transition={{ delay: 0.2 }}
+                            className="bg-white/80 backdrop-blur-xl p-8 rounded-3xl inline-block text-slate-800 shadow-xl border border-white/50 mt-4 w-full relative overflow-hidden"
+                        >
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-400/10 rounded-full blur-2xl transform translate-x-10 -translate-y-10" />
+                            <p className="text-sm uppercase font-bold mb-3 text-slate-400 tracking-widest">
+                                {isTamil ? "உங்கள் புகார் எண்" : "Your Ticket Number"}
+                            </p>
+                            <p className="text-5xl md:text-6xl font-mono font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-600 drop-shadow-sm">
+                                {ticketId}
+                            </p>
+                        </motion.div>
+                        
+                        <motion.button 
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => {
+                                setStep("record");
+                                setTranscript("");
+                            }}
+                            className="mt-12 bg-slate-900 hover:bg-slate-800 text-white font-semibold py-4 px-10 rounded-full shadow-lg shadow-slate-900/20 transition-all text-lg border border-slate-700"
+                        >
+                            {isTamil ? "புதிய புகார் அளிக்க" : "File Another Complaint"}
+                        </motion.button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

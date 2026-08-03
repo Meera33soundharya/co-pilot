@@ -1,4 +1,4 @@
-import DashboardLayout from "@/components/DashboardLayout";
+import { DashboardLayout } from "@/components/DashboardLayout";
 import { 
     Clock, MapPin, Shield, Zap, 
     Plus, CheckCircle2, AlertCircle, 

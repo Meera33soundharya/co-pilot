@@ -21,7 +21,7 @@ export default function RewordGame() {
     const current = gameChallenges[index];
 
     useEffect(() => {
-        let timer: number;
+        let timer: ReturnType<typeof setInterval>;
         if (isActive && timeLeft > 0) {
             timer = setInterval(() => setTimeLeft(t => t - 1), 1000);
         } else if (timeLeft === 0) {

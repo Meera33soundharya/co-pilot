@@ -1,4 +1,5 @@
-import DashboardLayout from "@/components/DashboardLayout";
+import React from "react";
+import { DashboardLayout } from "@/components/DashboardLayout";
 import { useState, useEffect } from "react";
 import { useComplaints } from "@/context/ComplaintsContext";
 import {
@@ -41,10 +42,11 @@ export default function ExecutiveSummary() {
   const selectedDays = timeframes.find(t => t.label === period)?.days ?? 90;
 
   // Filter complaints by date
-  const filteredComplaints = complaints.filter(c => {
+  const filteredComplaints = React.useMemo(() => {
+    // eslint-disable-next-line react-hooks/purity
     const cutoff = Date.now() - selectedDays * 86400000;
-    return c.timestamp >= cutoff;
-  });
+    return complaints.filter(c => c.timestamp >= cutoff);
+  }, [complaints, selectedDays]);
 
   // Calculate KPIs
   const totalDepartments = 12;

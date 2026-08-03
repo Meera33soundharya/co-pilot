@@ -102,7 +102,9 @@ export default function CitizenPortal() {
                 ...form, 
                 category: analysis.category,
                 priority: analysis.priority,
-                dept: analysis.dept
+                dept: analysis.dept,
+                estimatedTime: analysis.estimatedTime,
+                suggestedOfficer: analysis.suggestedOfficer
             });
             
             setTicketId(id);
@@ -269,7 +271,7 @@ export default function CitizenPortal() {
                         <button onClick={() => fileInputRef.current?.click()} className="btn-secondary w-full">{t("portal_uploadDoc")}</button>
                         <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} />
                         <div className="flex gap-4">
-                            <button onClick={back} className="btn-secondary flex-1">{t("portal_back")}</button>
+                            <button onClick={back} className="btn-secondary flex-1">{t("portal_back" as any)}</button>
                             <button onClick={next} className="btn-primary flex-[2]">{t("portal_nextLocation")}</button>
                         </div>
                     </div>
@@ -280,8 +282,8 @@ export default function CitizenPortal() {
                         <input value={mapQuery} onChange={e => setMapQuery(e.target.value)} className="input-field" placeholder={t("portal_searchLocation")} />
                         <button onClick={detectLocation} className="btn-secondary w-full">{t("portal_detectLocation")}</button>
                         <div className="flex gap-4">
-                            <button onClick={back} className="btn-secondary flex-1">{t("portal_back")}</button>
-                            <button onClick={next} className="btn-primary flex-[2]">{t("portal_nextReview")}</button>
+                            <button onClick={back} className="btn-secondary flex-1">{t("portal_back" as any)}</button>
+                            <button onClick={next} className="btn-primary flex-[2]">{t("portal_nextReview" as any)}</button>
                         </div>
                     </div>
                 )}
@@ -308,6 +310,11 @@ export default function CitizenPortal() {
                         <div className="bg-emerald-50 p-6 rounded-3xl inline-block text-emerald-800">
                             <p className="text-xs uppercase font-black mb-1">{t("portal_ticketId")}</p>
                             <p className="text-4xl font-mono font-black">{ticketId}</p>
+                        </div>
+                        <div className="mt-8">
+                            <button onClick={() => navigate("/track-complaint")} className="px-8 py-3 bg-[#B91C1C] text-white rounded-full font-black uppercase text-sm tracking-widest hover:bg-red-800 transition-all">
+                                Track Complaint Status
+                            </button>
                         </div>
                     </div>
                 )}

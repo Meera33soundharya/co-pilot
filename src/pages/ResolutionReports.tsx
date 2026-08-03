@@ -1,5 +1,5 @@
 import { useState } from "react";
-import DashboardLayout from "@/components/DashboardLayout";
+import { DashboardLayout } from "@/components/DashboardLayout";
 import { useComplaints } from "@/context/ComplaintsContext";
 import { 
     Search, Filter, Download, FileText, 
@@ -276,7 +276,13 @@ async function downloadPDF(doc: any, complaint: any) {
 }
 
 export default function ResolutionReports() {
-    const { closedDocs, allComplaints, currentUser, clearClosedDocs, deleteClosedDoc } = useComplaints();
+    const { 
+        closedDocs = [], 
+        allComplaints = [], 
+        currentUser, 
+        clearClosedDocs = () => {}, 
+        deleteClosedDoc = () => {} 
+    } = useComplaints();
     const [search, setSearch] = useState("");
     const [deptFilter, setDeptFilter] = useState("All");
     const [selectedDoc, setSelectedDoc] = useState<any>(null);
@@ -286,7 +292,7 @@ export default function ResolutionReports() {
         setSearch(text);
     };
 
-    const filteredDocs = closedDocs.filter(doc => {
+    const filteredDocs = (closedDocs || []).filter(doc => {
         const matchSearch = doc.name.toLowerCase().includes(search.toLowerCase()) || 
                             doc.complaintId.toLowerCase().includes(search.toLowerCase()) ||
                             doc.assetId.toLowerCase().includes(search.toLowerCase());

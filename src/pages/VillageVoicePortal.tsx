@@ -1,667 +1,492 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import {
-  Mic, Loader2, Bot, Send, Keyboard, User, StopCircle, RefreshCw, CheckCircle2
-} from "lucide-react";
+/**
+ * VillageVoicePortal — Tamil-Only Agentic AI Voice Complaint System
+ *
+ * Strict conversational flow matching the required requirements:
+ * Name (1m) -> Complaint (3m) -> Area (2m) -> Ward (2m) -> Process -> Confirm -> Submit
+ */
+
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  Mic, RefreshCw, CheckCircle2, Bot,
+  Loader2, MapPin, User, AlertCircle
+} from "lucide-react";
 import { useComplaints } from "@/context/ComplaintsContext";
+import {
+  classifyComplaint, speakText, listenForSpeech,
+  isDontKnow, isConfirmation, PROMPTS,
+  type CollectedFields, type ClassifiedData
+} from "@/services/agentVoiceService";
 
-// ── Constants ─────────────────────────────────────────────────────────────────
+// ── Types ──────────────────────────────────────────────────────────────────
 
-const GEMINI_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || "";
-const GEMINI_URL = GEMINI_API_KEY
-  ? `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`
-  : "";
+type UIState = "idle" | "running" | "submitting" | "success" | "error";
 
-const LANGUAGES = {
-  TA: { code: "ta-IN", name: "Tamil" },
-  EN: { code: "en-IN", name: "English" },
-};
-
-type LangKey = keyof typeof LANGUAGES;
-type Step = 0 | 1 | 2 | 3 | 4; // 0=name,1=complaint,2=ward,3=phone,4=confirm
-
-interface Message {
+interface ChatMessage {
   id: number;
-  sender: "ai" | "user";
+  role: "ai" | "user";
   text: string;
   isTyping?: boolean;
 }
 
-interface Answers {
-  name: string;
-  complaint: string;
-  ward: string;
-  phone: string;
+// ── Sub-components ─────────────────────────────────────────────────────────
+
+function Waveform({ active }: { active: boolean }) {
+  return (
+    <div className="flex items-center justify-center gap-[3px] h-10">
+      {Array.from({ length: 12 }).map((_, i) => (
+        <div
+          key={i}
+          className={`rounded-full transition-all duration-200 ${active ? "bg-white" : "bg-white/30"}`}
+          style={{
+            width: "3px",
+            height: active ? `${8 + Math.sin((i / 12) * Math.PI * 2) * 16 + 8}px` : "4px",
+            animation: active
+              ? `agentWave 0.8s ease-in-out ${(i * 0.07).toFixed(2)}s infinite alternate`
+              : "none",
+          }}
+        />
+      ))}
+    </div>
+  );
 }
 
-// ── Scripted Questions (local fallback, always reliable) ──────────────────────
-
-const Q = {
-  TA: [
-    "வணக்கம்! நான் உங்கள் புகார் பதிவு உதவியாளர். உங்கள் பெயரை சொல்லுங்கள்.",
-    (name: string) => `நன்றி ${name}! உங்கள் புகாரை விவரிக்கவும். என்ன பிரச்சனை உள்ளது?`,
-    (complaint: string) => `சரி, "${complaint.substring(0, 30)}..." என்று பதிவு செய்தேன். உங்கள் வார்டு எண் அல்லது பகுதி பெயரை சொல்லுங்கள்.`,
-    (ward: string) => `${ward} பதிவு செய்யப்பட்டது. இப்போது உங்கள் மொபைல் எண்ணை வழங்கவும்.`,
-    (a: Answers) => `உறுதிப்படுத்தல்:\nபெயர்: ${a.name}\nபுகார்: ${a.complaint}\nவார்டு: ${a.ward}\nமொபைல்: ${a.phone}\n\nசரியா? "ஆம்" அல்லது "இல்லை" என்று சொல்லுங்கள்.`,
-  ],
-  EN: [
-    "Hello! I'm your complaint registration assistant. Please tell me your name.",
-    (name: string) => `Thank you ${name}! Please describe your complaint. What is the issue?`,
-    (complaint: string) => `Got it — "${complaint.substring(0, 30)}...". Now tell me your ward number or area name.`,
-    (ward: string) => `Recorded: ${ward}. Please provide your mobile number.`,
-    (a: Answers) => `Confirmation:\nName: ${a.name}\nComplaint: ${a.complaint}\nWard: ${a.ward}\nMobile: ${a.phone}\n\nIs this correct? Say "Yes" or "No".`,
-  ],
-};
-
-// ── Gemini AI (optional enhancement) ─────────────────────────────────────────
-
-async function tryGemini(history: { role: string; parts: { text: string }[] }[]): Promise<string | null> {
-  if (!GEMINI_URL) return null;
-  try {
-    const res = await fetch(GEMINI_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        system_instruction: {
-          parts: [{
-            text: `You are a civic grievance assistant. You are currently at a specific step in collecting: name, complaint description, ward/area, and phone number. 
-            Acknowledge the user's answer warmly in 1 short sentence only. Do NOT ask any questions — just acknowledge. 
-            Respond in the SAME language as the user (Tamil or English). Keep it under 15 words.`
-          }]
-        },
-        contents: history.slice(-3),
-        generationConfig: { temperature: 0.7, maxOutputTokens: 60 },
-      }),
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || null;
-  } catch {
-    return null;
-  }
+function ThinkingDots() {
+  return (
+    <div className="flex gap-1.5 items-center py-1">
+      {[0, 150, 300].map((d) => (
+        <div
+          key={d}
+          className="w-2.5 h-2.5 rounded-full bg-white/70"
+          style={{ animation: `bounce 1.2s ease-in-out ${d}ms infinite` }}
+        />
+      ))}
+    </div>
+  );
 }
 
-// ── Entity Extraction (local) ─────────────────────────────────────────────────
-
-function extractName(text: string): string {
-  const enMatch = text.match(/(?:my name is|i am|this is|name is)\s+([A-Za-z][a-z]+(?:\s+[A-Za-z][a-z]+)?)/i);
-  if (enMatch) return enMatch[1].trim();
-  const taMatch = text.match(/(?:என் பெயர்|பெயர்|நான்)\s+([^\s,।]+)/);
-  if (taMatch) return taMatch[1].trim();
-  // Fall back to first 1-3 words
-  const words = text.trim().split(/\s+/).slice(0, 3).join(" ");
-  return words || text.trim();
+function AiMsg({ text, isTyping }: { text: string; isTyping?: boolean }) {
+  return (
+    <div className="flex w-full justify-start animate-in slide-in-from-bottom-2 fade-in duration-300">
+      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mr-3 shrink-0 border border-white/10 shadow-lg">
+        <Bot className="w-5 h-5 text-white" />
+      </div>
+      <div className="max-w-[80%] rounded-2xl rounded-bl-sm px-5 py-3.5 bg-white/10 backdrop-blur-md border border-white/10 text-white text-base font-medium leading-relaxed">
+        {isTyping ? <ThinkingDots /> : <p className="whitespace-pre-wrap">{text}</p>}
+      </div>
+    </div>
+  );
 }
 
-function extractPhone(text: string): string {
-  const m = text.match(/(?:\+91|91)?\s*([6-9]\d{9})/);
-  return m ? m[1] : text.replace(/\D/g, "").slice(0, 10) || text.trim();
+function UserMsg({ text, interim }: { text: string; interim?: boolean }) {
+  return (
+    <div className="flex w-full justify-end animate-in slide-in-from-bottom-2 fade-in duration-300">
+      <div className={`max-w-[80%] rounded-2xl rounded-br-sm px-5 py-3.5 bg-indigo-600/90 border border-indigo-500/50 text-white text-base font-medium leading-relaxed ${interim ? 'opacity-70 italic' : ''}`}>
+        <p className="whitespace-pre-wrap">{text || "..."}</p>
+      </div>
+    </div>
+  );
 }
 
-function extractWard(text: string): string {
-  const m = text.match(/(?:ward|வார்டு|வார்ட்)[^\d]*(\d+)/i) || text.match(/(\d+)\s*(?:ward|வார்டு)/i);
-  if (m) return `Ward ${m[1]}`;
-  return text.trim();
+function SuccessCard({ id, onNew }: { id: string; onNew: () => void }) {
+  return (
+    <div className="w-full max-w-xs mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden text-center animate-in zoom-in-90 fade-in duration-500">
+      <div className="bg-gradient-to-b from-emerald-400 to-emerald-500 px-6 pt-8 pb-6">
+        <CheckCircle2 className="w-16 h-16 text-white mx-auto mb-3" strokeWidth={1.5} />
+        <h2 className="text-white font-black text-xl">வெற்றிகரமாக பதிவு!</h2>
+      </div>
+      <div className="px-6 py-5">
+        <p className="text-gray-500 text-sm font-semibold mb-2">பதிவு எண்</p>
+        <div className="bg-emerald-50 border-2 border-emerald-200 rounded-2xl px-4 py-3 mb-5">
+          <p className="text-emerald-700 font-black text-2xl tracking-widest font-mono">{id}</p>
+        </div>
+        <button
+          onClick={onNew}
+          className="w-full py-3 bg-[#1e3a57] hover:bg-[#152d45] text-white rounded-2xl font-black text-sm uppercase tracking-wider transition-all"
+        >
+          மீண்டும் புகார் சொல்லுங்கள்
+        </button>
+      </div>
+    </div>
+  );
 }
 
-function isYes(text: string): boolean {
-  const t = text.toLowerCase();
-  return ["yes", "ஆம்", "ஆம", "சரி", "ok", "okay", "ஓகே", "யெஸ்", "correct", "confirm", "right", "ஆமா"].some(w => t.includes(w));
-}
+// ── Main Component ─────────────────────────────────────────────────────────
 
-// ── Component ─────────────────────────────────────────────────────────────────
+let _msgId = 0;
 
 export default function VillageVoicePortal() {
   const navigate = useNavigate();
   const { addComplaint } = useComplaints();
 
-  const [lang, setLang] = useState<LangKey>("TA");
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [inputText, setInputText] = useState("");
-  const [liveText, setLiveText] = useState("");
-  const [isRecording, setIsRecording] = useState(false);
-  const [isBusy, setIsBusy] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [submittedId, setSubmittedId] = useState("");
-  const [step, setStep] = useState<Step>(0);
-  const [answers, setAnswers] = useState<Answers>({ name: "", complaint: "", ward: "", phone: "" });
+  const [uiState, setUiState] = useState<UIState>("idle");
+  const [isListeningUI, setIsListeningUI] = useState(false);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [interimText, setInterimText] = useState("");
+  const [successId, setSuccessId] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
 
-  const msgIdRef = useRef(0);
-  const nextId = () => ++msgIdRef.current;
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
-  const streamRef = useRef<MediaStream | null>(null);
-  const recognitionRef = useRef<any>(null);
-  const recogActiveRef = useRef(false);
-  const synthRef = useRef(window.speechSynthesis);
-  const historyRef = useRef<{ role: string; parts: { text: string }[] }[]>([]);
-  const stepRef = useRef<Step>(0);
-  const answersRef = useRef<Answers>({ name: "", complaint: "", ward: "", phone: "" });
+  const abortRef = useRef(false);
 
-  // ── Setup ──────────────────────────────────────────────────────────────────
-
-  useEffect(() => {
-    synthRef.current.getVoices();
-    synthRef.current.onvoiceschanged = () => synthRef.current.getVoices();
-
-    const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (SpeechRecognitionAPI) {
-      const rec = new SpeechRecognitionAPI();
-      rec.continuous = true;
-      rec.interimResults = true;
-      rec.onstart = () => { recogActiveRef.current = true; };
-      rec.onend = () => { recogActiveRef.current = false; };
-      rec.onresult = (e: any) => {
-        let t = "";
-        for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript;
-        setLiveText(t);
-      };
-      rec.onerror = () => {};
-      recognitionRef.current = rec;
-    }
-    return () => {
-      cleanupRecording();
-      try { synthRef.current.cancel(); } catch (_) {}
-    };
-  }, []);
-
-  useEffect(() => {
-    if (recognitionRef.current) recognitionRef.current.lang = LANGUAGES[lang].code;
-  }, [lang]);
-
+  // Auto-scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, liveText]);
+  }, [messages, interimText, uiState]);
 
-  // ── Speech ─────────────────────────────────────────────────────────────────
+  // ── Stable message adders ──────────────────────────────────────────────
+  const pushAi = useCallback((text: string) => {
+    setMessages(prev => [...prev, { id: ++_msgId, role: "ai", text }]);
+  }, []);
 
-  const speak = useCallback((text: string, onEnd?: () => void) => {
-    try { synthRef.current.cancel(); } catch (_) {}
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = LANGUAGES[lang].code;
-    utter.rate = 0.9;
-    let fired = false;
-    const done = () => { if (!fired) { fired = true; onEnd?.(); } };
-    utter.onend = done;
-    utter.onerror = done;
-    const guard = setTimeout(done, Math.max(3000, text.length * 80));
-    utter.addEventListener("end", () => clearTimeout(guard));
-    utter.addEventListener("error", () => clearTimeout(guard));
-    try { synthRef.current.speak(utter); } catch (_) { done(); }
-  }, [lang]);
+  const pushUser = useCallback((text: string) => {
+    setMessages(prev => [...prev, { id: ++_msgId, role: "user", text }]);
+  }, []);
 
-  // ── Recording ───────────────────────────────────────────────────────────────
+  const pushTyping = useCallback(() => {
+    const id = ++_msgId;
+    setMessages(prev => [...prev, { id, role: "ai", text: "", isTyping: true }]);
+    return id;
+  }, []);
 
-  const cleanupRecording = () => {
-    if (recognitionRef.current && recogActiveRef.current) {
-      try { recognitionRef.current.stop(); } catch (_) {}
-    }
-    streamRef.current?.getTracks().forEach((t) => t.stop());
-    streamRef.current = null;
-  };
+  const resolveTyping = useCallback((id: number) => {
+    setMessages(prev => prev.filter(m => m.id !== id));
+  }, []);
 
-  const startRecording = useCallback(async () => {
-    if (isRecording) return;
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      streamRef.current = stream;
-      chunksRef.current = [];
-      setLiveText("");
-      if (recognitionRef.current && !recogActiveRef.current) {
-        try {
-          recognitionRef.current.lang = LANGUAGES[lang].code;
-          recognitionRef.current.start();
-        } catch (_) {}
+  // ── Single imperative async runner ─────────────────────────────────────
+  const runFlow = useCallback(async () => {
+    abortRef.current = false;
+    setUiState("running");
+    setMessages([]);
+    setInterimText("");
+    setSuccessId("");
+    setErrorMsg("");
+    _msgId = 0;
+
+    const fields: CollectedFields = { name: "", complaint: "", area: "", ward: "" };
+
+    // Smart listen wrapper
+    const listen = async (maxMs: number) => {
+      setIsListeningUI(true);
+      setInterimText("");
+      const resp = await listenForSpeech({
+        maxMs,
+        silenceAfterMs: 3000,
+        onInterim: (text) => setInterimText(text)
+      });
+      setIsListeningUI(false);
+      setInterimText("");
+      return resp;
+    };
+
+    // Helper: speak + listen with one retry
+    const ask = async (prompt: string, timeoutPrompt: string, fieldKey: keyof CollectedFields, maxMs: number): Promise<boolean> => {
+      pushAi(prompt);
+      await speakText(prompt);
+      if (abortRef.current) return false;
+
+      let resp = await listen(maxMs);
+      if (abortRef.current) return false;
+
+      if (!resp) {
+        pushAi(timeoutPrompt);
+        await speakText(timeoutPrompt);
+        if (abortRef.current) return false;
+
+        resp = await listen(maxMs);
+        if (abortRef.current) return false;
       }
-      const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus") ? "audio/webm;codecs=opus" : "audio/webm";
-      const mr = new MediaRecorder(stream, { mimeType });
-      mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
-      mr.start(250);
-      mediaRecorderRef.current = mr;
-      setIsRecording(true);
-    } catch {
-      addAIMsg(lang === "TA" ? "மைக்ரோஃபோன் அனுமதி தேவை. தட்டச்சு செய்து பயன்படுத்தவும்." : "Mic access denied. Please type instead.");
-    }
-  }, [lang, isRecording]);
 
-  const stopRecording = useCallback(() => {
-    if (recognitionRef.current && recogActiveRef.current) {
-      try { recognitionRef.current.stop(); } catch (_) {}
-    }
-    const mr = mediaRecorderRef.current;
-    const capturedLiveText = liveText;
-    setIsRecording(false);
-    if (!mr || mr.state === "inactive") {
-      streamRef.current?.getTracks().forEach((t) => t.stop());
+      if (!resp) return false;
+
+      pushUser(resp);
+      fields[fieldKey] = resp;
+      return true;
+    };
+
+    // 1 & 2. Welcome & Ask Name (wait 1 min = 60000ms)
+    const nameOk = await ask(PROMPTS.welcome + " " + PROMPTS.ask_name, PROMPTS.name_timeout, "name", 60000);
+    if (!nameOk || abortRef.current) {
+      if (!abortRef.current) { setErrorMsg("பெயர் கேட்கவில்லை. மீண்டும் முயற்சிக்கவும்."); setUiState("error"); }
       return;
     }
-    mr.onstop = async () => {
-      streamRef.current?.getTracks().forEach((t) => t.stop());
-      const transcript = capturedLiveText.trim();
-      setLiveText("");
-      if (!transcript) {
-        addAIMsg(lang === "TA" ? "கேட்கவில்லை. மீண்டும் பேசவும் அல்லது தட்டச்சு செய்யவும்." : "Didn't catch that. Speak again or type.");
-        setTimeout(() => startRecording(), 1500);
-        return;
-      }
-      await handleUserInput(transcript);
-    };
-    try { mr.stop(); } catch (_) {}
-  }, [liveText, lang]);
 
-  // ── Message Helpers ────────────────────────────────────────────────────────
+    // 3. Ask Complaint (wait 3 min = 180000ms)
+    const complaintOk = await ask(PROMPTS.ask_complaint, PROMPTS.complaint_timeout, "complaint", 180000);
+    if (!complaintOk || abortRef.current) {
+      if (!abortRef.current) { setErrorMsg("புகார் கேட்கவில்லை. மீண்டும் முயற்சிக்கவும்."); setUiState("error"); }
+      return;
+    }
 
-  const addAIMsg = (text: string) =>
-    setMessages((p) => [...p, { id: nextId(), sender: "ai", text }]);
+    // 4. Ask Area (wait 2 min = 120000ms)
+    const areaOk = await ask(PROMPTS.ask_area, PROMPTS.area_timeout, "area", 120000);
+    if (!areaOk || abortRef.current) {
+      if (!abortRef.current) { setErrorMsg("பகுதி கேட்கவில்லை. மீண்டும் முயற்சிக்கவும்."); setUiState("error"); }
+      return;
+    }
 
-  const addUserMsg = (text: string) =>
-    setMessages((p) => [...p, { id: nextId(), sender: "user", text }]);
+    // 5. Ask Ward (wait 2 min = 120000ms)
+    pushAi(PROMPTS.ask_ward);
+    await speakText(PROMPTS.ask_ward);
+    if (abortRef.current) return;
 
-  const addTyping = () => {
-    const id = nextId();
-    setMessages((p) => [...p, { id, sender: "ai", text: "", isTyping: true }]);
-    return id;
-  };
+    let wardResp = await listen(120000);
+    if (abortRef.current) return;
 
-  const resolveTyping = (id: number, text: string) =>
-    setMessages((p) => p.map((m) => m.id === id ? { ...m, text, isTyping: false } : m));
+    if (!wardResp) {
+      pushAi(PROMPTS.ward_timeout);
+      await speakText(PROMPTS.ward_timeout);
+      if (abortRef.current) return;
+      wardResp = await listen(120000);
+    } else if (isDontKnow(wardResp)) {
+      pushUser(wardResp);
+      pushAi(PROMPTS.ask_ward_landmark);
+      await speakText(PROMPTS.ask_ward_landmark);
+      if (abortRef.current) return;
+      wardResp = await listen(120000);
+    }
 
-  // ── Core: Ask Question at Step ─────────────────────────────────────────────
+    if (abortRef.current) return;
+    if (!wardResp) {
+      if (!abortRef.current) { setErrorMsg("வார்டு கேட்கவில்லை. மீண்டும் முயற்சிக்கவும்."); setUiState("error"); }
+      return;
+    }
+    pushUser(wardResp);
+    fields.ward = wardResp;
 
-  const askQuestion = useCallback((s: Step, ans: Answers) => {
-    const qList = Q[lang];
-    let question = "";
-    if (s === 0) question = qList[0] as string;
-    else if (s === 1) question = (qList[1] as Function)(ans.name);
-    else if (s === 2) question = (qList[2] as Function)(ans.complaint);
-    else if (s === 3) question = (qList[3] as Function)(ans.ward);
-    else if (s === 4) question = (qList[4] as Function)(ans);
+    // Processing
+    pushAi(PROMPTS.processing);
+    await speakText(PROMPTS.processing);
+    if (abortRef.current) return;
 
-    const typingId = addTyping();
-    setTimeout(() => {
-      resolveTyping(typingId, question);
-      speak(question, () => {
-        setTimeout(() => startRecording(), 400);
+    const typingId = pushTyping();
+    let classified: ClassifiedData & { summary: string } | null = null;
+    try {
+      classified = await classifyComplaint(fields);
+      if (abortRef.current) return;
+    } catch {
+      resolveTyping(typingId);
+      if (!abortRef.current) { setErrorMsg("AI பிழை ஏற்பட்டது. மீண்டும் முயற்சிக்கவும்."); setUiState("error"); }
+      return;
+    }
+    resolveTyping(typingId);
+
+    // 6. Confirmation
+    const summaryPrompt = PROMPTS.buildSummary(fields);
+    pushAi(summaryPrompt);
+    await speakText(summaryPrompt);
+    if (abortRef.current) return;
+
+    pushAi(PROMPTS.ask_confirm);
+    await speakText(PROMPTS.ask_confirm);
+    if (abortRef.current) return;
+
+    let confirmResp = await listen(60000);
+    if (abortRef.current) return;
+
+    if (!confirmResp) {
+      pushAi(PROMPTS.retry);
+      await speakText(PROMPTS.retry);
+      if (abortRef.current) return;
+      confirmResp = await listen(60000);
+    }
+
+    if (abortRef.current) return;
+    if (!confirmResp) {
+      if (!abortRef.current) { setErrorMsg("பதில் கேட்கவில்லை. மீண்டும் முயற்சிக்கவும்."); setUiState("error"); }
+      return;
+    }
+
+    pushUser(confirmResp);
+
+    if (!isConfirmation(confirmResp)) {
+      // User said no, or something else. For now, abort or restart.
+      pushAi("நீங்கள் தகவல்களை உறுதிப்படுத்தவில்லை. மீண்டும் முதலிலிருந்து தொடங்குகிறேன்.");
+      await speakText("நீங்கள் தகவல்களை உறுதிப்படுத்தவில்லை. மீண்டும் முதலிலிருந்து தொடங்குகிறேன்.");
+      if (!abortRef.current) runFlow(); // restart
+      return;
+    }
+
+    // 7. Submit
+    setUiState("submitting");
+
+    try {
+      const id = await addComplaint({
+        citizen: fields.name || "Voice Citizen",
+        phone: "N/A",
+        ward: fields.ward || "Unknown",
+        issue: fields.complaint.substring(0, 60),
+        description: fields.complaint,
+        priority: classified.priority,
+        category: classified.category,
+        dept: classified.dept,
+        location: fields.area || classified.landmark,
+        notifPref: "None",
+        source: "voice",
       });
-    }, 500);
-  }, [lang, speak, startRecording]);
 
-  // ── Core: Handle User Input ────────────────────────────────────────────────
+      if (abortRef.current) return;
+      setSuccessId(id as string);
+      setUiState("success");
 
-  const handleUserInput = useCallback(async (text: string) => {
-    setIsBusy(true);
-    addUserMsg(text);
-    historyRef.current.push({ role: "user", parts: [{ text }] });
-
-    const currentStep = stepRef.current;
-    const currentAnswers = { ...answersRef.current };
-
-    // Extract the answer for this step
-    let newAnswers = { ...currentAnswers };
-    if (currentStep === 0) newAnswers.name = extractName(text);
-    else if (currentStep === 1) newAnswers.complaint = text.trim();
-    else if (currentStep === 2) newAnswers.ward = extractWard(text);
-    else if (currentStep === 3) newAnswers.phone = extractPhone(text);
-    else if (currentStep === 4) {
-      if (isYes(text)) {
-        // Submit complaint
-        const typingId = addTyping();
-        try {
-          const id = addComplaint({
-            citizen: newAnswers.name || "Voice User",
-            phone: newAnswers.phone || "N/A",
-            ward: newAnswers.ward || "Unknown",
-            issue: newAnswers.complaint,
-            description: newAnswers.complaint,
-            priority: "Medium",
-            notifPref: "None",
-            source: "voice",
-            autoAssignTo: "Field Officer",
-          });
-          const successMsg = lang === "TA"
-            ? `✅ புகார் வெற்றிகரமாக பதிவு செய்யப்பட்டது! புகார் எண்: ${id}`
-            : `✅ Complaint registered successfully! ID: ${id}`;
-          resolveTyping(typingId, successMsg);
-          speak(successMsg);
-          setSubmittedId(id as string);
-          setIsSubmitted(true);
-        } catch {
-          resolveTyping(typingId, lang === "TA" ? "பதிவு தோல்வியடைந்தது. மீண்டும் முயற்சிக்கவும்." : "Submission failed. Try again.");
-        }
-        setIsBusy(false);
-        return;
-      } else {
-        // Re-start
-        const restartMsg = lang === "TA" ? "சரி, மீண்டும் தொடங்குவோம்." : "Okay, let's start over.";
-        addAIMsg(restartMsg);
-        speak(restartMsg, () => {
-          const freshAnswers = { name: "", complaint: "", ward: "", phone: "" };
-          answersRef.current = freshAnswers;
-          stepRef.current = 0;
-          setAnswers(freshAnswers);
-          setStep(0);
-          setTimeout(() => askQuestion(0, freshAnswers), 800);
-        });
-        setIsBusy(false);
-        return;
-      }
+      const msg = PROMPTS.success(id as string);
+      pushAi(msg);
+      await speakText(msg);
+    } catch (err) {
+      if (abortRef.current) return;
+      setErrorMsg(String(err));
+      setUiState("error");
     }
+  }, [pushAi, pushUser, pushTyping, resolveTyping, addComplaint]);
 
-    answersRef.current = newAnswers;
-    setAnswers(newAnswers);
-
-    // Try Gemini for a warm acknowledgment (non-blocking, optional)
-    let ack = "";
-    const geminiAck = await tryGemini([
-      ...historyRef.current.slice(-4),
-    ]);
-    if (geminiAck) {
-      ack = geminiAck;
-      historyRef.current.push({ role: "model", parts: [{ text: ack }] });
-    }
-
-    // Show ack if we have one, then move to next step in 1 second
-    const nextStep = (currentStep + 1) as Step;
-    stepRef.current = nextStep;
-    setStep(nextStep);
-
-    if (ack && nextStep < 4) {
-      // Show Gemini ack, then ask next question in 1s
-      const ackId = addTyping();
-      setTimeout(() => {
-        resolveTyping(ackId, ack);
-        speak(ack, () => {
-          setTimeout(() => {
-            setIsBusy(false);
-            askQuestion(nextStep, newAnswers);
-          }, 1000);
-        });
-      }, 300);
-    } else {
-      // No ack, directly ask next question in 1s
-      setIsBusy(false);
-      setTimeout(() => askQuestion(nextStep, newAnswers), 1000);
-    }
-  }, [lang, speak, addComplaint, askQuestion]);
-
-  // ── Start Conversation ─────────────────────────────────────────────────────
-
-  const startConversation = useCallback(() => {
-    const fresh: Answers = { name: "", complaint: "", ward: "", phone: "" };
-    answersRef.current = fresh;
-    stepRef.current = 0;
-    historyRef.current = [];
-    msgIdRef.current = 0;
+  // ── Reset ──────────────────────────────────────────────────────────────
+  const handleReset = useCallback(() => {
+    abortRef.current = true;
+    try { window.speechSynthesis?.cancel(); } catch { /* ignore */ }
+    setIsListeningUI(false);
+    setUiState("idle");
     setMessages([]);
-    setAnswers(fresh);
-    setStep(0);
-    setIsSubmitted(false);
-    setSubmittedId("");
-    setIsBusy(false);
-    askQuestion(0, fresh);
-  }, [askQuestion]);
+    setInterimText("");
+    _msgId = 0;
+  }, []);
 
-  // ── Text Submit ────────────────────────────────────────────────────────────
+  const isActive = uiState !== "idle";
 
-  const handleTextSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const text = inputText.trim();
-    if (!text) return;
-    setInputText("");
-    if (messages.length === 0) { startConversation(); return; }
-    if (isBusy || isSubmitted) return;
-    if (isRecording) stopRecording();
-    await handleUserInput(text);
-  };
-
-  // ── Reset ──────────────────────────────────────────────────────────────────
-
-  const reset = () => {
-    cleanupRecording();
-    try { synthRef.current.cancel(); } catch (_) {}
-    setMessages([]);
-    msgIdRef.current = 0;
-    setLiveText("");
-    setIsRecording(false);
-    setIsBusy(false);
-    setIsSubmitted(false);
-    setSubmittedId("");
-    setStep(0);
-    setAnswers({ name: "", complaint: "", ward: "", phone: "" });
-    answersRef.current = { name: "", complaint: "", ward: "", phone: "" };
-    stepRef.current = 0;
-    historyRef.current = [];
-  };
-
-  // ── Mic Button ─────────────────────────────────────────────────────────────
-
-  const handleMicClick = () => {
-    if (isRecording) { stopRecording(); return; }
-    if (isSubmitted) { reset(); return; }
-    if (messages.length === 0) { startConversation(); return; }
-    if (!isBusy) startRecording();
-  };
-
-  // ── Step indicator ─────────────────────────────────────────────────────────
-
-  const stepNames = lang === "TA"
-    ? ["பெயர்", "புகார்", "வார்டு", "மொபைல்", "உறுதி"]
-    : ["Name", "Complaint", "Ward", "Mobile", "Confirm"];
-
+  // ── Render ─────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#A8CDE2] via-[#8EBCD8] to-[#6BA3C4] flex flex-col font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex flex-col font-sans relative overflow-hidden">
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-600/20 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-600/20 rounded-full blur-[100px] pointer-events-none" />
+
+      <style>{`
+        @keyframes agentWave {
+          0%   { height: 4px; }
+          100% { height: 32px; }
+        }
+        @keyframes pulseRing {
+          0%   { transform: scale(1); opacity: 0.8; }
+          100% { transform: scale(1.5); opacity: 0; }
+        }
+      `}</style>
+
       {/* Header */}
-      <header className="h-16 flex items-center justify-between px-5 shrink-0 bg-white/30 backdrop-blur-md border-b border-white/20">
+      <header className="h-16 flex items-center justify-between px-5 bg-slate-900/40 backdrop-blur-xl border-b border-white/10 shrink-0 z-10">
         <button
-          onClick={() => navigate("/")}
-          className="px-4 py-1.5 bg-white/40 hover:bg-white/60 text-[#2B4B6F] rounded-full font-black text-sm tracking-widest uppercase shadow-sm transition-all"
+          onClick={() => navigate(-1)}
+          className="px-4 py-2 rounded-full bg-white/5 hover:bg-white/15 text-white/90 text-xs font-bold uppercase tracking-widest transition-all border border-white/10"
         >
-          Back
+          ← திரும்பு
         </button>
         <div className="flex flex-col items-center">
-          <span className="font-black text-[#2B4B6F] uppercase tracking-widest text-sm">
-            {lang === "TA" ? "வாய்மொழி போர்ட்டல்" : "Voice Portal"}
+          <span className="text-white font-black text-sm uppercase tracking-widest flex items-center gap-2">
+            <Bot className="w-4 h-4 text-indigo-400" />
+            அரசு புகார் மையம்
           </span>
-          <span className="text-[10px] text-[#3A5D7C] font-semibold opacity-60">Gemini AI</span>
+          <span className="text-indigo-300/60 text-[9px] font-bold uppercase tracking-widest mt-0.5">குரல் மூலம் பதிவு செய்யுங்கள்</span>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setLang((l) => (l === "TA" ? "EN" : "TA"))}
-            className="px-3 py-1.5 bg-white/40 hover:bg-white/60 text-[#2B4B6F] rounded-full font-black text-xs uppercase shadow-sm transition-all"
-          >
-            {lang === "TA" ? "ENG" : "தமிழ்"}
-          </button>
-          {messages.length > 0 && (
-            <button onClick={reset} className="p-2 bg-white/40 hover:bg-white/60 text-[#2B4B6F] rounded-full transition-all" title="Restart">
-              <RefreshCw className="w-4 h-4" />
+        <div className="w-20 flex justify-end">
+          {isActive && (
+            <button
+              onClick={handleReset}
+              className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white/60 transition-all"
+              title="Restart"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
       </header>
 
-      {/* Step Progress */}
-      {messages.length > 0 && !isSubmitted && (
-        <div className="flex items-center justify-center gap-1 py-2 px-4 bg-white/20 backdrop-blur-sm border-b border-white/10">
-          {stepNames.map((name, i) => (
-            <div key={i} className="flex items-center gap-1">
-              <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all ${
-                i < step ? "bg-emerald-400 text-white" : i === step ? "bg-[#2B4B6F] text-white" : "bg-white/30 text-[#3A5D7C]"
-              }`}>
-                {i < step ? "✓" : i + 1} {name}
-              </div>
-              {i < stepNames.length - 1 && <div className="w-3 h-px bg-white/40" />}
-            </div>
-          ))}
-        </div>
-      )}
+      <main className="flex-1 flex flex-col overflow-hidden z-10">
 
-      {/* Chat Area */}
-      <main className="flex-1 flex flex-col w-full max-w-2xl mx-auto overflow-hidden relative pb-36">
-        <div className="flex-1 w-full overflow-y-auto px-4 pt-6 space-y-4 scroll-smooth">
-
-          {/* Welcome */}
-          {messages.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-16 animate-in fade-in duration-700">
-              <div className="w-28 h-28 bg-white/40 backdrop-blur-md rounded-full flex items-center justify-center mb-6 shadow-xl border border-white/60">
-                <Bot className="w-14 h-14 text-[#2B4B6F]" />
-              </div>
-              <h1 className="text-2xl font-black text-[#2B4B6F] mb-2 text-center">
-                {lang === "TA" ? "AI புகார் உதவியாளர்" : "AI Grievance Assistant"}
-              </h1>
-              <p className="text-sm font-semibold text-[#3A5D7C] text-center max-w-xs mb-6 opacity-80">
-                {lang === "TA"
-                  ? "தமிழ் அல்லது ஆங்கிலத்தில் பேசுங்கள் — AI தானாக புகாரை பதிவு செய்யும்"
-                  : "Speak in Tamil or English — AI will register your complaint automatically"}
-              </p>
-              <button
-                onClick={startConversation}
-                className="px-10 py-4 bg-[#2B4B6F] hover:bg-[#1e3a57] text-white rounded-full font-black tracking-widest uppercase text-base shadow-2xl transition-all hover:scale-105 active:scale-95 flex items-center gap-3"
-              >
-                <Mic className="w-5 h-5" />
-                {lang === "TA" ? "தொடங்க" : "Start"}
-              </button>
-            </div>
-          )}
-
-          {/* Messages */}
-          {messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`flex w-full ${msg.sender === "user" ? "justify-end" : "justify-start"} animate-in slide-in-from-bottom-2 fade-in duration-300`}
-            >
-              {msg.sender === "ai" && (
-                <div className="w-9 h-9 rounded-full bg-[#2B4B6F] flex items-center justify-center mr-3 shrink-0 mt-1 shadow-md">
-                  <Bot className="w-5 h-5 text-white" />
-                </div>
-              )}
-              <div className={`max-w-[78%] rounded-[1.5rem] px-5 py-3.5 shadow-md text-left text-[15px] leading-relaxed ${
-                msg.sender === "user"
-                  ? "bg-[#2B4B6F] text-white rounded-br-sm"
-                  : "bg-white text-[#2B4B6F] rounded-bl-sm font-semibold"
-              }`}>
-                {msg.isTyping ? (
-                  <div className="flex items-center gap-1.5 py-1">
-                    {[0, 150, 300].map((d) => (
-                      <div key={d} className="w-2 h-2 rounded-full bg-[#50A7B1] animate-bounce" style={{ animationDelay: `${d}ms` }} />
-                    ))}
-                  </div>
-                ) : (
-                  <p className="whitespace-pre-wrap">{msg.text}</p>
-                )}
-              </div>
-              {msg.sender === "user" && (
-                <div className="w-9 h-9 rounded-full bg-[#5B88A8] flex items-center justify-center ml-3 shrink-0 mt-1 shadow-md">
-                  <User className="w-5 h-5 text-white" />
-                </div>
-              )}
-            </div>
-          ))}
-
-          {/* Live caption */}
-          {isRecording && liveText && (
-            <div className="flex w-full justify-end animate-in fade-in">
-              <div className="max-w-[78%] bg-[#5B88A8]/60 text-white rounded-[1.5rem] rounded-br-sm px-5 py-3 shadow-md text-[14px]">
-                <p className="italic opacity-80">{liveText}<span className="animate-pulse">…</span></p>
-              </div>
-              <div className="w-9 h-9 rounded-full bg-[#5B88A8]/50 flex items-center justify-center ml-3 shrink-0 mt-1">
-                <User className="w-5 h-5 text-white opacity-60" />
-              </div>
-            </div>
-          )}
-
-          {/* Success card */}
-          {isSubmitted && submittedId && (
-            <div className="flex justify-center animate-in fade-in zoom-in duration-500 mt-4">
-              <div className="bg-white rounded-2xl p-6 shadow-xl text-center max-w-xs border border-emerald-100">
-                <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
-                <p className="font-black text-emerald-700 text-base mb-1">
-                  {lang === "TA" ? "வெற்றிகரமாக பதிவு!" : "Successfully Submitted!"}
-                </p>
-                <p className="text-emerald-600 font-bold text-sm bg-emerald-50 rounded-lg px-3 py-1.5 mb-4">
-                  ID: {submittedId}
-                </p>
-                <button
-                  onClick={reset}
-                  className="px-6 py-2 bg-[#2B4B6F] hover:bg-[#1e3a57] text-white rounded-full font-black text-sm uppercase tracking-wider transition-all"
-                >
-                  {lang === "TA" ? "புதிய புகார்" : "New Complaint"}
-                </button>
-              </div>
-            </div>
-          )}
-
-          <div ref={messagesEndRef} className="h-4" />
-        </div>
-
-        {/* Bottom bar */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[#6BA3C4] via-[#8EBCD8]/95 to-transparent pb-6">
-          {/* Status label */}
-          <p className="text-center text-[11px] font-black text-[#2B4B6F] uppercase tracking-widest mb-3 min-h-[1rem] opacity-75">
-            {isRecording
-              ? (lang === "TA" ? "பேசுங்கள் — நிறுத்த அழுத்தவும்" : "Speak — tap to stop")
-              : isBusy
-              ? (lang === "TA" ? "AI சிந்திக்கிறது..." : "AI thinking...")
-              : isSubmitted
-              ? (lang === "TA" ? "வெற்றிகரமாக பதிவு!" : "Successfully submitted!")
-              : messages.length === 0
-              ? (lang === "TA" ? "தொடங்க அழுத்தவும்" : "Tap to start")
-              : (lang === "TA" ? "மைக் அழுத்தி பேசவும் அல்லது தட்டச்சு செய்யவும்" : "Tap mic to speak or type")}
-          </p>
-
-          <div className="w-full max-w-2xl mx-auto bg-white/95 backdrop-blur-xl rounded-[2.5rem] p-2.5 shadow-2xl border border-white flex items-center gap-3">
-            <button
-              onClick={handleMicClick}
-              disabled={isBusy && !isRecording}
-              aria-label={isRecording ? "Stop" : "Record"}
-              className={`w-14 h-14 shrink-0 rounded-full flex items-center justify-center transition-all shadow-md ${
-                isRecording
-                  ? "bg-red-500 hover:bg-red-600 shadow-red-500/40 animate-pulse"
-                  : isBusy
-                  ? "bg-gray-300 cursor-not-allowed"
-                  : isSubmitted
-                  ? "bg-emerald-500 hover:bg-emerald-600"
-                  : "bg-[#2B4B6F] hover:bg-[#1e3a57] hover:scale-105"
-              }`}
-            >
-              {isRecording ? (
-                <StopCircle className="w-6 h-6 text-white" />
-              ) : isBusy ? (
-                <Loader2 className="w-6 h-6 text-white animate-spin" />
-              ) : isSubmitted ? (
-                <RefreshCw className="w-6 h-6 text-white" />
-              ) : (
-                <Mic className="w-6 h-6 text-white" />
-              )}
-            </button>
-
-            <form
-              onSubmit={handleTextSubmit}
-              className="flex-1 flex items-center bg-gray-100 rounded-full border border-gray-200 px-5 py-3 focus-within:border-[#50A7B1] focus-within:ring-4 focus-within:ring-[#50A7B1]/20 transition-all"
-            >
-              <Keyboard className="w-4 h-4 text-gray-400 mr-3 shrink-0" />
-              <input
-                type="text"
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                disabled={isSubmitted}
-                placeholder={
-                  isRecording
-                    ? (lang === "TA" ? "பேசுங்கள்..." : "Listening...")
-                    : (lang === "TA" ? "இங்கே தட்டச்சு செய்யவும்..." : "Type your message...")
-                }
-                className="flex-1 bg-transparent border-none focus:outline-none text-[#2B4B6F] font-semibold placeholder:font-medium placeholder:text-gray-400 disabled:opacity-50 text-[15px]"
+        {/* IDLE */}
+        {uiState === "idle" && (
+          <div className="flex-1 flex flex-col items-center justify-center px-6 text-center gap-10 animate-in fade-in duration-700">
+            <div className="relative">
+              <div className="absolute inset-0 rounded-full bg-indigo-500/20 animate-ping scale-[1.3] blur-sm" />
+              <div
+                className="absolute inset-0 rounded-full bg-blue-500/10 scale-[1.8]"
+                style={{ animation: "pulseRing 2.5s ease-out 0.5s infinite" }}
               />
-              <button
-                type="submit"
-                disabled={!inputText.trim() || isSubmitted}
-                className="ml-2 p-2.5 rounded-full bg-[#50A7B1] text-white disabled:opacity-40 disabled:bg-gray-400 hover:bg-[#3D8F9A] transition-colors hover:scale-105 active:scale-95"
-              >
-                <Send className="w-4 h-4" />
-              </button>
-            </form>
+              <div className="w-44 h-44 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-2xl shadow-indigo-500/40 relative z-10 border border-white/10">
+                <Mic className="w-24 h-24 text-white drop-shadow-md" strokeWidth={1.5} />
+              </div>
+            </div>
+            <div>
+              <h1 className="text-white font-black text-4xl mb-4 leading-tight">
+                பேசுங்கள், நாங்கள் கேட்கிறோம்
+              </h1>
+              <p className="text-indigo-200 text-lg font-medium max-w-sm mx-auto leading-relaxed">
+                தண்ணீர், சாலை, குப்பை, விளக்கு — எந்த பிரச்சனையாக இருந்தாலும் சொல்லுங்கள்.
+              </p>
+            </div>
+            <button
+              onClick={runFlow}
+              className="w-72 py-5 bg-white hover:bg-gray-100 text-indigo-900 rounded-full font-black text-xl uppercase tracking-wider shadow-[0_0_40px_rgba(255,255,255,0.3)] transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-3"
+            >
+              <Mic className="w-7 h-7 text-indigo-600" />
+              புகார் சொல்லுங்கள்
+            </button>
           </div>
-        </div>
+        )}
+
+        {/* RUNNING */}
+        {(uiState === "running" || uiState === "submitting") && (
+          <div className="flex-1 flex flex-col min-h-0">
+            <div className="flex-1 overflow-y-auto px-4 py-5 space-y-4">
+              {messages.map((msg) =>
+                msg.role === "ai"
+                  ? <AiMsg key={msg.id} text={msg.text} isTyping={msg.isTyping} />
+                  : <UserMsg key={msg.id} text={msg.text} />
+              )}
+              {interimText && <UserMsg text={interimText} interim />}
+              {uiState === "submitting" && <AiMsg text="பதிவு செய்யப்படுகிறது..." />}
+              <div ref={messagesEndRef} className="h-20" />
+            </div>
+
+            {/* Listening bar */}
+            {isListeningUI && (
+              <div className="bg-slate-900/70 backdrop-blur-2xl border-t border-white/10 px-6 py-5 flex flex-col items-center gap-3 shrink-0">
+                <div className="flex items-center gap-5">
+                  <div className="w-12 h-12 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 animate-pulse flex items-center justify-center">
+                      <Mic className="w-4 h-4 text-white" />
+                    </div>
+                  </div>
+                  <Waveform active={true} />
+                </div>
+                <p className="text-indigo-200 text-sm font-semibold animate-pulse">
+                  கேட்கிறோம்... சொல்லுங்கள்
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* SUCCESS */}
+        {uiState === "success" && (
+          <div className="flex-1 flex items-center justify-center p-6 animate-in fade-in">
+            <SuccessCard id={successId} onNew={handleReset} />
+          </div>
+        )}
+
+        {/* ERROR */}
+        {uiState === "error" && (
+          <div className="flex-1 flex flex-col items-center justify-center px-6 text-center animate-in zoom-in-95 fade-in">
+            <div className="w-20 h-20 rounded-full bg-red-500/20 flex items-center justify-center mb-6">
+              <AlertCircle className="w-10 h-10 text-red-400" />
+            </div>
+            <h2 className="text-xl font-bold text-white mb-3">சரியாக கேட்கவில்லை</h2>
+            <p className="text-red-200/80 max-w-sm mb-8">{errorMsg}</p>
+            <button
+              onClick={handleReset}
+              className="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full font-bold uppercase tracking-wider transition-all"
+            >
+              மீண்டும் பேசுங்கள்
+            </button>
+          </div>
+        )}
+
       </main>
     </div>
   );

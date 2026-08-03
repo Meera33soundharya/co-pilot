@@ -416,6 +416,9 @@ export const translations = {
 
 // ── Context ───────────────────────────────────────────────────────────────────
 interface LanguageContextType {
+    language?: string;
+    detectAndSetLanguage?: (text: string) => void;
+    langTag?: string;
     lang: Lang;
     setLang: (l: Lang) => void;
     t: (key: keyof typeof translations.en) => string;

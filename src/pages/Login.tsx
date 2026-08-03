@@ -77,7 +77,7 @@ export default function Login() {
       {/* ══ LEFT PANEL — 55% — Robot hand image ══════════════════════ */}
       <div className="hidden lg:block" style={{ width: "55%", flexShrink: 0, position: "relative", background: "#000" }}>
         <img
-          src="/robot_hand.png"
+          src="/images/energy_hands.png"
           alt="AI Robot Hand with Energy Ball"
           style={{
             position: "absolute",

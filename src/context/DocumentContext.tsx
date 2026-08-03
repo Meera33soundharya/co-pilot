@@ -252,7 +252,7 @@ export function DocumentProvider({ children }: { children: ReactNode }) {
                         type: "JPG",
                         size: "2.1 MB",
                         date: new Date(comp.resolutionDate || Date.now()).toLocaleDateString("en-IN", { day: 'numeric', month: 'short', year: 'numeric' }),
-                        uploadTimestamp: comp.resolutionDate || Date.now(),
+                        uploadTimestamp: comp.resolutionDate ? new Date(comp.resolutionDate).getTime() : Date.now(),
                         category: "Field Officer Reports",
                         status: "approved",
                         access: "public",
@@ -271,8 +271,9 @@ export function DocumentProvider({ children }: { children: ReactNode }) {
     });
 
     // Merge closedDocs from ComplaintsContext (Resolution Reports PDF)
-    closedDocs.forEach(cd => {
-        if (!allDocuments.find(d => d.id === cd.assetId)) {
+    if (closedDocs) {
+        closedDocs.forEach(cd => {
+            if (!allDocuments.find(d => d.id === cd.assetId)) {
             allDocuments.push({
                 id: cd.assetId,
                 name: cd.name,
@@ -283,9 +284,9 @@ export function DocumentProvider({ children }: { children: ReactNode }) {
                 category: "Resolution Reports",
                 status: cd.status as DocumentStatus || "approved",
                 access: cd.access as any || "public",
-                dept: cd.dept,
-                summary: cd.summary,
-                uploader: "System Auto-Gen",
+                dept: cd.dept || "Cross-Department",
+                summary: cd.summary || "System generated resolution report",
+                uploader: cd.uploader || "System Auto-Gen",
                 complaintId: cd.complaintId,
                 versions: [],
                 fileData: cd.resolutionProof || "",
@@ -294,6 +295,7 @@ export function DocumentProvider({ children }: { children: ReactNode }) {
             });
         }
     });
+}
 
     // Apply any dynamic updates
     const finalAllDocuments = allDocuments.map(doc => {
