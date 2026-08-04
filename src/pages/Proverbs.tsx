@@ -1,4 +1,4 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
+import DashboardLayout from "@/components/DashboardLayout";
 import { Quote, Sparkles, MessageSquare, History, Search, RefreshCw, Share2, Heart, Languages, Lightbulb } from "lucide-react";
 import { useState } from "react";
 
@@ -39,14 +39,14 @@ export default function Proverbs() {
                         </div>
 
                         <div className={`transition-all duration-500 transform ${animating ? "opacity-0 scale-95" : "opacity-100 scale-100"}`}>
-                            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-red-600/60 mb-6 block">{current.category}</span>
+                            <span className="text-sm font-black uppercase tracking-[0.4em] text-red-600/60 mb-6 block">{current.category}</span>
                             <h2 className="text-3xl font-black text-gray-900 leading-tight mb-8">
                                 “{current.text}”
                             </h2>
-                            <p className="text-sm font-bold text-gray-400 font-serif italic mb-10">— {current.origin}</p>
+                            <p className="text-lg font-bold text-gray-400 font-serif italic mb-10">— {current.origin}</p>
 
                             <div className="max-w-xl mx-auto p-6 bg-gray-50 rounded-2xl border border-gray-100">
-                                <p className="text-xs text-gray-500 leading-relaxed">
+                                <p className="text-base text-gray-500 leading-relaxed">
                                     <span className="font-black text-gray-900 uppercase text-[9px] tracking-widest mr-2">Analysis:</span>
                                     {current.meaning}
                                 </p>
@@ -59,7 +59,7 @@ export default function Proverbs() {
                             </button>
                             <button
                                 onClick={nextProverb}
-                                className="flex items-center gap-3 px-8 py-4 bg-gray-900 border border-transparent rounded-2xl text-white text-[10px] font-black uppercase tracking-widest hover:bg-gray-800 transition-all active:scale-95 shadow-xl shadow-gray-200"
+                                className="flex items-center gap-3 px-8 py-4 bg-gray-900 border border-transparent rounded-2xl text-white text-sm font-black uppercase tracking-widest hover:bg-gray-800 transition-all active:scale-95 shadow-xl shadow-gray-200"
                             >
                                 <RefreshCw className={`w-4 h-4 ${animating ? "animate-spin" : ""}`} /> New Insight
                             </button>
@@ -79,8 +79,8 @@ export default function Proverbs() {
                             </div>
                             <h3 className="font-black text-gray-900">Multi-lingual Wisdom</h3>
                         </div>
-                        <p className="text-xs text-gray-500 leading-relaxed mb-6">Explore governance proverbs in over 12 native languages, including Hindi, Marathi, and Tamil.</p>
-                        <button className="text-[10px] font-black uppercase tracking-widest text-red-600 flex items-center gap-2 hover:gap-3 transition-all">
+                        <p className="text-base text-gray-500 leading-relaxed mb-6">Explore governance proverbs in over 12 native languages, including Hindi, Marathi, and Tamil.</p>
+                        <button className="text-sm font-black uppercase tracking-widest text-red-600 flex items-center gap-2 hover:gap-3 transition-all">
                             Change Language <Search className="w-3 h-3" />
                         </button>
                     </div>
@@ -92,8 +92,8 @@ export default function Proverbs() {
                             </div>
                             <h3 className="font-black text-gray-900">AI Proverbs Generator</h3>
                         </div>
-                        <p className="text-xs text-gray-500 leading-relaxed mb-6">Give our model a topic, and it will generate a brand new proverb based on historical wisdom patterns.</p>
-                        <button className="text-[10px] font-black uppercase tracking-widest text-violet-600 flex items-center gap-2 hover:gap-3 transition-all">
+                        <p className="text-base text-gray-500 leading-relaxed mb-6">Give our model a topic, and it will generate a brand new proverb based on historical wisdom patterns.</p>
+                        <button className="text-sm font-black uppercase tracking-widest text-violet-600 flex items-center gap-2 hover:gap-3 transition-all">
                             Try Generator <Sparkles className="w-3 h-3" />
                         </button>
                     </div>
@@ -103,7 +103,7 @@ export default function Proverbs() {
                 <div className="bg-gray-900 rounded-[2.5rem] p-8 text-white">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="font-black flex items-center gap-2"><History className="w-5 h-5 text-gray-500" /> Recent Favorites</h3>
-                        <span className="text-[10px] font-black uppercase text-white/30 tracking-widest">3 Saved</span>
+                        <span className="text-sm font-black uppercase text-white/30 tracking-widest">3 Saved</span>
                     </div>
                     <div className="space-y-3">
                         {proverbsData.slice(0, 2).map((p, i) => (
@@ -111,7 +111,7 @@ export default function Proverbs() {
                                 <div className="p-1.5 bg-white/10 rounded-lg text-amber-400 group-hover:scale-110 transition-transform">
                                     <MessageSquare className="w-3.5 h-3.5" />
                                 </div>
-                                <p className="text-xs text-white/80 truncate flex-1 font-medium">{p.text}</p>
+                                <p className="text-base text-white/80 truncate flex-1 font-medium">{p.text}</p>
                                 <ArrowRight className="w-3.5 h-3.5 text-white/20" />
                             </div>
                         ))}

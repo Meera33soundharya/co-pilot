@@ -7,28 +7,21 @@
 export function speak(text: string, lang = 'en-IN'): Promise<void> {
   return new Promise((resolve) => {
     try {
-      if (typeof window === 'undefined' || !window.speechSynthesis) {
-        console.warn('[speech] speechSynthesis API not available.');
-        return resolve();
-      }
+      const tl = lang.split('-')[0] || 'en';
+      // Truncate to 190 chars just in case, since Google TTS limits to ~200
+      const safeText = text.substring(0, 190);
+      const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(safeText)}&tl=${tl}&client=tw-ob`;
       
-      window.speechSynthesis.cancel();
+      const audio = new Audio(url);
       
-      // Truncate to avoid potential browser limits (usually safe up to ~3000 chars, but keeping safe)
-      const safeText = text.substring(0, 500);
-      const utterance = new SpeechSynthesisUtterance(safeText);
-      utterance.lang = lang;
+      audio.onended = () => resolve();
+      audio.onerror = () => resolve();
       
-      utterance.onend = () => resolve();
-      utterance.onerror = (e) => {
-        console.warn('[speech] speak error:', e);
+      audio.play().catch(e => {
+        console.warn('[speech] audio play blocked by browser:', e);
+        // If autoplay is blocked, resolve so the flow doesn't freeze
         resolve();
-      };
-      
-      window.speechSynthesis.speak(utterance);
-      
-      // Fallback timeout in case onend doesn't fire
-      setTimeout(() => resolve(), safeText.length * 100 + 3000);
+      });
       
     } catch (e) {
       console.warn('[speech] speak error:', e);

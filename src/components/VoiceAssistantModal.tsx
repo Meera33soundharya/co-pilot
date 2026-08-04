@@ -33,7 +33,7 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
             const analysis = await analyzeComplaint(text, text);
             
             setForm({
-                citizen: entities.citizen || "",
+                citizen: entities.name || "",
                 issue: analysis.summary || text,
                 description: text,
                 dept: analysis.dept || "General Administration",

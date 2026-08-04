@@ -10,7 +10,7 @@ import {
   Sparkles,
   Volume2,
 } from "lucide-react";
-import { DashboardLayout } from "@/components/DashboardLayout";
+import DashboardLayout from "@/components/DashboardLayout";
 import { useComplaints } from "@/context/ComplaintsContext";
 import { analyzeComplaint, extractEntities } from "@/services/aiService";
 
@@ -127,8 +127,8 @@ export default function SpeechStudio() {
 
     setWorkflowState((prev) => ({ ...prev, ai: true }));
 
-    const complaintId = await addComplaint({
-      citizen: entities.citizen || "Citizen",
+    const complaintId = addComplaint({
+      citizen: entities.name || "Citizen",
       phone: entities.phone || "Not provided",
       ward: entities.ward || "Ward 28",
       issue: entities.issue || cleaned,
@@ -144,7 +144,7 @@ export default function SpeechStudio() {
     setWorkflowState((prev) => ({ ...prev, registration: true, assignment: true }));
     const confirmationText = `Complaint ${complaintId} has been registered. ${aiResult.summary}. Routed to ${aiResult.dept}.`;
     setOutputText(confirmationText);
-    setSessionSummary({ complaintId: String(complaintId), dept: aiResult.dept, category: aiResult.category, priority: aiResult.priority });
+    setSessionSummary({ complaintId, dept: aiResult.dept, category: aiResult.category, priority: aiResult.priority });
     setStatus("Citizen complaint auto-registered and routed");
     setWorkflowState((prev) => ({ ...prev, confirmation: true, notification: true }));
     speakText(confirmationText);

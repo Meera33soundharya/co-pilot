@@ -1,4 +1,4 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
+import DashboardLayout from "@/components/DashboardLayout";
 import { Brain, Sparkles, Zap, Cpu, Network, Activity, Layers, ShieldCheck } from "lucide-react";
 
 export default function BrainSpark() {
@@ -21,7 +21,7 @@ export default function BrainSpark() {
                                 <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
                             </div>
                             <p className="text-3xl font-black text-gray-900 tracking-tight">{s.value}</p>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mt-1">{s.label}</p>
+                            <p className="text-sm font-black uppercase tracking-widest text-gray-400 mt-1">{s.label}</p>
                         </div>
                     ))}
                 </div>
@@ -40,11 +40,11 @@ export default function BrainSpark() {
                                 </div>
                                 <div>
                                     <h3 className="font-black text-lg">Neural Layer Activation</h3>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-white/30">Real-time model processing visualization</p>
+                                    <p className="text-sm font-black uppercase tracking-widest text-white/30">Real-time model processing visualization</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-4">
-                                <div className="flex items-center gap-1.5 px-3 py-1 bg-white/5 rounded-lg border border-white/10 text-[10px] font-black uppercase">
+                                <div className="flex items-center gap-1.5 px-3 py-1 bg-white/5 rounded-lg border border-white/10 text-sm font-black uppercase">
                                     <Activity className="w-3 h-3 text-emerald-400" /> High Performance
                                 </div>
                             </div>
@@ -62,7 +62,7 @@ export default function BrainSpark() {
                                     />
                                 ))}
                             </div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20 mt-8">Processing Governance Streams</p>
+                            <p className="text-sm font-black uppercase tracking-[0.4em] text-white/20 mt-8">Processing Governance Streams</p>
                         </div>
 
                         <div className="grid grid-cols-3 gap-6 mt-8">
@@ -73,7 +73,7 @@ export default function BrainSpark() {
                             ].map(x => (
                                 <div key={x.label} className="p-4 bg-white/5 rounded-2xl border border-white/10 text-center">
                                     <p className="text-[9px] font-black uppercase tracking-widest text-white/30 mb-1">{x.label}</p>
-                                    <p className="text-sm font-black text-[#B91C1C]">{x.value}</p>
+                                    <p className="text-lg font-black text-[#B91C1C]">{x.value}</p>
                                 </div>
                             ))}
                         </div>
@@ -95,15 +95,15 @@ export default function BrainSpark() {
                                 ].map((alert, i) => (
                                     <div key={i} className={`p-5 rounded-2xl border ${alert.color} group cursor-pointer hover:scale-[1.02] transition-all`}>
                                         <div className="flex justify-between items-start mb-2">
-                                            <h4 className={`text-xs font-black uppercase tracking-widest ${alert.iconColor}`}>{alert.title}</h4>
+                                            <h4 className={`text-base font-black uppercase tracking-widest ${alert.iconColor}`}>{alert.title}</h4>
                                             <span className="text-[9px] font-black text-gray-400">{alert.time}</span>
                                         </div>
-                                        <p className="text-xs text-gray-700 leading-relaxed">{alert.body}</p>
+                                        <p className="text-base text-gray-700 leading-relaxed">{alert.body}</p>
                                     </div>
                                 ))}
                             </div>
 
-                            <button className="w-full mt-6 py-4 bg-gray-900 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-gray-800 transition-all shadow-xl shadow-gray-200">
+                            <button className="w-full mt-6 py-4 bg-gray-900 text-white rounded-2xl text-base font-black uppercase tracking-widest hover:bg-gray-800 transition-all shadow-xl shadow-gray-200">
                                 Launch Full System Audit
                             </button>
                         </div>
@@ -118,16 +118,16 @@ export default function BrainSpark() {
                         </div>
                         <div>
                             <h3 className="text-xl font-black">Neural Core Online</h3>
-                            <p className="text-white/60 text-sm">Cluster 09-Alpha provides dedicated compute for predicted infrastructure risks.</p>
+                            <p className="text-white/60 text-lg">Cluster 09-Alpha provides dedicated compute for predicted infrastructure risks.</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
                         <div className="text-right hidden md:block">
-                            <p className="text-xs font-black uppercase">Model Confidence</p>
+                            <p className="text-base font-black uppercase">Model Confidence</p>
                             <p className="text-2xl font-black text-red-500">98.2%</p>
                         </div>
                         <div className="w-px h-10 bg-white/20 mx-4 hidden md:block" />
-                        <button className="px-8 py-4 bg-white text-gray-900 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-red-50 transition-all active:scale-95 shadow-xl">
+                        <button className="px-8 py-4 bg-white text-gray-900 rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-red-50 transition-all active:scale-95 shadow-xl">
                             Optimization Guide
                         </button>
                     </div>

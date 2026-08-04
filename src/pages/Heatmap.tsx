@@ -1,9 +1,10 @@
-import { useState } from "react";
-import { DashboardLayout } from "@/components/DashboardLayout";
+import { useState, useMemo } from "react";
+import DashboardLayout from "@/components/DashboardLayout";
 import { useComplaints } from "@/context/ComplaintsContext";
 import { MapPin, TrendingUp, Flame } from "lucide-react";
 
 const WARDS = Array.from({ length: 12 }, (_, i) => `Ward ${i + 1}`);
+
 
 const CATEGORY_COLORS: Record<string, string> = {
     "Roads & Infrastructure": "#B91C1C",
@@ -16,7 +17,7 @@ const CATEGORY_COLORS: Record<string, string> = {
     "Enforcement": "#9CA3AF",
 };
 
-// Real Bengaluru neighbourhood coords per ward
+// Real Bengaluru neighbourhood coords per ward (used only as fallback if complaint lacks coords)
 const WARD_COORDS: Record<string, { lat: number; lng: number; area: string }> = {
     "Ward 1":  { lat: 12.9716, lng: 77.5946, area: "MG Road, Bengaluru" },
     "Ward 2":  { lat: 12.9279, lng: 77.6271, area: "Koramangala" },
@@ -32,14 +33,35 @@ const WARD_COORDS: Record<string, { lat: number; lng: number; area: string }> = 
     "Ward 12": { lat: 13.0475, lng: 77.6177, area: "RT Nagar" },
 };
 
+// Normalize a ward string to a canonical key: extracts the leading integer.
+// "Ward 02" -> "Ward 2", "Ward Number 1, Kolkata" -> kept as-is (non-standard).
+function canonicalWardKey(ward: string): string {
+    // Match "Ward" followed by optional whitespace + zero-padded number
+    const m = ward.match(/^Ward\s+(\d+)$/i);
+    if (m) return `Ward ${parseInt(m[1], 10)}`;
+    return ward; // non-standard ward strings pass through unchanged
+}
+
 function generateWardData(complaints: any[]) {
-    return WARDS.map((ward) => {
-        const wardComplaints = complaints.filter(c => c.ward === ward);
+    // Base 12 canonical wards
+    const baseWards = Array.from({ length: 12 }, (_, i) => `Ward ${i + 1}`);
+
+    // Collect all unique canonical ward keys from complaint data
+    const extraWards = complaints
+        .map(c => c.ward)
+        .filter(Boolean)
+        .map(canonicalWardKey)
+        .filter(w => !baseWards.includes(w)); // only non-standard wards (e.g. Kolkata)
+
+    const uniqueWards = Array.from(new Set([...baseWards, ...extraWards]));
+
+    return uniqueWards.map((ward) => {
+        // Match complaints by canonical key so "Ward 02" and "Ward 2" both land on "Ward 2"
+        const wardComplaints = complaints.filter(c => canonicalWardKey(c.ward) === ward);
         const total = wardComplaints.length;
         const resolved = wardComplaints.filter(c => c.status === "Resolved").length;
         const highPri = wardComplaints.filter(c => c.priority === "High").length;
 
-        // Determine top issue from actual data, or default if empty
         const issueCounts = wardComplaints.reduce((acc: Record<string, number>, c) => {
             acc[c.category] = (acc[c.category] || 0) + 1;
             return acc;
@@ -47,12 +69,27 @@ function generateWardData(complaints: any[]) {
         
         const topCat = Object.entries(issueCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "General Maintenance";
 
-        // Intensity scale (0-10): 0 is empty, 1-3 is low, 4-7 is moderate, 8-10 is critical
-        // We scale based on the relative volume of complaints in the district
-        const maxComplaints = Math.max(...WARDS.map(w => complaints.filter(c => c.ward === w).length), 1);
+        const maxComplaints = Math.max(...uniqueWards.map(w => complaints.filter(c => canonicalWardKey(c.ward) === w).length), 1);
         const intensity = total === 0 ? 0 : Math.ceil((total / maxComplaints) * 10);
         
-        return { ward, total, resolved, highPri, topCat, intensity };
+        // Find correct coordinates: prefer actual complaint coords, then static fallback
+        const complaintWithCoords = wardComplaints.find(c => c.coords && typeof c.coords.lat === 'number');
+        let lat: number | undefined = undefined;
+        let lng: number | undefined = undefined;
+        let area = "Location details unavailable";
+
+        if (complaintWithCoords) {
+            lat = complaintWithCoords.coords.lat;
+            lng = complaintWithCoords.coords.lng;
+            area = complaintWithCoords.location || ward;
+        } else if (WARD_COORDS[ward]) {
+            lat = WARD_COORDS[ward].lat;
+            lng = WARD_COORDS[ward].lng;
+            area = WARD_COORDS[ward].area;
+        }
+        // Only warn once per unique ward key (memoized — this won't loop)
+
+        return { ward, total, resolved, highPri, topCat, intensity, lat, lng, area };
     });
 }
 
@@ -72,7 +109,9 @@ function heatTextColor(intensity: number): string {
 export default function Heatmap() {
     const { complaints } = useComplaints();
     const [selected, setSelected] = useState<string | null>(null);
-    const wardData = generateWardData(complaints);
+    // Memoize ward data — only recompute when the complaints array changes,
+    // not on every render. This eliminates the console.warn loop.
+    const wardData = useMemo(() => generateWardData(complaints), [complaints]);
     const selectedWard = wardData.find(w => w.ward === selected);
     const totalComplaints = wardData.reduce((s, w) => s + w.total, 0);
     const hottest = [...wardData].sort((a, b) => b.intensity - a.intensity)[0];
@@ -98,7 +137,7 @@ export default function Heatmap() {
                             </div>
                             <p className={`text-3xl font-black ${k.color} mb-1`}>{k.value}</p>
                             <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">{k.label}</p>
-                            <p className="text-[10px] text-gray-400 mt-0.5">{k.sub}</p>
+                            <p className="text-sm text-gray-400 mt-0.5">{k.sub}</p>
                         </div>
                     ))}
                 </div>
@@ -107,7 +146,7 @@ export default function Heatmap() {
                     {/* Heatmap Grid */}
                     <div className="lg:col-span-2 bg-white rounded-3xl border border-gray-100 p-7 shadow-sm">
                         <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400">Ward Complaint Density</h3>
+                            <h3 className="text-sm font-black uppercase tracking-widest text-gray-400">Ward Complaint Density</h3>
                             <div className="flex items-center gap-2">
                                 <span className="text-[9px] font-black text-gray-300 uppercase">Low</span>
                                 <div className="flex gap-1">
@@ -155,104 +194,67 @@ export default function Heatmap() {
                         </div>
                     </div>
 
-                    {/* Ward Detail / Top Issues */}
+                    {/* Ward Detail Panel */}
                     <div className="bg-white rounded-3xl border border-gray-100 shadow-sm flex flex-col overflow-hidden">
                         {selectedWard ? (
-                            <>
-                                {/* Mini OSM map for selected ward */}
-                                {WARD_COORDS[selectedWard.ward] && (
-                                    <div className="relative h-[180px]">
-                                        <iframe
-                                            key={selectedWard.ward}
-                                            src={`https://www.openstreetmap.org/export/embed.html?bbox=${WARD_COORDS[selectedWard.ward].lng - 0.025},${WARD_COORDS[selectedWard.ward].lat - 0.025},${WARD_COORDS[selectedWard.ward].lng + 0.025},${WARD_COORDS[selectedWard.ward].lat + 0.025}&layer=mapnik`}
-                                            width="100%"
-                                            height="100%"
-                                            style={{ border: "none" }}
-                                            title={`${selectedWard.ward} map`}
-                                            loading="lazy"
-                                        />
-                                        {/* Colorful Pulsing Location Pin Overlay */}
-                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                                            <div className="relative flex items-center justify-center">
-                                                {/* Pulsing glow rings */}
-                                                <span className="absolute inline-flex h-10 w-10 rounded-full bg-red-500 opacity-60 animate-ping" />
-                                                <span className="absolute inline-flex h-6 w-6 rounded-full bg-red-600 opacity-30 animate-pulse" />
-                                                
-                                                {/* Modern MapPin marker icon */}
-                                                <div className="relative transform -translate-y-3 filter drop-shadow-[0_4px_6px_rgba(239,68,68,0.5)] animate-bounce duration-1000">
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        viewBox="0 0 24 24"
-                                                        fill="currentColor"
-                                                        className="w-8 h-8 text-red-500"
-                                                    >
-                                                        <path
-                                                            fillRule="evenodd"
-                                                            d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z"
-                                                            clipRule="evenodd"
-                                                        />
-                                                    </svg>
-                                                    <div className="absolute top-[8px] left-[8px] w-4 h-4 rounded-full bg-white flex items-center justify-center shadow-sm">
-                                                        <div className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse" />
-                                                    </div>
-                                                </div>
-                                            </div>
+                            <div className="p-6 flex flex-col gap-4">
+                                {/* Ward header */}
+                                <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
+                                    <div
+                                        className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                                        style={{ backgroundColor: heatColor(selectedWard.intensity) }}
+                                    >
+                                        <MapPin className={`w-4 h-4 ${selectedWard.intensity > 4 ? 'text-white' : 'text-red-500'}`} />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <h3 className="text-lg font-black text-gray-900 leading-tight">{selectedWard.ward}</h3>
+                                        <p className="text-sm text-gray-400 font-medium truncate">{selectedWard.area}</p>
+                                    </div>
+                                    <div
+                                        className="ml-auto px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-widest text-white shrink-0"
+                                        style={{ backgroundColor: heatColor(selectedWard.intensity) }}
+                                    >
+                                        {selectedWard.total} cases
+                                    </div>
+                                </div>
+
+                                {/* Stats */}
+                                <div className="space-y-1">
+                                    {[
+                                        { label: "Total Complaints", value: selectedWard.total,   color: "text-gray-900" },
+                                        { label: "Resolved",         value: selectedWard.resolved, color: "text-emerald-600" },
+                                        { label: "High Priority",    value: selectedWard.highPri,  color: "text-red-600" },
+                                    ].map(item => (
+                                        <div key={item.label} className="flex items-center justify-between py-2.5 border-b border-gray-50">
+                                            <span className="text-base font-bold text-gray-500">{item.label}</span>
+                                            <span className={`text-lg font-black ${item.color}`}>{item.value}</span>
                                         </div>
-                                        <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-widest text-[#B91C1C] border border-red-100 flex items-center gap-1.5 z-20">
-                                            <MapPin className="w-2.5 h-2.5" /> {selectedWard.ward}
-                                        </div>
-                                        <div
-                                            className="absolute top-2 right-2 px-2 py-0.5 rounded-lg text-[9px] font-black uppercase text-white z-20"
-                                            style={{ backgroundColor: heatColor(selectedWard.intensity) }}
-                                        >
-                                            {selectedWard.total} cases
+                                    ))}
+                                    <div className="py-2.5 border-b border-gray-50">
+                                        <p className="text-base font-bold text-gray-500 mb-1.5">Top Issue</p>
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: CATEGORY_COLORS[selectedWard.topCat] ?? "#9CA3AF" }} />
+                                            <span className="text-base font-black text-gray-900">{selectedWard.topCat}</span>
                                         </div>
                                     </div>
-                                )}
-                                <div className="p-6 flex flex-col flex-1">
-                                    <div className="flex items-center gap-3 mb-4">
-                                        <div className="p-2.5 bg-red-50 rounded-xl">
-                                            <MapPin className="w-4 h-4 text-[#B91C1C]" />
-                                        </div>
-                                        <div>
-                                            <h3 className="text-sm font-black text-gray-900">{selectedWard.ward}</h3>
-                                            <p className="text-[10px] text-gray-400 font-medium">{WARD_COORDS[selectedWard.ward]?.area}</p>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-3 flex-1">
-                                        {[
-                                            { label: "Total Complaints", value: selectedWard.total,   color: "text-gray-900" },
-                                            { label: "Resolved",         value: selectedWard.resolved, color: "text-emerald-600" },
-                                            { label: "High Priority",    value: selectedWard.highPri,  color: "text-red-600" },
-                                        ].map(item => (
-                                            <div key={item.label} className="flex items-center justify-between py-2.5 border-b border-gray-50">
-                                                <span className="text-xs font-bold text-gray-500">{item.label}</span>
-                                                <span className={`text-lg font-black ${item.color}`}>{item.value}</span>
-                                            </div>
-                                        ))}
-                                        <div className="py-2.5 border-b border-gray-50">
-                                            <p className="text-xs font-bold text-gray-500 mb-1.5">Top Issue</p>
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: CATEGORY_COLORS[selectedWard.topCat] ?? "#9CA3AF" }} />
-                                                <span className="text-xs font-black text-gray-900">{selectedWard.topCat}</span>
-                                            </div>
-                                        </div>
-                                        <div className="pt-1">
-                                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Heat Level</p>
-                                            <div className="h-2.5 bg-gray-50 rounded-full overflow-hidden">
-                                                <div className="h-full rounded-full transition-all duration-700" style={{ width: `${(selectedWard.intensity / 10) * 100}%`, backgroundColor: heatColor(selectedWard.intensity) }} />
-                                            </div>
+                                    <div className="pt-3">
+                                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Heat Level</p>
+                                        <div className="h-2.5 bg-gray-50 rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full rounded-full transition-all duration-700"
+                                                style={{ width: `${(selectedWard.intensity / 10) * 100}%`, backgroundColor: heatColor(selectedWard.intensity) }}
+                                            />
                                         </div>
                                     </div>
                                 </div>
-                            </>
+                            </div>
                         ) : (
                             <div className="flex-1 flex flex-col items-center justify-center text-center p-10">
                                 <div className="p-4 bg-gray-50 rounded-3xl mb-4">
                                     <MapPin className="w-8 h-8 text-gray-200" />
                                 </div>
-                                <p className="text-sm font-black text-gray-400 mb-2">Select a Ward</p>
-                                <p className="text-xs text-gray-300">Click any ward cell to see its map and stats</p>
+                                <p className="text-lg font-black text-gray-400 mb-2">Select a Ward</p>
+                                <p className="text-base text-gray-300">Click any ward cell to see its stats</p>
                             </div>
                         )}
                     </div>
@@ -260,7 +262,7 @@ export default function Heatmap() {
 
                 {/* Category Legend */}
                 <div className="bg-white rounded-3xl border border-gray-100 p-7 shadow-sm">
-                    <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-5">Issue Categories Across Wards</h3>
+                    <h3 className="text-sm font-black uppercase tracking-widest text-gray-400 mb-5">Issue Categories Across Wards</h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {Object.entries(CATEGORY_COLORS).map(([cat, color]) => {
                             const count = complaints.filter(c => c.category === cat).length;
@@ -268,8 +270,8 @@ export default function Heatmap() {
                                 <div key={cat} className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl">
                                     <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: color }} />
                                     <div className="min-w-0">
-                                        <p className="text-xs font-black text-gray-900 truncate">{cat}</p>
-                                        <p className="text-[10px] text-gray-400">{count} complaints</p>
+                                        <p className="text-base font-black text-gray-900 truncate">{cat}</p>
+                                        <p className="text-sm text-gray-400">{count} complaints</p>
                                     </div>
                                 </div>
                             );
@@ -281,22 +283,22 @@ export default function Heatmap() {
                 <div className="bg-white rounded-3xl border border-gray-100 p-7 shadow-sm">
                     <div className="flex items-center gap-2 mb-5">
                         <TrendingUp className="w-4 h-4 text-[#B91C1C]" />
-                        <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400">Top 5 Problem Wards</h3>
+                        <h3 className="text-sm font-black uppercase tracking-widest text-gray-400">Top 5 Problem Wards</h3>
                     </div>
                     <div className="space-y-3">
                         {[...wardData].sort((a, b) => b.total - a.total).slice(0, 5).map((w, i) => {
                             const pct = Math.round((w.total / (wardData[0]?.total || 1)) * 100);
                             return (
                                 <div key={w.ward} className="flex items-center gap-4">
-                                    <span className="text-[10px] font-black text-gray-400 w-4">{i + 1}</span>
-                                    <span className="text-xs font-black text-gray-900 w-16">{w.ward}</span>
+                                    <span className="text-sm font-black text-gray-400 w-4">{i + 1}</span>
+                                    <span className="text-base font-black text-gray-900 w-16">{w.ward}</span>
                                     <div className="flex-1 h-3 bg-gray-50 rounded-full overflow-hidden">
                                         <div
                                             className="h-full rounded-full transition-all duration-700"
                                             style={{ width: `${pct}%`, backgroundColor: heatColor(w.intensity) }}
                                         />
                                     </div>
-                                    <span className="text-xs font-black text-gray-700 w-6 text-right">{w.total}</span>
+                                    <span className="text-base font-black text-gray-700 w-6 text-right">{w.total}</span>
                                     <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: CATEGORY_COLORS[w.topCat] ?? "#9CA3AF" }} />
                                 </div>
                             );

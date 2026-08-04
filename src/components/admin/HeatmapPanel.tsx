@@ -14,7 +14,7 @@ export default function HeatmapPanel() {
     return ALL_WARDS.map(ward => {
       const wc = complaints.filter(c => c.ward === ward);
       const total = wc.length;
-      const open = wc.filter(c => c.status === ("New" as any) || c.status === ("Categorized" as any)).length;
+      const open = wc.filter(c => c.status === "New" || c.status === "Categorized").length;
       const resolved = wc.filter(c => c.status === "Resolved" || c.status === "Closed").length;
       const highPri = wc.filter(c => c.priority === "High" && c.status !== "Resolved" && c.status !== "Closed").length;
       const resoPct = total > 0 ? Math.round(((resolved) / total) * 100) : 100;

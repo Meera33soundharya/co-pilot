@@ -13,8 +13,8 @@ export function RiskMeter({ value, label }: RiskMeterProps) {
     return (
         <div className="space-y-2">
             <div className="flex justify-between items-end">
-                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{label}</span>
-                <span className="text-sm font-black text-gray-900">{value}%</span>
+                <span className="text-sm font-black uppercase tracking-widest text-gray-400">{label}</span>
+                <span className="text-lg font-black text-gray-900">{value}%</span>
             </div>
             <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
                 <div
@@ -45,7 +45,7 @@ export function SentimentGauge({ value, label }: { value: number; label: string 
                     <span className="text-xl font-black text-gray-900">{value}</span>
                 </div>
             </div>
-            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{label}</span>
+            <span className="text-sm font-black uppercase tracking-widest text-gray-400">{label}</span>
         </div>
     );
 }

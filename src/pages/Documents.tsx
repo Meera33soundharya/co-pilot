@@ -1,381 +1,352 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
-import { useState, useRef } from "react";
-import {
-    FileText, FolderOpen, Download, Eye, Search,
-    Upload, Clock, CheckCircle2, Lock, Share2, X, AlertCircle
+import React, { useState, useMemo, useRef } from "react";
+import DashboardLayout from "@/components/DashboardLayout";
+import { 
+    FileText, FolderOpen, Download, Search, Upload, Clock, 
+    CheckCircle2, Lock, Share2, AlertCircle, Shield, Grid, List, 
+    UploadCloud, Trash2, XCircle, FileBarChart, PieChart, Users, Building2
 } from "lucide-react";
-import { api } from "@/services/api";
+import { useDocuments, type DocumentRecord, type DocumentCategory } from "@/context/DocumentContext";
+import { useComplaints } from "@/context/ComplaintsContext";
+import { DocumentPreviewModal } from "@/components/documents/DocumentPreviewModal";
+import { ManualUploadModal } from "@/components/documents/ManualUploadModal";
 
-const folders = [
-    { name: "Citizen Petitions",    count: 234, icon: "🗂️", color: "#B91C1C", bg: "bg-white", border: "border-red-100" },
-    { name: "Official Notices",     count: 89,  icon: "📋", color: "#374151", bg: "bg-white", border: "border-gray-100" },
-    { name: "Budget Reports",       count: 42,  icon: "💰", color: "#B91C1C", bg: "bg-white", border: "border-red-100" },
-    { name: "Policy Drafts",        count: 67,  icon: "📝", color: "#1F2937", bg: "bg-white", border: "border-gray-100" },
-    { name: "Infrastructure Plans", count: 32,  icon: "🏗️", color: "#B91C1C", bg: "bg-white", border: "border-red-100" },
-    { name: "Minutes of Meetings",  count: 128, icon: "📅", color: "#111827", bg: "bg-white", border: "border-gray-100" },
+const categories: { name: DocumentCategory; icon: React.ReactNode; color: string; countStr: string }[] = [
+    { name: "Complaint Documents", icon: <AlertCircle className="w-6 h-6" />, color: "text-amber-600", countStr: "Active Issues" },
+    { name: "Resolution Reports", icon: <CheckCircle2 className="w-6 h-6" />, color: "text-emerald-600", countStr: "Resolved" },
+    { name: "Government Circulars", icon: <FileText className="w-6 h-6" />, color: "text-indigo-600", countStr: "Official" },
+    { name: "Meeting Documents", icon: <Users className="w-6 h-6" />, color: "text-blue-600", countStr: "Minutes & Agendas" },
+    { name: "Policy Documents", icon: <Building2 className="w-6 h-6" />, color: "text-purple-600", countStr: "Guidelines" },
+    { name: "Field Officer Reports", icon: <FolderOpen className="w-6 h-6" />, color: "text-rose-600", countStr: "Inspections" },
 ];
 
-const recentDocs = [
-    { name: "Citizen Module - Technical User Guide.pdf", size: "2.4 MB", date: "Mar 27, 2026", type: "PDF",  status: "approved", access: "public" },
-    { name: "Citizen Petition - Ward 07 Water Shortage.pdf", size: "1.2 MB", date: "Mar 27, 2026", type: "PDF",  status: "pending",  access: "public" },
-    { name: "Annual Budget Report FY2025-26.pdf",        size: "4.2 MB", date: "Feb 19, 2026", type: "PDF",  status: "approved", access: "public" },
-    { name: "Ward 03 Infrastructure Upgrade Plan.docx",  size: "1.8 MB", date: "Feb 18, 2026", type: "DOCX", status: "draft",    access: "restricted" },
-    { name: "Public Health Advisory - Q4 2025.pdf",      size: "2.1 MB", date: "Feb 17, 2026", type: "PDF",  status: "approved", access: "public" },
-    { name: "Meeting Minutes - City Council Feb 15.pdf", size: "990 KB", date: "Feb 15, 2026", type: "PDF",  status: "pending",  access: "internal" },
-    { name: "Water Supply Tender Document #WS-24-09.pdf",size: "6.7 MB", date: "Feb 14, 2026", type: "PDF",  status: "approved", access: "public" },
-    { name: "Emergency Response Protocol 2026.docx",     size: "3.4 MB", date: "Feb 12, 2026", type: "DOCX", status: "draft",    access: "restricted" },
-];
-
-const typeStyle: Record<string, { bg: string; text: string }> = {
-    PDF:  { bg: "#FEF2F2", text: "#B91C1C" },
-    DOCX: { bg: "#F9FAFB", text: "#4B5563" },
+const statusStyles = {
+    approved: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    pending: "bg-amber-50 text-amber-700 border-amber-200",
+    rejected: "bg-red-50 text-red-700 border-red-200",
+    draft: "bg-gray-50 text-gray-700 border-gray-200",
 };
-
-const statusStyle: Record<string, { bg: string; text: string; label: string }> = {
-    approved: { bg: "#F0FDF4", text: "#059669", label: "APPROVED" },
-    draft:    { bg: "#F9FAFB", text: "#9CA3AF", label: "DRAFT" },
-    pending:  { bg: "#FFFBEB", text: "#D97706", label: "PENDING" },
-};
-
-interface PreviewDoc {
-    name: string;
-    type: string;
-    date: string;
-    size: string;
-    status: string;
-    access: string;
-}
 
 export default function Documents() {
+    const { allDocuments, uploadDocument, deleteDocument, updateStatus } = useDocuments();
+    const { currentUser } = useComplaints();
+    
     const [search, setSearch] = useState("");
-    const [previewDoc, setPreviewDoc] = useState<PreviewDoc | null>(null);
-    const [downloading, setDownloading] = useState<string | null>(null);
-    const [uploadOpen, setUploadOpen] = useState(false);
-    const [uploaded, setUploaded] = useState(false);
-    const [uploading, setUploading] = useState(false);
-    const [aiSummary, setAiSummary] = useState<string[]>([]);
-
-    const filtered = recentDocs.filter(d =>
-        d.name.toLowerCase().includes(search.toLowerCase())
-    );
-
+    const [selectedCategory, setSelectedCategory] = useState<DocumentCategory | "All">("All");
+    const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+    const [previewDoc, setPreviewDoc] = useState<DocumentRecord | null>(null);
+    const [isDragging, setIsDragging] = useState(false);
+    const [showManualUpload, setShowManualUpload] = useState(false);
+    
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const [shareToast, setShareToast] = useState<string | null>(null);
 
-    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (!e.target.files?.length) return;
-        const file = e.target.files[0];
-        setUploading(true);
-        try {
-            const res = await api.documents.upload(file);
-            setAiSummary(res.summary);
-            setUploaded(true);
-        } catch (err) {
-            console.error("Document upload failed:", err);
-        } finally {
-            setUploading(false);
+    // Dashboard Metrics
+    const metrics = useMemo(() => {
+        return {
+            total: allDocuments.length,
+            pending: allDocuments.filter(d => d.status === "pending").length,
+            approved: allDocuments.filter(d => d.status === "approved").length,
+            resolutions: allDocuments.filter(d => d.category === "Resolution Reports").length,
+            circulars: allDocuments.filter(d => d.category === "Government Circulars").length,
+            meetings: allDocuments.filter(d => d.category === "Meeting Documents").length,
+        };
+    }, [allDocuments]);
+
+    // Filtering
+    const filteredDocs = useMemo(() => {
+        return allDocuments.filter(doc => {
+            const matchesSearch = 
+                doc.name.toLowerCase().includes(search.toLowerCase()) ||
+                doc.id.toLowerCase().includes(search.toLowerCase()) ||
+                doc.summary.toLowerCase().includes(search.toLowerCase()) ||
+                doc.citizenName?.toLowerCase().includes(search.toLowerCase()) ||
+                doc.dept.toLowerCase().includes(search.toLowerCase());
+            
+            const matchesCategory = selectedCategory === "All" || doc.category === selectedCategory;
+            
+            return matchesSearch && matchesCategory;
+        }).sort((a, b) => b.uploadTimestamp - a.uploadTimestamp);
+    }, [allDocuments, search, selectedCategory]);
+
+    // Drag and Drop Handlers
+    const onDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(true);
+    };
+    
+    const onDragLeave = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(false);
+    };
+
+    const onDrop = async (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(false);
+        const files = Array.from(e.dataTransfer.files);
+        if (files.length) handleFiles(files);
+    };
+
+    const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) handleFiles(Array.from(e.target.files));
+    };
+
+    const handleFiles = async (files: File[]) => {
+        for (const file of files) {
+            // Automatic AI-like categorization based on filename
+            let autoCategory: DocumentCategory = "Government Circulars";
+            const nameLower = file.name.toLowerCase();
+            
+            if (nameLower.includes("complaint") || nameLower.includes("petition") || nameLower.includes("grievance")) {
+                autoCategory = "Complaint Documents";
+            } else if (nameLower.includes("resolution") || nameLower.includes("solved") || nameLower.includes("closed")) {
+                autoCategory = "Resolution Reports";
+            } else if (nameLower.includes("meeting") || nameLower.includes("agenda") || nameLower.includes("minutes")) {
+                autoCategory = "Meeting Documents";
+            } else if (nameLower.includes("policy") || nameLower.includes("guideline") || nameLower.includes("rule")) {
+                autoCategory = "Policy Documents";
+            } else if (nameLower.includes("report") || nameLower.includes("inspection") || nameLower.includes("field")) {
+                autoCategory = "Field Officer Reports";
+            } else if (nameLower.includes("circular") || nameLower.includes("notice") || nameLower.includes("order")) {
+                autoCategory = "Government Circulars";
+            }
+
+            await uploadDocument(file, {
+                category: selectedCategory === "All" ? autoCategory : selectedCategory,
+                uploader: currentUser?.name || "Admin",
+            });
         }
-    };
-
-    // Actually downloads a real text file with doc info
-    const handleDownload = (doc: typeof recentDocs[0]) => {
-        setDownloading(doc.name);
-        const content = `GOVERNMENT DOCUMENT\n${'='.repeat(50)}\nName   : ${doc.name}\nType   : ${doc.type}\nSize   : ${doc.size}\nDate   : ${doc.date}\nStatus : ${doc.status.toUpperCase()}\nAccess : ${doc.access}\n${'='.repeat(50)}\n\n[This is a demonstration export generated by GovPilot.]\n[In production, this would be the actual document content.]`;
-        const blob = new Blob([content], { type: 'text/plain' });
-        const url  = URL.createObjectURL(blob);
-        const a    = document.createElement('a');
-        a.href     = url;
-        a.download = doc.name.replace(/\.(pdf|docx)$/i, '.txt');
-        a.click();
-        URL.revokeObjectURL(url);
-        setTimeout(() => setDownloading(null), 1500);
-    };
-
-    const handleShare = (docName: string) => {
-        const text = `${window.location.origin}/documents/${encodeURIComponent(docName)}`;
-        navigator.clipboard?.writeText(text).catch(() => {});
-        setShareToast(docName);
-        setTimeout(() => setShareToast(null), 2000);
+        // Small toast could be added here
     };
 
     return (
-        <DashboardLayout title="Documents" subtitle="Centralized government document management system">
-
-            {/* Preview Modal */}
+        <DashboardLayout title="Document Management" subtitle="Enterprise Document System & Secure Registry">
+            
             {previewDoc && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-black/40 backdrop-blur-md" onClick={() => setPreviewDoc(null)} />
-                    <div className="relative bg-[#FDFCF8] rounded-[3rem] shadow-2xl w-full max-w-lg overflow-hidden animate-slide-up border border-white/50">
-                        <div className="absolute top-0 right-0 w-48 h-48 bg-red-500/5 blur-[60px] pointer-events-none" />
-                        <div className="flex items-center justify-between px-8 py-6 border-b border-gray-100 relative z-10">
-                            <div className="flex items-center gap-4">
-                                <div className="px-3 py-1 rounded-xl text-[10px] font-black tracking-widest text-white" style={{ background: "#B91C1C" }}>
-                                    {previewDoc.type}
-                                </div>
-                                <span className="font-black text-gray-900 text-sm truncate max-w-[200px] uppercase tracking-tight">{previewDoc.name}</span>
-                            </div>
-                            <button onClick={() => setPreviewDoc(null)} className="p-2 rounded-2xl hover:bg-gray-100 text-gray-400 transition-colors">
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-                        <div className="p-10 space-y-8 relative z-10">
-                            {/* Document preview body */}
-                            <div className="bg-gray-50 rounded-[2rem] border border-gray-100 p-6 space-y-4 shadow-inner">
-                                <div className="flex items-center gap-3 pb-3 border-b border-gray-200">
-                                    <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
-                                        <FileText className="w-5 h-5 text-[#B91C1C]" />
-                                    </div>
-                                    <div>
-                                        <p className="text-xs font-black text-gray-900 leading-tight">{previewDoc.name}</p>
-                                        <p className="text-[10px] text-gray-400">{previewDoc.size} · {previewDoc.type}</p>
-                                    </div>
-                                </div>
-                                {/* Simulated content lines */}
-                                <div className="space-y-2">
-                                    {["Executive Summary", "Section 1: Background", "Section 2: Findings", "Section 3: Recommendations", "Appendix A: Data Tables"].map((s, i) => (
-                                        <div key={i} className="flex items-center gap-3 p-2.5 bg-white rounded-xl border border-gray-100">
-                                            <div className="w-5 h-5 rounded-full bg-red-50 flex items-center justify-center text-[9px] font-black text-red-600 shrink-0">{i + 1}</div>
-                                            <span className="text-xs font-bold text-gray-700">{s}</span>
-                                            <span className="ml-auto text-[10px] text-gray-400">pg {i * 4 + 1}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                                <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-100 rounded-xl">
-                                    <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                                    <p className="text-[10px] font-black text-amber-700">Preview only — Download for full content</p>
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-8">
-                                <div>
-                                    <p className="text-gray-400 font-black uppercase tracking-widest text-[9px] mb-1">Upload Date</p>
-                                    <p className="font-black text-gray-900">{previewDoc.date}</p>
-                                </div>
-                                <div>
-                                    <p className="text-gray-400 font-black uppercase tracking-widest text-[9px] mb-1">Status Level</p>
-                                    <p className="font-black uppercase text-xs" style={{ color: statusStyle[previewDoc.status]?.text }}>{statusStyle[previewDoc.status]?.label}</p>
-                                </div>
-                            </div>
-                            <div className="flex gap-4">
-                                <button onClick={() => { handleDownload(previewDoc); setPreviewDoc(null); }} className="flex-1 flex items-center justify-center gap-3 py-4 rounded-2xl text-white text-[11px] font-black uppercase tracking-[0.2em] transition-all hover:bg-neutral-800 shadow-xl shadow-red-900/20 active:scale-95" style={{ backgroundColor: "#B91C1C" }}>
-                                    <Download className="w-4 h-4" /> Download
-                                </button>
-                                <button onClick={() => setPreviewDoc(null)} className="px-8 flex items-center justify-center py-4 rounded-2xl bg-gray-100 text-gray-900 text-[11px] font-black uppercase tracking-[0.2em] hover:bg-gray-200 transition-all">
-                                    Close
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <DocumentPreviewModal 
+                    document={allDocuments.find(d => d.id === previewDoc.id) || previewDoc} 
+                    onClose={() => setPreviewDoc(null)} 
+                    onSelectDocument={(doc) => setPreviewDoc(doc)}
+                />
             )}
 
-            {/* Share toast */}
-            {shareToast && (
-                <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-3 px-6 py-3 bg-gray-900 text-white rounded-2xl shadow-2xl animate-fade-in text-sm font-black">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Link copied to clipboard!
-                </div>
-            )}
-
-            {/* Upload Modal */}
-            <input ref={fileInputRef} type="file" className="hidden" accept=".pdf,.docx,.xlsx,.png,.jpg"
-                onChange={handleFileChange} />
-            {uploadOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => { setUploadOpen(false); setUploaded(false); setAiSummary([]); }} />
-                    <div className="relative bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden animate-slide-up">
-                        <div className="px-8 py-6 border-b border-gray-100 flex items-center justify-between">
-                            <h2 className="font-black text-gray-900">Secure Upload</h2>
-                            <button onClick={() => { setUploadOpen(false); setUploaded(false); setAiSummary([]); }} className="p-2 rounded-2xl hover:bg-gray-100 text-gray-400"><X className="w-4 h-4" /></button>
+            {/* Dashboard Overview Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+                {[
+                    { label: "Total Documents", value: metrics.total, color: "text-indigo-600", bg: "bg-indigo-50" },
+                    { label: "Pending Verification", value: metrics.pending, color: "text-amber-600", bg: "bg-amber-50" },
+                    { label: "Approved Assets", value: metrics.approved, color: "text-emerald-600", bg: "bg-emerald-50" },
+                    { label: "Resolution Reports", value: metrics.resolutions, color: "text-blue-600", bg: "bg-blue-50" },
+                    { label: "Govt Circulars", value: metrics.circulars, color: "text-purple-600", bg: "bg-purple-50" },
+                    { label: "Meeting Docs", value: metrics.meetings, color: "text-rose-600", bg: "bg-rose-50" },
+                ].map((stat, i) => (
+                    <div key={i} className="bg-white/70 backdrop-blur-xl border border-white p-5 rounded-3xl shadow-sm hover:shadow-md transition-shadow">
+                        <div className={`w-10 h-10 rounded-xl ${stat.bg} ${stat.color} flex items-center justify-center mb-3`}>
+                            <FileBarChart className="w-5 h-5" />
                         </div>
-                        <div className="p-8 space-y-5">
-                            {!uploaded ? (
-                                <>
-                                    {/* Click area opens real file picker */}
-                                    <div onClick={() => fileInputRef.current?.click()}
-                                         className="border-2 border-dashed border-gray-200 rounded-2xl p-10 text-center hover:border-red-300 transition-colors cursor-pointer group">
-                                        <Upload className="w-10 h-10 text-gray-300 mx-auto mb-3 group-hover:text-red-400 transition-colors" />
-                                        <p className="text-sm font-bold text-gray-600">Click to select a file from your device</p>
-                                        <p className="text-xs text-gray-400 mt-1">PDF, DOCX, XLSX, PNG, JPG up to 50 MB</p>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Target Folder</label>
-                                        <select className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-medium text-gray-800 focus:outline-none focus:border-red-200">
-                                            {folders.map(f => <option key={f.name}>{f.name}</option>)}
-                                        </select>
-                                    </div>
-                                    <button onClick={() => fileInputRef.current?.click()}
-                                        className="btn-primary w-full !py-4" disabled={uploading}>
-                                        <Upload className="w-4 h-4" /> {uploading ? "Uploading & Analysing..." : "Upload Securely"}
-                                    </button>
-                                </>
-                            ) : (
-                                <div className="text-center py-6 space-y-4">
-                                    <div className="w-16 h-16 rounded-2xl bg-emerald-50 flex items-center justify-center mx-auto">
-                                        <CheckCircle2 className="w-8 h-8 text-emerald-500" />
-                                    </div>
-                                    <h3 className="font-black text-gray-900 text-lg">Uploaded Successfully!</h3>
-                                    <p className="text-sm text-gray-500 mb-2">File has been encrypted and stored securely in GovPilot.</p>
-                                    
-                                    {/* AI Summary Wireframe Implementation */}
-                                    {aiSummary.length > 0 && (
-                                        <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5 text-left space-y-3 shadow-inner mt-4">
-                                            <div className="flex items-center gap-2 text-red-700 font-black text-xs uppercase tracking-widest">
-                                                <span>🧠 AI Document Summary</span>
-                                            </div>
-                                            <ul className="space-y-2">
-                                                {aiSummary.map((pt, idx) => (
-                                                    <li key={idx} className="text-xs text-gray-600 font-bold flex gap-2">
-                                                        <span className="text-red-600 font-black">{idx + 1}.</span>
-                                                        <span>{pt}</span>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    )}
-                                    
-                                    <button onClick={() => { setUploadOpen(false); setUploaded(false); setAiSummary([]); }} className="btn-primary w-full !py-4">Done</button>
-                                </div>
-                            )}
-                        </div>
+                        <p className="text-3xl font-black text-gray-900">{stat.value}</p>
+                        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">{stat.label}</p>
                     </div>
-                </div>
-            )}
+                ))}
+            </div>
 
-            <div className="space-y-6">
-                {/* Action Bar */}
-                <div className="flex gap-6">
-                    <div className="relative flex-1 group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 group-focus-within:text-[#B91C1C] transition-colors" />
-                        <input
-                            value={search}
-                            onChange={e => setSearch(e.target.value)}
-                            type="text"
-                            placeholder="Search strategic signals, reports, or notices..."
-                            className="w-full pl-12 pr-6 py-4 bg-white border border-gray-100 rounded-2xl text-sm text-gray-900 focus:outline-none focus:ring-4 focus:ring-red-500/5 font-bold transition-all placeholder:text-gray-300 shadow-sm"
-                        />
+            {showManualUpload && <ManualUploadModal onClose={() => setShowManualUpload(false)} />}
+
+            {/* Upload Zones */}
+            <div className="mb-8">
+                {/* Drag & Drop Bulk Zone */}
+                <div 
+                    onDragOver={onDragOver}
+                    onDragLeave={onDragLeave}
+                    onDrop={onDrop}
+                    className={`w-full border-2 border-dashed rounded-[2rem] p-10 text-center transition-all cursor-pointer flex flex-col items-center justify-center ${
+                        isDragging ? "border-indigo-500 bg-indigo-50" : "border-gray-200 bg-white hover:border-indigo-300 hover:bg-gray-50"
+                    }`}
+                    onClick={() => fileInputRef.current?.click()}
+                >
+                    <input type="file" multiple className="hidden" ref={fileInputRef} onChange={handleFileInput} />
+                    <div className="w-20 h-20 bg-indigo-50 border border-indigo-100 shadow-sm rounded-full flex items-center justify-center mb-4 transition-transform hover:scale-110">
+                        <UploadCloud className={`w-10 h-10 ${isDragging ? "text-indigo-600" : "text-indigo-500"}`} />
                     </div>
-                    <button
-                        onClick={() => setUploadOpen(true)}
-                        className="flex items-center gap-3 px-8 py-4 bg-[#B91C1C] text-white rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] hover:bg-neutral-800 transition-all shadow-xl shadow-red-900/20 active:scale-95"
-                    >
-                        <Upload className="w-4 h-4" /> Secure Upload
-                    </button>
-                </div>
-
-                {/* Folders */}
-                <div>
-                    <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-6 flex items-center gap-3">
-                        <div className="w-1.5 h-1.5 rounded-full bg-[#B91C1C]" />
-                        Library Architecture
-                    </h2>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-                        {folders.map(folder => (
-                            <div
-                                key={folder.name}
-                                className={`group cursor-pointer rounded-[2rem] border p-6 hover:shadow-2xl hover:-translate-y-2 transition-all active:scale-95 relative overflow-hidden ${folder.bg} ${folder.border}`}
-                                onClick={() => setSearch(folder.name.split(" ")[0])}
-                            >
-                                <div className="absolute top-0 right-0 w-16 h-16 bg-red-500/5 blur-[30px] group-hover:bg-red-500/10 transition-all" />
-                                <div className="mb-6 relative z-10">
-                                    <div className="w-10 h-10 rounded-2xl bg-red-50 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
-                                        <FolderOpen className="w-5 h-5" style={{ color: "#B91C1C" }} />
-                                    </div>
-                                </div>
-                                <p className="text-xs font-black leading-tight tracking-tight text-gray-900 mb-1 group-hover:text-[#B91C1C] transition-colors">{folder.name}</p>
-                                <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">{folder.count} Signals</p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Recent Files */}
-                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                    <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                        <div className="flex items-center gap-2.5">
-                            <FileText className="w-4 h-4 text-gray-500" />
-                            <h3 className="text-sm font-black text-gray-900">Recent Files</h3>
-                        </div>
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{recentDocs.length} Total Files</span>
-                    </div>
-                    <div className="divide-y divide-gray-50">
-                        {filtered.map(doc => (
-                            <div key={doc.name} className="flex items-center gap-4 px-6 py-4 hover:bg-gray-50/60 transition-colors group">
-                                {/* Type Badge */}
-                                <div className="px-2.5 py-1 rounded-lg text-[10px] font-black shrink-0"
-                                    style={{ background: typeStyle[doc.type]?.bg ?? "#F3F4F6", color: typeStyle[doc.type]?.text ?? "#374151" }}>
-                                    {doc.type}
-                                </div>
-
-                                {/* Name + Meta */}
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-bold text-gray-900 truncate">{doc.name}</p>
-                                    <div className="flex items-center gap-3 mt-0.5">
-                                        <span className="text-[10px] text-gray-400 font-medium flex items-center gap-1">
-                                            <Clock className="w-3 h-3" /> {doc.date}
-                                        </span>
-                                        <span className="text-[10px] text-gray-400 font-medium">{doc.size}</span>
-                                    </div>
-                                </div>
-
-                                {/* Status + Actions */}
-                                <div className="flex items-center gap-2 shrink-0">
-                                    <span className="text-[10px] font-black px-2.5 py-1 rounded-lg"
-                                        style={{ background: statusStyle[doc.status]?.bg, color: statusStyle[doc.status]?.text }}>
-                                        {statusStyle[doc.status]?.label}
-                                    </span>
-
-                                    {/* Access icon */}
-                                    {doc.access === "restricted" ? (
-                                        <div className="p-1.5 rounded-lg bg-amber-50 text-amber-500" title="Restricted">
-                                            <Lock className="w-3.5 h-3.5" />
-                                        </div>
-                                    ) : (
-                                        <div className="p-1.5 rounded-lg bg-emerald-50 text-emerald-500" title="Public">
-                                            <CheckCircle2 className="w-3.5 h-3.5" />
-                                        </div>
-                                    )}
-
-                                    {/* Share */}
-                                    <button
-                                        onClick={() => handleShare(doc.name)}
-                                        className={`p-1.5 rounded-lg transition-all ${shareToast === doc.name ? "bg-emerald-50 text-emerald-600" : "bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-[#B91C1C]"}`}
-                                        title="Copy shareable link"
-                                    >
-                                        {shareToast === doc.name ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
-                                    </button>
-
-                                    {/* Preview */}
-                                    <button
-                                        onClick={() => setPreviewDoc(doc)}
-                                        className="p-1.5 rounded-lg bg-gray-50 text-gray-400 hover:bg-gray-100 transition-all"
-                                        title="Preview"
-                                    >
-                                        <Eye className="w-3.5 h-3.5" />
-                                    </button>
-
-                                    {/* Download — actually downloads a file */}
-                                    <button
-                                        onClick={() => handleDownload(doc)}
-                                        className={`p-1.5 rounded-lg transition-all relative ${downloading === doc.name ? "bg-emerald-50 text-emerald-600" : "bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-[#B91C1C]"}`}
-                                        title="Download"
-                                    >
-                                        {downloading === doc.name ? (
-                                            <CheckCircle2 className="w-3.5 h-3.5" />
-                                        ) : (
-                                            <Download className="w-3.5 h-3.5" />
-                                        )}
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                        {filtered.length === 0 && (
-                            <div className="py-12 text-center">
-                                <FileText className="w-10 h-10 text-gray-200 mx-auto mb-2" />
-                                <p className="text-sm font-bold text-gray-400">No documents found</p>
-                            </div>
-                        )}
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">AI Bulk Upload & Auto-Categorization</h3>
+                    <p className="text-gray-500 font-medium text-lg mb-4 max-w-xl mx-auto">
+                        Drag & drop multiple files here. Our AI engine will automatically scan, classify, and extract data from your documents.
+                    </p>
+                    <div className="flex gap-4">
+                        <span className="px-4 py-1.5 bg-gray-100 text-gray-600 text-xs font-bold rounded-full uppercase tracking-wider">PDF</span>
+                        <span className="px-4 py-1.5 bg-gray-100 text-gray-600 text-xs font-bold rounded-full uppercase tracking-wider">DOCX</span>
+                        <span className="px-4 py-1.5 bg-gray-100 text-gray-600 text-xs font-bold rounded-full uppercase tracking-wider">JPG / PNG</span>
                     </div>
                 </div>
             </div>
+
+            {/* Categories & Search Bar */}
+            <div className="bg-white rounded-[2rem] p-4 shadow-sm border border-gray-100 mb-6 space-y-4">
+                
+                {/* Categories */}
+                <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                    <button
+                        onClick={() => setSelectedCategory("All")}
+                        className={`shrink-0 px-6 py-3 rounded-xl font-bold text-sm transition-all ${
+                            selectedCategory === "All" ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                        }`}
+                    >
+                        All Assets
+                    </button>
+                    {categories.map(cat => (
+                        <button
+                            key={cat.name}
+                            onClick={() => setSelectedCategory(cat.name)}
+                            className={`shrink-0 flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all ${
+                                selectedCategory === cat.name ? "bg-indigo-50 text-indigo-700 ring-2 ring-indigo-200" : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                            }`}
+                        >
+                            <span className={cat.color}>{cat.icon}</span>
+                            {cat.name}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Search & View Toggle */}
+                <div className="flex gap-4">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <input
+                            type="text"
+                            placeholder="Search by ID, Citizen, Officer, Department, or Keyword..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-none rounded-xl font-medium text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-500/20"
+                        />
+                    </div>
+                    <div className="flex bg-gray-50 rounded-xl p-1 shrink-0">
+                        <button onClick={() => setViewMode("list")} className={`p-2.5 rounded-lg transition-colors ${viewMode === "list" ? "bg-white shadow-sm text-indigo-600" : "text-gray-400 hover:text-gray-600"}`}>
+                            <List className="w-5 h-5" />
+                        </button>
+                        <button onClick={() => setViewMode("grid")} className={`p-2.5 rounded-lg transition-colors ${viewMode === "grid" ? "bg-white shadow-sm text-indigo-600" : "text-gray-400 hover:text-gray-600"}`}>
+                            <Grid className="w-5 h-5" />
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Document Library View */}
+            <div className="bg-white rounded-[2rem] border border-gray-100 overflow-hidden shadow-sm min-h-[400px]">
+                
+                {filteredDocs.length === 0 && (
+                    <div className="flex flex-col items-center justify-center h-[400px] text-center">
+                        <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                            <Search className="w-10 h-10 text-gray-300" />
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">No documents found</h3>
+                        <p className="text-gray-500">Try adjusting your search criteria or category filter.</p>
+                    </div>
+                )}
+
+                {/* List View */}
+                {viewMode === "list" && filteredDocs.length > 0 && (
+                    <div className="divide-y divide-gray-50">
+                        {filteredDocs.map(doc => (
+                            <div key={doc.id} className="flex items-center p-5 hover:bg-gray-50/50 transition-colors group">
+                                <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex flex-col items-center justify-center shrink-0 mr-5">
+                                    <span className="text-[10px] font-black">{doc.type}</span>
+                                    <FileText className="w-4 h-4 mt-0.5" />
+                                </div>
+                                <div className="flex-1 min-w-0 pr-4">
+                                    <h4 
+                                        className="text-base font-bold text-gray-900 truncate cursor-pointer hover:text-indigo-600 transition-colors"
+                                        onClick={() => setPreviewDoc(doc)}
+                                    >
+                                        {doc.name}
+                                    </h4>
+                                    <div className="flex items-center gap-4 mt-1">
+                                        <span className="text-xs font-semibold text-gray-500">{doc.id}</span>
+                                        <span className="text-xs font-semibold text-gray-500 flex items-center gap-1"><Clock className="w-3 h-3" /> {doc.date}</span>
+                                        <span className="text-xs font-semibold text-gray-500 flex items-center gap-1"><FolderOpen className="w-3 h-3" /> {doc.size}</span>
+                                    </div>
+                                </div>
+                                
+                                <div className="hidden md:flex flex-col items-end pr-8 shrink-0 w-48">
+                                    <p className="text-sm font-bold text-gray-900 truncate">{doc.dept}</p>
+                                    <p className="text-xs font-semibold text-gray-500 truncate">{doc.category}</p>
+                                </div>
+
+                                <div className="hidden lg:flex items-center justify-center shrink-0 w-32 pr-8">
+                                    <span className={`px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider ${statusStyles[doc.status]}`}>
+                                        {doc.status}
+                                    </span>
+                                </div>
+
+                                <div className="flex items-center gap-2 shrink-0">
+                                    {doc.status === "pending" && currentUser?.role === "admin" && (
+                                        <>
+                                            <button onClick={() => updateStatus(doc.id, "approved")} className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors opacity-0 group-hover:opacity-100" title="Approve">
+                                                <CheckCircle2 className="w-4 h-4" />
+                                            </button>
+                                            <button onClick={() => updateStatus(doc.id, "rejected")} className="p-2.5 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors opacity-0 group-hover:opacity-100" title="Reject">
+                                                <XCircle className="w-4 h-4" />
+                                            </button>
+                                        </>
+                                    )}
+                                    <button onClick={() => setPreviewDoc(doc)} className="p-2.5 rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors" title="View Document">
+                                        <FileText className="w-4 h-4" />
+                                    </button>
+                                    {currentUser?.role === "admin" && (
+                                        <button onClick={() => { if(window.confirm('Delete document?')) deleteDocument(doc.id); }} className="p-2.5 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors" title="Delete">
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {/* Grid View */}
+                {viewMode === "grid" && filteredDocs.length > 0 && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+                        {filteredDocs.map(doc => (
+                            <div key={doc.id} className="bg-white border border-gray-100 rounded-3xl p-5 hover:shadow-xl hover:shadow-indigo-900/5 transition-all group flex flex-col">
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex flex-col items-center justify-center shrink-0">
+                                        <span className="text-[10px] font-black">{doc.type}</span>
+                                        <FileText className="w-4 h-4 mt-0.5" />
+                                    </div>
+                                    <span className={`px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider ${statusStyles[doc.status]}`}>
+                                        {doc.status}
+                                    </span>
+                                </div>
+                                <h4 
+                                    className="text-lg font-bold text-gray-900 line-clamp-2 cursor-pointer hover:text-indigo-600 transition-colors mb-2"
+                                    onClick={() => setPreviewDoc(doc)}
+                                >
+                                    {doc.name}
+                                </h4>
+                                <div className="space-y-1 mb-4 flex-1">
+                                    <p className="text-sm font-semibold text-gray-500">ID: {doc.id}</p>
+                                    <p className="text-sm font-semibold text-gray-500">{doc.category}</p>
+                                    <p className="text-sm font-semibold text-gray-500">{doc.dept}</p>
+                                </div>
+                                <div className="flex items-center justify-between pt-4 border-t border-gray-50">
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-xs font-semibold text-gray-400">{doc.date}</span>
+                                        <span className="text-xs font-semibold text-gray-400">{doc.size}</span>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button onClick={() => setPreviewDoc(doc)} className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 text-gray-600 transition-colors">
+                                            <FileText className="w-4 h-4" />
+                                        </button>
+                                        {currentUser?.role === "admin" && (
+                                            <button onClick={() => { if(window.confirm('Delete?')) deleteDocument(doc.id); }} className="p-2 bg-red-50 rounded-lg hover:bg-red-100 text-red-600 transition-colors">
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+            
         </DashboardLayout>
     );
 }

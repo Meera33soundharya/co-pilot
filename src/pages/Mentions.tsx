@@ -1,202 +1,175 @@
+import React from "react";
+import DashboardLayout from "@/components/DashboardLayout";
+import { Twitter, Facebook, ExternalLink, ThumbsUp, ThumbsDown, Minus, TrendingUp, TrendingDown, RefreshCw } from "lucide-react";
 import { useState } from "react";
-import { DashboardLayout } from "@/components/DashboardLayout";
-import { Plus, Clock, BookOpen, Newspaper, Tv, ChevronRight, X } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
-const INITIAL_ITEMS = [
-    {
-        id: "q1", title: "Youth Employment Reform", source: "Reuters", dueDate: "Jun 17", status: "Draft",
-        notes: "Need to address the 3 specific policy proposals mentioned in the question."
-    },
-    {
-        id: "q2", title: "Food Security Initiative", source: "National Tribune", dueDate: "Jun 16", status: "Draft",
-        notes: "Reference recent agricultural report figures."
-    },
-    {
-        id: "q3", title: "Infrastructure Bill", source: "The Daily Record", dueDate: "Jun 15", status: "Approved",
-        notes: "Confirmed by Chief of Staff. Ready to release."
-    },
-    {
-        id: "q4", title: "Foreign Policy Statement", source: "BBC Africa", dueDate: "Jun 12", status: "Published",
-        notes: "Published on official website and shared to all channels."
-    },
+const mentions = [
+    { platform: "Twitter", handle: "@ANI", text: "Municipal Corporation launches 'GovPilot' AI system to track citizen grievances in real-time. Officials say the system has already resolved 78% of pending cases.", sentiment: "positive", time: "12 min ago", engagement: 2847, reach: "142K" },
+    { platform: "Facebook", handle: "Residents of Ward 03", text: "The new AI monitoring has finally flagged our water supply issue. Commissioner's office responded within 2 hours! This is what digital governance looks like.", sentiment: "positive", time: "45 min ago", engagement: 892, reach: "18K" },
+    { platform: "Twitter", handle: "@CivicVoice_IN", text: "Critical: Water supply disruption in Ward 03 affects 12,000+ residents. @MunicipalCorp yet to provide timeline for resolution. #GovFailure", sentiment: "negative", time: "1h ago", engagement: 4132, reach: "89K" },
+    { platform: "Twitter", handle: "@TechReporterIN", text: "Interesting use of AI in public governance. The GovCoPilot system seems to be setting a new benchmark for smart city administration. Worth watching.", sentiment: "neutral", time: "2h ago", engagement: 567, reach: "32K" },
+    { platform: "Facebook", handle: "Ward 12 Citizens Forum", text: "Street lights near SV School broken for 4 days. Multiple complaints filed but no action. Is anyone monitoring this?", sentiment: "negative", time: "3h ago", engagement: 1203, reach: "9K" },
+    { platform: "Twitter", handle: "@SmartCityIndia", text: "Resolution rate improved by 18% in just 3 months after implementing AI-powered complaint management. Great work @MunicipalCorp!", sentiment: "positive", time: "5h ago", engagement: 334, reach: "24K" },
 ];
 
-const STATUSES = ["Draft", "Approved", "Published"];
+const sentimentData = [
+    { label: "Positive", value: 62, color: "#10B981" },
+    { label: "Neutral", value: 23, color: "#4B5563" },
+    { label: "Negative", value: 15, color: "#B91C1C" },
+];
 
-const STATUS_STYLE: Record<string, { bg: string; text: string; border: string }> = {
-    "Draft": { bg: "rgba(59,130,246,0.12)", text: "#3B82F6", border: "rgba(59,130,246,0.3)" },
-    "Approved": { bg: "rgba(16,185,129,0.12)", text: "#10B981", border: "rgba(16,185,129,0.3)" },
-    "Published": { bg: "rgba(139,92,246,0.12)", text: "#A78BFA", border: "rgba(139,92,246,0.3)" },
+const engagementHistory = [
+    { date: "Feb 14", positive: 45, negative: 22, neutral: 18 },
+    { date: "Feb 15", positive: 52, negative: 18, neutral: 24 },
+    { date: "Feb 16", positive: 38, negative: 31, neutral: 20 },
+    { date: "Feb 17", positive: 67, negative: 14, neutral: 28 },
+    { date: "Feb 18", positive: 58, negative: 19, neutral: 22 },
+    { date: "Feb 19", positive: 72, negative: 12, neutral: 30 },
+    { date: "Feb 20", positive: 61, negative: 15, neutral: 23 },
+];
+
+const sentimentIcon: Record<string, React.ReactElement> = {
+    positive: <ThumbsUp className="w-3.5 h-3.5 text-emerald-500" />,
+    negative: <ThumbsDown className="w-3.5 h-3.5 text-[#B91C1C]" />,
+    neutral: <Minus className="w-3.5 h-3.5 text-gray-400" />,
 };
 
-const SOURCE_ICON = (src: string) => {
-    if (src.includes("BBC") || src.includes("TV")) return <Tv className="w-3 h-3" />;
-    if (src.includes("Tribune") || src.includes("Record") || src.includes("Times")) return <Newspaper className="w-3 h-3" />;
-    return <BookOpen className="w-3 h-3" />;
+const sentimentBadge: Record<string, string> = {
+    positive: "bg-emerald-50 text-emerald-700 border-emerald-100",
+    negative: "bg-red-50 text-red-700 border-red-100",
+    neutral: "bg-gray-50 text-gray-700 border-gray-100",
 };
 
-export default function MediaQueue() {
-    const [items, setItems] = useState(INITIAL_ITEMS);
-    const [showNew, setShowNew] = useState(false);
-    const [newTitle, setNewTitle] = useState("");
-    const [newSource, setNewSource] = useState("");
-    const [newDue, setNewDue] = useState("");
-    const [selected, setSelected] = useState<typeof INITIAL_ITEMS[0] | null>(null);
+export default function Mentions() {
+    const [filter, setFilter] = useState("All");
+    const [action, setAction] = useState<string | null>(null);
 
-    const counts = STATUSES.reduce((acc, s) => ({ ...acc, [s]: items.filter(i => i.status === s).length }), {} as Record<string, number>);
+    const handleAction = (type: string) => {
+        setAction(type);
+        setTimeout(() => setAction(null), 1500);
+    };
 
-    function addItem() {
-        if (!newTitle.trim()) return;
-        setItems(prev => [...prev, {
-            id: `q${Date.now()}`, title: newTitle, source: newSource || "Unknown", dueDate: newDue || "TBD", status: "Draft", notes: ""
-        }]);
-        setNewTitle(""); setNewSource(""); setNewDue("");
-        setShowNew(false);
-    }
+    const filtered = filter === "All" ? mentions : mentions.filter(m => m.sentiment === filter.toLowerCase());
 
     return (
-        <DashboardLayout 
-            title="Media Queue" 
-            subtitle="Manage press queries and official responses."
-            actions={
-                <button
-                    onClick={() => setShowNew(true)}
-                    style={{
-                        display: "flex", alignItems: "center", gap: 8, background: "#3B82F6",
-                        color: "#fff", border: "none", borderRadius: 10, padding: "10px 20px",
-                        fontWeight: 700, fontSize: "0.875rem", cursor: "pointer",
-                        boxShadow: "0 4px 20px rgba(59,130,246,0.35)"
-                    }}
-                >
-                    <Plus className="w-4 h-4" /> New Response
-                </button>
-            }
-        >
-            <div>
-
-                {/* Kanban columns */}
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
-                    {STATUSES.map(status => {
-                        const ss = STATUS_STYLE[status];
-                        const colItems = items.filter(i => i.status === status);
-                        return (
-                            <div key={status} style={{ background: "#111827", borderRadius: 16, border: "1px solid #1F2937", overflow: "hidden" }}>
-                                {/* Column header */}
-                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: "1px solid #1F2937" }}>
-                                    <span style={{ color: "#9CA3AF", fontWeight: 800, fontSize: "0.75rem", letterSpacing: "0.12em", textTransform: "uppercase" }}>{status}</span>
-                                    <span style={{ background: ss.bg, color: ss.text, border: `1px solid ${ss.border}`, borderRadius: 20, padding: "2px 10px", fontSize: "0.75rem", fontWeight: 800 }}>
-                                        {counts[status] || 0}
-                                    </span>
+        <DashboardLayout title="Mentions" subtitle="Real-time social media monitoring & sentiment analysis">
+            <div className="space-y-6">
+                {/* Stats */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    {[
+                        { label: "Total Mentions", value: "1,284", change: "+24%", icon: TrendingUp, positive: true },
+                        { label: "Positive Sentiment", value: "61.8%", change: "+3.2%", icon: ThumbsUp, positive: true },
+                        { label: "Negative Mentions", value: "192", change: "-12%", icon: ThumbsDown, positive: true },
+                        { label: "Avg Engagement", value: "1,663", change: "+8.4%", icon: TrendingDown, positive: false },
+                    ].map(s => (
+                        <div key={s.label} className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-all group">
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="p-2 rounded-xl bg-gray-50 group-hover:bg-red-50 transition-colors">
+                                    <s.icon className="w-4 h-4 text-gray-400 group-hover:text-[#B91C1C] transition-colors" />
                                 </div>
+                                <span className={`text-sm font-black px-2 py-0.5 rounded-lg ${s.positive ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>{s.change}</span>
+                            </div>
+                            <p className="text-2xl font-black text-gray-900 leading-tight">{s.value}</p>
+                            <p className="text-sm uppercase tracking-widest text-gray-400 font-black mt-1">{s.label}</p>
+                        </div>
+                    ))}
+                </div>
 
-                                {/* Cards */}
-                                <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 10, minHeight: 200 }}>
-                                    {colItems.map(item => (
-                                        <div
-                                            key={item.id}
-                                            onClick={() => setSelected(item)}
-                                            style={{
-                                                background: "#1F2937", borderRadius: 12, padding: "14px 16px",
-                                                border: "1px solid #374151", cursor: "pointer", transition: "border-color 0.15s"
-                                            }}
-                                            onMouseEnter={e => (e.currentTarget.style.borderColor = "#3B82F6")}
-                                            onMouseLeave={e => (e.currentTarget.style.borderColor = "#374151")}
-                                        >
-                                            <p style={{ color: "#fff", fontWeight: 700, fontSize: "0.9rem", margin: "0 0 8px" }}>{item.title}</p>
-                                            <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#9CA3AF", fontSize: "0.75rem", marginBottom: 6 }}>
-                                                {SOURCE_ICON(item.source)}
-                                                {item.source}
-                                            </div>
-                                            {item.dueDate !== "TBD" && (
-                                                <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#6B7280", fontSize: "0.73rem" }}>
-                                                    <Clock className="w-3 h-3" />
-                                                    Due {item.dueDate}
-                                                </div>
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                    {/* Feed */}
+                    <div className="xl:col-span-2 space-y-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex bg-white border border-gray-100 p-1 rounded-xl gap-1 shadow-sm">
+                                {["All", "Positive", "Negative", "Neutral"].map(f => (
+                                    <button
+                                        key={f}
+                                        onClick={() => setFilter(f)}
+                                        className={`px-4 py-1.5 rounded-lg text-sm font-black uppercase tracking-wider transition-all ${filter === f ? "bg-gray-900 text-white shadow-md shadow-gray-200" : "text-gray-400 hover:text-gray-700"}`}
+                                    >
+                                        {f}
+                                    </button>
+                                ))}
+                            </div>
+                            <button onClick={() => handleAction("refresh")} className="flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm font-black text-gray-500 hover:bg-gray-50 transition-all shadow-sm">
+                                <RefreshCw className={`w-3.5 h-3.5 ${action === "refresh" ? "animate-spin text-red-600" : ""}`} />
+                                {action === "refresh" ? "Syncing..." : "Refresh Feed"}
+                            </button>
+                        </div>
+
+                        <div className="space-y-3">
+                            {filtered.map((m, i) => (
+                                <div key={i} className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all group text-left">
+                                    <div className="flex items-start gap-4">
+                                        <div className={`p-2.5 rounded-xl shrink-0 ${m.platform === "Twitter" ? "bg-gray-50 text-gray-900" : "bg-red-50 text-[#B91C1C]"}`}>
+                                            {m.platform === "Twitter" ? (
+                                                <Twitter className="w-4 h-4" />
+                                            ) : (
+                                                <Facebook className="w-4 h-4" />
                                             )}
                                         </div>
-                                    ))}
-                                    {colItems.length === 0 && (
-                                        <div style={{ textAlign: "center", color: "#374151", fontSize: "0.8rem", padding: "30px 0" }}>No items</div>
-                                    )}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-3 mb-2 flex-wrap">
+                                                <span className="text-base font-black text-gray-900">{m.handle}</span>
+                                                <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase border flex items-center gap-1 ${sentimentBadge[m.sentiment]}`}>
+                                                    {sentimentIcon[m.sentiment]}
+                                                    {m.sentiment}
+                                                </span>
+                                                <span className="text-sm text-gray-400 font-bold ml-auto">{m.time}</span>
+                                            </div>
+                                            <p className="text-lg text-gray-700 leading-relaxed">{m.text}</p>
+                                            <div className="flex items-center gap-4 mt-3 text-sm text-gray-400 font-bold">
+                                                <span>👍 {m.engagement.toLocaleString()}</span>
+                                                <span>📡 {m.reach} reach</span>
+                                                <button onClick={() => handleAction(`view-${i}`)} className="flex items-center gap-1 ml-auto text-red-600 hover:opacity-70 transition-colors">
+                                                    <ExternalLink className="w-3 h-3" /> {action === `view-${i}` ? "Opening Source..." : "View Post"}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Sentiment Breakdown */}
+                    <div className="space-y-5">
+                        <div className="bg-[#0B1221] rounded-2xl p-6 text-white shadow-2xl">
+                            <h3 className="font-black text-lg mb-5">Sentiment Breakdown</h3>
+                            <div className="space-y-4">
+                                {sentimentData.map(s => (
+                                    <div key={s.label}>
+                                        <div className="flex justify-between mb-2 text-sm font-black">
+                                            <span className="text-white/60">{s.label}</span>
+                                            <span>{s.value}%</span>
+                                        </div>
+                                        <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                                            <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${s.value}%`, backgroundColor: s.color }} />
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
-                        );
-                    })}
+                        </div>
+
+                        <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+                            <h3 className="font-black text-gray-900 text-lg mb-5">7-Day Engagement</h3>
+                            <div className="h-[200px]">
+                                <ResponsiveContainer width="99%" height="100%" minWidth={1} minHeight={1}>
+                                    <BarChart data={engagementHistory}>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} strokeOpacity={0.4} />
+                                        <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 9, fontWeight: 700, fill: '#94A3B8' }} />
+                                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 9, fontWeight: 700, fill: '#94A3B8' }} />
+                                        <Tooltip />
+                                        <Bar dataKey="positive" fill="#10B981" radius={[4, 4, 0, 0]} stackId="a" />
+                                        <Bar dataKey="neutral" fill="#9CA3AF" stackId="a" />
+                                        <Bar dataKey="negative" fill="#B91C1C" stackId="a" radius={[0, 0, 0, 0]} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            {/* Detail modal */}
-            {selected && (
-                <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}
-                    onClick={() => setSelected(null)}>
-                    <div style={{ background: "#111827", border: "1px solid #1F2937", borderRadius: 20, padding: 32, width: 520, maxWidth: "95vw" }}
-                        onClick={e => e.stopPropagation()}>
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-                            <h2 style={{ color: "#fff", fontWeight: 800, fontSize: "1.15rem", margin: 0 }}>{selected.title}</h2>
-                            <button onClick={() => setSelected(null)} style={{ background: "none", border: "none", color: "#6B7280", cursor: "pointer" }}><X className="w-5 h-5" /></button>
-                        </div>
-                        <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
-                            <span style={{ ...STATUS_STYLE[selected.status] && { background: STATUS_STYLE[selected.status].bg, color: STATUS_STYLE[selected.status].text, border: `1px solid ${STATUS_STYLE[selected.status].border}` }, borderRadius: 8, padding: "4px 12px", fontSize: "0.78rem", fontWeight: 700 }}>{selected.status}</span>
-                            <span style={{ display: "flex", alignItems: "center", gap: 4, color: "#9CA3AF", fontSize: "0.8rem", background: "#1F2937", border: "1px solid #374151", borderRadius: 8, padding: "4px 12px" }}>
-                                {SOURCE_ICON(selected.source)} {selected.source}
-                            </span>
-                            {selected.dueDate !== "TBD" && (
-                                <span style={{ display: "flex", alignItems: "center", gap: 4, color: "#9CA3AF", fontSize: "0.8rem", background: "#1F2937", border: "1px solid #374151", borderRadius: 8, padding: "4px 12px" }}>
-                                    <Clock className="w-3 h-3" /> Due {selected.dueDate}
-                                </span>
-                            )}
-                        </div>
-                        <label style={{ color: "#9CA3AF", fontSize: "0.8rem", fontWeight: 600, display: "block", marginBottom: 6 }}>Notes / Draft Response</label>
-                        <textarea rows={5} defaultValue={selected.notes} style={{
-                            width: "100%", background: "#1F2937", border: "1px solid #374151", borderRadius: 10,
-                            padding: "12px 14px", color: "#fff", fontSize: "0.9rem", resize: "vertical", boxSizing: "border-box"
-                        }} />
-                        <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
-                            {STATUSES.filter(s => s !== selected.status).map(s => (
-                                <button key={s} onClick={() => {
-                                    setItems(prev => prev.map(i => i.id === selected.id ? { ...i, status: s } : i));
-                                    setSelected(null);
-                                }} style={{
-                                    flex: 1, background: STATUS_STYLE[s].bg, border: `1px solid ${STATUS_STYLE[s].border}`,
-                                    color: STATUS_STYLE[s].text, borderRadius: 10, padding: "9px", fontWeight: 700, fontSize: "0.8rem", cursor: "pointer"
-                                }}>
-                                    Move to {s} <ChevronRight className="w-3 h-3 inline" />
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* New item modal */}
-            {showNew && (
-                <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}
-                    onClick={() => setShowNew(false)}>
-                    <div style={{ background: "#111827", border: "1px solid #1F2937", borderRadius: 20, padding: 32, width: 460, maxWidth: "95vw" }}
-                        onClick={e => e.stopPropagation()}>
-                        <h2 style={{ color: "#fff", fontWeight: 800, fontSize: "1.1rem", marginBottom: 20 }}>New Press Query</h2>
-                        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                            {[
-                                { label: "Query Title", value: newTitle, set: setNewTitle, placeholder: "e.g. Infrastructure Funding..." },
-                                { label: "Source / Outlet", value: newSource, set: setNewSource, placeholder: "e.g. Reuters, BBC..." },
-                                { label: "Due Date", value: newDue, set: setNewDue, placeholder: "e.g. Jun 20" },
-                            ].map(f => (
-                                <div key={f.label}>
-                                    <label style={{ color: "#9CA3AF", fontSize: "0.8rem", fontWeight: 600, display: "block", marginBottom: 6 }}>{f.label}</label>
-                                    <input value={f.value} onChange={e => f.set(e.target.value)} placeholder={f.placeholder} style={{
-                                        width: "100%", background: "#1F2937", border: "1px solid #374151", borderRadius: 10,
-                                        padding: "10px 14px", color: "#fff", fontSize: "0.9rem", boxSizing: "border-box"
-                                    }} />
-                                </div>
-                            ))}
-                        </div>
-                        <div style={{ display: "flex", gap: 12, marginTop: 22 }}>
-                            <button onClick={() => setShowNew(false)} style={{ flex: 1, background: "#1F2937", border: "1px solid #374151", borderRadius: 10, padding: "10px", color: "#9CA3AF", fontWeight: 600, cursor: "pointer" }}>Cancel</button>
-                            <button onClick={addItem} style={{ flex: 1, background: "#3B82F6", border: "none", borderRadius: 10, padding: "10px", color: "#fff", fontWeight: 700, cursor: "pointer" }}>Add to Draft</button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </DashboardLayout>
     );
 }

@@ -76,8 +76,7 @@ interface DocumentContextProps {
 const DocCtx = createContext<DocumentContextProps | null>(null);
 
 export function DocumentProvider({ children }: { children: ReactNode }) {
-    const { allComplaints } = useComplaints();
-    const closedDocs = (useComplaints() as any).closedDocs || [];
+    const { closedDocs, allComplaints } = useComplaints();
     const documentsRef = useRef<DocumentRecord[]>([]);
     const allDocumentsRef = useRef<DocumentRecord[]>([]);
     const [documentUpdates, setDocumentUpdates] = useState<Record<string, Partial<DocumentRecord>>>({});
@@ -252,14 +251,14 @@ export function DocumentProvider({ children }: { children: ReactNode }) {
                         name: `Resolution_Proof_${comp.id}.jpg`,
                         type: "JPG",
                         size: "2.1 MB",
-                        date: new Date((comp as any).resolutionDate || Date.now()).toLocaleDateString("en-IN", { day: 'numeric', month: 'short', year: 'numeric' }),
-                        uploadTimestamp: (comp as any).resolutionDate ? new Date((comp as any).resolutionDate).getTime() : Date.now(),
+                        date: new Date(comp.resolutionDate || Date.now()).toLocaleDateString("en-IN", { day: 'numeric', month: 'short', year: 'numeric' }),
+                        uploadTimestamp: comp.resolutionDate || Date.now(),
                         category: "Field Officer Reports",
                         status: "approved",
                         access: "public",
                         dept: comp.dept || "Unassigned",
-                        summary: `Photographic proof of resolution for complaint ${comp.id}. Officer notes: ${(comp as any).resolutionNotes || 'None'}`,
-                        uploader: (comp as any).officerDetails || "Field Officer",
+                        summary: `Photographic proof of resolution for complaint ${comp.id}. Officer notes: ${comp.resolutionNotes || 'None'}`,
+                        uploader: comp.officerDetails || "Field Officer",
                         complaintId: comp.id,
                         versions: [],
                         fileData: comp.resolutionProof,
@@ -272,9 +271,8 @@ export function DocumentProvider({ children }: { children: ReactNode }) {
     });
 
     // Merge closedDocs from ComplaintsContext (Resolution Reports PDF)
-    if (closedDocs) {
-        (closedDocs as any[]).forEach((cd: any) => {
-            if (!allDocuments.find(d => d.id === cd.assetId)) {
+    closedDocs.forEach(cd => {
+        if (!allDocuments.find(d => d.id === cd.assetId)) {
             allDocuments.push({
                 id: cd.assetId,
                 name: cd.name,
@@ -285,9 +283,9 @@ export function DocumentProvider({ children }: { children: ReactNode }) {
                 category: "Resolution Reports",
                 status: cd.status as DocumentStatus || "approved",
                 access: cd.access as any || "public",
-                dept: cd.dept || "Cross-Department",
-                summary: cd.summary || "System generated resolution report",
-                uploader: cd.uploader || "System Auto-Gen",
+                dept: cd.dept,
+                summary: cd.summary,
+                uploader: "System Auto-Gen",
                 complaintId: cd.complaintId,
                 versions: [],
                 fileData: cd.resolutionProof || "",
@@ -296,7 +294,6 @@ export function DocumentProvider({ children }: { children: ReactNode }) {
             });
         }
     });
-}
 
     // Apply any dynamic updates
     const finalAllDocuments = allDocuments.map(doc => {

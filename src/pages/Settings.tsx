@@ -1,4 +1,4 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
+import DashboardLayout from "@/components/DashboardLayout";
 import { useState } from "react";
 import {
     User, Bell, Shield, Save, Camera,
@@ -68,7 +68,7 @@ export default function Settings() {
                                     className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl transition-all text-left group ${activeSection === label ? "bg-[#B91C1C] text-white shadow-xl shadow-red-900/20" : "text-gray-400 hover:text-gray-900 hover:bg-gray-50"}`}
                                 >
                                     <Icon className={`w-5 h-5 shrink-0 ${activeSection === label ? "text-white" : "text-gray-300 group-hover:text-[#B91C1C] transition-colors"}`} />
-                                    <span className="text-[10px] font-black uppercase tracking-widest leading-none">{label}</span>
+                                    <span className="text-sm font-black uppercase tracking-widest leading-none">{label}</span>
                                     {activeSection !== label && <ChevronRight className="w-4 h-4 ml-auto opacity-20 group-hover:opacity-40" />}
                                 </button>
                             ))}
@@ -82,7 +82,7 @@ export default function Settings() {
                     {activeSection === "Profile & Identity" && (
                         <div className="bg-white border border-gray-100 rounded-[2.5rem] shadow-sm p-10 relative overflow-hidden animate-in fade-in slide-in-from-bottom-4">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/5 blur-[40px] pointer-events-none" />
-                            <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-10 flex items-center gap-3 relative z-10">
+                            <h2 className="text-sm font-black text-gray-400 uppercase tracking-[0.2em] mb-10 flex items-center gap-3 relative z-10">
                                 <div className="w-1.5 h-1.5 rounded-full bg-[#B91C1C]" />
                                 Identity & Protocol
                             </h2>
@@ -98,8 +98,8 @@ export default function Settings() {
                                 </div>
                                 <div className="space-y-1">
                                     <p className="text-xl font-black text-gray-900 tracking-tight">{name}</p>
-                                    <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">{designation} · {dept}</p>
-                                    <button onClick={() => handleAction("photo")} className="text-[10px] font-black text-[#B91C1C] uppercase tracking-widest mt-2 hover:translate-x-1 transition-transform flex items-center gap-1.5">
+                                    <p className="text-sm text-gray-400 font-black uppercase tracking-widest">{designation} · {dept}</p>
+                                    <button onClick={() => handleAction("photo")} className="text-sm font-black text-[#B91C1C] uppercase tracking-widest mt-2 hover:translate-x-1 transition-transform flex items-center gap-1.5">
                                         {action === "photo" ? "Initializing..." : <>Request Credential Update <ChevronRight className="w-3 h-3" /></>}
                                     </button>
                                 </div>
@@ -115,11 +115,11 @@ export default function Settings() {
                                     { label: "Governance Division", value: dept, setter: setDept },
                                 ].map(({ label, value, setter }) => (
                                     <div key={label} className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">{label}</label>
+                                        <label className="text-sm font-black uppercase tracking-widest text-gray-400 ml-1">{label}</label>
                                         <input
                                             value={value}
                                             onChange={e => setter(e.target.value)}
-                                            className="w-full px-6 py-4 bg-gray-50 border border-transparent rounded-2xl text-sm font-bold text-gray-900 focus:outline-none focus:ring-4 focus:ring-red-500/5 focus:bg-white focus:border-red-100 transition-all shadow-inner"
+                                            className="w-full px-6 py-4 bg-gray-50 border border-transparent rounded-2xl text-lg font-bold text-gray-900 focus:outline-none focus:ring-4 focus:ring-red-500/5 focus:bg-white focus:border-red-100 transition-all shadow-inner"
                                         />
                                     </div>
                                 ))}
@@ -128,12 +128,12 @@ export default function Settings() {
                             <div className="mt-10 flex gap-4 relative z-10">
                                 <button
                                     onClick={handleSave}
-                                    className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] transition-all shadow-xl active:scale-95 ${saved ? "bg-emerald-500 text-white shadow-emerald-500/20" : "bg-[#B91C1C] text-white hover:bg-neutral-800 shadow-red-900/20"}`}
+                                    className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-2xl text-base font-black uppercase tracking-[0.2em] transition-all shadow-xl active:scale-95 ${saved ? "bg-emerald-500 text-white shadow-emerald-500/20" : "bg-[#B91C1C] text-white hover:bg-neutral-800 shadow-red-900/20"}`}
                                 >
                                     <Save className="w-4 h-4" />
                                     {saved ? "Changes Committed" : "Commit Protocol"}
                                 </button>
-                                <button onClick={() => { setSaved(false); }} className="px-10 py-4 bg-gray-100 rounded-2xl text-[11px] font-black text-gray-900 hover:bg-gray-200 transition-all uppercase tracking-widest">
+                                <button onClick={() => { setSaved(false); }} className="px-10 py-4 bg-gray-100 rounded-2xl text-base font-black text-gray-900 hover:bg-gray-200 transition-all uppercase tracking-widest">
                                     Abort
                                 </button>
                             </div>
@@ -143,7 +143,7 @@ export default function Settings() {
                     {/* ──── NOTIFICATIONS SECTION ──── */}
                     {activeSection === "Notifications & Alerts" && (
                         <div className="bg-white border border-gray-100 rounded-[2.5rem] shadow-sm p-10 animate-in fade-in slide-in-from-right-4">
-                            <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-10 flex items-center gap-3">
+                            <h2 className="text-sm font-black text-gray-400 uppercase tracking-[0.2em] mb-10 flex items-center gap-3">
                                 <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                                 Notifications & Protocol Alerts
                             </h2>
@@ -157,8 +157,8 @@ export default function Settings() {
                                 ].map(({ label, desc, on }) => (
                                     <div key={label} className="flex items-center justify-between p-6 bg-gray-50 rounded-3xl border border-transparent hover:border-amber-100 transition-all group">
                                         <div className="max-w-md">
-                                            <p className="text-sm font-black text-gray-900">{label}</p>
-                                            <p className="text-[11px] text-gray-400 font-medium mt-0.5">{desc}</p>
+                                            <p className="text-lg font-black text-gray-900">{label}</p>
+                                            <p className="text-base text-gray-400 font-medium mt-0.5">{desc}</p>
                                         </div>
                                         <Toggle defaultOn={on} />
                                     </div>
@@ -170,7 +170,7 @@ export default function Settings() {
                     {/* ──── SECURITY SECTION ──── */}
                     {activeSection === "Security & Access" && (
                         <div className="bg-white border border-gray-100 rounded-[2.5rem] shadow-sm p-10 animate-in fade-in slide-in-from-right-4">
-                            <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-10 flex items-center gap-3">
+                            <h2 className="text-sm font-black text-gray-400 uppercase tracking-[0.2em] mb-10 flex items-center gap-3">
                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                                 Multi-Factor Security Protocol
                             </h2>
@@ -182,20 +182,20 @@ export default function Settings() {
                                 ].map(({ label, desc, on }) => (
                                     <div key={label} className="flex items-center justify-between p-6 bg-gray-50 rounded-3xl group">
                                         <div className="max-w-md">
-                                            <p className="text-sm font-black text-gray-900">{label}</p>
-                                            <p className="text-[11px] text-gray-400 font-medium mt-0.5">{desc}</p>
+                                            <p className="text-lg font-black text-gray-900">{label}</p>
+                                            <p className="text-base text-gray-400 font-medium mt-0.5">{desc}</p>
                                         </div>
                                         <Toggle defaultOn={on} />
                                     </div>
                                 ))}
                                 
                                 <div className="p-8 border-2 border-dashed border-gray-100 rounded-[2rem] space-y-4">
-                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400">Trusted Device Management</h4>
-                                    <div className="flex items-center justify-between py-2 border-b border-gray-50 text-[11px] font-bold text-gray-900">
+                                    <h4 className="text-sm font-black uppercase tracking-widest text-gray-400">Trusted Device Management</h4>
+                                    <div className="flex items-center justify-between py-2 border-b border-gray-50 text-base font-bold text-gray-900">
                                         <span>District-Mobile (Samsung S23)</span>
                                         <span className="text-emerald-500 font-black">ACTIVE</span>
                                     </div>
-                                    <div className="flex items-center justify-between py-2 text-[11px] font-bold text-gray-400">
+                                    <div className="flex items-center justify-between py-2 text-base font-bold text-gray-400">
                                         <span>Officer-Laptop (MacBook Pro)</span>
                                         <button className="text-red-500 hover:underline">Revoke Access</button>
                                     </div>
@@ -211,27 +211,27 @@ export default function Settings() {
                                 <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
                                     <div className="p-3 bg-emerald-50 rounded-2xl w-fit mb-4"><CheckCircle2 className="w-5 h-5 text-emerald-600" /></div>
                                     <h4 className="text-3xl font-black text-gray-900">{stats.resolved}</h4>
-                                    <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest mt-1">Grievances Resolved</p>
+                                    <p className="text-sm font-black uppercase text-gray-400 tracking-widest mt-1">Grievances Resolved</p>
                                 </div>
                                 <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
                                     <div className="p-3 bg-blue-50 rounded-2xl w-fit mb-4"><Clock className="w-5 h-5 text-blue-600" /></div>
                                     <h4 className="text-3xl font-black text-gray-900">{stats.avgTime}</h4>
-                                    <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest mt-1">Avg Resolution Time</p>
+                                    <p className="text-sm font-black uppercase text-gray-400 tracking-widest mt-1">Avg Resolution Time</p>
                                 </div>
                                 <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
                                     <div className="p-3 bg-amber-50 rounded-2xl w-fit mb-4"><Star className="w-5 h-5 text-amber-600" /></div>
                                     <h4 className="text-3xl font-black text-gray-900">{stats.satisfaction}</h4>
-                                    <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest mt-1">Satisfaction Score</p>
+                                    <p className="text-sm font-black uppercase text-gray-400 tracking-widest mt-1">Satisfaction Score</p>
                                 </div>
                             </div>
 
                             <div className="bg-white border border-gray-100 rounded-[2.5rem] shadow-sm p-10">
                                 <div className="flex items-center justify-between mb-8">
-                                    <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-3">
+                                    <h2 className="text-sm font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-3">
                                         <Activity className="w-4 h-4 text-[#B91C1C]" />
                                         Resolution Efficiency Trend
                                     </h2>
-                                    <button className="text-[10px] font-black uppercase text-[#B91C1C] flex items-center gap-2">Download Full Report <ExternalLink className="w-3 h-3" /></button>
+                                    <button className="text-sm font-black uppercase text-[#B91C1C] flex items-center gap-2">Download Full Report <ExternalLink className="w-3 h-3" /></button>
                                 </div>
                                 <div className="h-48 flex items-end gap-3 px-4">
                                     {[30, 45, 25, 60, 80, 55, 90].map((h, i) => (

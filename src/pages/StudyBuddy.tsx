@@ -1,4 +1,4 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
+import DashboardLayout from "@/components/DashboardLayout";
 import {
     BookOpen, GraduationCap, Search, Sparkles, Star, History,
     FileText, ArrowRight, PlayCircle, Bookmark, AlertCircle,
@@ -139,7 +139,7 @@ function QuizModal({ topic, onClose }: { topic: typeof ALL_TOPICS[0]; onClose: (
                     </div>
                     <div className="flex-1 min-w-0">
                         <p className={`text-[9px] font-black uppercase tracking-widest ${topic.color} opacity-60`}>Practice Quiz</p>
-                        <p className="text-sm font-black text-gray-900 truncate">{topic.title}</p>
+                        <p className="text-lg font-black text-gray-900 truncate">{topic.title}</p>
                     </div>
                     <button onClick={() => onClose(score, questions.length)} className="p-2 rounded-xl hover:bg-white/50 transition-colors">
                         <X className="w-5 h-5 text-gray-500" />
@@ -154,7 +154,7 @@ function QuizModal({ topic, onClose }: { topic: typeof ALL_TOPICS[0]; onClose: (
                                 <div className="h-full bg-[#B91C1C] rounded-full transition-all"
                                     style={{ width: `${((qIdx + 1) / questions.length) * 100}%` }} />
                             </div>
-                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest shrink-0">
+                            <span className="text-sm font-black text-gray-400 uppercase tracking-widest shrink-0">
                                 {qIdx + 1}/{questions.length}
                             </span>
                         </div>
@@ -180,8 +180,8 @@ function QuizModal({ topic, onClose }: { topic: typeof ALL_TOPICS[0]; onClose: (
                                 return (
                                     <button key={i} onClick={() => handleSelect(i)}
                                         disabled={selected !== null}
-                                        className={`w-full flex items-center gap-3 p-3.5 rounded-2xl text-left text-sm font-bold transition-all ${cls} ${selected === null ? "cursor-pointer" : "cursor-default"}`}>
-                                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 text-[10px] font-black ${showResult && i === q.correct ? "bg-emerald-500 text-white" : showResult && i === selected ? "bg-red-400 text-white" : "bg-gray-200 text-gray-500"}`}>
+                                        className={`w-full flex items-center gap-3 p-3.5 rounded-2xl text-left text-lg font-bold transition-all ${cls} ${selected === null ? "cursor-pointer" : "cursor-default"}`}>
+                                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 text-sm font-black ${showResult && i === q.correct ? "bg-emerald-500 text-white" : showResult && i === selected ? "bg-red-400 text-white" : "bg-gray-200 text-gray-500"}`}>
                                             {showResult && i === q.correct ? <CheckCircle2 className="w-3.5 h-3.5" /> :
                                              showResult && i === selected  ? <XCircle className="w-3.5 h-3.5" /> :
                                              String.fromCharCode(65 + i)}
@@ -195,14 +195,14 @@ function QuizModal({ topic, onClose }: { topic: typeof ALL_TOPICS[0]; onClose: (
                         {/* Hint */}
                         {selected === null && (
                             <button onClick={() => setShowHint(!showHint)}
-                                className="flex items-center gap-2 text-xs font-bold text-amber-600 hover:text-amber-700 transition-colors">
+                                className="flex items-center gap-2 text-base font-bold text-amber-600 hover:text-amber-700 transition-colors">
                                 <Lightbulb className="w-3.5 h-3.5" />
                                 {showHint ? "Hide hint" : "Show hint"}
                             </button>
                         )}
                         {showHint && selected === null && (
                             <div className="p-3.5 bg-amber-50 border border-amber-100 rounded-2xl">
-                                <p className="text-xs font-bold text-amber-700">💡 {q.hint}</p>
+                                <p className="text-base font-bold text-amber-700">💡 {q.hint}</p>
                             </div>
                         )}
 
@@ -212,14 +212,14 @@ function QuizModal({ topic, onClose }: { topic: typeof ALL_TOPICS[0]; onClose: (
                                 <p className={`text-[9px] font-black uppercase tracking-widest mb-1 ${selected === q.correct ? "text-emerald-600" : "text-red-600"}`}>
                                     {selected === q.correct ? "✓ Correct!" : "✗ Not quite"}
                                 </p>
-                                <p className={`text-xs font-medium leading-relaxed ${selected === q.correct ? "text-emerald-800" : "text-red-800"}`}>{q.explanation}</p>
+                                <p className={`text-base font-medium leading-relaxed ${selected === q.correct ? "text-emerald-800" : "text-red-800"}`}>{q.explanation}</p>
                             </div>
                         )}
 
                         {/* Next button */}
                         {showResult && (
                             <button onClick={handleNext}
-                                className="w-full flex items-center justify-center gap-2 py-3.5 bg-[#B91C1C] hover:bg-red-800 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-red-200 active:scale-95">
+                                className="w-full flex items-center justify-center gap-2 py-3.5 bg-[#B91C1C] hover:bg-red-800 text-white rounded-2xl text-base font-black uppercase tracking-widest transition-all shadow-lg shadow-red-200 active:scale-95">
                                 {isLast ? <><Trophy className="w-4 h-4" /> See Results</> : <><ChevronRight className="w-4 h-4" /> Next Question</>}
                             </button>
                         )}
@@ -232,7 +232,7 @@ function QuizModal({ topic, onClose }: { topic: typeof ALL_TOPICS[0]; onClose: (
                         </div>
                         <div>
                             <h3 className="text-xl font-black text-gray-900">{pct >= 70 ? "🎉 Well Done!" : "Keep Practising!"}</h3>
-                            <p className="text-sm text-gray-500 mt-1">You scored <strong>{score}</strong> out of <strong>{questions.length}</strong> questions</p>
+                            <p className="text-lg text-gray-500 mt-1">You scored <strong>{score}</strong> out of <strong>{questions.length}</strong> questions</p>
                         </div>
                         <div className="grid grid-cols-3 gap-3">
                             {[{ label: "Correct", val: score, color: "text-emerald-600 bg-emerald-50" },
@@ -247,11 +247,11 @@ function QuizModal({ topic, onClose }: { topic: typeof ALL_TOPICS[0]; onClose: (
                         </div>
                         <div className="flex gap-3">
                             <button onClick={() => { setQIdx(0); setSelected(null); setShowResult(false); setShowHint(false); setScore(0); setFinished(false); }}
-                                className="flex-1 flex items-center justify-center gap-2 py-3 border border-gray-200 rounded-2xl text-xs font-black text-gray-600 hover:bg-gray-50 transition-all">
+                                className="flex-1 flex items-center justify-center gap-2 py-3 border border-gray-200 rounded-2xl text-base font-black text-gray-600 hover:bg-gray-50 transition-all">
                                 <RotateCcw className="w-4 h-4" /> Retry
                             </button>
                             <button onClick={() => onClose(score, questions.length)}
-                                className="flex-1 flex items-center justify-center gap-2 py-3 bg-[#B91C1C] text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-red-800 transition-all">
+                                className="flex-1 flex items-center justify-center gap-2 py-3 bg-[#B91C1C] text-white rounded-2xl text-base font-black uppercase tracking-widest hover:bg-red-800 transition-all">
                                 <ArrowRight className="w-4 h-4" /> Done
                             </button>
                         </div>
@@ -299,11 +299,11 @@ export default function StudyBuddy() {
                 {/* ── Hero Search Bar ─────────────────────────────── */}
                 <div className="bg-white border border-gray-100 rounded-[2.5rem] p-8 shadow-sm text-center relative overflow-hidden">
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-72 h-28 bg-red-400/5 blur-[60px]" />
-                    <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-red-50 text-red-600 rounded-full text-[10px] font-black uppercase tracking-widest mb-5 border border-red-100">
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-red-50 text-red-600 rounded-full text-sm font-black uppercase tracking-widest mb-5 border border-red-100">
                         <Sparkles className="w-3 h-3" /> Powered by Gov-Large v4
                     </div>
                     <h2 className="text-2xl font-black text-gray-900 mb-2">Search any Governance Topic</h2>
-                    <p className="text-sm text-gray-400 mb-6">Click a topic to read, then press <strong>Start Practice</strong> for an interactive quiz</p>
+                    <p className="text-lg text-gray-400 mb-6">Click a topic to read, then press <strong>Start Practice</strong> for an interactive quiz</p>
 
                     <div className="relative max-w-2xl mx-auto group">
                         <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 group-focus-within:text-[#B91C1C] transition-colors" />
@@ -313,7 +313,7 @@ export default function StudyBuddy() {
                             value={search}
                             onChange={e => setSearch(e.target.value)}
                             placeholder="e.g.  water  ·  ward 12  ·  budget  ·  road  ·  SLA  ·  drainage..."
-                            className="w-full pl-14 pr-14 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl text-sm font-medium text-gray-800 focus:outline-none focus:border-red-200 focus:bg-white transition-all placeholder:text-gray-300"
+                            className="w-full pl-14 pr-14 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl text-lg font-medium text-gray-800 focus:outline-none focus:border-red-200 focus:bg-white transition-all placeholder:text-gray-300"
                         />
                         {search && (
                             <button onClick={() => setSearch("")} className="absolute right-5 top-1/2 -translate-y-1/2 p-1 text-gray-300 hover:text-red-500 transition-colors">
@@ -325,7 +325,7 @@ export default function StudyBuddy() {
                     <div className="flex flex-wrap justify-center gap-2 mt-5">
                         {CATEGORIES.map(cat => (
                             <button key={cat} onClick={() => setCategory(cat)}
-                                className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+                                className={`px-4 py-1.5 rounded-xl text-base font-bold transition-all border ${
                                     category === cat
                                         ? "bg-[#B91C1C] text-white border-[#B91C1C] shadow"
                                         : "bg-gray-50 text-gray-400 border-gray-100 hover:bg-red-50 hover:text-red-600 hover:border-red-100"
@@ -338,7 +338,7 @@ export default function StudyBuddy() {
 
                 {/* ── Results Count ───────────────────────────────── */}
                 <div className="flex items-center justify-between px-1">
-                    <p className="text-sm font-black text-gray-700">
+                    <p className="text-lg font-black text-gray-700">
                         {search.trim()
                             ? <>{visible.length} topic{visible.length !== 1 ? "s" : ""} matching <span className="text-[#B91C1C]">"{search}"</span></>
                             : <>{visible.length} topics available</>
@@ -346,12 +346,12 @@ export default function StudyBuddy() {
                     </p>
                     <div className="flex items-center gap-2">
                         {Object.keys(completedTopics).length > 0 && (
-                            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-xl">
+                            <span className="text-sm font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-xl">
                                 ✓ {Object.keys(completedTopics).length} practised today
                             </span>
                         )}
                         {search && (
-                            <button onClick={() => { setSearch(""); setCategory("All"); }} className="text-xs font-bold text-gray-400 hover:text-red-600 flex items-center gap-1 transition-colors">
+                            <button onClick={() => { setSearch(""); setCategory("All"); }} className="text-base font-bold text-gray-400 hover:text-red-600 flex items-center gap-1 transition-colors">
                                 <X className="w-3.5 h-3.5" /> Clear
                             </button>
                         )}
@@ -363,8 +363,8 @@ export default function StudyBuddy() {
                     <div className="bg-white border border-gray-100 rounded-3xl p-16 text-center">
                         <Search className="w-10 h-10 text-gray-200 mx-auto mb-3" />
                         <p className="font-bold text-gray-400">No topics found for "{search}"</p>
-                        <p className="text-xs text-gray-300 mt-1">Try: water · ward · budget · road · SLA · drainage · sanitation</p>
-                        <button onClick={() => { setSearch(""); setCategory("All"); }} className="mt-4 px-5 py-2 bg-red-50 text-red-600 rounded-xl text-xs font-bold hover:bg-red-100 transition-colors">
+                        <p className="text-base text-gray-300 mt-1">Try: water · ward · budget · road · SLA · drainage · sanitation</p>
+                        <button onClick={() => { setSearch(""); setCategory("All"); }} className="mt-4 px-5 py-2 bg-red-50 text-red-600 rounded-xl text-base font-bold hover:bg-red-100 transition-colors">
                             Show all topics
                         </button>
                     </div>
@@ -383,7 +383,7 @@ export default function StudyBuddy() {
                                             <topic.icon className={`w-5 h-5 ${topic.color}`} />
                                         </div>
                                         <div className="flex flex-col items-end gap-1">
-                                            <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg ${topic.bg} ${topic.color}`}>
+                                            <span className={`text-sm font-black uppercase tracking-widest px-2.5 py-1 rounded-lg ${topic.bg} ${topic.color}`}>
                                                 {topic.category}
                                             </span>
                                             {pct !== null && (
@@ -397,7 +397,7 @@ export default function StudyBuddy() {
                                     {/* Title & Description */}
                                     <div className="flex-1">
                                         <h3 className="text-base font-black text-gray-900 mb-1.5 leading-snug">{topic.title}</h3>
-                                        <p className="text-sm text-gray-500 leading-relaxed">{topic.desc}</p>
+                                        <p className="text-lg text-gray-500 leading-relaxed">{topic.desc}</p>
                                     </div>
 
                                     {/* Progress bar if attempted */}
@@ -411,7 +411,7 @@ export default function StudyBuddy() {
                                     {/* CTA Button */}
                                     <button
                                         onClick={() => setActiveQuiz(topic)}
-                                        className={`flex items-center justify-center gap-2 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all w-full ${
+                                        className={`flex items-center justify-center gap-2 py-3 rounded-2xl text-base font-black uppercase tracking-widest transition-all w-full ${
                                             pct !== null
                                                 ? "bg-gray-50 text-gray-700 border border-gray-100 hover:bg-[#B91C1C] hover:text-white hover:border-[#B91C1C]"
                                                 : "bg-red-50 text-[#B91C1C] hover:bg-[#B91C1C] hover:text-white"
@@ -445,17 +445,17 @@ export default function StudyBuddy() {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center justify-between mb-2">
-                                        <p className="text-sm font-black text-gray-800 truncate">{u.title}</p>
-                                        <span className="text-[10px] text-gray-400 font-bold ml-3 shrink-0">{u.last}</span>
+                                        <p className="text-lg font-black text-gray-800 truncate">{u.title}</p>
+                                        <span className="text-sm text-gray-400 font-bold ml-3 shrink-0">{u.last}</span>
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
                                             <div className="h-full bg-[#B91C1C] rounded-full transition-all" style={{ width: `${u.progress}%` }} />
                                         </div>
-                                        <span className="text-xs font-black text-gray-500 shrink-0">{u.progress}%</span>
+                                        <span className="text-base font-black text-gray-500 shrink-0">{u.progress}%</span>
                                     </div>
                                 </div>
-                                <button className="shrink-0 px-4 py-2 bg-gray-50 hover:bg-[#B91C1C] hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all">
+                                <button className="shrink-0 px-4 py-2 bg-gray-50 hover:bg-[#B91C1C] hover:text-white rounded-xl text-base font-black uppercase tracking-widest transition-all">
                                     Resume
                                 </button>
                             </div>
@@ -463,14 +463,14 @@ export default function StudyBuddy() {
                     </div>
 
                     <div className="bg-[#0B1221] rounded-[2rem] p-7 text-white shadow-2xl">
-                        <h3 className="font-black mb-5 text-sm">Expertise Level</h3>
+                        <h3 className="font-black mb-5 text-lg">Expertise Level</h3>
                         <div className="flex items-center gap-4 mb-6">
                             <div className="w-14 h-14 rounded-full border-4 border-[#B91C1C] flex items-center justify-center shrink-0">
                                 <span className="text-lg font-black">L4</span>
                             </div>
                             <div>
-                                <p className="font-black text-sm">Senior Analyst</p>
-                                <p className="text-[10px] text-white/40 uppercase tracking-widest">Next: Governance Strategist</p>
+                                <p className="font-black text-lg">Senior Analyst</p>
+                                <p className="text-sm text-white/40 uppercase tracking-widest">Next: Governance Strategist</p>
                             </div>
                         </div>
                         <div className="space-y-3">
@@ -478,25 +478,25 @@ export default function StudyBuddy() {
                                 <div className="p-2 bg-amber-500/20 rounded-lg"><Star className="w-4 h-4 text-amber-400" /></div>
                                 <div>
                                     <p className="text-[9px] font-black uppercase tracking-widest text-white/30">Total XP</p>
-                                    <p className="text-sm font-black">{totalXP.toLocaleString()} XP</p>
+                                    <p className="text-lg font-black">{totalXP.toLocaleString()} XP</p>
                                 </div>
                             </div>
                             <div className="p-3.5 bg-white/5 rounded-2xl border border-white/10 flex items-center gap-3">
                                 <div className="p-2 bg-cyan-500/20 rounded-lg"><Bookmark className="w-4 h-4 text-cyan-400" /></div>
                                 <div>
                                     <p className="text-[9px] font-black uppercase tracking-widest text-white/30">Policies Mastered</p>
-                                    <p className="text-sm font-black">{32 + masteredCount} Policies</p>
+                                    <p className="text-lg font-black">{32 + masteredCount} Policies</p>
                                 </div>
                             </div>
                             <div className="p-3.5 bg-white/5 rounded-2xl border border-white/10 flex items-center gap-3">
                                 <div className="p-2 bg-emerald-500/20 rounded-lg"><Trophy className="w-4 h-4 text-emerald-400" /></div>
                                 <div>
                                     <p className="text-[9px] font-black uppercase tracking-widest text-white/30">Quizzes Completed</p>
-                                    <p className="text-sm font-black">{Object.keys(completedTopics).length} Today</p>
+                                    <p className="text-lg font-black">{Object.keys(completedTopics).length} Today</p>
                                 </div>
                             </div>
                         </div>
-                        <button className="w-full mt-6 py-3.5 bg-[#B91C1C] text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-red-800 transition-all">
+                        <button className="w-full mt-6 py-3.5 bg-[#B91C1C] text-white rounded-2xl text-base font-black uppercase tracking-widest hover:bg-red-800 transition-all">
                             Download Certificate
                         </button>
                     </div>

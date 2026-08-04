@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ComplaintsProvider } from "@/context/ComplaintsContext";
 import { useComplaints } from "@/context/ComplaintsContext";
+import { DocumentProvider } from "@/context/DocumentContext";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Grievances from "./pages/Grievances";
@@ -24,20 +25,25 @@ import CitizenModule from "./pages/CitizenModule";
 import Profile from "./pages/Profile";
 import Announcements from "./pages/Announcements";
 import CitizenModuleGuide from "./pages/CitizenModuleGuide";
+
 import Heatmap from "./pages/Heatmap";
 import PeopleManagement from "./pages/PeopleManagement";
 import FieldPortal from "./pages/FieldPortal";
 import Landing from "./pages/Landing";
-import TrackComplaint from "./pages/TrackComplaint";
-import ElectionAnalytics from "./pages/ElectionAnalytics";
-import VoterCRM from "./pages/VoterCRM";
-import Meetings from "./pages/Meetings";
-import Constituency from "./pages/Constituency";
-import AICoPilot from "./pages/AICoPilot";
-import ElderlyPortal from "./pages/ElderlyPortal";
+import AdminPanel from "./pages/AdminPanel";
 import AIAssistant from "./components/AIAssistant";
 import CommandPalette from "./components/CommandPalette";
+import VoiceAssistant from "./components/VoiceAssistant";
+import Meetings from "./pages/Meetings";
+import MediaQueue from "./pages/MediaQueue";
+import Constituency from "./pages/Constituency";
+import AICoPilot from "./pages/AICoPilot";
+import VillageVoicePortal from "./pages/VillageVoicePortal";
+import ResolutionReports from "./pages/ResolutionReports";
+
 import { Toaster } from 'sonner';
+import { useEffect } from 'react';
+import { initializeAutomationServices } from '@/services/realtimeService';
 
 // 🔒 Route Guard - redirect to /login if not authenticated
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -46,7 +52,23 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+// 🚀 If already logged in, redirect away from login page
+function PublicRoute({ children }: { children: React.ReactNode }) {
+  const { currentUser } = useComplaints();
+  if (currentUser) {
+    if (currentUser.role === "citizen") return <Navigate to="/citizen" replace />;
+    if (currentUser.role === "officer") return <Navigate to="/field-portal" replace />;
+    return <Navigate to="/dashboard" replace />;
+  }
+  return <>{children}</>;
+}
+
 function App() {
+  useEffect(() => {
+    // Initialize automation services on app startup
+    initializeAutomationServices();
+  }, []);
+
   return (
     <ComplaintsProvider>
       <Toaster
@@ -63,50 +85,55 @@ function App() {
         }}
       />
       <BrowserRouter>
-        <Routes>
-          {/* Public pages */}
-          <Route path="/" element={<Login />} />
-          <Route path="/landing" element={<Landing />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/submit-complaint" element={<CitizenPortal />} />
-          <Route path="/voice-portal" element={<ElderlyPortal />} />
+        <DocumentProvider>
+          <Routes>
+            {/* Public pages */}
+            <Route path="/" element={<Landing />} />
+            <Route path="/meetings" element={<ProtectedRoute><Meetings /></ProtectedRoute>} />
+            <Route path="/media-queue" element={<ProtectedRoute><MediaQueue /></ProtectedRoute>} />
+            <Route path="/constituency" element={<ProtectedRoute><Constituency /></ProtectedRoute>} />
+            <Route path="/ai-copilot" element={<ProtectedRoute><AICoPilot /></ProtectedRoute>} />
+            <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+            <Route path="/submit-complaint" element={<CitizenPortal />} />
+            <Route path="/village-voice" element={<VillageVoicePortal />} />
 
-          {/* Protected pages */}
-          <Route path="/citizen" element={<ProtectedRoute><CitizenModule /></ProtectedRoute>} />
-          <Route path="/track-complaint" element={<ProtectedRoute><TrackComplaint /></ProtectedRoute>} />
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/field-portal" element={<ProtectedRoute><FieldPortal /></ProtectedRoute>} />
-          <Route path="/interactive-dashboard" element={<ProtectedRoute><InteractiveDashboard /></ProtectedRoute>} />
-          <Route path="/brainspark" element={<ProtectedRoute><BrainSpark /></ProtectedRoute>} />
-          <Route path="/study-buddy" element={<ProtectedRoute><StudyBuddy /></ProtectedRoute>} />
-          <Route path="/proverbs" element={<ProtectedRoute><Proverbs /></ProtectedRoute>} />
-          <Route path="/policy-simulator" element={<ProtectedRoute><PolicySimulator /></ProtectedRoute>} />
-          <Route path="/explainable-ai" element={<ProtectedRoute><ExplainableAI /></ProtectedRoute>} />
-          <Route path="/grievances" element={<ProtectedRoute><Grievances /></ProtectedRoute>} />
-          <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
-          <Route path="/speech-ai" element={<ProtectedRoute><SpeechAI /></ProtectedRoute>} />
-          <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-          <Route path="/mentions" element={<ProtectedRoute><Mentions /></ProtectedRoute>} />
-          <Route path="/ai-alerts" element={<ProtectedRoute><AIAlerts /></ProtectedRoute>} />
-          <Route path="/announcements" element={<ProtectedRoute><Announcements /></ProtectedRoute>} />
-          <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-          <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
-          <Route path="/citizen-guide" element={<ProtectedRoute><CitizenModuleGuide /></ProtectedRoute>} />
-          <Route path="/schedule" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          <Route path="/heatmap" element={<ProtectedRoute><Heatmap /></ProtectedRoute>} />
-          <Route path="/people" element={<ProtectedRoute><PeopleManagement /></ProtectedRoute>} />
-          <Route path="/election-analytics" element={<ProtectedRoute><ElectionAnalytics /></ProtectedRoute>} />
-          <Route path="/voter-crm" element={<ProtectedRoute><VoterCRM /></ProtectedRoute>} />
-          <Route path="/meetings" element={<ProtectedRoute><Meetings /></ProtectedRoute>} />
-          <Route path="/constituency" element={<ProtectedRoute><Constituency /></ProtectedRoute>} />
-          <Route path="/ai-copilot" element={<ProtectedRoute><AICoPilot /></ProtectedRoute>} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
 
-        {/* Global overlays */}
-        <AIAssistant />
-        <CommandPalette />
+
+            {/* Protected pages */}
+            <Route path="/citizen" element={<ProtectedRoute><CitizenModule /></ProtectedRoute>} />
+            <Route path="/field-portal" element={<ProtectedRoute><FieldPortal /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/interactive-dashboard" element={<ProtectedRoute><InteractiveDashboard /></ProtectedRoute>} />
+            <Route path="/brainspark" element={<ProtectedRoute><BrainSpark /></ProtectedRoute>} />
+            <Route path="/study-buddy" element={<ProtectedRoute><StudyBuddy /></ProtectedRoute>} />
+            <Route path="/proverbs" element={<ProtectedRoute><Proverbs /></ProtectedRoute>} />
+            <Route path="/policy-simulator" element={<ProtectedRoute><PolicySimulator /></ProtectedRoute>} />
+            <Route path="/explainable-ai" element={<ProtectedRoute><ExplainableAI /></ProtectedRoute>} />
+            <Route path="/grievances" element={<ProtectedRoute><Grievances /></ProtectedRoute>} />
+            <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
+            <Route path="/speech-ai" element={<ProtectedRoute><SpeechAI /></ProtectedRoute>} />
+            <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+            <Route path="/resolution-reports" element={<ProtectedRoute><ResolutionReports /></ProtectedRoute>} />
+            <Route path="/mentions" element={<ProtectedRoute><Mentions /></ProtectedRoute>} />
+            <Route path="/ai-alerts" element={<ProtectedRoute><AIAlerts /></ProtectedRoute>} />
+            <Route path="/announcements" element={<ProtectedRoute><Announcements /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+            <Route path="/citizen-guide" element={<ProtectedRoute><CitizenModuleGuide /></ProtectedRoute>} />
+            <Route path="/schedule" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />
+            <Route path="/schedule-guide" element={<Navigate to="/schedule" replace />} />
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/heatmap" element={<ProtectedRoute><Heatmap /></ProtectedRoute>} />
+            <Route path="/people" element={<ProtectedRoute><PeopleManagement /></ProtectedRoute>} />
+            <Route path="/admin-panel" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+
+          {/* Global overlays */}
+          <AIAssistant />
+          <CommandPalette />
+          <VoiceAssistant />
+        </DocumentProvider>
       </BrowserRouter>
     </ComplaintsProvider>
   );

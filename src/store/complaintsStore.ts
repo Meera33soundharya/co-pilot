@@ -18,11 +18,11 @@ export type Category =
 
 // Full workflow status
 export type Status =
-    | "Pending"
-    | "Accepted"
-    | "Rejected"
+    | "New"
+    | "Categorized"
     | "Assigned"
     | "In Progress"
+    | "Pending Verification"
     | "Resolved"
     | "Closed";
 
@@ -32,13 +32,12 @@ export interface AuditEntry {
     time: string;
     actor: string;
     action: string;
-    note?: string; // Officer comments / details
-    image?: string; // Proof of work
+    note?: string;
+    image?: string;
 }
 
 export interface Complaint {
     id: string;
-
     // Citizen info
     citizen: string;
     phone: string;
@@ -46,22 +45,34 @@ export interface Complaint {
     citizenId: string;
 
     // Problem info
-
-    // Problem info
     category: Category;
     issue: string;
     description: string;
     priority: Priority;
 
-    // 🆕 New Actionable Modules
-    evidence?: string[];      // URLs to photos/videos
-    location?: string;        // Text location
-    coords?: { lat: number; lng: number }; // Map pin
+    // 🆕 Tamil Voice Fields
+    originalComplaintTamil?: string;    // Original Tamil speech text
+    translatedEnglish?: string; // AI-translated English version
+    aiSummary?: string;          // Short AI-generated summary
+    landmark?: string;           // Spoken landmark
+    area?: string;               // Spoken area name
+
+    // 🆕 Actionable Modules
+    evidence?: string[];
+    location?: string;
+    coords?: { lat: number; lng: number };
     notifPref?: "SMS" | "Email" | "None";
-    sentiment?: number;       // 0 to 100 scoring
-    rating?: number;          // 1-5 stars citizen feedback
-    resolutionProof?: string; // Base64 or URL of "after" photo
-    source?: string;          // Source of complaint
+    sentiment?: number;
+    rating?: number;
+    source?: "voice" | "web";
+
+    // 🆕 Resolution Evidence
+    resolutionProof?: string;
+    resolutionNotes?: string;
+    supportingDocs?: string[];
+    adminRemarks?: string;
+    resolutionDate?: number;
+    officerDetails?: string;
 
     // Workflow
     status: Status;
@@ -77,16 +88,16 @@ export interface Complaint {
 
 // ── Auto-categorize from keywords ──────────────────────────────
 const CATEGORY_KEYWORDS: { category: Category; words: string[] }[] = [
-    { category: "Water Supply", words: ["water", "leak", "pipe", "tap", "supply", "bore"] },
-    { category: "Electricity", words: ["light", "power", "electric", "voltage", "street light", "current"] },
-    { category: "Roads & Infrastructure", words: ["road", "pothole", "footpath", "pavement", "crack", "construction"] },
-    { category: "Sanitation", words: ["garbage", "waste", "dustbin", "trash", "toilet", "hygiene", "drain", "sewage"] },
-    { category: "Drainage", words: ["drain", "flood", "waterlog", "clog", "overflow", "stormwater"] },
-    { category: "Public Health", words: ["health", "hospital", "clinic", "mosquito", "disease", "stray", "animal"] },
-    { category: "Parks & Recreation", words: ["park", "garden", "swing", "bench", "tree", "playground"] },
-    { category: "Enforcement", words: ["noise", "illegal", "encroach", "vendor", "traffic", "parking", "hawker"] },
-    { category: "Education", words: ["school", "teacher", "class", "student", "college", "education"] },
-    { category: "Ward Committee & Governance", words: ["committee", "politician", "meeting", "ward member", "mla", "official visit", "councillor", "liason"] },
+    { category: "Water Supply", words: ["water", "leak", "pipe", "tap", "supply", "bore", "தண்ணீர்", "குழாய்", "கசிவு"] },
+    { category: "Electricity", words: ["light", "power", "electric", "voltage", "street light", "current", "மின்சாரம்", "விளக்கு", "கம்பி"] },
+    { category: "Roads & Infrastructure", words: ["road", "pothole", "footpath", "pavement", "crack", "construction", "சாலை", "குழி", "பாதை"] },
+    { category: "Sanitation", words: ["garbage", "waste", "dustbin", "trash", "toilet", "hygiene", "drain", "sewage", "குப்பை", "கழிவு", "துர்நாற்றம்"] },
+    { category: "Drainage", words: ["drain", "flood", "waterlog", "clog", "overflow", "stormwater", "வடிகால்", "வெள்ளம்", "நீர்த்தேக்கம்"] },
+    { category: "Public Health", words: ["health", "hospital", "clinic", "mosquito", "disease", "stray", "animal", "மருத்துவமனை", "கொசு", "நோய்"] },
+    { category: "Parks & Recreation", words: ["park", "garden", "swing", "bench", "tree", "playground", "பூங்கா", "மரம்", "விளையாட்டு"] },
+    { category: "Enforcement", words: ["noise", "illegal", "encroach", "vendor", "traffic", "parking", "hawker", "சத்தம்", "ஆக்கிரமிப்பு"] },
+    { category: "Education", words: ["school", "teacher", "class", "student", "college", "education", "பள்ளி", "ஆசிரியர்", "மாணவர்"] },
+    { category: "Ward Committee & Governance", words: ["committee", "politician", "meeting", "ward member", "mla", "councillor", "வார்டு", "கவுன்சிலர்"] },
 ];
 
 export function autoCategory(text: string): Category {
@@ -113,9 +124,9 @@ export const CATEGORY_DEPT: Record<Category, string> = {
 };
 
 // ── Helpers ────────────────────────────────────────────────────
-let _nextId = 8300;
+let _nextId = 9;
 export function generateId(): string {
-    return `GRV-${_nextId++}`;
+    return `#${String(_nextId++).padStart(3, '0')}`;
 }
 
 export function timeAgo(ms: number): string {
@@ -129,7 +140,7 @@ export function timeAgo(ms: number): string {
     return `${days} day${days > 1 ? "s" : ""} ago`;
 }
 
-// ── Initial demo data ──────────────────────────────────────────
+// ── Initial Tamil Voice Complaint Data ──────────────────────────
 const now = Date.now();
 const H = 3600000;
 const D = 86400000;
@@ -140,166 +151,213 @@ function entry(actor: string, action: string, minsAgo = 0): AuditEntry {
 
 export const initialComplaints: Complaint[] = [
     {
-        id: "GRV-8296", citizen: "Online Citizen", phone: "+91 90000 12345",
-        ward: "Ward 02", citizenId: "citizen_amit",
-        category: "Water Supply", issue: "No water supply for 2 days – Sector 4",
-        description: "The water supply has been completely cut off for 2 days in Sector 4. Residents are buying water at high cost. Urgent repair needed.",
-        priority: "High", status: "Pending", assignedTo: "", dept: "Water Supply Department",
-        time: "Just now", timestamp: now - 1 * 60000, notified: false,
-        audit: [
-            entry("Citizen", "Complaint submitted via Online Portal", 1),
-            entry("System", "Auto-categorized as Water Supply", 0),
-        ],
+        id: "#001",
+        citizen: "ராமு",
+        phone: "+91 98421 11234",
+        ward: "வார்டு 12",
+        citizenId: "citizen_ramu_001",
+        category: "Water Supply",
+        issue: "எங்க தெருவுல இரண்டு நாளா தண்ணீர் வரல.",
+        description: "எங்க தெருவுல இரண்டு நாளா தண்ணீர் வரல.",
+        originalComplaintTamil: "எங்க தெருவுல இரண்டு நாளா தண்ணீர் வரல.",
+        area: "அண்ணா நகர்",
+        priority: "High",
+        status: "New",
+        assignedTo: "",
+        dept: "Water Supply Department",
+        source: "voice",
+        time: "Just now",
+        timestamp: now - 5 * 60000,
+        notified: false,
+        audit: [entry("System", "குரல் புகார் பதிவு செய்யப்பட்டது", 5)],
     },
     {
-
-        id: "GRV-8295", citizen: "Meera Soundarya", phone: "+91 63821 54321",
-        ward: "Ward 05", citizenId: "citizen_meera",
-        category: "Electricity", issue: "Live wire dangling on street near Park West",
-        description: "Extremely dangerous live wire hanging low after last night's wind. Needs immediate isolation before anyone gets hurt.",
-        priority: "High", status: "Pending", assignedTo: "", dept: "Electricity Board",
-        time: "Just now", timestamp: now - 5 * 60000, notified: false,
-        audit: [
-            entry("System", "Complaint submitted via mobile app", 5),
-            entry("System", "Auto-categorized as Electricity (CRITICAL)", 4),
-        ],
+        id: "#002",
+        citizen: "சரஸ்வதி",
+        phone: "+91 94423 55678",
+        ward: "வார்டு 7",
+        citizenId: "citizen_saraswathi_002",
+        category: "Sanitation",
+        issue: "சாலை முழுக்க குப்பை குவிஞ்சிருக்கு.",
+        description: "சாலை முழுக்க குப்பை குவிஞ்சிருக்கு.",
+        originalComplaintTamil: "சாலை முழுக்க குப்பை குவிஞ்சிருக்கு.",
+        area: "தியாகராஜ நகர்",
+        priority: "High",
+        status: "Assigned",
+        assignedTo: "Sanitation Department",
+        dept: "Sanitation Department",
+        source: "voice",
+        time: "45 min ago",
+        timestamp: now - 45 * 60000,
+        notified: false,
+        audit: [entry("System", "குரல் புகார் பதிவு செய்யப்பட்டது", 45)],
     },
     {
-        id: "GRV-8294", citizen: "Amit Patel", phone: "+91 98765 43210",
-        ward: "Ward 03", citizenId: "citizen_amit",
-        category: "Water Supply", issue: "Severe water leakage – Block C, Sector 7",
-        description: "Water is leaking from the main pipeline near Block C and flooding the road, making it dangerous for pedestrians and vehicles.",
-        priority: "High", status: "In Progress", assignedTo: "Rajiv Kumar (Water Dept)", dept: "Water Supply Department",
-        time: "2 hours ago", timestamp: now - 2 * H, notified: false,
-        audit: [
-            entry("System", "Complaint submitted by citizen", 120),
-            entry("System", "Auto-categorized as Water Supply", 119),
-            entry("Admin", "Assigned to Water Supply Department", 115),
-            entry("Rajiv Kumar", "Started working on the complaint", 60),
-        ],
+        id: "#003",
+        citizen: "முருகன்",
+        phone: "+91 97890 22345",
+        ward: "வார்டு 3",
+        citizenId: "citizen_murugan_003",
+        category: "Electricity",
+        issue: "தெருவிளக்கு மூன்று நாளா எரியல.",
+        description: "தெருவிளக்கு மூன்று நாளா எரியல.",
+        originalComplaintTamil: "தெருவிளக்கு மூன்று நாளா எரியல.",
+        area: "கே.கே. நகர்",
+        priority: "Medium",
+        status: "In Progress",
+        assignedTo: "Electricity Board",
+        dept: "Electricity Board",
+        source: "voice",
+        time: "2 hours ago",
+        timestamp: now - 2 * H,
+        notified: false,
+        audit: [entry("System", "குரல் புகார் பதிவு செய்யப்பட்டது", 120)],
     },
     {
-        id: "GRV-8293", citizen: "Sunita Rao", phone: "+91 87654 32109",
-        ward: "Ward 12", citizenId: "citizen_sunita",
-        category: "Electricity", issue: "Street light not working near DAV School",
-        description: "Three consecutive street lights have been non-functional for 5 days, creating serious safety issues for students at night.",
-        priority: "Medium", status: "Assigned", assignedTo: "Electricity Board", dept: "Electricity Board",
-        time: "4 hours ago", timestamp: now - 4 * H, notified: false,
-        audit: [
-            entry("System", "Complaint submitted by citizen", 240),
-            entry("System", "Auto-categorized as Electricity", 239),
-            entry("Admin", "Assigned to Electricity Board", 235),
-        ],
+        id: "#004",
+        citizen: "லட்சுமி",
+        phone: "+91 98765 44321",
+        ward: "வார்டு 5",
+        citizenId: "citizen_lakshmi_004",
+        category: "Drainage",
+        issue: "சாக்கடை நிரம்பி தண்ணீர் வெளியே வருகிறது.",
+        description: "சாக்கடை நிரம்பி தண்ணீர் வெளியே வருகிறது.",
+        originalComplaintTamil: "சாக்கடை நிரம்பி தண்ணீர் வெளியே வருகிறது.",
+        area: "வேளச்சேரி",
+        priority: "High",
+        status: "New",
+        assignedTo: "",
+        dept: "Drainage & Sewerage",
+        source: "voice",
+        time: "3 hours ago",
+        timestamp: now - 3 * H,
+        notified: false,
+        audit: [entry("System", "குரல் புகார் பதிவு செய்யப்பட்டது", 180)],
     },
     {
-        id: "GRV-8292", citizen: "Vikram Singh", phone: "+91 76543 21098",
-        ward: "Ward 06", citizenId: "citizen_vikram",
-        category: "Roads & Infrastructure", issue: "Broken road causing accidents on Main Road",
-        description: "A large pothole formed due to recent rain. Two accidents have already occurred. Urgent road repair is needed immediately.",
-        priority: "High", status: "Pending", assignedTo: "", dept: "Roads & PWD",
-        time: "5 hours ago", timestamp: now - 5 * H, notified: false,
-        audit: [
-            entry("System", "Complaint submitted by citizen", 300),
-            entry("System", "Auto-categorized as Roads & Infrastructure", 299),
-        ],
+        id: "#005",
+        citizen: "கார்த்திக்",
+        phone: "+91 99001 33456",
+        ward: "வார்டு 9",
+        citizenId: "citizen_karthik_005",
+        category: "Roads & Infrastructure",
+        issue: "ரோடு முழுக்க பள்ளம்.",
+        description: "ரோடு முழுக்க பள்ளம்.",
+        originalComplaintTamil: "ரோடு முழுக்க பள்ளம்.",
+        area: "பாண்டி பஜார்",
+        priority: "Medium",
+        status: "Assigned",
+        assignedTo: "Roads & PWD",
+        dept: "Roads & PWD",
+        source: "voice",
+        time: "1 day ago",
+        timestamp: now - 1 * D,
+        notified: false,
+        audit: [entry("System", "குரல் புகார் பதிவு செய்யப்பட்டது", 1440)],
     },
     {
-        id: "GRV-8291", citizen: "Ananya Iyer", phone: "+91 65432 10987",
-        ward: "Ward 09", citizenId: "citizen_ananya",
-        category: "Sanitation", issue: "Garbage not collected for 3 days",
-        description: "No garbage collection truck has visited our area for 3 days. Waste is piling up near the main entrance gate.",
-        priority: "Medium", status: "Resolved", assignedTo: "Sanitation Department", dept: "Sanitation Department",
-        time: "1 day ago", timestamp: now - 1 * D, notified: true,
-        audit: [
-            entry("System", "Complaint submitted", 1440),
-            entry("System", "Auto-categorized as Sanitation", 1438),
-            entry("Admin", "Assigned to Sanitation Dept", 1430),
-            entry("Officer", "Started work", 1200),
-            entry("Officer", "Garbage cleared. Resolved.", 720),
-            entry("System", "Citizen notified via SMS", 719),
-        ],
+        id: "#006",
+        citizen: "தேவி",
+        phone: "+91 91234 77890",
+        ward: "வார்டு 2",
+        citizenId: "citizen_devi_006",
+        category: "Drainage",
+        issue: "மழைநீர் வீட்டுக்குள் வருகிறது.",
+        description: "மழைநீர் வீட்டுக்குள் வருகிறது.",
+        originalComplaintTamil: "மழைநீர் வீட்டுக்குள் வருகிறது.",
+        area: "மாம்பலம்",
+        priority: "High",
+        status: "In Progress",
+        assignedTo: "Drainage & Sewerage",
+        dept: "Drainage & Sewerage",
+        source: "voice",
+        time: "1 day ago",
+        timestamp: now - 1 * D - 2 * H,
+        notified: true,
+        audit: [entry("System", "குரல் புகார் பதிவு செய்யப்பட்டது", 1560)],
     },
     {
-        id: "GRV-8290", citizen: "Karan Mehta", phone: "+91 54321 09876",
-        ward: "Ward 03", citizenId: "citizen_karan",
-        category: "Drainage", issue: "Drain blocked after heavy rain",
-        description: "The drainage outlet near the park is completely blocked, causing waterlogging inside 4 residential houses.",
-        priority: "High", status: "In Progress", assignedTo: "Drainage & Sewerage", dept: "Drainage & Sewerage",
-        time: "1 day ago", timestamp: now - 1 * D, notified: false,
-        audit: [
-            entry("System", "Complaint submitted", 1440),
-            entry("System", "Auto-categorized as Drainage", 1439),
-            entry("Admin", "Assigned to Drainage & Sewerage", 1430),
-            entry("Officer", "Work in progress — clearing blockage", 800),
-        ],
+        id: "#007",
+        citizen: "வேலு",
+        phone: "+91 98321 66543",
+        ward: "வார்டு 15",
+        citizenId: "citizen_velu_007",
+        category: "Water Supply",
+        issue: "குடிநீர் குழாய் உடைந்து தண்ணீர் வீணாகிறது.",
+        description: "குடிநீர் குழாய் உடைந்து தண்ணீர் வீணாகிறது.",
+        originalComplaintTamil: "குடிநீர் குழாய் உடைந்து தண்ணீர் வீணாகிறது.",
+        area: "கோடம்பாக்கம்",
+        priority: "High",
+        status: "Resolved",
+        assignedTo: "Water Supply Department",
+        dept: "Water Supply Department",
+        source: "voice",
+        time: "2 days ago",
+        timestamp: now - 2 * D,
+        notified: true,
+        audit: [entry("System", "குரல் புகார் பதிவு செய்யப்பட்டது", 2880)],
     },
     {
-        id: "GRV-8289", citizen: "Priya Sharma", phone: "+91 43210 98765",
-        ward: "Ward 07", citizenId: "citizen_priya",
-        category: "Parks & Recreation", issue: "Broken swings in community park",
-        description: "The swing and slide in the community park are broken and sharp-edged. Children risk injury when using them.",
-        priority: "Low", status: "Accepted", assignedTo: "", dept: "Parks Department",
-        time: "2 days ago", timestamp: now - 2 * D, notified: false,
-        audit: [
-            entry("System", "Complaint submitted", 2880),
-            entry("System", "Auto-categorized as Parks & Recreation", 2879),
-        ],
+        id: "#008",
+        citizen: "அனிதா",
+        phone: "+91 93456 88901",
+        ward: "வார்டு 6",
+        citizenId: "citizen_anitha_008",
+        category: "Electricity",
+        issue: "மின்கம்பி கீழே தொங்குது.",
+        description: "மின்கம்பி கீழே தொங்குது.",
+        originalComplaintTamil: "மின்கம்பி கீழே தொங்குது.",
+        area: "அடையாறு",
+        priority: "High",
+        status: "New",
+        assignedTo: "",
+        dept: "Electricity Board",
+        source: "voice",
+        time: "Just now",
+        timestamp: now - 2 * 60000,
+        notified: false,
+        audit: [entry("System", "குரல் புகார் பதிவு செய்யப்பட்டது", 2)],
     },
     {
-        id: "GRV-8288", citizen: "Rajesh Sharma", phone: "+91 32109 87654",
-        ward: "Ward 11", citizenId: "citizen_rajesh",
-        category: "Enforcement", issue: "Loud construction work after 10 PM",
-        description: "Construction work continues past 10 PM every night, violating municipal noise regulations and disturbing residents.",
-        priority: "Medium", status: "Closed", assignedTo: "Municipal Enforcement", dept: "Municipal Enforcement",
-        time: "3 days ago", timestamp: now - 3 * D, notified: true,
-        audit: [
-            entry("System", "Complaint submitted", 4320),
-            entry("System", "Auto-categorized", 4319),
-            entry("Admin", "Assigned to Enforcement", 4300),
-            entry("Officer", "Warning issued to builder", 3000),
-            entry("Officer", "Marked resolved", 2500),
-            entry("Admin", "Complaint closed", 2400),
-        ],
+        id: "#009",
+        citizen: "பாலு",
+        phone: "+91 93456 77901",
+        ward: "வார்டு 10",
+        citizenId: "citizen_balu_009",
+        category: "Sanitation",
+        issue: "பொது கழிப்பிடம் சுத்தம் இல்லை.",
+        description: "பொது கழிப்பிடம் சுத்தம் இல்லை.",
+        originalComplaintTamil: "பொது கழிப்பிடம் சுத்தம் இல்லை.",
+        area: "மைலாப்பூர்",
+        priority: "Medium",
+        status: "New",
+        assignedTo: "",
+        dept: "Sanitation Department",
+        source: "voice",
+        time: "1 hour ago",
+        timestamp: now - 1 * H,
+        notified: false,
+        audit: [entry("System", "குரல் புகார் பதிவு செய்யப்பட்டது", 60)],
     },
     {
-        id: "GRV-8287", citizen: "Deepika Nair", phone: "+91 21098 76543",
-        ward: "Ward 04", citizenId: "citizen_deepika",
-        category: "Roads & Infrastructure", issue: "Deep pothole damaging vehicles near temple",
-        description: "A deep pothole near the temple entrance has damaged 3 vehicles this week. Urgent repair and warning signs needed.",
-        priority: "High", status: "In Progress", assignedTo: "Roads & PWD", dept: "Roads & PWD",
-        time: "3 days ago", timestamp: now - 3 * D, notified: false,
-        audit: [
-            entry("System", "Complaint submitted", 4320),
-            entry("System", "Auto-categorized as Roads", 4319),
-            entry("Admin", "Assigned to Roads & PWD", 4300),
-            entry("Officer", "Inspection done. Repair scheduled.", 2000),
-        ],
-    },
-    {
-        id: "GRV-8286", citizen: "Mohammed Ali", phone: "+91 10987 65432",
-        ward: "Ward 02", citizenId: "citizen_ali",
-        category: "Sanitation", issue: "Public toilet dirty near Ward Office",
-        description: "The public toilet near the ward office has not been cleaned for over a week. Condition is extremely unhygienic.",
-        priority: "Medium", status: "Pending", assignedTo: "", dept: "Sanitation Department",
-        time: "4 days ago", timestamp: now - 4 * D, notified: false,
-        audit: [
-            entry("System", "Complaint submitted", 5760),
-            entry("System", "Auto-categorized as Sanitation", 5759),
-        ],
-    },
-    {
-        id: "GRV-8285", citizen: "Suresh Babu", phone: "+91 09876 54321",
-        ward: "Ward 08", citizenId: "citizen_suresh",
-        category: "Enforcement", issue: "Footpath blocked by vendor stall near market",
-        description: "A vendor has set up a permanent stall blocking the footpath near the main market, preventing pedestrian movement.",
-        priority: "Low", status: "Resolved", assignedTo: "Municipal Enforcement", dept: "Municipal Enforcement",
-        time: "5 days ago", timestamp: now - 5 * D, notified: true,
-        audit: [
-            entry("System", "Complaint submitted", 7200),
-            entry("System", "Auto-categorized", 7199),
-            entry("Admin", "Assigned to Enforcement", 7180),
-            entry("Officer", "Vendor relocated. Resolved.", 6000),
-            entry("System", "Citizen notified", 5999),
-        ],
-    },
+        id: "#010",
+        citizen: "கவிதா",
+        phone: "+91 93456 55901",
+        ward: "வார்டு 11",
+        citizenId: "citizen_kavitha_010",
+        category: "Sanitation",
+        issue: "குப்பை வண்டி ஒரு வாரமா வரல.",
+        description: "குப்பை வண்டி ஒரு வாரமா வரல.",
+        originalComplaintTamil: "குப்பை வண்டி ஒரு வாரமா வரல.",
+        area: "சைதாப்பேட்டை",
+        priority: "Low",
+        status: "New",
+        assignedTo: "",
+        dept: "Sanitation Department",
+        source: "voice",
+        time: "4 hours ago",
+        timestamp: now - 4 * H,
+        notified: false,
+        audit: [entry("System", "குரல் புகார் பதிவு செய்யப்பட்டது", 240)],
+    }
 ];
