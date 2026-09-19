@@ -10,6 +10,7 @@ import {
 import AdminSlide from "./AdminSlide";
 import { useState, useEffect } from "react";
 import { useComplaints } from "@/context/ComplaintsContext";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface DashboardLayoutProps {
     children: ReactNode;
@@ -35,75 +36,75 @@ interface NavGroup {
 // ── Nav definitions per role ─────────────────────────────────
 const ADMIN_NAV: NavGroup[] = [
     {
-        group: "Overview", items: [
-            { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
+        group: "nav.overview", items: [
+            { icon: LayoutDashboard, label: "nav.dashboard", path: "/dashboard" },
         ]
     },
     {
-        group: "People", items: [
-            { icon: LayoutDashboard, label: "Field Portal", path: "/field-portal" },
-            { icon: Users2, label: "People", path: "/people" },
+        group: "nav.peopleGroup", items: [
+            { icon: LayoutDashboard, label: "nav.fieldPortal", path: "/field-portal" },
+            { icon: Users2, label: "nav.people", path: "/people" },
         ]
     },
     {
-        group: "Complaints", items: [
-            { icon: MessageSquare, label: "Complaints", path: "/grievances", badge: "live" },
-            { icon: FileBarChart2, label: "Reports", path: "/reports" },
-            { icon: FolderOpen, label: "Resolution Reports", path: "/resolution-reports" },
+        group: "nav.complaintsGroup", items: [
+            { icon: MessageSquare, label: "nav.complaints", path: "/grievances", badge: "live" },
+            { icon: FileBarChart2, label: "nav.reports", path: "/reports" },
+            { icon: FolderOpen, label: "nav.resolutionReports", path: "/resolution-reports" },
         ]
     },
     {
-        group: "Comms & AI", items: [
-            { icon: Megaphone, label: "Announcements", path: "/announcements" },
-            { icon: Volume2, label: "Speech AI", path: "/speech-ai" },
-            { icon: Calendar, label: "Meetings", path: "/meetings" },
-            { icon: Megaphone, label: "Media Queue", path: "/media-queue" },
-            { icon: Zap, label: "AI Co-Pilot", path: "/ai-copilot" },
-            { icon: FolderOpen, label: "Documents", path: "/documents" },
-            { icon: Calendar, label: "Schedule", path: "/schedule" },
+        group: "nav.commsAi", items: [
+            { icon: Megaphone, label: "nav.announcements", path: "/announcements" },
+            { icon: Volume2, label: "nav.speechAi", path: "/speech-ai" },
+            { icon: Calendar, label: "nav.meetings", path: "/meetings" },
+            { icon: Megaphone, label: "nav.mediaQueue", path: "/media-queue" },
+            { icon: Zap, label: "nav.aiCopilot", path: "/ai-copilot" },
+            { icon: FolderOpen, label: "nav.documents", path: "/documents" },
+            { icon: Calendar, label: "nav.schedule", path: "/schedule" },
         ]
     },
     {
-        group: "Account", items: [
-            { icon: User, label: "My Profile", path: "/profile" },
-            { icon: Settings, label: "Settings", path: "/settings" },
+        group: "nav.account", items: [
+            { icon: User, label: "nav.myProfile", path: "/profile" },
+            { icon: Settings, label: "nav.settings", path: "/settings" },
         ]
     },
 ];
 
 const OFFICER_NAV: NavGroup[] = [
     {
-        group: "Main", items: [
-            { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-            { icon: MessageSquare, label: "Assigned Complaints", path: "/grievances", badge: "live" },
+        group: "nav.main", items: [
+            { icon: LayoutDashboard, label: "nav.dashboard", path: "/dashboard" },
+            { icon: MessageSquare, label: "nav.assignedComplaints", path: "/grievances", badge: "live" },
         ]
     },
     {
-        group: "Work", items: [
-            { icon: LayoutDashboard, label: "Field Portal", path: "/field-portal", badge: "new" },
-            { icon: FileBarChart2, label: "Reports", path: "/reports" },
-            { icon: FolderOpen, label: "Resolution Reports", path: "/resolution-reports" },
-            { icon: Megaphone, label: "Announcements", path: "/announcements" },
-            { icon: Calendar, label: "Schedule", path: "/schedule" },
-            { icon: FolderOpen, label: "Documents", path: "/documents" },
+        group: "nav.work", items: [
+            { icon: LayoutDashboard, label: "nav.fieldPortal", path: "/field-portal", badge: "new" },
+            { icon: FileBarChart2, label: "nav.reports", path: "/reports" },
+            { icon: FolderOpen, label: "nav.resolutionReports", path: "/resolution-reports" },
+            { icon: Megaphone, label: "nav.announcements", path: "/announcements" },
+            { icon: Calendar, label: "nav.schedule", path: "/schedule" },
+            { icon: FolderOpen, label: "nav.documents", path: "/documents" },
         ]
     },
     {
-        group: "Account", items: [
-            { icon: User, label: "My Profile", path: "/profile" },
-            { icon: Settings, label: "Settings", path: "/settings" },
+        group: "nav.account", items: [
+            { icon: User, label: "nav.myProfile", path: "/profile" },
+            { icon: Settings, label: "nav.settings", path: "/settings" },
         ]
     },
 ];
 
 const CITIZEN_NAV: NavGroup[] = [
     {
-        group: "My Account", items: [
-            { icon: LayoutDashboard, label: "Dashboard", path: "/citizen" },
-            { icon: PlusCircle, label: "Submit Complaint", path: "/submit-complaint" },
-            { icon: MessageSquare, label: "Track Complaint", path: "/citizen#track-complaint" },
-            { icon: Megaphone, label: "Announcements", path: "/announcements" },
-            { icon: User, label: "My Profile", path: "/profile" },
+        group: "nav.myAccount", items: [
+            { icon: LayoutDashboard, label: "nav.dashboard", path: "/citizen" },
+            { icon: PlusCircle, label: "nav.submitComplaint", path: "/submit-complaint" },
+            { icon: MessageSquare, label: "nav.trackComplaint", path: "/citizen#track-complaint" },
+            { icon: Megaphone, label: "nav.announcements", path: "/announcements" },
+            { icon: User, label: "nav.myProfile", path: "/profile" },
         ]
     },
 ];
@@ -112,6 +113,7 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
     const navigate = useNavigate();
     const location = useLocation();
     const { currentUser, logout, complaints, notifications, readNotification } = useComplaints();
+    const { language, toggleLanguage, t } = useLanguage();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [adminSlideOpen, setAdminSlideOpen] = useState(false);
     const [showNotifs, setShowNotifs] = useState(false);
@@ -219,11 +221,11 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
                 <nav className="flex-1 py-4 px-3 space-y-5 overflow-y-auto">
                     {navGroups.map(({ group, items }) => (
                         <div key={group}>
-                            <p className="px-4 mb-2 text-[11px] font-black uppercase tracking-[0.15em] text-gray-400">{group}</p>
+                            <p className="px-4 mb-2 text-[11px] font-black uppercase tracking-[0.15em] text-gray-400">{t(group)}</p>
                             <div className="space-y-1">
                                 {items.map(({ icon: Icon, label, path, badge }) => {
-                                    const isAssignedComplaints = label === "Assigned Complaints";
-                                    const isComplaints = label === "Complaints";
+                                    const isAssignedComplaints = label === "nav.assignedComplaints";
+                                    const isComplaints = label === "nav.complaints";
                                     const liveCnt = badge === "new" ? newCount : isAssignedComplaints ? assignedCount : badge === "live" ? newCount : 0;
                                     const navTo = isAssignedComplaints
                                         ? `${path}?status=Assigned`
@@ -255,7 +257,7 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
                                                         }`}>
                                                             <Icon className={`w-4 h-4 ${isActiveCustom ? "text-white" : "text-gray-500 group-hover:text-[#B91C1C]"}`} />
                                                         </div>
-                                                        <span className={`text-sm font-semibold whitespace-nowrap tracking-tight ${isActiveCustom ? "text-white" : ""}`}>{label}</span>
+                                                        <span className={`text-sm font-semibold whitespace-nowrap tracking-tight ${isActiveCustom ? "text-white" : ""}`}>{t(label)}</span>
                                                     </div>
                                                     {liveCnt > 0 && (
                                                         <span className={`text-xs font-bold px-2 py-0.5 rounded-lg ml-auto ${
@@ -315,7 +317,7 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                 <input
                                     type="text"
-                                    placeholder="Search complaints, wards, officers…"
+                                    placeholder={t("common.search")}
                                     onKeyDown={e => {
                                         if (e.key === "Enter") {
                                             navigate(`/grievances?q=${encodeURIComponent(e.currentTarget.value)}`);
@@ -334,6 +336,31 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
                     </div>
 
                     <div className="flex items-center gap-3">
+                        {/* Dual language pill toggle */}
+                        <div className="flex items-center rounded-lg border border-gray-200 overflow-hidden bg-gray-50 shadow-sm">
+                            <button
+                                onClick={() => language !== 'en' && toggleLanguage()}
+                                className={`px-3 py-1.5 text-sm font-bold transition-all duration-200 ${
+                                    language === 'en'
+                                        ? 'bg-[#B91C1C] text-white shadow-inner'
+                                        : 'text-gray-500 hover:bg-gray-100'
+                                }`}
+                            >
+                                🌐 EN
+                            </button>
+                            <div className="w-px h-4 bg-gray-300" />
+                            <button
+                                onClick={() => language !== 'ta' && toggleLanguage()}
+                                className={`px-3 py-1.5 text-sm font-bold transition-all duration-200 ${
+                                    language === 'ta'
+                                        ? 'bg-[#B91C1C] text-white shadow-inner'
+                                        : 'text-gray-500 hover:bg-gray-100'
+                                }`}
+                            >
+                                தமிழ்
+                            </button>
+                        </div>
+
                         <span className="hidden sm:block text-sm font-bold text-gray-900 tabular-nums">{time}</span>
                         <div className="w-px h-5 bg-gray-300 hidden sm:block" />
 
@@ -356,7 +383,7 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
                                     <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-white rounded-3xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-fade-in">
                                         <div className="px-6 py-5 border-b border-gray-50 flex items-center justify-between bg-gray-50/50">
                                             <h3 className="text-lg font-bold text-gray-900 uppercase tracking-wide flex items-center gap-2">
-                                                <Bell className="w-4 h-4 text-[#B91C1C]" /> Notifications
+                                                <Bell className="w-4 h-4 text-[#B91C1C]" /> {t("common.notifications")}
                                             </h3>
                                             {unreadCount > 0 && (
                                                 <span className="text-base font-bold bg-red-100 text-[#B91C1C] px-2.5 py-0.5 rounded-full uppercase">{unreadCount} New</span>
@@ -367,7 +394,7 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
                                             {notifications.length === 0 ? (
                                                 <div className="p-12 text-center">
                                                     <Bell className="w-8 h-8 text-gray-200 mx-auto mb-3" />
-                                                    <p className="text-sm font-bold text-gray-400 uppercase tracking-wide">No notifications</p>
+                                                    <p className="text-sm font-bold text-gray-400 uppercase tracking-wide">{t("common.noNotifications")}</p>
                                                 </div>
                                             ) : (
                                                 <div className="divide-y divide-gray-50">
@@ -413,7 +440,7 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
                                                 }}
                                                 className="text-base font-bold text-gray-500 hover:text-gray-900 uppercase tracking-wide flex items-center justify-center gap-2 mx-auto"
                                             >
-                                                {role === "citizen" ? "Track My Complaints" : role === "officer" ? "Open Field Portal" : "View All Complaints"} <ArrowRight className="w-3.5 h-3.5" />
+                                                {role === "citizen" ? t("common.trackMyComplaints") : role === "officer" ? t("common.openFieldPortal") : t("common.viewAllComplaints")} <ArrowRight className="w-3.5 h-3.5" />
                                             </button>
                                         </div>
                                     </div>
@@ -440,7 +467,7 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
                         <button
                             onClick={handleLogout}
                             className="p-2 text-gray-900 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                            title="Sign Out"
+                            title={t("common.signOut")}
                         >
                             <LogOut className="w-5 h-5" />
                         </button>

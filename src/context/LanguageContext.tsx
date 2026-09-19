@@ -1,67 +1,109 @@
-import React, { createContext, useContext, useState } from "react";
-import { listenOnce } from "@/utils/speech";
+// ─────────────────────────────────────────────────────────────────────────────
+//  GovPilot — Global Language Context
+//  Single source of truth for language state across the entire application.
+//
+//  IMPORTANT RULE:
+//  This context controls APPLICATION UI language ONLY.
+//  Complaint text submitted by citizens is NEVER translated here.
+//  Always display complaint.issue as-is from the database.
+// ─────────────────────────────────────────────────────────────────────────────
 
-type Lang = 'en' | 'ta';
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { translations, type Lang } from "../translations";
 
-interface LangCtx {
+interface LanguageContextValue {
+  /** Current active language */
+  language: Lang;
+  /** Toggle between 'en' and 'ta' */
+  toggleLanguage: () => void;
+  /** Set language directly */
+  setLanguage: (lang: Lang) => void;
+  detectAndSetLanguage?: (text: string) => void;
+  /** Translate a UI key. Returns English fallback if key missing in Tamil. */
+  t: (key: string, fallback?: string) => string;
+
+  // Legacy aliases (for VoiceAssistant compatibility)
   lang: Lang;
   langTag: string;
   setLang: (l: Lang) => void;
-  detectAndSetLanguage: () => Promise<Lang>;
-  t: (key: string) => string;
 }
 
-const translations: Record<string, Record<Lang, string>> = {
-  'tap_microphone': { en: 'Tap the microphone and tell us your complaint.', ta: 'மைக்ரோஃபோன் பொத்தானை அழுத்தி உங்கள் புகாரை தெரிவிக்கவும்.' },
-  'speak_name': { en: 'Hello. Please say your full name.', ta: 'வணக்கம். உங்கள் பெயரை சொல்லுங்கள்.' },
-  'speak_phone': { en: 'Please say your phone number or say skip.', ta: 'உங்கள் தொலைபேசி எண்ணை சொல்லுங்கள், அல்லது பாஸிட் சொல்வதற்கு' },
-  'speak_issue': { en: 'Now describe the problem you want to report.', ta: 'பயன்பாட்டிற்கான பிரச்சினையை சொல்லுங்கள்.' },
-  'complaint_submitted': { en: 'Your complaint has been submitted. Case ID', ta: 'உங்கள் புகார் சமர்ப்பிக்கப்பட்டது. வழக்கு ஐடி' },
-};
+const LanguageContext = createContext<LanguageContextValue | null>(null);
 
-const Ctx = createContext<LangCtx | null>(null);
+const STORAGE_KEY = "govpilot_language";
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [lang, setLangState] = useState<Lang>('en');
-
-  const setLang = (l: Lang) => setLangState(l);
-
-  async function detectAndSetLanguage(): Promise<Lang> {
-    // Try Tamil first with a short timeout, then English fallback
+  const [language, setLang] = useState<Lang>(() => {
     try {
-      const ta = await listenOnce('ta-IN', 4000);
-      if (/[\u0B80-\u0BFF]/.test(ta) || ta.trim().length > 0 && ta.split(' ').length <= 20 && /[\u0B80-\u0BFF]/.test(ta)) {
-        setLangState('ta');
-        return 'ta';
-      }
-      const en = await listenOnce('en-IN', 4000);
-      if (en && en.trim().length > 0) {
-        setLangState('en');
-        return 'en';
-      }
-    } catch (e) {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved === "ta" || saved === "en") return saved;
+    } catch {
+      // localStorage blocked
+    }
+    return "en";
+  });
+
+  // Persist to localStorage whenever language changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, language);
+    } catch {
       // ignore
     }
-    // fallback to browser locale
-    const nav = typeof navigator !== 'undefined' ? (navigator.language || 'en').toLowerCase() : 'en';
-    const detected: Lang = nav.startsWith('ta') ? 'ta' : 'en';
-    setLangState(detected);
-    return detected;
-  }
+  }, [language]);
 
-  const ctx: LangCtx = {
-    lang,
-    langTag: lang === 'ta' ? 'ta-IN' : 'en-IN',
-    setLang,
-    detectAndSetLanguage,
-    t: (key: string) => (translations[key] ? translations[key][lang] : key),
+  const toggleLanguage = useCallback(() => {
+    setLang(prev => (prev === "en" ? "ta" : "en"));
+  }, []);
+
+  const setLanguage = useCallback((lang: Lang) => {
+    setLang(lang);
+  }, []);
+
+  /**
+   * Translate a UI key to the current language.
+   * NEVER use this for citizen complaint text — display complaint.issue directly.
+   */
+  const t = useCallback(
+    (key: string, fallback?: string): string => {
+      try {
+        const dict = translations[language];
+        if (dict && dict[key]) return dict[key];
+        // Fallback to English if key missing in Tamil
+        const enDict = translations["en"];
+        if (enDict && enDict[key]) return enDict[key];
+      } catch {
+        // ignore
+      }
+      // Last resort: return the key itself or the provided fallback
+      return fallback ?? key;
+    },
+    [language]
+  );
+
+  const value: LanguageContextValue = {
+    language,
+    toggleLanguage,
+    setLanguage,
+    t,
+    // Legacy aliases
+    lang: language,
+    langTag: language === "ta" ? "ta-IN" : "en-IN",
+    setLang: setLanguage,
+    detectAndSetLanguage: () => {},
   };
 
-  return <Ctx.Provider value={ctx}>{children}</Ctx.Provider>;
+  return (
+    <LanguageContext.Provider value={value}>
+      {children}
+    </LanguageContext.Provider>
+  );
 }
 
-export function useLanguage() {
-  const c = useContext(Ctx);
-  if (!c) throw new Error('useLanguage must be used within LanguageProvider');
-  return c;
+export function useLanguage(): LanguageContextValue {
+  const ctx = useContext(LanguageContext);
+  if (!ctx) {
+    throw new Error("useLanguage must be used inside <LanguageProvider>");
+  }
+  return ctx;
 }

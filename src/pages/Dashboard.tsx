@@ -1,5 +1,6 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { useComplaints } from "@/context/ComplaintsContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState, useMemo } from "react";
 import {
@@ -10,6 +11,7 @@ import {
 
 export default function Dashboard() {
     const { complaints, currentUser, notifications } = useComplaints();
+    const { language, t } = useLanguage();
     const navigate = useNavigate();
     const [viewGrievance, setViewGrievance] = useState<any>(null);
     const [viewNotification, setViewNotification] = useState<any>(null);
@@ -110,10 +112,10 @@ export default function Dashboard() {
     const recentNotifs = notifications.slice(0, 4);
 
     return (
-        <DashboardLayout title="Dashboard" subtitle={
-            isAdmin ? "Live overview — all complaints" :
-                isOfficer ? `Your dept: ${currentUser?.dept}` :
-                    "Your complaint status"
+        <DashboardLayout title={t('page.dashboard', 'Dashboard')} subtitle={
+            isAdmin ? t('page.dashboard.subtitle.admin', 'Live overview — all complaints') :
+                isOfficer ? t('page.dashboard.subtitle.officer', 'Your dept:') + ` ${currentUser?.dept}` :
+                    t('page.complaints.subtitle.citizen', 'Your complaint status')
         }>
             <div className="space-y-8 pb-10 relative">
                 
@@ -131,8 +133,8 @@ export default function Dashboard() {
                                             <Shield className="w-7 h-7 text-red-600" />
                                         </div>
                                         <div>
-                                            <h3 className="text-xl font-black text-gray-900 uppercase italic">Mission Detail</h3>
-                                            <p className="text-sm text-gray-400 font-black uppercase tracking-widest">Case ID: {viewGrievance.id}</p>
+                                            <h3 className="text-xl font-black text-gray-900 uppercase italic">{t('dashboard.missionDetail', 'Mission Detail')}</h3>
+                                            <p className="text-sm text-gray-400 font-black uppercase tracking-widest">{t('dashboard.caseId', 'Case ID')}: {viewGrievance.id}</p>
                                         </div>
                                     </div>
                                     <button onClick={() => setViewGrievance(null)} className="p-3 rounded-2xl hover:bg-gray-100 text-gray-300 transition-colors">
@@ -150,22 +152,26 @@ export default function Dashboard() {
                                                 {viewGrievance.category}
                                             </span>
                                         </div>
-                                        <h4 className="text-2xl font-black text-gray-900 italic uppercase leading-tight">{viewGrievance.issue}</h4>
-                                        <p className="text-gray-500 font-medium leading-relaxed">{viewGrievance.description || "No tactical briefing provided for this complaint."}</p>
+                                        <h4 className="text-2xl font-black text-gray-900 italic uppercase leading-tight">
+                                            {viewGrievance.originalComplaintTamil || viewGrievance.issue}
+                                        </h4>
+                                        <p className="text-gray-500 font-medium leading-relaxed">
+                                            {viewGrievance.originalComplaintTamil || viewGrievance.description || viewGrievance.issue}
+                                        </p>
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-6">
                                         <div className="p-6 bg-gray-50 rounded-3xl border border-gray-100">
                                             <div className="flex items-center gap-2 mb-2">
                                                 <User className="w-3.5 h-3.5 text-gray-400" />
-                                                <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Citizen Node</p>
+                                                <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{t('dashboard.citizenNode', 'Citizen Node')}</p>
                                             </div>
                                             <p className="font-black text-gray-900 uppercase italic">{viewGrievance.citizen}</p>
                                         </div>
                                         <div className="p-6 bg-gray-50 rounded-3xl border border-gray-100">
                                             <div className="flex items-center gap-2 mb-2">
                                                 <MapPin className="w-3.5 h-3.5 text-gray-400" />
-                                                <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Sector Ward</p>
+                                                <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{t('dashboard.sectorWard', 'Sector Ward')}</p>
                                             </div>
                                             <p className="font-black text-gray-900 uppercase italic">{viewGrievance.ward}</p>
                                         </div>
@@ -174,10 +180,10 @@ export default function Dashboard() {
 
                                 <div className="flex gap-4">
                                     <button onClick={() => { navigate(`/grievances?id=${viewGrievance.id}`); setViewGrievance(null); }} className="flex-1 py-5 bg-gray-900 text-white rounded-3xl text-base font-black uppercase tracking-[0.2em] hover:bg-red-600 transition-all shadow-xl active:scale-95">
-                                        Full Mission Log
+                                        {t('common.fullLog', 'Full Mission Log')}
                                     </button>
                                     <button onClick={() => setViewGrievance(null)} className="px-10 py-5 bg-gray-200 text-gray-900 rounded-3xl text-base font-black uppercase tracking-[0.2em] hover:bg-gray-300 transition-all active:scale-95">
-                                        Dismiss
+                                        {t('common.dismiss', 'Dismiss')}
                                     </button>
                                 </div>
                             </div>
@@ -233,10 +239,10 @@ export default function Dashboard() {
                 {/* ── KPI STATS ROW ─────────────────────────────── */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {[
-                        { label: "Open Complaints", value: total - resolved - closed, icon: Activity, delta: `${highPri} High`, positive: false, isPrimary: true },
-                        { label: "Assigned", value: assigned, icon: TrendingUp, delta: "+1.2%", positive: true, isPrimary: false },
-                        { label: "Resolved", value: resolved, icon: TrendingDown, delta: `${resoPct}%`, positive: true, isPrimary: false },
-                        { label: "Health Score", value: `${healthScore}/100`, icon: Award, isPrimary: false },
+                        { label: t('dashboard.openComplaints', 'Open Complaints'), value: total - resolved - closed, icon: Activity, delta: `${highPri} High`, positive: false, isPrimary: true },
+                        { label: t('dashboard.assigned', 'Assigned'), value: assigned, icon: TrendingUp, delta: "+1.2%", positive: true, isPrimary: false },
+                        { label: t('dashboard.resolved', 'Resolved'), value: resolved, icon: TrendingDown, delta: `${resoPct}%`, positive: true, isPrimary: false },
+                        { label: t('dashboard.healthScore', 'Health Score'), value: `${healthScore}/100`, icon: Award, isPrimary: false },
                     ].map((card, i) => (
                         <div key={i} className={`rounded-[2.5rem] p-8 shadow-2xl transition-all hover:scale-[1.02] active:scale-[0.98] group relative overflow-hidden flex flex-col justify-between ${
                             card.isPrimary ? "bg-[#B91C1C] text-white" : "bg-white text-gray-900 border border-gray-100"
@@ -263,9 +269,9 @@ export default function Dashboard() {
                 {/* ── COMMAND CONSOLE: QUICK ACTIONS ─────────────── */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {[
-                        { label: "Coordinate Mission", desc: "Deploy field units now", icon: Zap, link: "/schedule", color: "bg-red-600 text-white shadow-red-500/20" },
-                        { label: "Review Grievances", desc: "Process urgent queue", icon: MessageSquare, link: "/grievances", color: "bg-white text-gray-900 border border-gray-100" },
-                        { label: "Policy Simulator", desc: "Predict impact AI", icon: Sparkles, link: "/policy-simulator", color: "bg-white text-gray-900 border border-gray-100" },
+                        { label: t('dashboard.coordinateMission', 'Coordinate Mission'), desc: t('dashboard.deployFieldUnits', 'Deploy field units now'), icon: Zap, link: "/schedule", color: "bg-red-600 text-white shadow-red-500/20" },
+                        { label: t('dashboard.reviewGrievances', 'Review Grievances'), desc: t('dashboard.processUrgentQueue', 'Process urgent queue'), icon: MessageSquare, link: "/grievances", color: "bg-white text-gray-900 border border-gray-100" },
+                        { label: t('dashboard.policySimulator', 'Policy Simulator'), desc: t('dashboard.predictImpact', 'Predict impact AI'), icon: Sparkles, link: "/policy-simulator", color: "bg-white text-gray-900 border border-gray-100" },
                     ].map((btn, i) => (
                         <button key={i} onClick={() => navigate(btn.link)}
                             className={`group p-8 rounded-[2.5rem] flex flex-col gap-6 text-left transition-all hover:scale-[1.02] active:scale-[0.98] shadow-2xl ${btn.color}`}>
@@ -293,8 +299,8 @@ export default function Dashboard() {
                                         <Brain className="w-6 h-6 text-[#B91C1C]" />
                                     </div>
                                     <div>
-                                        <h3 className="text-xl font-black text-gray-900 uppercase italic">AI Executive Briefing</h3>
-                                        <p className="text-sm text-gray-400 font-black uppercase tracking-[0.2em]">Automated Strategic Summary</p>
+                                        <h3 className="text-xl font-black text-gray-900 uppercase italic">{t('dashboard.aiBriefing', 'AI Executive Briefing')}</h3>
+                                        <p className="text-sm text-gray-400 font-black uppercase tracking-[0.2em]">{t('dashboard.automatedSummary', 'Automated Strategic Summary')}</p>
                                     </div>
                                 </div>
                                 <button
@@ -303,8 +309,8 @@ export default function Dashboard() {
                                     className="flex items-center gap-3 px-8 py-4 bg-gray-900 text-white rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-[#B91C1C] transition-all shadow-2xl disabled:opacity-60"
                                 >
                                     {generatingBrief
-                                        ? <><Loader2 className="w-4 h-4 animate-spin" /> Analyzing...</>
-                                        : <><Sparkles className="w-4 h-4" /> Generate Briefing</>
+                                        ? <><Loader2 className="w-4 h-4 animate-spin" /> {t('dashboard.analyzing', 'Analyzing...')}</>
+                                        : <><Sparkles className="w-4 h-4" /> {t('dashboard.generateBriefing', 'Generate Briefing')}</>
                                     }
                                 </button>
                             </div>
@@ -314,13 +320,13 @@ export default function Dashboard() {
                                     <pre className="text-base font-bold text-gray-700 whitespace-pre-wrap leading-relaxed font-sans">{briefing}</pre>
                                     <div className="flex items-center gap-3 mt-6 pt-6 border-t border-gray-200/50">
                                         <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                                        <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Live Decision Support Core Active</span>
+                                        <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{t('dashboard.liveDecisionSupport', 'Live Decision Support Core Active')}</span>
                                     </div>
                                 </div>
                             ) : (
                                 <div className="bg-gray-50 border border-dashed border-gray-200 rounded-[2.5rem] p-20 text-center">
                                     <Sparkles className="w-16 h-16 text-gray-200 mx-auto mb-6" />
-                                    <p className="text-base font-black text-gray-400 uppercase tracking-[0.2em]">Request AI intelligence sweep to begin</p>
+                                    <p className="text-base font-black text-gray-400 uppercase tracking-[0.2em]">{t('dashboard.requestIntelligence', 'Request AI intelligence sweep to begin')}</p>
                                 </div>
                             )}
                         </div>
@@ -334,7 +340,7 @@ export default function Dashboard() {
                         <div className="relative z-10 space-y-8">
                             <div className="flex items-center gap-3">
                                 <Shield className="w-5 h-5 text-white/20" />
-                                <h3 className="text-base font-black uppercase tracking-[0.3em] text-white/40 italic">Constituency Integrity</h3>
+                                <h3 className="text-base font-black uppercase tracking-[0.3em] text-white/40 italic">{t('dashboard.constituencyIntegrity', 'Constituency Integrity')}</h3>
                             </div>
 
                             <div className="flex justify-center py-4">
@@ -358,8 +364,8 @@ export default function Dashboard() {
 
                             <div className="space-y-2 text-center">
                                 <p className={`text-2xl font-black uppercase italic tracking-tight ${healthScore >= 70 ? "text-emerald-400" : healthScore >= 40 ? "text-amber-400" : "text-[#B91C1C]"
-                                    }`}>{healthScore >= 70 ? "Stable" : healthScore >= 40 ? "Attention Required" : "Critical Alert"}</p>
-                                <p className="text-sm text-white/30 font-black uppercase tracking-widest">District Health Index</p>
+                                    }`}>{healthScore >= 70 ? t('dashboard.stable', 'Stable') : healthScore >= 40 ? t('dashboard.attentionRequired', 'Attention Required') : t('dashboard.criticalAlert', 'Critical Alert')}</p>
+                                <p className="text-sm text-white/30 font-black uppercase tracking-widest">{t('dashboard.districtHealthIndex', 'District Health Index')}</p>
                             </div>
                         </div>
                     </div>
@@ -370,11 +376,11 @@ export default function Dashboard() {
                     <div className="px-10 py-8 border-b border-gray-50 flex items-center justify-between bg-gray-50/30">
                         <div className="flex items-center gap-4">
                             <div className="w-3 h-3 rounded-full bg-red-600 animate-pulse" />
-                            <h3 className="text-lg font-black text-gray-900 uppercase italic">Urgent Operation Queue</h3>
+                            <h3 className="text-lg font-black text-gray-900 uppercase italic">{t('dashboard.urgentQueue', 'Urgent Operation Queue')}</h3>
                         </div>
                         <button onClick={() => navigate("/grievances")}
                             className="text-sm font-black uppercase tracking-[0.2em] text-[#B91C1C] hover:text-black flex items-center gap-2 transition-colors">
-                            Full Log <ChevronRight className="w-4 h-4" />
+                            {t('dashboard.fullLog', 'Full Log')} <ChevronRight className="w-4 h-4" />
                         </button>
                     </div>
 
@@ -391,10 +397,12 @@ export default function Dashboard() {
                                 </div>
                                 <div className="flex-1 min-w-0 space-y-1">
                                     <div className="flex items-center gap-2">
-                                        <h4 className="text-lg font-black text-gray-900 truncate uppercase italic">{c.issue}</h4>
+                                        <h4 className="text-lg font-black text-gray-900 truncate uppercase italic">
+                                            {viewGrievance?.id === c.id ? (c.originalComplaintTamil || c.issue) : (c.originalComplaintTamil || c.issue)}
+                                        </h4>
                                         {c.priority === "High" && <div className="w-1.5 h-1.5 rounded-full bg-red-600 animate-ping" />}
                                     </div>
-                                    <p className="text-base text-gray-400 font-bold uppercase tracking-tight">{c.citizen} · {c.ward} · {c.dept || "Awaiting Unit"}</p>
+                                    <p className="text-base text-gray-400 font-bold uppercase tracking-tight">{c.citizen} · {c.ward} · {c.dept || t('dashboard.awaitingUnit', 'Awaiting Unit')}</p>
                                 </div>
                                 <div className="flex items-center gap-3">
                                     <div className="hidden md:flex items-center gap-4">
@@ -429,19 +437,19 @@ export default function Dashboard() {
                                     <MessageSquare className="w-6 h-6 text-[#B91C1C]" />
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-black text-gray-900 uppercase italic leading-tight">Complaint Monitor</h3>
-                                    <p className="text-sm text-gray-400 font-black uppercase tracking-[0.2em]">Assignment & Tracking</p>
+                                    <h3 className="text-xl font-black text-gray-900 uppercase italic leading-tight">{t('dashboard.complaintMonitor', 'Complaint Monitor')}</h3>
+                                    <p className="text-sm text-gray-400 font-black uppercase tracking-[0.2em]">{t('dashboard.assignmentTracking', 'Assignment & Tracking')}</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">
-                                <input value={tableQ} onChange={e => setTableQ(e.target.value)} placeholder="Search..." className="px-4 py-2.5 rounded-xl border border-gray-200 text-lg bg-gray-50 focus:outline-none focus:border-red-300 focus:ring-2 focus:ring-red-50 transition-all" />
+                                <input value={tableQ} onChange={e => setTableQ(e.target.value)} placeholder={t('common.search', 'Search...')} className="px-4 py-2.5 rounded-xl border border-gray-200 text-lg bg-gray-50 focus:outline-none focus:border-red-300 focus:ring-2 focus:ring-red-50 transition-all" />
                                 <select value={tableStatus} onChange={e => setTableStatus(e.target.value)} className="px-4 py-2.5 rounded-xl border border-gray-200 text-lg bg-gray-50 focus:outline-none focus:border-red-300">
-                                    <option>All</option>
-                                    <option>New</option>
-                                    <option>Assigned</option>
-                                    <option>In Progress</option>
-                                    <option>Resolved</option>
-                                    <option>Closed</option>
+                                    <option value="All">{t('common.all', 'All')}</option>
+                                    <option value="New">{t('status.New', 'New')}</option>
+                                    <option value="Assigned">{t('status.Assigned', 'Assigned')}</option>
+                                    <option value="In Progress">{t('status.In Progress', 'In Progress')}</option>
+                                    <option value="Resolved">{t('status.Resolved', 'Resolved')}</option>
+                                    <option value="Closed">{t('status.Closed', 'Closed')}</option>
                                 </select>
                             </div>
                         </div>
@@ -450,18 +458,20 @@ export default function Dashboard() {
                             <table className="w-full text-lg">
                                 <thead className="text-left text-sm text-gray-400 uppercase tracking-widest font-black">
                                     <tr>
-                                        <th className="p-3">ID</th>
-                                        <th className="p-3">Issue</th>
-                                        <th className="p-3">Ward</th>
-                                        <th className="p-3">Status</th>
-                                        <th className="p-3">Priority</th>
+                                        <th className="p-3">{t('dashboard.id', 'ID')}</th>
+                                        <th className="p-3">{t('dashboard.issue', 'Issue')}</th>
+                                        <th className="p-3">{t('dashboard.ward', 'Ward')}</th>
+                                        <th className="p-3">{t('dashboard.status', 'Status')}</th>
+                                        <th className="p-3">{t('common.priority', 'Priority')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {filteredComplaints.slice(0, 8).map(c => (
                                         <tr key={c.id} className="border-t border-gray-50 hover:bg-red-50/20 transition-colors cursor-pointer" onClick={() => setViewGrievance(c)}>
                                             <td className="p-3 font-black text-gray-900">{c.id}</td>
-                                            <td className="p-3 font-bold text-gray-700 truncate max-w-[200px]">{c.issue}</td>
+                                            <td className="p-3 font-bold text-gray-700 truncate max-w-[200px]">
+                                                {c.originalComplaintTamil || c.issue}
+                                            </td>
                                             <td className="p-3 text-gray-500">{c.ward}</td>
                                             <td className="p-3">
                                                 <span className={`text-sm font-black px-3 py-1 rounded-lg uppercase tracking-widest ${
@@ -469,12 +479,12 @@ export default function Dashboard() {
                                                     c.status === "Resolved" ? "bg-emerald-50 text-emerald-600" :
                                                     c.status === "In Progress" ? "bg-amber-50 text-amber-600" :
                                                     "bg-gray-50 text-gray-500"
-                                                }`}>{c.status}</span>
+                                                }`}>{t(`status.${c.status}`, c.status)}</span>
                                             </td>
                                             <td className="p-3">
                                                 <span className={`text-sm font-black px-3 py-1 rounded-lg uppercase tracking-widest ${
                                                     c.priority === "High" ? "bg-red-50 text-[#B91C1C]" : "bg-gray-50 text-gray-500"
-                                                }`}>{c.priority ?? "Normal"}</span>
+                                                }`}>{t(`priority.${c.priority}`, c.priority ?? "Normal")}</span>
                                             </td>
                                         </tr>
                                     ))}
@@ -484,7 +494,7 @@ export default function Dashboard() {
 
                         <div className="mt-6 pt-4 border-t border-gray-100 text-center relative z-10">
                             <button onClick={() => navigate("/grievances")} className="text-sm font-black text-[#B91C1C] uppercase tracking-widest hover:text-gray-900 flex items-center gap-2 mx-auto transition-colors">
-                                View All Complaints <ChevronRight className="w-3.5 h-3.5" />
+                                {t('dashboard.viewAllComplaints', 'View All Complaints')} <ChevronRight className="w-3.5 h-3.5" />
                             </button>
                         </div>
                     </div>
@@ -496,8 +506,8 @@ export default function Dashboard() {
                                 <Bell className="w-6 h-6 text-[#B91C1C]" />
                             </div>
                             <div>
-                                <h3 className="text-xl font-black text-gray-900 uppercase italic leading-tight">Notifications</h3>
-                                <p className="text-sm text-gray-400 font-black uppercase tracking-[0.2em]">Recent alerts</p>
+                                <h3 className="text-xl font-black text-gray-900 uppercase italic leading-tight">{t('dashboard.notifications', 'Notifications')}</h3>
+                                <p className="text-sm text-gray-400 font-black uppercase tracking-[0.2em]">{t('dashboard.recentAlerts', 'Recent alerts')}</p>
                             </div>
                         </div>
 
@@ -505,7 +515,7 @@ export default function Dashboard() {
                             {recentNotifs.length === 0 ? (
                                 <div className="text-center py-12">
                                     <Bell className="w-10 h-10 text-gray-200 mx-auto mb-3" />
-                                    <p className="text-sm font-black text-gray-400 uppercase tracking-widest">No notifications yet</p>
+                                    <p className="text-sm font-black text-gray-400 uppercase tracking-widest">{t('common.noNotifications', 'No notifications yet')}</p>
                                 </div>
                             ) : (
                                 recentNotifs.map(n => (

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useComplaints } from "@/context/ComplaintsContext";
+import { useLanguage } from "@/context/LanguageContext";
 import {
     PlusCircle, MessageSquare, Clock, CheckCircle2,
     AlertTriangle, ArrowRight, MapPin, Calendar,
@@ -100,6 +101,7 @@ function ComplaintTimeline({ status }: { status: Status }) {
 
 export default function CitizenModule() {
     const { complaints, currentUser, rateComplaint, reopenComplaint, announcements } = useComplaints();
+    const { t, language } = useLanguage();
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -146,8 +148,8 @@ export default function CitizenModule() {
 
     return (
         <DashboardLayout
-            title="Citizen Portal"
-            subtitle={`Welcome, ${currentUser?.name || 'Citizen'}. Managing your local governance interaction.`}
+            title={t('page.citizenPortal', 'Citizen Portal')}
+            subtitle={t('page.citizenPortal.subtitle', 'Managing your local governance interaction')}
         >
             <div className="space-y-6 pb-10">
 
@@ -186,8 +188,8 @@ export default function CitizenModule() {
                                             <span className="text-xl text-gray-500 font-bold flex items-center gap-2"><MapPin className="w-4 h-4" />{ann.ward}</span>
                                             <span className="text-xl text-gray-400 font-bold">{ann.date}</span>
                                         </div>
-                                        <p className="text-xl font-black text-gray-900 leading-snug">{ann.title}</p>
-                                        <p className="text-lg text-gray-500 mt-2 line-clamp-1">{ann.body}</p>
+                                        <p className="text-xl font-black text-gray-900 leading-snug">{ann.title[language]}</p>
+                                        <p className="text-lg text-gray-500 mt-2 line-clamp-1">{ann.body[language]}</p>
                                     </div>
                                     <button
                                         onClick={(e) => { e.stopPropagation(); setDismissedAnns(p => [...p, ann.id]); }}

@@ -16,8 +16,8 @@ import { toast } from "sonner";
 export type AnnouncementType = "General" | "Alert" | "Resolution" | "Event";
 export interface Announcement {
     id: string;
-    title: string;
-    body: string;
+    title: { en: string; ta: string };
+    body: { en: string; ta: string };
     type: AnnouncementType;
     ward: string;
     postedBy: string;
@@ -89,6 +89,11 @@ interface ComplaintsCtx {
         notifPref?: "SMS" | "Email" | "None";
         autoAssignTo?: string;
         source?: "voice" | "web";
+        originalComplaintTamil?: string;
+        translatedEnglish?: string;
+        aiSummary?: string;
+        landmark?: string;
+        area?: string;
     }) => string;
     updateStatus: (id: string, newStatus: Status, actorNote?: string, proofImg?: string, supportingDocs?: string[]) => void;
     verifyComplaint: (id: string, approved: boolean, remarks?: string) => void;
@@ -98,7 +103,7 @@ interface ComplaintsCtx {
     rateComplaint: (id: string, rating: number) => void;
     reopenComplaint: (id: string, note: string) => void;
     readNotification: (id: string) => void;
-    postAnnouncement: (data: { title: string; body: string; type: AnnouncementType; ward: string }) => void;
+    postAnnouncement: (data: { title: { en: string; ta: string }; body: { en: string; ta: string }; type: AnnouncementType; ward: string }) => void;
     deleteAnnouncement: (id: string) => void;
     closedDocs: ClosedDoc[];
     clearClosedDocs: () => void;
@@ -143,11 +148,11 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
     });
 
     const INITIAL_ANNOUNCEMENTS: Announcement[] = [
-        { id: "ANN-001", title: "Water Supply Disruption — Ward 5 & 7", body: "Due to emergency pipe replacement work scheduled on 17 March, water supply will be interrupted from 6AM to 2PM. Residents are advised to store water in advance.", type: "Alert", ward: "Ward 5, Ward 7", postedBy: "Municipal Commissioner", date: "15 Mar 2026", pinned: true, timestamp: Date.now() - 86400000 },
-        { id: "ANN-002", title: "Street Light Installation Completed — Ward 3", body: "We are pleased to announce the successful installation of 32 new LED streetlights along the Main Road stretch in Ward 3. The work was completed 2 days ahead of schedule.", type: "Resolution", ward: "Ward 3", postedBy: "Roads & PWD Dept", date: "14 Mar 2026", timestamp: Date.now() - 172800000 },
-        { id: "ANN-003", title: "Free Health Camp — Ward 11 Community Center", body: "A free health check-up camp will be held on 20 March 2026 at the Ward 11 Community Hall from 9AM–4PM. Services include blood pressure, sugar, eye check-up, and general physician consult.", type: "Event", ward: "Ward 11", postedBy: "Public Health Department", date: "13 Mar 2026", timestamp: Date.now() - 259200000 },
-        { id: "ANN-004", title: "Pothole Repair Drive — Wards 1–6 This Week", body: "The Roads & PWD Department will carry out a comprehensive pothole repair drive across Wards 1 through 6 this week.", type: "General", ward: "Wards 1–6", postedBy: "Roads & PWD", date: "12 Mar 2026", timestamp: Date.now() - 345600000 },
-        { id: "ANN-005", title: "Garbage Collection Timings Updated", body: "Effective from 16 March, morning garbage collection will begin at 7AM instead of 8AM. The evening round will continue as usual at 5PM.", type: "General", ward: "All Wards", postedBy: "Sanitation Department", date: "11 Mar 2026", timestamp: Date.now() - 432000000 },
+        { id: "ANN-001", title: { en: "Water Supply Disruption — Ward 5 & 7", ta: "குடிநீர் விநியோகத் தடை — வார்டு 5 & 7" }, body: { en: "Due to emergency pipe replacement work scheduled on 17 March, water supply will be interrupted from 6AM to 2PM. Residents are advised to store water in advance.", ta: "மார்ச் 17 அன்று திட்டமிடப்பட்ட அவசரகால குழாய் மாற்றுப் பணி காரணமாக, காலை 6 மணி முதல் மதியம் 2 மணி வரை குடிநீர் விநியோகம் தடைபடும். குடியிருப்பாளர்கள் முன்கூட்டியே தண்ணீரைச் சேமித்து வைக்குமாறு அறிவுறுத்தப்படுகிறார்கள்." }, type: "Alert", ward: "Ward 5, Ward 7", postedBy: "Municipal Commissioner", date: "15 Mar 2026", pinned: true, timestamp: Date.now() - 86400000 },
+        { id: "ANN-002", title: { en: "Street Light Installation Completed — Ward 3", ta: "தெருவிளக்கு நிறுவுதல் நிறைவடைந்தது — வார்டு 3" }, body: { en: "We are pleased to announce the successful installation of 32 new LED streetlights along the Main Road stretch in Ward 3. The work was completed 2 days ahead of schedule.", ta: "வார்டு 3-இல் உள்ள பிரதான சாலை நெடுகிலும் 32 புதிய LED தெருவிளக்குகள் வெற்றிகரமாக நிறுவப்பட்டுள்ளன என்பதை மகிழ்ச்சியுடன் தெரிவித்துக் கொள்கிறோம். திட்டமிடப்பட்ட நாளுக்கு 2 நாட்களுக்கு முன்பே பணி முடிக்கப்பட்டது." }, type: "Resolution", ward: "Ward 3", postedBy: "Roads & PWD Dept", date: "14 Mar 2026", timestamp: Date.now() - 172800000 },
+        { id: "ANN-003", title: { en: "Free Health Camp — Ward 11 Community Center", ta: "இலவச மருத்துவ முகாம் — வார்டு 11 சமூக நலக்கூடம்" }, body: { en: "A free health check-up camp will be held on 20 March 2026 at the Ward 11 Community Hall from 9AM–4PM. Services include blood pressure, sugar, eye check-up, and general physician consult.", ta: "மார்ச் 20, 2026 அன்று வார்டு 11 சமூக நலக்கூடத்தில் காலை 9 மணி முதல் மாலை 4 மணி வரை இலவச மருத்துவப் பரிசோதனை முகாம் நடைபெறும். இரத்த அழுத்தம், சர்க்கரை, கண் பரிசோதனை மற்றும் பொது மருத்துவ ஆலோசனை ஆகியவை இதில் அடங்கும்." }, type: "Event", ward: "Ward 11", postedBy: "Public Health Department", date: "13 Mar 2026", timestamp: Date.now() - 259200000 },
+        { id: "ANN-004", title: { en: "Pothole Repair Drive — Wards 1–6 This Week", ta: "பள்ளம் சரிசெய்யும் பணி — வார்டுகள் 1–6 இந்த வாரம்" }, body: { en: "The Roads & PWD Department will carry out a comprehensive pothole repair drive across Wards 1 through 6 this week.", ta: "சாலைகள் மற்றும் பொதுப்பணித் துறை சார்பில் இந்த வாரம் 1 முதல் 6 வரையிலான வார்டுகளில் விரிவான பள்ளம் சரிசெய்யும் பணி மேற்கொள்ளப்படும்." }, type: "General", ward: "Wards 1–6", postedBy: "Roads & PWD", date: "12 Mar 2026", timestamp: Date.now() - 345600000 },
+        { id: "ANN-005", title: { en: "Garbage Collection Timings Updated", ta: "குப்பை சேகரிப்பு நேரங்கள் புதுப்பிக்கப்பட்டன" }, body: { en: "Effective from 16 March, morning garbage collection will begin at 7AM instead of 8AM. The evening round will continue as usual at 5PM.", ta: "மார்ச் 16 முதல், காலை குப்பை சேகரிப்பு வழக்கமான 8 மணிக்கு பதிலாக காலை 7 மணிக்கு தொடங்கும். மாலை நேர சேகரிப்பு வழக்கம் போல் மாலை 5 மணிக்கு நடைபெறும்." }, type: "General", ward: "All Wards", postedBy: "Sanitation Department", date: "11 Mar 2026", timestamp: Date.now() - 432000000 },
     ];
 
     const [announcements, setAnnouncements] = useState<Announcement[]>(() => {
@@ -664,7 +669,7 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
         }));
     }
 
-    function postAnnouncement(data: { title: string; body: string; type: AnnouncementType; ward: string }) {
+    function postAnnouncement(data: { title: { en: string; ta: string }; body: { en: string; ta: string }; type: AnnouncementType; ward: string }) {
         const ann: Announcement = {
             id: `ANN-${String(announcements.length + 1).padStart(3, "0")}`,
             title: data.title,
@@ -685,8 +690,8 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
         // Push a notification targeting ALL users so citizens see it immediately in bell + toast
         pushNotif({
             type: "alert",
-            title: `📢 ${data.type === "Alert" ? "⚠️ URGENT: " : ""}${data.title}`,
-            message: `${data.ward} — ${data.body.slice(0, 100)}${data.body.length > 100 ? "..." : ""}`,
+            title: `📢 ${data.type === "Alert" ? "⚠️ URGENT: " : ""}${data.title.en}`,
+            message: `${data.ward} — ${data.body.en.slice(0, 100)}${data.body.en.length > 100 ? "..." : ""}`,
             target: "all",
             announcementId: ann.id,
         });

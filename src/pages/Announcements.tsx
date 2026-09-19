@@ -8,12 +8,13 @@ import {
     CheckCircle2, AlertTriangle, Info, ChevronRight,
     Search, Filter, Loader2, Send, Trash2
 } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
-const TYPE_CFG: Record<AnnouncementType, { color: string; bg: string; border: string; icon: any; label: string }> = {
-    Alert: { color: "text-red-600", bg: "bg-red-50", border: "border-red-200", icon: AlertTriangle, label: "Alert" },
-    Resolution: { color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200", icon: CheckCircle2, label: "Resolved" },
-    Event: { color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-200", icon: Calendar, label: "Event" },
-    General: { color: "text-gray-600", bg: "bg-gray-50", border: "border-gray-200", icon: Info, label: "Info" },
+const TYPE_CFG: Record<AnnouncementType, { color: string; bg: string; border: string; icon: any; labelKey: string }> = {
+    Alert: { color: "text-red-600", bg: "bg-red-50", border: "border-red-200", icon: AlertTriangle, labelKey: "announcements.type.Alert" },
+    Resolution: { color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200", icon: CheckCircle2, labelKey: "announcements.type.Resolution" },
+    Event: { color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-200", icon: Calendar, labelKey: "announcements.type.Event" },
+    General: { color: "text-gray-600", bg: "bg-gray-50", border: "border-gray-200", icon: Info, labelKey: "announcements.type.General" },
 };
 
 const AUTO_TYPE_KEYWORDS: { type: AnnouncementType; words: string[] }[] = [
@@ -33,6 +34,7 @@ function autoType(text: string): AnnouncementType {
 
 export default function Announcements() {
     const { currentUser, announcements, postAnnouncement, deleteAnnouncement } = useComplaints();
+    const { t, language } = useLanguage();
     const role = currentUser?.role ?? "admin";
     const canManage = role === "admin" || role === "officer";
 
@@ -67,8 +69,8 @@ export default function Announcements() {
     const filtered = announcements
         .filter(a => filter === "All" || a.type === filter)
         .filter(a =>
-            a.title.toLowerCase().includes(search.toLowerCase()) ||
-            a.body.toLowerCase().includes(search.toLowerCase()) ||
+            a.title[language].toLowerCase().includes(search.toLowerCase()) ||
+            a.body[language].toLowerCase().includes(search.toLowerCase()) ||
             a.ward.toLowerCase().includes(search.toLowerCase())
         )
         .sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
@@ -77,7 +79,12 @@ export default function Announcements() {
         if (!newAnn.title || !newAnn.body) return;
         setPosting(true);
         setTimeout(() => {
-            postAnnouncement({ title: newAnn.title, body: newAnn.body, type: newAnn.type, ward: newAnn.ward });
+            postAnnouncement({ 
+                title: { en: newAnn.title, ta: newAnn.title }, 
+                body: { en: newAnn.body, ta: newAnn.body }, 
+                type: newAnn.type, 
+                ward: newAnn.ward 
+            });
             setNewAnn({ title: "", body: "", type: "General", ward: "All Wards" });
             setManualType(false);
             setShowForm(false);
@@ -87,8 +94,8 @@ export default function Announcements() {
 
     return (
         <DashboardLayout
-            title="Announcements"
-            subtitle={canManage ? "Post and manage official ward announcements" : "Stay updated with official government notices"}
+            title={t("announcements.title", "Announcements")}
+            subtitle={canManage ? t("announcements.postAndManage", "Post and manage official ward announcements") : t("announcements.stayUpdated", "Stay updated with official government notices")}
             actions={canManage ? (
                 <div className="flex items-center gap-3">
                     <button
@@ -97,13 +104,13 @@ export default function Announcements() {
                         }}
                         className="flex items-center gap-2 px-5 py-2.5 bg-red-50 text-red-600 border border-red-100 rounded-2xl text-base font-black hover:bg-red-100 transition-all shadow-sm"
                     >
-                        <Trash2 className="w-4 h-4" /> Delete All
+                        <Trash2 className="w-4 h-4" /> {t("announcements.deleteAll", "Delete All")}
                     </button>
                     <button
                         onClick={() => setShowForm(true)}
                         className="flex items-center gap-2 px-5 py-2.5 bg-[#B91C1C] text-white rounded-2xl text-base font-black hover:bg-red-800 transition-all shadow-lg shadow-red-200"
                     >
-                        <Plus className="w-4 h-4" /> New Announcement
+                        <Plus className="w-4 h-4" /> {t("announcements.new", "New Announcement")}
                     </button>
                 </div>
             ) : undefined}
@@ -118,29 +125,29 @@ export default function Announcements() {
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <div className="p-2.5 bg-red-50 rounded-xl"><Megaphone className="w-5 h-5 text-[#B91C1C]" /></div>
-                                    <h3 className="text-lg font-black text-gray-900">New Announcement</h3>
+                                    <h3 className="text-lg font-black text-gray-900">{t("announcements.new", "New Announcement")}</h3>
                                 </div>
                                 <button onClick={() => setShowForm(false)} className="p-2 hover:bg-gray-50 rounded-xl text-gray-400"><X className="w-5 h-5" /></button>
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-black uppercase tracking-widest text-gray-400">Title *</label>
+                                <label className="text-sm font-black uppercase tracking-widest text-gray-400">{t("announcements.newTitle", "Title *")}</label>
                                 <input type="text" value={newAnn.title} onChange={e => setNewAnn(p => ({ ...p, title: e.target.value }))}
-                                    placeholder="e.g. Water Supply Disruption — Ward 5"
+                                    placeholder={t("announcements.newTitlePlaceholder", "e.g. Water Supply Disruption — Ward 5")}
                                     className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl text-lg font-bold focus:outline-none focus:border-[#B91C1C]/30 focus:bg-white transition-all" />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-black uppercase tracking-widest text-gray-400">Type</label>
+                                    <label className="text-sm font-black uppercase tracking-widest text-gray-400">{t("announcements.newType", "Type")}</label>
                                     <select value={newAnn.type} onChange={e => { setNewAnn(p => ({ ...p, type: e.target.value as AnnouncementType })); setManualType(true); }}
                                         className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl text-lg font-bold focus:outline-none focus:border-[#B91C1C]/30 transition-all">
-                                        {(["General", "Alert", "Resolution", "Event"] as AnnouncementType[]).map(t => (
-                                            <option key={t} value={t}>{t}</option>
+                                        {(["General", "Alert", "Resolution", "Event"] as AnnouncementType[]).map(type => (
+                                            <option key={type} value={type}>{t(`announcements.type.${type}`, type)}</option>
                                         ))}
                                     </select>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-black uppercase tracking-widest text-gray-400">Ward</label>
+                                    <label className="text-sm font-black uppercase tracking-widest text-gray-400">{t("announcements.newWard", "Ward")}</label>
                                     <select value={newAnn.ward} onChange={e => setNewAnn(p => ({ ...p, ward: e.target.value }))}
                                         className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl text-lg font-bold focus:outline-none focus:border-[#B91C1C]/30 transition-all cursor-pointer">
                                         <option value="All Wards">All Wards</option>
@@ -151,9 +158,9 @@ export default function Announcements() {
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-black uppercase tracking-widest text-gray-400">Message *</label>
+                                <label className="text-sm font-black uppercase tracking-widest text-gray-400">{t("announcements.newMessage", "Message *")}</label>
                                 <textarea rows={4} value={newAnn.body} onChange={e => setNewAnn(p => ({ ...p, body: e.target.value }))}
-                                    placeholder="Write the full announcement body here..."
+                                    placeholder={t("announcements.newMessagePlaceholder", "Write the full announcement body here...")}
                                     className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl text-lg font-bold focus:outline-none focus:border-[#B91C1C]/30 focus:bg-white transition-all resize-none" />
                             </div>
                             <button
@@ -161,7 +168,7 @@ export default function Announcements() {
                                 disabled={posting || !newAnn.title || !newAnn.body}
                                 className="w-full flex items-center justify-center gap-2 py-3.5 bg-[#B91C1C] text-white rounded-2xl text-lg font-black hover:bg-red-800 transition-all shadow-lg shadow-red-200 disabled:opacity-60 disabled:cursor-not-allowed"
                             >
-                                {posting ? <><Loader2 className="w-4 h-4 animate-spin" /> Posting...</> : <><Send className="w-4 h-4" /> Post Announcement</>}
+                                {posting ? <><Loader2 className="w-4 h-4 animate-spin" /> {t("announcements.postingBtn", "Posting...")}</> : <><Send className="w-4 h-4" /> {t("announcements.postBtn", "Post Announcement")}</>}
                             </button>
                         </div>
                     </div>
@@ -173,7 +180,7 @@ export default function Announcements() {
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                         <input
                             type="text"
-                            placeholder="Search announcements, wards..."
+                            placeholder={t("announcements.searchPlaceholder", "Search announcements, wards...")}
                             value={search}
                             onChange={e => setSearch(e.target.value)}
                             className="w-full pl-11 pr-4 py-3 bg-white border border-gray-100 rounded-2xl text-lg font-bold focus:outline-none focus:border-[#B91C1C]/30 text-gray-700 placeholder:text-gray-300 shadow-sm"
@@ -189,17 +196,16 @@ export default function Announcements() {
                                         ? "bg-[#B91C1C] text-white shadow-lg shadow-red-200"
                                         : "bg-white border border-gray-100 text-gray-500 hover:bg-gray-50"
                                     }`}
-                            >{f}</button>
+                            >{f === "All" ? t("common.all", "All") : t(`announcements.type.${f}`, f)}</button>
                         ))}
                     </div>
                 </div>
 
-                {/* Pinned alert */}
                 {filtered.filter(a => a.pinned).length > 0 && (
                     <div className="flex items-center gap-2 px-4 py-2 bg-red-50 border border-red-100 rounded-2xl">
                         <Bell className="w-3.5 h-3.5 text-[#B91C1C]" />
                         <span className="text-base font-black text-[#B91C1C] uppercase tracking-widest">
-                            {filtered.filter(a => a.pinned).length} Pinned Alert{filtered.filter(a => a.pinned).length > 1 ? "s" : ""}
+                            {filtered.filter(a => a.pinned).length} {filtered.filter(a => a.pinned).length > 1 ? t("announcements.pinnedAlerts", "Pinned Alerts") : t("announcements.pinnedAlert", "Pinned Alert")}
                         </span>
                     </div>
                 )}
@@ -208,7 +214,7 @@ export default function Announcements() {
                 {filtered.length === 0 ? (
                     <div className="bg-white rounded-3xl border border-gray-100 p-16 text-center">
                         <Megaphone className="w-12 h-12 text-gray-200 mx-auto mb-4" />
-                        <p className="text-lg font-black text-gray-400">No announcements found</p>
+                        <p className="text-lg font-black text-gray-400">{t("announcements.noAnnouncements", "No announcements found")}</p>
                     </div>
                 ) : (
                     <div className="space-y-4">
@@ -230,10 +236,10 @@ export default function Announcements() {
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 mb-2 flex-wrap">
                                                 {ann.pinned && (
-                                                    <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 bg-[#B91C1C] text-white rounded-full">📌 Pinned</span>
+                                                    <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 bg-[#B91C1C] text-white rounded-full">📌 {t("announcements.pinned", "Pinned")}</span>
                                                 )}
                                                 <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${cfg.bg} ${cfg.color} ${cfg.border}`}>
-                                                    {cfg.label}
+                                                    {t(cfg.labelKey, cfg.labelKey)}
                                                 </span>
                                                 <span className="text-sm font-bold text-gray-400 flex items-center gap-1">
                                                     <MapPin className="w-3 h-3" /> {ann.ward}
@@ -242,9 +248,9 @@ export default function Announcements() {
                                                     <Calendar className="w-3 h-3" /> {ann.date}
                                                 </span>
                                             </div>
-                                            <h4 className="text-xl font-black text-gray-900 group-hover:text-[#B91C1C] transition-colors leading-tight">{ann.title}</h4>
+                                            <h4 className="text-xl font-black text-gray-900 group-hover:text-[#B91C1C] transition-colors leading-tight">{ann.title[language]}</h4>
                                             {!isOpen && (
-                                                <p className="text-lg text-gray-500 mt-1 line-clamp-2 leading-relaxed">{ann.body}</p>
+                                                <p className="text-lg text-gray-500 mt-1 line-clamp-2 leading-relaxed">{ann.body[language]}</p>
                                             )}
                                         </div>
                                         {canManage && (
@@ -265,13 +271,13 @@ export default function Announcements() {
                                     {isOpen && (
                                         <div className="px-6 pb-6 pt-0">
                                             <div className="ml-15 pl-4 border-l-2 border-gray-100">
-                                                <p className="text-lg text-gray-700 leading-relaxed mb-4">{ann.body}</p>
+                                                <p className="text-lg text-gray-700 leading-relaxed mb-4">{ann.body[language]}</p>
                                                 <div className="flex items-center gap-2 pt-3 border-t border-gray-50">
                                                     <div className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center text-[8px] font-black text-gray-500">
                                                         {ann.postedBy.charAt(0)}
                                                     </div>
                                                     <span className="text-sm font-black text-gray-400 uppercase tracking-widest">
-                                                        Posted by {ann.postedBy} · {ann.date}
+                                                        {t("announcements.postedBy", "Posted by")} {ann.postedBy} · {ann.date}
                                                     </span>
                                                 </div>
                                             </div>

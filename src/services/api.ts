@@ -30,6 +30,8 @@ export interface Complaint {
   notifPref: "SMS" | "Email" | "None";
   sentiment: number;
   rating?: number;
+  translatedEnglish?: string;
+  originalComplaintTamil?: string;
   resolutionProof?: string;
   source?: string;
   audit: {

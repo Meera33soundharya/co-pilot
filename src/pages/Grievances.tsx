@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useComplaints } from "@/context/ComplaintsContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { CATEGORY_DEPT } from "@/store/complaintsStore";
 import type { Priority, Status, Category, Complaint } from "@/store/complaintsStore";
 import {
@@ -73,6 +74,7 @@ const AI_SUGGESTIONS: Record<string, {
 
 // ── AI Suggestion Panel ──────────────────────────────────────────────────────
 function AISuggestionPanel({ complaint, onAccept }: { complaint: Complaint; onAccept: () => void }) {
+    const { t } = useLanguage();
     const suggestion = AI_SUGGESTIONS[complaint.category] ?? AI_SUGGESTIONS["Other"];
     const [accepted, setAccepted] = useState(false);
     return (
@@ -82,8 +84,8 @@ function AISuggestionPanel({ complaint, onAccept }: { complaint: Complaint; onAc
                     <Sparkles className="w-4 h-4 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <p className="text-lg font-black uppercase tracking-widest text-white/70">AI Co-Pilot Suggestion</p>
-                    <p className="text-lg font-black text-white truncate">Recommended Resolution Plan</p>
+                    <p className="text-lg font-black uppercase tracking-widest text-white/70">{t('grievances.aiCoPilotSuggestion', 'AI Co-Pilot Suggestion')}</p>
+                    <p className="text-lg font-black text-white truncate">{t('grievances.recommendedResolutionPlan', 'Recommended Resolution Plan')}</p>
                 </div>
                 <div className="px-2.5 py-1 bg-white/20 rounded-lg text-base font-black text-white uppercase tracking-wide flex items-center gap-1">
                     <Timer className="w-3 h-3" /> {suggestion.eta}
@@ -97,7 +99,7 @@ function AISuggestionPanel({ complaint, onAccept }: { complaint: Complaint; onAc
                 </div>
 
                 <div className="space-y-2">
-                    <p className="text-base font-black uppercase tracking-widest text-amber-700">Suggested Action Steps</p>
+                    <p className="text-base font-black uppercase tracking-widest text-amber-700">{t('grievances.suggestedActionSteps', 'Suggested Action Steps')}</p>
                     {suggestion.steps.map((step, i) => (
                         <div key={i} className="flex items-start gap-3">
                             <div className="w-5 h-5 rounded-full bg-amber-200 text-amber-800 text-lg font-black flex items-center justify-center shrink-0 mt-0.5">
@@ -110,7 +112,7 @@ function AISuggestionPanel({ complaint, onAccept }: { complaint: Complaint; onAc
 
                 <div className="flex items-center gap-2.5 p-3 bg-blue-50 border border-blue-100 rounded-2xl">
                     <Wrench className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                    <p className="text-base font-black text-blue-800">Assign to: <span className="text-blue-600">{suggestion.dept}</span></p>
+                    <p className="text-base font-black text-blue-800">{t('grievances.assignTo', 'Assign to:')} <span className="text-blue-600">{suggestion.dept}</span></p>
                 </div>
 
                 {!accepted ? (
@@ -118,12 +120,12 @@ function AISuggestionPanel({ complaint, onAccept }: { complaint: Complaint; onAc
                         onClick={() => { setAccepted(true); onAccept(); }}
                         className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white text-base font-black uppercase tracking-widest transition-all shadow-lg shadow-amber-200 active:scale-95"
                     >
-                        <ThumbsUp className="w-4 h-4" /> Accept AI Plan & Assign
+                        <ThumbsUp className="w-4 h-4" /> {t('grievances.acceptAiPlan', 'Accept AI Plan & Assign')}
                     </button>
                 ) : (
                     <div className="flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-emerald-100 border border-emerald-200">
                         <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                        <span className="text-base font-black text-emerald-700 uppercase tracking-widest">Plan Accepted — Officer Assigned</span>
+                        <span className="text-base font-black text-emerald-700 uppercase tracking-widest">{t('grievances.planAccepted', 'Plan Accepted — Officer Assigned')}</span>
                     </div>
                 )}
             </div>
@@ -165,11 +167,12 @@ function PriorityBadge({ priority }: { priority: Priority }) {
     );
 }
 function StatusBadge({ status }: { status: Status }) {
+    const { t } = useLanguage();
     const c = STATUS_CFG[status];
     return (
         <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-base font-black ${c.pill}`}>
             <span className={`w-2 h-2 rounded-full ${c.dot}`} />
-            {c.label}
+            {t(`status.${c.label}`, c.label)}
         </span>
     );
 }
@@ -191,41 +194,43 @@ function WorkflowBar({ status }: { status: Status }) {
 }
 
 function AssignPanel({ complaint, onAssign }: { complaint: Complaint; onAssign: (dept: string, to: string) => void }) {
+    const { t } = useLanguage();
     const [dept, setDept] = useState(complaint.dept || "");
     const [to, setTo] = useState(complaint.assignedTo || "");
     return (
         <div className="space-y-3 p-5 bg-blue-50 border border-blue-100 rounded-2xl">
-            <p className="text-base font-black uppercase tracking-widest text-blue-700">Assign to Department</p>
+            <p className="text-base font-black uppercase tracking-widest text-blue-700">{t('grievances.assignToDepartment', 'Assign to Department')}</p>
             <select value={dept} onChange={e => { setDept(e.target.value); setTo(e.target.value + " Team"); }}
                 className="w-full px-4 py-3 text-lg font-bold rounded-xl border border-blue-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-200">
-                <option value="">Choose department...</option>
+                <option value="">{t('grievances.chooseDepartment', 'Choose department...')}</option>
                 {ALL_CATEGORIES.map(c => (
                     <option key={c} value={CATEGORY_DEPT[c]}>{CATEGORY_DEPT[c]}</option>
                 ))}
             </select>
-            <input value={to} onChange={e => setTo(e.target.value)} placeholder="Officer / person name"
+            <input value={to} onChange={e => setTo(e.target.value)} placeholder={t('grievances.officerPersonName', 'Officer / person name')}
                 className="w-full px-4 py-3 text-lg font-bold rounded-xl border border-blue-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-200" />
             <button disabled={!dept || !to} onClick={() => onAssign(dept, to)}
                 className="btn-primary w-full !py-2.5 !bg-blue-600 hover:!bg-blue-700 !rounded-xl">
-                Confirm Assignment
+                {t('grievances.confirmAssignment', 'Confirm Assignment')}
             </button>
         </div>
     );
 }
 
 function CategorizePanel({ onCategorize }: { onCategorize: (cat: Category) => void }) {
+    const { t } = useLanguage();
     const [cat, setCat] = useState<Category | "">("");
     return (
         <div className="space-y-3 p-4 bg-purple-50 border border-purple-100 rounded-2xl">
-            <p className="text-lg font-black uppercase tracking-widest text-purple-700">Set / Change Category</p>
+            <p className="text-lg font-black uppercase tracking-widest text-purple-700">{t('grievances.setChangeCategory', 'Set / Change Category')}</p>
             <select value={cat} onChange={e => setCat(e.target.value as Category)}
                 className="w-full px-3 py-2.5 text-base font-bold rounded-xl border border-purple-200 bg-white focus:outline-none focus:ring-2 focus:ring-purple-200">
-                <option value="">Choose category...</option>
-                {ALL_CATEGORIES.map(c => <option key={c}>{c}</option>)}
+                <option value="">{t('grievances.chooseCategory', 'Choose category...')}</option>
+                {ALL_CATEGORIES.map(c => <option key={c}>{t(`category.${c}`, c)}</option>)}
             </select>
             <button disabled={!cat} onClick={() => cat && onCategorize(cat)}
                 className="btn-primary w-full !py-2.5 !bg-purple-600 hover:!bg-purple-700 !rounded-xl">
-                Save Category
+                {t('grievances.saveCategory', 'Save Category')}
             </button>
         </div>
     );
@@ -241,6 +246,7 @@ export default function Grievances() {
         complaints, allComplaints, currentUser,
         updateStatus, verifyComplaint, assignComplaint, notifyCitizen, categorize,
     } = useComplaints();
+    const { language, t } = useLanguage();
 
     const isAdmin = currentUser?.role === "admin" || !currentUser;
     const isOfficer = currentUser?.role === "officer";
@@ -349,10 +355,10 @@ export default function Grievances() {
     });
 
     return (
-        <DashboardLayout title="Complaints" subtitle={
-            isAdmin ? "All complaints — full access" :
-                isOfficer ? `Your dept: ${currentUser?.dept}` :
-                    "Your submitted complaints"
+        <DashboardLayout title={t('page.grievances', 'Complaints')} subtitle={
+            isAdmin ? t('page.grievances.subtitle.admin', 'All complaints — full access') :
+                isOfficer ? t('page.grievances.subtitle.officer', 'Your dept:') + ` ${currentUser?.dept}` :
+                    t('page.grievances.subtitle.citizen', 'Your submitted complaints')
         }>
 
             {/* Toast */}
@@ -378,11 +384,11 @@ export default function Grievances() {
                                     <StatusBadge status={detail.status} />
                                     {detail.notified && (
                                         <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50 border border-emerald-100 text-base font-black text-emerald-600">
-                                            <Bell className="w-2.5 h-2.5" /> Notified
+                                            <Bell className="w-2.5 h-2.5" /> {t('grievances.notified', 'Notified')}
                                         </span>
                                     )}
                                 </div>
-                                <p className="text-lg text-gray-400 font-medium mt-1">Filed {detail.time} · {detail.dept || "Unassigned"}</p>
+                                <p className="text-lg text-gray-400 font-medium mt-1">{t('grievances.filed', 'Filed')} {detail.time} · {detail.dept || t('dashboard.unassigned', 'Unassigned')}</p>
                             </div>
                             <button onClick={() => { setDetail(null); setShowAssign(false); setShowCatPanel(false); setShowAI(false); }}
                                 className="p-2 rounded-xl hover:bg-gray-100 text-gray-400 transition-colors">
@@ -392,12 +398,12 @@ export default function Grievances() {
 
                         {/* Workflow bar */}
                         <div className="px-6 py-4 border-b border-gray-50 bg-gray-50/50">
-                            <p className="text-base font-black uppercase tracking-widest text-gray-400 mb-2">Complaint Journey</p>
+                            <p className="text-base font-black uppercase tracking-widest text-gray-400 mb-2">{t('grievances.complaintJourney', 'Complaint Journey')}</p>
                             <WorkflowBar status={detail.status} />
                             <div className="flex justify-between mt-2">
                                 {WORKFLOW_STEPS.map(s => (
                                     <span key={s} className={`text-lg font-black uppercase tracking-tight ${detail.status === s ? "text-[#B91C1C]" : "text-gray-300"}`}>
-                                        {s === "In Progress" ? "Working" : s}
+                                        {t(`status.${s}`, s === "In Progress" ? "Working" : s)}
                                     </span>
                                 ))}
                             </div>
@@ -413,24 +419,28 @@ export default function Grievances() {
                                         <Tag className="w-2.5 h-2.5" /> {detail.category}
                                     </span>
                                 </div>
-                                <h2 className="text-lg font-black text-gray-900 leading-snug">{detail.issue}</h2>
+                                <h2 className="text-lg font-black text-gray-900 leading-snug">
+                                    {detail.originalComplaintTamil || detail.issue}
+                                </h2>
                                 <div className="bg-gray-50 rounded-2xl border border-gray-100 p-4">
                                     <p className="text-lg font-black uppercase tracking-widest text-gray-400 mb-1.5">Details</p>
-                                    <p className="text-lg text-gray-600 leading-relaxed">{detail.description || "No additional details provided."}</p>
+                                    <p className="text-lg text-gray-600 leading-relaxed">
+                                        {detail.originalComplaintTamil || detail.description || detail.issue}
+                                    </p>
                                 </div>
                             </div>
 
                             {/* Info grid */}
                             <div className="px-6 py-5 border-b border-gray-100">
-                                <p className="text-lg font-black uppercase tracking-widest text-gray-400 mb-3">Complaint Info</p>
+                                <p className="text-lg font-black uppercase tracking-widest text-gray-400 mb-3">{t('grievances.complaintInfo', 'Complaint Info')}</p>
                                 <div className="grid grid-cols-2 gap-2">
                                     {[
-                                        { icon: User, label: "Filed by", value: detail.citizen },
-                                        { icon: Phone, label: "Phone", value: detail.phone || "Not provided" },
-                                        { icon: MapPin, label: "Ward", value: detail.ward },
-                                        { icon: Building2, label: "Department", value: detail.dept || "Not assigned yet" },
-                                        { icon: AlertTriangle, label: "Priority", value: `${detail.priority} Priority` },
-                                        { icon: Clock, label: "Filed", value: detail.time },
+                                        { icon: User, label: t('grievances.filedBy', 'Filed by'), value: detail.citizen },
+                                        { icon: Phone, label: t('grievances.phone', 'Phone'), value: detail.phone || t('grievances.notProvided', 'Not provided') },
+                                        { icon: MapPin, label: t('dashboard.ward', 'Ward'), value: detail.ward },
+                                        { icon: Building2, label: t('grievances.department', 'Department'), value: detail.dept || t('grievances.notAssignedYet', 'Not assigned yet') },
+                                        { icon: AlertTriangle, label: t('common.priority', 'Priority'), value: `${t(`priority.${detail.priority}`, detail.priority)}` },
+                                        { icon: Clock, label: t('grievances.filed', 'Filed'), value: detail.time },
                                     ].map(({ icon: Icon, label, value }) => (
                                         <div key={label} className="flex items-start gap-3 p-3 rounded-2xl bg-gray-50 border border-gray-100">
                                             <Icon className="w-3.5 h-3.5 text-gray-400 mt-0.5 shrink-0" />
@@ -446,7 +456,7 @@ export default function Grievances() {
                             {/* ── Citizen Evidence Assets ── */}
                             {detail.evidence && detail.evidence.length > 0 && (
                                 <div className="px-6 py-5 border-b border-gray-100">
-                                    <p className="text-lg font-black uppercase tracking-widest text-gray-400 mb-4">Evidence & Tactical Media</p>
+                                    <p className="text-lg font-black uppercase tracking-widest text-gray-400 mb-4">{t('grievances.evidenceMedia', 'Evidence & Tactical Media')}</p>
                                     <div className="grid grid-cols-2 gap-3">
                                         {detail.evidence.map((rawUrl, idx) => {
                                             const [url, meta] = rawUrl.split('#');
@@ -508,8 +518,8 @@ export default function Grievances() {
                                     >
                                         <Sparkles className="w-4 h-4 shrink-0" />
                                         <div className="flex-1 text-left">
-                                            <p className="text-base font-black uppercase tracking-widest">AI Solution Suggestion</p>
-                                            <p className="text-lg font-medium opacity-70 mt-0.5">Auto-generated step-by-step resolution plan</p>
+                                            <p className="text-base font-black uppercase tracking-widest">{t('grievances.aiSolutionSuggestion', 'AI Solution Suggestion')}</p>
+                                            <p className="text-lg font-medium opacity-70 mt-0.5">{t('grievances.autoGeneratedPlan', 'Auto-generated step-by-step resolution plan')}</p>
                                         </div>
                                         <ChevronDown className={`w-4 h-4 transition-transform ${showAI ? "rotate-180" : ""}`} />
                                     </button>
@@ -529,7 +539,7 @@ export default function Grievances() {
 
                             {/* Audit log */}
                             <div className="px-6 py-5 border-b border-gray-100">
-                                <p className="text-lg font-black uppercase tracking-widest text-gray-400 mb-4">Activity Log</p>
+                                <p className="text-lg font-black uppercase tracking-widest text-gray-400 mb-4">{t('grievances.activityLog', 'Activity Log')}</p>
                                 <div className="relative pl-5 space-y-4 before:absolute before:left-[7px] before:top-2 before:bottom-2 before:w-px before:bg-gray-100">
                                     {detail.audit.map((a, i) => (
                                         <div key={i} className="flex items-start gap-3 relative">
@@ -546,16 +556,16 @@ export default function Grievances() {
                             {/* ── Pending Verification Details ── */}
                             {detail.status === "Pending Verification" && (
                                 <div className="px-6 py-5 border-b border-gray-100 bg-amber-50">
-                                    <p className="text-lg font-black uppercase tracking-widest text-amber-800 mb-4">Pending Verification Evidence</p>
+                                    <p className="text-lg font-black uppercase tracking-widest text-amber-800 mb-4">{t('grievances.pendingVerificationEvidence', 'Pending Verification Evidence')}</p>
                                     {detail.resolutionProof && (
                                         <div className="mb-4">
-                                            <p className="text-base font-bold text-amber-700 mb-2">Resolution Photo</p>
+                                            <p className="text-base font-bold text-amber-700 mb-2">{t('grievances.resolutionPhoto', 'Resolution Photo')}</p>
                                             <img src={detail.resolutionProof} alt="Resolution" className="w-full max-w-sm rounded-xl border border-amber-200" />
                                         </div>
                                     )}
                                     {detail.resolutionNotes && (
                                         <div className="mb-4">
-                                            <p className="text-base font-bold text-amber-700 mb-1">Resolution Notes</p>
+                                            <p className="text-base font-bold text-amber-700 mb-1">{t('grievances.resolutionNotes', 'Resolution Notes')}</p>
                                             <p className="text-lg text-amber-900 bg-white p-3 rounded-xl border border-amber-200">{detail.resolutionNotes}</p>
                                         </div>
                                     )}
@@ -581,17 +591,17 @@ export default function Grievances() {
                             {/* Admin panels */}
                             {isAdmin && (
                                 <div className="px-6 py-5 space-y-3">
-                                    <p className="text-lg font-black uppercase tracking-widest text-gray-400">Admin Actions</p>
+                                    <p className="text-lg font-black uppercase tracking-widest text-gray-400">{t('grievances.adminActions', 'Admin Actions')}</p>
                                     <button onClick={() => { setShowCatPanel(!showCatPanel); setShowAssign(false); }}
                                         className="w-full flex items-center gap-2 py-3 px-4 rounded-2xl border border-purple-200 bg-purple-50 text-purple-700 text-base font-black hover:bg-purple-100 transition-all">
-                                        <Tag className="w-4 h-4" /> Change Category
+                                        <Tag className="w-4 h-4" /> {t('grievances.changeCategory', 'Change Category')}
                                         <ChevronDown className={`w-3.5 h-3.5 ml-auto transition-transform ${showCatPanel ? "rotate-180" : ""}`} />
                                     </button>
                                     {showCatPanel && <CategorizePanel onCategorize={doCategorize} />}
 
                                     <button onClick={() => { setShowAssign(!showAssign); setShowCatPanel(false); }}
                                         className="w-full flex items-center gap-2 py-3 px-4 rounded-2xl border border-blue-200 bg-blue-50 text-blue-700 text-base font-black hover:bg-blue-100 transition-all">
-                                        <Building2 className="w-4 h-4" /> Assign to Department
+                                        <Building2 className="w-4 h-4" /> {t('grievances.assignToDepartment', 'Assign to Department')}
                                         <ChevronDown className={`w-3.5 h-3.5 ml-auto transition-transform ${showAssign ? "rotate-180" : ""}`} />
                                     </button>
                                     {showAssign && <AssignPanel complaint={detail} onAssign={doAssign} />}
@@ -601,24 +611,24 @@ export default function Grievances() {
 
                         {/* Action footer */}
                         <div className="shrink-0 border-t border-gray-100 bg-white p-5 space-y-2.5">
-                            <p className="text-base font-black uppercase tracking-widest text-gray-400 mb-1">Update Status</p>
+                            <p className="text-base font-black uppercase tracking-widest text-gray-400 mb-1">{t('grievances.updateStatus', 'Update Status')}</p>
 
                             {(isAdmin || isOfficer) && detail.status === "New" && (
                                 <button onClick={() => doStatus(detail.id, "Categorized", "Marked as categorized")}
                                     className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white text-base font-black transition-all">
-                                    <Tag className="w-4 h-4" /> Mark as Categorized
+                                    <Tag className="w-4 h-4" /> {t('grievances.markCategorized', 'Mark as Categorized')}
                                 </button>
                             )}
                             {(isAdmin || isOfficer) && (detail.status === "New" || detail.status === "Categorized" || detail.status === "Assigned") && (
                                 <button onClick={() => doStatus(detail.id, "In Progress", "Work started on complaint")}
                                     className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white text-base font-black transition-all">
-                                    <PlayCircle className="w-4 h-4" /> Start Working
+                                    <PlayCircle className="w-4 h-4" /> {t('grievances.startWorking', 'Start Working')}
                                 </button>
                             )}
                             {(isAdmin || isOfficer) && (detail.status === "In Progress" || detail.status === "Assigned") && (
                                 <button onClick={() => doStatus(detail.id, "Pending Verification", "Work completed, sent for verification")}
                                     className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-2xl bg-[#B91C1C] hover:bg-red-700 text-white text-base font-black transition-all">
-                                    <CheckCircle2 className="w-4 h-4" /> Submit for Verification
+                                    <CheckCircle2 className="w-4 h-4" /> {t('grievances.submitVerification', 'Submit for Verification')}
                                 </button>
                             )}
                             
@@ -626,17 +636,17 @@ export default function Grievances() {
                                 <div className="space-y-2">
                                     <button onClick={() => { verifyComplaint(detail.id, true, "Verified and Approved by Admin"); setDetail(null); }}
                                         className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-base font-black transition-all">
-                                        <CheckCircle2 className="w-4 h-4" /> Approve & Close
+                                        <CheckCircle2 className="w-4 h-4" /> {t('grievances.approveClose', 'Approve & Close')}
                                     </button>
                                     <button onClick={() => {
-                                        const remarks = prompt("Enter remarks for rejection:");
+                                        const remarks = prompt(t('grievances.enterRemarks', "Enter remarks for rejection:"));
                                         if (remarks) {
                                             verifyComplaint(detail.id, false, remarks);
                                             setDetail(null);
                                         }
                                     }}
                                         className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-2xl bg-gray-100 border border-gray-200 text-gray-600 hover:bg-gray-200 text-base font-black transition-all">
-                                        <XCircle className="w-4 h-4" /> Reject & Send Back
+                                        <XCircle className="w-4 h-4" /> {t('grievances.rejectSendBack', 'Reject & Send Back')}
                                     </button>
                                 </div>
                             )}
@@ -670,13 +680,13 @@ export default function Grievances() {
                 {!isCitizen && (
                     <div className="bg-gradient-to-r from-[#B91C1C] to-red-700 rounded-3xl p-5 flex items-center justify-between gap-4 shadow-xl shadow-red-200">
                         <div className="text-white">
-                            <p className="text-lg font-black uppercase tracking-widest opacity-70 mb-1">🌐 Share with citizens</p>
-                            <p className="text-lg font-black">Citizens can file complaints online</p>
-                            <p className="text-base opacity-70 mt-0.5">New submissions appear here instantly — auto-categorized & AI-prioritized</p>
+                            <p className="text-lg font-black uppercase tracking-widest opacity-70 mb-1">🌐 {t('dashboard.shareWithCitizens', 'SHARE WITH CITIZENS')}</p>
+                            <p className="text-lg font-black">{t('dashboard.citizensCanFile', 'Citizens can file complaints online')}</p>
+                            <p className="text-base opacity-70 mt-0.5">{t('dashboard.newSubmissionsAppear', 'New submissions appear here instantly — auto-categorized & AI-prioritized')}</p>
                         </div>
                         <a href="/submit-complaint" target="_blank" rel="noopener noreferrer"
                             className="shrink-0 flex items-center gap-2 bg-white text-[#B91C1C] font-black text-base px-4 py-2.5 rounded-2xl hover:bg-red-50 transition-all whitespace-nowrap">
-                            <ExternalLink className="w-3.5 h-3.5" /> Open Portal
+                            <ExternalLink className="w-3.5 h-3.5" /> {t('dashboard.openPortal', 'Open Portal')}
                         </a>
                     </div>
                 )}
@@ -684,21 +694,21 @@ export default function Grievances() {
                 {/* Debug Panel (visible to admin only) */}
                 {isAdmin && (
                     <div className="bg-gray-900 text-white rounded-3xl p-5 space-y-2">
-                        <p className="text-lg font-black uppercase tracking-widest text-gray-300">🔧 Debug Panel</p>
+                        <p className="text-lg font-black uppercase tracking-widest text-gray-300">🔧 {t('dashboard.debugPanel', 'DEBUG PANEL')}</p>
                         <div className="grid grid-cols-3 gap-3 text-sm">
                             <div className="bg-gray-800 p-3 rounded-xl">
-                                <p className="text-gray-400 font-bold">Total Complaints</p>
+                                <p className="text-gray-400 font-bold">{t('dashboard.totalComplaints', 'Total Complaints')}</p>
                                 <p className="text-2xl font-black text-white">{allComplaints.length}</p>
                             </div>
                             <div className="bg-gray-800 p-3 rounded-xl">
-                                <p className="text-gray-400 font-bold">Current User</p>
+                                <p className="text-gray-400 font-bold">{t('dashboard.currentUser', 'Current User')}</p>
                                 <p className="text-lg font-bold text-white truncate">{currentUser?.name || 'None'}</p>
-                                <p className="text-gray-400 text-xs">Role: {currentUser?.role || 'None'}</p>
+                                <p className="text-gray-400 text-xs">{t('dashboard.role', 'Role:')} {currentUser?.role || 'None'}</p>
                             </div>
                             <div className="bg-gray-800 p-3 rounded-xl">
-                                <p className="text-gray-400 font-bold">Filtered View</p>
-                                <p className="text-lg font-bold text-white">{filtered.length} visible</p>
-                                <p className="text-gray-400 text-xs">Status: {statusFilter} | Priority: {priFilter}</p>
+                                <p className="text-gray-400 font-bold">{t('dashboard.filteredView', 'Filtered View')}</p>
+                                <p className="text-lg font-bold text-white">{filtered.length} {t('dashboard.visible', 'visible')}</p>
+                                <p className="text-gray-400 text-xs">{t('dashboard.statusAll', 'Status: All')} | {t('dashboard.priorityAll', 'Priority: All')}</p>
                             </div>
                         </div>
                     </div>
@@ -723,7 +733,7 @@ export default function Grievances() {
                                 className={`rounded-2xl border p-4 text-center transition-all hover:scale-105 active:scale-95 ${statusFilter === s ? "border-[#B91C1C] bg-red-50 shadow-md" : "bg-white border-gray-100 shadow-sm"}`}>
                                 <span className={`w-2.5 h-2.5 rounded-full mx-auto block mb-2 ${cfg.dot}`} />
                                 <p className={`text-3xl font-black ${statusFilter === s ? "text-[#B91C1C]" : "text-gray-800"}`}>{cnt}</p>
-                                <p className="text-lg font-black uppercase tracking-widest text-gray-400 mt-1 leading-tight">{s === "In Progress" ? "Working" : s}</p>
+                                <p className="text-lg font-black uppercase tracking-widest text-gray-400 mt-1 leading-tight">{t(`status.${s}`, s === "In Progress" ? "Working" : s)}</p>
                             </button>
                         );
                     })}
@@ -737,21 +747,20 @@ export default function Grievances() {
                             <input
                                 value={query}
                                 onChange={e => setQuery(e.target.value)}
-                                placeholder="Search by complaint, citizen, ID, ward…"
+                                placeholder={t('grievances.searchPlaceholder', 'Search by complaint, citizen, ID, ward…')}
                                 className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-transparent rounded-2xl text-lg font-bold focus:bg-white focus:border-[#B91C1C]/20 focus:outline-none transition-all text-gray-700 placeholder:text-gray-400 placeholder:font-medium"
                             />
                         </div>
                         {!isCitizen && (
                             <button onClick={() => navigate("/submit-complaint")}
-                                className="btn-primary !px-5 !py-3 shrink-0">
-                                <Plus className="w-4 h-4" />
-                                <span className="hidden sm:inline">New</span>
+                                className="flex items-center gap-2 px-6 py-3.5 bg-[#B91C1C] text-white rounded-2xl text-base font-black uppercase tracking-widest hover:bg-red-800 transition-all shadow-md active:scale-95 shrink-0">
+                                <Plus className="w-5 h-5" /> {t('grievances.new', 'New')}
                             </button>
                         )}
                         <button onClick={() => setShowFilters(!showFilters)}
                             className={`flex items-center gap-2 px-4 py-3 rounded-2xl border text-base font-black transition-all ${showFilters ? "bg-gray-900 text-white border-gray-900" : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"}`}>
                             <Filter className="w-4 h-4" />
-                            <span className="hidden sm:inline">Filters</span>
+                            <span className="hidden sm:inline">{t('grievances.filters', 'Filters')}</span>
                             {(priFilter !== "All" || catFilter !== "All") && (
                                 <span className="w-2 h-2 rounded-full bg-[#B91C1C]" />
                             )}
@@ -761,21 +770,21 @@ export default function Grievances() {
                     {showFilters && (
                         <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-100">
                             <div>
-                                <p className="text-base font-black uppercase text-gray-400 mb-2">Priority</p>
+                                <p className="text-base font-black uppercase text-gray-400 mb-2">{t('grievances.priority', 'Priority')}</p>
                                 <div className="flex flex-wrap gap-1.5">
                                     {FILTER_PRIORITIES.map(p => (
                                         <button key={p} onClick={() => setPriFilter(p)}
                                             className={`px-3 py-1.5 rounded-xl text-lg font-black border transition-all ${priFilter === p ? "bg-[#B91C1C] text-white border-[#B91C1C]" : "bg-gray-50 text-gray-500 border-gray-200 hover:border-gray-300"}`}>
-                                            {p}
+                                            {p === "All" ? t('grievances.allPriorities', 'All') : t(`priority.${p}`, p)}
                                         </button>
                                     ))}
                                 </div>
                             </div>
                             <div>
-                                <p className="text-base font-black uppercase text-gray-400 mb-2">Category</p>
+                                <p className="text-base font-black uppercase text-gray-400 mb-2">{t('grievances.category', 'Category')}</p>
                                 <select value={catFilter} onChange={e => setCatFilter(e.target.value as Category | "All")}
                                     className="w-full px-3 py-2 text-base font-bold rounded-xl border border-gray-200 bg-gray-50 focus:outline-none focus:border-[#B91C1C]/30">
-                                    <option value="All">All Categories</option>
+                                    <option value="All">{t('grievances.allCategories', 'All Categories')}</option>
                                     {ALL_CATEGORIES.map(c => <option key={c}>{c}</option>)}
                                 </select>
                             </div>
@@ -786,13 +795,13 @@ export default function Grievances() {
                 {/* Results count */}
                 <div className="flex items-center justify-between">
                     <p className="text-base font-black uppercase tracking-widest text-white/60">
-                        Showing {filtered.length} of {complaints.length} complaints
-                        {(isAdmin || isOfficer) && ` · sorted by priority`}
+                        {t('dashboard.showingXofY', `Showing {0} of {1} Complaints`).replace('{0}', String(filtered.length)).replace('{1}', String(complaints.length))}
+                        {(isAdmin || isOfficer) && ` · ${t('grievances.sortedByPriority', 'sorted by priority')}`}
                     </p>
                     <div className="flex items-center gap-2">
                         <Layers className="w-4 h-4 text-white/40" />
                         <span className="text-base font-black text-white/40 uppercase tracking-widest">
-                            {isAdmin ? "Admin View" : isOfficer ? "Officer View" : "Citizen View"}
+                            {isAdmin ? t('grievances.adminView', 'Admin View') : isOfficer ? t('grievances.officerView', 'Officer View') : t('grievances.citizenView', 'Citizen View')}
                         </span>
                     </div>
                 </div>
@@ -802,8 +811,8 @@ export default function Grievances() {
                     {filtered.length === 0 ? (
                         <div className="bg-white rounded-3xl border border-gray-100 p-16 text-center shadow-sm">
                             <MessageSquare className="w-10 h-10 text-gray-200 mx-auto mb-3" />
-                            <p className="font-black text-gray-400 uppercase tracking-widest text-base">No complaints found</p>
-                            <p className="text-gray-300 text-base mt-1">Try adjusting your filters</p>
+                            <p className="font-black text-gray-400 uppercase tracking-widest text-base">{t('grievances.noComplaintsFound', 'No complaints found')}</p>
+                            <p className="text-gray-300 text-base mt-1">{t('grievances.tryAdjustingFilters', 'Try adjusting your filters')}</p>
                         </div>
                     ) : (
                         filtered.map(g => {
@@ -828,17 +837,19 @@ export default function Grievances() {
                                                         <PriorityBadge priority={g.priority} />
                                                         <StatusBadge status={g.status} />
                                                         {g.notified && (
-                                                            <span className="text-lg bg-emerald-50 text-emerald-600 border border-emerald-100 px-2 py-0.5 rounded-lg font-black">SMS Sent</span>
+                                                            <span className="text-lg bg-emerald-50 text-emerald-600 border border-emerald-100 px-2 py-0.5 rounded-lg font-black">{t('grievances.smsSent', 'SMS Sent')}</span>
                                                         )}
                                                     </div>
-                                                    <p className="text-base font-black text-gray-900 truncate">{g.issue}</p>
+                                                    <p className="text-base font-black text-gray-900 truncate">
+                                                        {g.originalComplaintTamil || g.issue}
+                                                    </p>
                                                     <p className="text-base text-gray-500 font-medium mt-1">
                                                         {g.citizen} · {g.ward} · {g.category}
                                                     </p>
                                                 </div>
                                                 <div className="text-right shrink-0">
                                                     <p className="text-lg font-black text-gray-400 uppercase">{g.time}</p>
-                                                    <p className="text-base text-gray-500 mt-1 font-semibold">{g.dept || "Unassigned"}</p>
+                                                    <p className="text-base text-gray-500 mt-1 font-semibold">{g.dept || t('dashboard.unassigned', 'Unassigned')}</p>
                                                 </div>
                                             </div>
 
@@ -852,37 +863,37 @@ export default function Grievances() {
                                                 {(isAdmin || isOfficer) && g.status === "New" && (
                                                     <button onClick={e => { e.stopPropagation(); doStatus(g.id, "Categorized", "Categorized"); }}
                                                         className="text-base font-black px-4 py-2 rounded-xl bg-purple-50 text-purple-700 border border-purple-100 hover:bg-purple-100 transition-all">
-                                                        ✦ Categorize
+                                                        ✦ {t('grievances.categorize', 'Categorize')}
                                                     </button>
                                                 )}
                                                 {(isAdmin || isOfficer) && (g.status === "Categorized" || g.status === "Assigned") && (
                                                     <button onClick={e => { e.stopPropagation(); doStatus(g.id, "In Progress", "Work started"); }}
                                                         className="text-base font-black px-4 py-2 rounded-xl bg-amber-50 text-amber-700 border border-amber-100 hover:bg-amber-100 transition-all">
-                                                        ▶ Start Work
+                                                        ▶ {t('grievances.startWork', 'Start Work')}
                                                     </button>
                                                 )}
                                                 {(isAdmin || isOfficer) && g.status === "In Progress" && (
                                                     <button onClick={e => { e.stopPropagation(); doStatus(g.id, "Resolved", "Resolved"); }}
                                                         className="text-base font-black px-4 py-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 transition-all">
-                                                        ✓ Resolve
+                                                        ✓ {t('grievances.resolve', 'Resolve')}
                                                     </button>
                                                 )}
                                                 {(isAdmin || isOfficer) && g.status === "Resolved" && !g.notified && (
                                                     <button onClick={e => { e.stopPropagation(); doNotify(g.id); }}
                                                         className="text-base font-black px-4 py-2 rounded-xl bg-sky-50 text-sky-700 border border-sky-100 hover:bg-sky-100 transition-all">
-                                                        📱 Notify Citizen
+                                                        📱 {t('grievances.notifyCitizenSms', 'Notify Citizen')}
                                                     </button>
                                                 )}
                                                 <button
                                                     className="text-base font-black px-4 py-2 rounded-xl bg-gray-50 text-gray-500 border border-gray-100 hover:bg-gray-100 transition-all ml-auto flex items-center gap-1.5"
                                                 >
-                                                    View Details <ArrowRight className="w-3.5 h-3.5" />
+                                                    {t('grievances.viewDetailsButton', 'View Details')} <ArrowRight className="w-3.5 h-3.5" />
                                                 </button>
                                                 {isCitizen && (
                                                     <a href="/submit-complaint" target="_blank" rel="noopener noreferrer"
                                                         onClick={e => e.stopPropagation()}
                                                         className="text-base font-black px-3 py-1.5 rounded-xl bg-red-50 text-[#B91C1C] border border-red-100 hover:bg-red-100 transition-all flex items-center gap-1">
-                                                        <FileText className="w-3 h-3" /> New Complaint
+                                                        <FileText className="w-3 h-3" /> {t('grievances.newComplaint', 'New Complaint')}
                                                     </a>
                                                 )}
                                             </div>

@@ -10,6 +10,8 @@ import {
   Activity, Circle, ChevronDown, ArrowLeft
 } from "lucide-react";
 
+import { useLanguage } from "@/context/LanguageContext";
+
 // ── Helpers ──────────────────────────────────────────────────
 const PRIORITY_CONFIG: Record<Priority, { label: string; color: string; bg: string; dot: string }> = {
   High:   { label: "High",   color: "text-red-700",    bg: "bg-red-50 border border-red-200",    dot: "bg-red-500" },
@@ -28,20 +30,22 @@ const STATUS_CONFIG: Record<Status, { label: string; color: string; bg: string }
 };
 
 function PriorityBadge({ priority }: { priority: Priority }) {
+  const { t } = useLanguage();
   const cfg = PRIORITY_CONFIG[priority] ?? PRIORITY_CONFIG.Medium;
   return (
     <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold ${cfg.bg} ${cfg.color}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-      {cfg.label}
+      {t(`priority.${priority}`)}
     </span>
   );
 }
 
 function StatusBadge({ status }: { status: Status }) {
+  const { t } = useLanguage();
   const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG["New"];
   return (
     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${cfg.bg} ${cfg.color}`}>
-      {cfg.label}
+      {t(`status.${status}`)}
     </span>
   );
 }
@@ -70,6 +74,7 @@ function formatDate(ts: number) {
 // ── Main Component ────────────────────────────────────────────
 export default function FieldPortal() {
   const { complaints, updateStatus, assignComplaint, currentUser } = useComplaints();
+  const { language, t } = useLanguage();
 
   const [search, setSearch] = useState("");
   const [filterPriority, setFilterPriority] = useState<Priority | "All">("All");
@@ -149,8 +154,8 @@ export default function FieldPortal() {
 
   return (
     <DashboardLayout 
-      title="Field Officer Portal" 
-      subtitle="Manage and resolve citizen complaints assigned to you"
+      title={t('page.fieldPortal', 'Field Officer Portal')}
+      subtitle={t('page.fieldPortal.subtitle', 'Manage and resolve citizen complaints assigned to you')}
     >
       <div className="flex h-[calc(100vh-160px)] border border-gray-200 bg-white rounded-2xl shadow-sm overflow-hidden">
         {/* ── LEFT PANEL: Complaint List ── */}
@@ -162,7 +167,7 @@ export default function FieldPortal() {
                 <input
                   value={search}
                   onChange={e => setSearch(e.target.value)}
-                  placeholder="Search complaints, citizens, wards…"
+                  placeholder="குடிமக்கள் புகார்கள் தேடவும்..."
                   className="w-full pl-9 pr-8 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
                 />
                 {search && (
@@ -178,7 +183,7 @@ export default function FieldPortal() {
                     onChange={e => setFilterPriority(e.target.value as Priority | "All")}
                     className="w-full pl-3 pr-7 py-1.5 text-xs border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 appearance-none font-medium text-gray-700"
                   >
-                    {priorities.map(p => <option key={p}>{p}</option>)}
+                    {priorities.map(p => <option key={p} value={p}>{p === "All" ? t("common.all") : t(`priority.${p}`)}</option>)}
                   </select>
                   <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" />
                 </div>
@@ -188,7 +193,7 @@ export default function FieldPortal() {
                     onChange={e => setFilterStatus(e.target.value as Status | "All")}
                     className="w-full pl-3 pr-7 py-1.5 text-xs border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 appearance-none font-medium text-gray-700"
                   >
-                    {statuses.map(s => <option key={s}>{s}</option>)}
+                    {statuses.map(s => <option key={s} value={s}>{s === "All" ? t("common.all") : t(`status.${s}`)}</option>)}
                   </select>
                   <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" />
                 </div>
@@ -207,7 +212,7 @@ export default function FieldPortal() {
               {myComplaints.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-16 text-gray-400">
                   <ClipboardList className="w-10 h-10 mb-3 opacity-40" />
-                  <p className="text-sm font-medium">No complaints found</p>
+                  <p className="text-sm font-medium">புகார்கள் எதுவும் காணப்படவில்லை</p>
                 </div>
               )}
               {myComplaints.map(c => (
@@ -220,7 +225,7 @@ export default function FieldPortal() {
                     <span className="text-xs font-mono font-bold text-blue-600">{c.id}</span>
                     <PriorityBadge priority={c.priority} />
                   </div>
-                  <p className="text-sm font-semibold text-gray-900 line-clamp-1 mb-1 font-tamil">
+                  <p className="text-sm font-semibold text-gray-900 line-clamp-1 mb-1">
                     {c.originalComplaintTamil || c.issue}
                   </p>
                   <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-1.5">
@@ -233,7 +238,7 @@ export default function FieldPortal() {
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-gray-400 flex items-center gap-1">
                       <Tag className="w-3 h-3" />
-                      {c.category}
+                      {t(`category.${c.category}`, c.category)}
                     </span>
                     <StatusBadge status={c.status} />
                   </div>
@@ -250,8 +255,8 @@ export default function FieldPortal() {
             {!selected ? (
               <div className="flex-1 flex flex-col items-center justify-center text-gray-400">
                 <ArrowLeft className="w-12 h-12 mb-4 opacity-30 animate-pulse text-blue-500" />
-                <p className="text-lg font-bold text-gray-700">Select a complaint</p>
-                <p className="text-sm mt-1 text-gray-500">Click a complaint from the left panel to view its details</p>
+                <p className="text-lg font-bold text-gray-700">ஒரு புகாரைத் தேர்ந்தெடுக்கவும்</p>
+                <p className="text-sm mt-1 text-gray-500">விவரங்களைக் காண இடது பக்கத்திலிருந்து ஒரு புகாரைக் கிளிக் செய்யவும்</p>
               </div>
             ) : (
               <div className="p-6 max-w-3xl">
@@ -263,7 +268,7 @@ export default function FieldPortal() {
                       <StatusBadge status={selected.status} />
                       <PriorityBadge priority={selected.priority} />
                     </div>
-                    <h2 className="text-xl font-bold text-gray-900 font-tamil">
+                    <h2 className="text-xl font-bold text-gray-900">
                       {selected.originalComplaintTamil || selected.issue}
                     </h2>
                   </div>
@@ -276,24 +281,24 @@ export default function FieldPortal() {
                   {/* Citizen Details */}
                   <div className="bg-white rounded-xl border border-gray-200 p-4">
                     <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3 flex items-center gap-1.5">
-                      <User className="w-3.5 h-3.5" /> குடிமகன் விவரம்
+                      <User className="w-3.5 h-3.5" /> குடிமக்கள் விவரம்
                     </h3>
                     <div className="grid grid-cols-3 gap-4">
                       <div>
-                        <p className="text-xs text-gray-400 mb-0.5">Name</p>
+                        <p className="text-xs text-gray-400 mb-0.5">பெயர்</p>
                         <p className="text-sm font-semibold text-gray-800">{selected.citizen}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-400 mb-0.5">Ward</p>
+                        <p className="text-xs text-gray-400 mb-0.5">வார்டு</p>
                         <p className="text-sm font-semibold text-gray-800">{selected.ward}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-400 mb-0.5">Phone</p>
+                        <p className="text-xs text-gray-400 mb-0.5">தொலைபேசி</p>
                         <p className="text-sm font-semibold text-gray-800">{selected.phone || "—"}</p>
                       </div>
                       {selected.location && (
                         <div className="col-span-3">
-                          <p className="text-xs text-gray-400 mb-0.5">Area / Location</p>
+                          <p className="text-xs text-gray-400 mb-0.5">பகுதி / இடம்</p>
                           <p className="text-sm font-semibold text-gray-800">{selected.location}</p>
                         </div>
                       )}
@@ -306,43 +311,38 @@ export default function FieldPortal() {
                       <FileText className="w-3.5 h-3.5" /> புகார் விவரம்
                     </h3>
 
-                    {selected.originalComplaintTamil ? (
-                      <div className="mb-3">
-                        <p className="text-xs text-gray-400 mb-1">புகார் விவரம்</p>
-                        <p className="text-sm text-gray-800 leading-relaxed bg-gray-50 p-2.5 rounded-lg border border-gray-100 font-tamil">
-                          {selected.originalComplaintTamil}
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="mb-3">
-                        <p className="text-xs text-gray-400 mb-1">Complaint Details</p>
-                        <p className="text-sm text-gray-800 leading-relaxed bg-gray-50 p-2.5 rounded-lg border border-gray-100">
-                          {selected.description || "No description provided."}
-                        </p>
-                      </div>
-                    )}
+                    <div className="mb-3">
+                      <p className="text-xs text-gray-400 mb-1">புகார் விவரம்</p>
+                      <p className="text-sm text-gray-800 leading-relaxed bg-gray-50 p-2.5 rounded-lg border border-gray-100 mb-2">
+                        {selected.originalComplaintTamil || selected.description || selected.issue}
+                      </p>
+                      <p className="text-xs text-gray-400 mb-1">புகார் சுருக்கம்</p>
+                      <p className="text-sm text-gray-800 leading-relaxed bg-gray-50 p-2.5 rounded-lg border border-gray-100">
+                        {selected.aiSummary || "No summary provided."}
+                      </p>
+                    </div>
 
                     <div className="grid grid-cols-2 gap-3">
                       <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
-                        <p className="text-xs text-gray-400 mb-1">பிரிவு</p>
-                        <p className="text-sm font-semibold text-gray-800">{selected.category}</p>
+                        <p className="text-xs text-gray-400 mb-1">வகை</p>
+                        <p className="text-sm font-semibold text-gray-800">{t(`category.${selected.category}`, selected.category)}</p>
                       </div>
                       <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
                         <p className="text-xs text-gray-400 mb-1">துறை</p>
                         <p className="text-sm font-semibold text-gray-800">{selected.dept}</p>
                       </div>
                       <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
-                        <p className="text-xs text-gray-400 mb-1">Assigned To</p>
+                        <p className="text-xs text-gray-400 mb-1">ஒதுக்கப்பட்ட அலுவலர்</p>
                         <p className="text-sm font-semibold text-gray-800">{selected.assignedTo || "—"}</p>
                       </div>
                       <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
-                        <p className="text-xs text-gray-400 mb-1">Submitted</p>
+                        <p className="text-xs text-gray-400 mb-1">சமர்ப்பித்த தேதி</p>
                         <p className="text-sm font-semibold text-gray-800">{formatDate(selected.timestamp)}</p>
                       </div>
                     </div>
 
                     <div className="mt-3">
-                      <p className="text-xs text-gray-400 mb-1.5">AI Severity Score</p>
+                      <p className="text-xs text-gray-400 mb-1.5">AI தீவிரத்தன்மை மதிப்பெண்</p>
                       <AISeverityBar score={aiSeverity(selected)} />
                     </div>
                   </div>
@@ -351,7 +351,7 @@ export default function FieldPortal() {
                   {selected.audit && selected.audit.length > 0 && (
                     <div className="bg-white rounded-xl border border-gray-200 p-4">
                       <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3 flex items-center gap-1.5">
-                        <Clock className="w-3.5 h-3.5" /> நடவடிக்கை வரலாறு
+                        <Clock className="w-3.5 h-3.5" /> செயல்பாட்டு பதிவு
                       </h3>
                       <div className="space-y-2">
                         {[...selected.audit].reverse().slice(0, 5).map((entry, i) => (
@@ -370,7 +370,7 @@ export default function FieldPortal() {
 
                   {/* Action Buttons */}
                   <div className="bg-white rounded-xl border border-gray-200 p-4">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">Actions</h3>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">செயல்கள்</h3>
 
                     <div className="grid grid-cols-2 gap-2 mb-3">
                       {/* Assign Officer */}
@@ -378,7 +378,7 @@ export default function FieldPortal() {
                         onClick={() => { setShowAssign(a => !a); setShowNote(false); }}
                         className="flex items-center justify-center gap-2 px-3 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg transition-colors"
                       >
-                        <Briefcase className="w-4 h-4" /> Assign Officer
+                        <Briefcase className="w-4 h-4" /> அலுவலரை ஒதுக்குக
                       </button>
 
                       {/* Mark In Progress */}
@@ -387,7 +387,7 @@ export default function FieldPortal() {
                         disabled={selected.status === "In Progress" || selected.status === "Resolved" || selected.status === "Closed"}
                         className="flex items-center justify-center gap-2 px-3 py-2.5 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                       >
-                        <Loader2 className="w-4 h-4" /> Mark In Progress
+                        <Loader2 className="w-4 h-4" /> செயல்பாட்டில் குறிக்கவும்
                       </button>
 
                       {/* Resolve */}
@@ -396,7 +396,7 @@ export default function FieldPortal() {
                         disabled={selected.status === "Resolved" || selected.status === "Closed"}
                         className="flex items-center justify-center gap-2 px-3 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                       >
-                        <CheckCircle2 className="w-4 h-4" /> Resolve Complaint
+                        <CheckCircle2 className="w-4 h-4" /> புகாரைத் தீர்க்கவும்
                       </button>
 
                       {/* Add Note */}
@@ -404,7 +404,7 @@ export default function FieldPortal() {
                         onClick={() => { setShowNote(n => !n); setShowAssign(false); }}
                         className="flex items-center justify-center gap-2 px-3 py-2.5 bg-gray-600 hover:bg-gray-700 text-white text-sm font-semibold rounded-lg transition-colors"
                       >
-                        <ClipboardList className="w-4 h-4" /> Add Officer Notes
+                        <ClipboardList className="w-4 h-4" /> அலுவலர் குறிப்பைச் சேர்க்கவும்
                       </button>
                     </div>
 
@@ -414,14 +414,14 @@ export default function FieldPortal() {
                         <input
                           value={assignTo}
                           onChange={e => setAssignTo(e.target.value)}
-                          placeholder="Enter officer name or ID…"
+                          placeholder="அலுவலர் பெயர் அல்லது ஐடியை உள்ளிடவும்..."
                           className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         />
                         <button
                           onClick={() => handleAction("assign")}
                           className="px-3 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 flex items-center gap-1"
                         >
-                          <Save className="w-4 h-4" /> Assign
+                          <Save className="w-4 h-4" /> ஒதுக்கு
                         </button>
                       </div>
                     )}
@@ -432,7 +432,7 @@ export default function FieldPortal() {
                         <textarea
                           value={noteText}
                           onChange={e => setNoteText(e.target.value)}
-                          placeholder="Add officer notes or resolution remarks…"
+                          placeholder="அலுவலர் குறிப்புகள் அல்லது தீர்வு குறிப்புகளைச் சேர்க்கவும்..."
                           rows={3}
                           className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                         />
@@ -440,7 +440,7 @@ export default function FieldPortal() {
                           onClick={() => handleAction("save-note")}
                           className="w-full py-2 bg-gray-800 text-white text-sm font-semibold rounded-lg hover:bg-gray-900 flex items-center justify-center gap-2"
                         >
-                          <Save className="w-4 h-4" /> Save Notes
+                          <Save className="w-4 h-4" /> குறிப்புகளைச் சேமி
                         </button>
                       </div>
                     )}
