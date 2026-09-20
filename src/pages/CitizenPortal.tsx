@@ -13,6 +13,8 @@ import { useNavigate } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, Tooltip, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { useLanguage } from "@/context/LanguageContext";
+
 
 // Fix Leaflet icon issue
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -215,6 +217,7 @@ WARDS.forEach(w => {
 });
 
 export default function CitizenPortal() {
+    const { t } = useLanguage();
     const { addComplaint, currentUser, logout } = useComplaints();
 
     const navigate = useNavigate();
@@ -591,8 +594,7 @@ export default function CitizenPortal() {
                                     onClick={() => { logout(); navigate("/"); }}
                                     className="flex items-center gap-2 text-base font-black text-red-600 hover:text-white hover:bg-red-600 transition-all bg-red-50 px-4 py-2 rounded-xl border border-red-100 uppercase tracking-widest"
                                 >
-                                    <LogOut className="w-4 h-4" /> Sign Out
-                                </button>
+                                    <LogOut className="w-4 h-4" />{t("common.signOut")}</button>
                             </div>
                 </div>
             </header>
@@ -771,7 +773,7 @@ export default function CitizenPortal() {
                                             <Paperclip className="w-5 h-5 text-gray-400 group-hover:text-[#B91C1C]" />
                                         </div>
                                         <div className="text-center">
-                                            <p className="text-sm font-black uppercase text-gray-900 leading-tight">Upload Document</p>
+                                            <p className="text-sm font-black uppercase text-gray-900 leading-tight">{t("documents.upload")}</p>
                                             <p className="text-[8px] font-bold text-gray-400 uppercase tracking-tighter">PNG, JPG, PDF (Max 10MB)</p>
                                         </div>
                                     </button>
@@ -833,7 +835,7 @@ export default function CitizenPortal() {
                             </div>
 
                             <div className="flex gap-4">
-                                <button onClick={back} className="btn-secondary flex-1 !py-4">Back</button>
+                                <button onClick={back} className="btn-secondary flex-1 !py-4">{t("common.back")}</button>
                                 <button onClick={next} disabled={!form.issue} className="btn-primary flex-[2] !py-4 disabled:opacity-30">
                                     Next: Confirm Location Area
                                 </button>
@@ -896,7 +898,7 @@ export default function CitizenPortal() {
                                                 {form.location && (
                                                     <Tooltip direction="top" offset={[0, -4]} opacity={1} className="bg-transparent border-0 shadow-none p-0 !m-0">
                                                         <div className="bg-gray-900 text-left p-3 rounded-2xl shadow-xl border border-white/10 max-w-[200px] whitespace-normal">
-                                                            <p className="font-black text-white text-sm">Location</p>
+                                                            <p className="font-black text-white text-sm">{t("grievances.location")}</p>
                                                             <p className="text-xs text-gray-400 font-medium">
                                                                 {form.location}
                                                             </p>
@@ -967,9 +969,7 @@ export default function CitizenPortal() {
                                             <button
                                                 onClick={() => setPendingLocation(null)}
                                                 className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl border border-gray-200 text-gray-500 text-sm font-black hover:bg-gray-100 transition-colors"
-                                            >
-                                                Cancel
-                                            </button>
+                                            >{t("common.cancel")}</button>
                                             <button
                                                 onClick={() => {
                                                     setForm(f => ({
@@ -1068,7 +1068,7 @@ export default function CitizenPortal() {
                             </div>
 
                             <div className="flex gap-4 pt-4">
-                                <button onClick={back} className="btn-secondary flex-1 !py-4">Back</button>
+                                <button onClick={back} className="btn-secondary flex-1 !py-4">{t("common.back")}</button>
                                 <button onClick={next} className="btn-primary flex-[2] !py-4 !shadow-2xl">Confirm & Review Details</button>
                             </div>
                         </div>
@@ -1183,7 +1183,7 @@ export default function CitizenPortal() {
 
                                 {/* Actions */}
                                 <div className="flex gap-4 pt-2">
-                                    <button onClick={back} className="btn-secondary flex-1">Back</button>
+                                    <button onClick={back} className="btn-secondary flex-1">{t("common.back")}</button>
                                     <button onClick={handleSubmit}
                                         className="btn-primary flex-[2] !shadow-2xl !shadow-red-500/20 active:scale-95 group">
                                         <span>Authorize &amp; Submit Grievance</span>
@@ -1341,9 +1341,7 @@ export default function CitizenPortal() {
                             <button 
                                 onClick={stopCamera} 
                                 className="btn-secondary !py-3 !px-6 text-sm font-black uppercase tracking-widest !rounded-xl"
-                            >
-                                Cancel
-                            </button>
+                            >{t("common.cancel")}</button>
                             <button 
                                 onClick={capturePhoto} 
                                 className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3.5 rounded-xl text-sm font-black uppercase tracking-widest transition-all shadow-lg active:scale-95"

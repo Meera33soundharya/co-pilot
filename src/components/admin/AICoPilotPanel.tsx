@@ -6,8 +6,11 @@ import {
   CheckCircle2, ListChecks, Bot, GripHorizontal
 } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/context/LanguageContext";
+
 
 export default function AICoPilotPanel() {
+    const { t } = useLanguage();
   const [issue, setIssue] = useState("Severe water logging and infrastructure damage in Ward 7 after recent monsoon");
   const [description, setDescription] = useState("Multiple residents in Ward 7 (near the main transit hub) have reported severe water logging reaching up to 2 feet. The drainage system appears to be completely blocked with construction debris from the nearby bridge project. This is causing major traffic gridlocks, and water is starting to enter ground-floor commercial shops. Urgent intervention is required before the next rainfall predicted in 48 hours. Attached: 3 photos of the flooded intersection and a signed petition from local business owners.");
   const [loading, setLoading] = useState(false);
@@ -152,12 +155,12 @@ export default function AICoPilotPanel() {
                 <div className="grid grid-cols-3 gap-4">
                   <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col gap-2 relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-1 h-full bg-[#C81D25]" />
-                    <span className="text-sm font-black uppercase tracking-widest text-white/40 flex items-center gap-1.5"><BarChart className="w-3 h-3" /> Category</span>
+                    <span className="text-sm font-black uppercase tracking-widest text-white/40 flex items-center gap-1.5"><BarChart className="w-3 h-3" />{t("common.category")}</span>
                     <span className="text-base font-bold text-white truncate">{result.category}</span>
                   </div>
                   <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col gap-2 relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-1 h-full bg-amber-500" />
-                    <span className="text-sm font-black uppercase tracking-widest text-white/40 flex items-center gap-1.5"><ShieldAlert className="w-3 h-3" /> Priority</span>
+                    <span className="text-sm font-black uppercase tracking-widest text-white/40 flex items-center gap-1.5"><ShieldAlert className="w-3 h-3" />{t("common.priority")}</span>
                     <span className="text-base font-bold text-white truncate">{result.priority}</span>
                   </div>
                   <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col gap-2 relative overflow-hidden">

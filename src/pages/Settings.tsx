@@ -6,13 +6,7 @@ import {
     ExternalLink, CheckCircle2
 } from "lucide-react";
 import { useComplaints } from "@/context/ComplaintsContext";
-
-const settingsSections = [
-    { icon: User, label: "Profile & Identity" },
-    { icon: Bell, label: "Notifications & Alerts" },
-    { icon: Shield, label: "Security & Access" },
-    { icon: FileBarChart2, label: "Performance Metrics" },
-];
+import { useLanguage } from "@/context/LanguageContext";
 
 function Toggle({ defaultOn = false }: { defaultOn?: boolean }) {
     const [on, setOn] = useState(defaultOn);
@@ -27,8 +21,17 @@ function Toggle({ defaultOn = false }: { defaultOn?: boolean }) {
 }
 
 export default function Settings() {
+    const { t } = useLanguage();
     const { currentUser, complaints } = useComplaints();
-    const [activeSection, setActiveSection] = useState("Profile & Identity");
+
+    const SECTIONS = [
+        { icon: User,          key: "settings.profileIdentity" },
+        { icon: Bell,          key: "settings.notificationsAlerts" },
+        { icon: Shield,        key: "settings.securityAccess" },
+        { icon: FileBarChart2, key: "settings.performanceMetrics" },
+    ];
+
+    const [activeKey, setActiveKey] = useState("settings.profileIdentity");
     const [name, setName] = useState(currentUser?.name || "Administrator");
     const [email, setEmail] = useState("officer@govpilot.in");
     const [phone, setPhone] = useState("+91 98765 43210");
@@ -54,22 +57,45 @@ export default function Settings() {
         satisfaction: "92%",
     };
 
+    const profileFields = [
+        { labelKey: "settings.officerName",    value: name,        setter: setName },
+        { labelKey: "settings.mailNode",        value: email,       setter: setEmail },
+        { labelKey: "settings.designation",     value: designation, setter: setDesignation },
+        { labelKey: "settings.deptWard",        value: ward,        setter: setWard },
+        { labelKey: "settings.encryptedContact",value: phone,       setter: setPhone },
+        { labelKey: "settings.govDivision",     value: dept,        setter: setDept },
+    ];
+
+    const notifItems = [
+        { labelKey: "settings.notif.newGrievance",     descKey: "settings.notif.newGrievanceDesc",     on: true },
+        { labelKey: "settings.notif.criticalEscalation", descKey: "settings.notif.criticalEscalationDesc", on: true },
+        { labelKey: "settings.notif.sentimentSpike",   descKey: "settings.notif.sentimentSpikeDesc",   on: true },
+        { labelKey: "settings.notif.deptMemo",         descKey: "settings.notif.deptMemoDesc",         on: false },
+        { labelKey: "settings.notif.maintenance",      descKey: "settings.notif.maintenanceDesc",      on: false },
+    ];
+
+    const securityItems = [
+        { labelKey: "settings.security.bio2fa",        descKey: "settings.security.bio2faDesc",        on: true },
+        { labelKey: "settings.security.sessionTimeout",descKey: "settings.security.sessionTimeoutDesc",on: true },
+        { labelKey: "settings.security.loginAnomaly",  descKey: "settings.security.loginAnomalyDesc",  on: false },
+    ];
+
     return (
-        <DashboardLayout title="Officer Settings & Governance" subtitle="Manage your professional profile, operational metrics, and communication tools">
+        <DashboardLayout title={t("settings.pageTitle")} subtitle={t("settings.pageSubtitle")}>
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 {/* Sidebar Nav */}
                 <div className="lg:col-span-1">
                     <div className="bg-white border border-gray-100 rounded-[2.5rem] shadow-sm p-4 h-fit lg:sticky lg:top-6">
                         <div className="space-y-1">
-                            {settingsSections.map(({ icon: Icon, label }) => (
+                            {SECTIONS.map(({ icon: Icon, key }) => (
                                 <button
-                                    key={label}
-                                    onClick={() => setActiveSection(label)}
-                                    className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl transition-all text-left group ${activeSection === label ? "bg-[#B91C1C] text-white shadow-xl shadow-red-900/20" : "text-gray-400 hover:text-gray-900 hover:bg-gray-50"}`}
+                                    key={key}
+                                    onClick={() => setActiveKey(key)}
+                                    className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl transition-all text-left group ${activeKey === key ? "bg-[#B91C1C] text-white shadow-xl shadow-red-900/20" : "text-gray-400 hover:text-gray-900 hover:bg-gray-50"}`}
                                 >
-                                    <Icon className={`w-5 h-5 shrink-0 ${activeSection === label ? "text-white" : "text-gray-300 group-hover:text-[#B91C1C] transition-colors"}`} />
-                                    <span className="text-sm font-black uppercase tracking-widest leading-none">{label}</span>
-                                    {activeSection !== label && <ChevronRight className="w-4 h-4 ml-auto opacity-20 group-hover:opacity-40" />}
+                                    <Icon className={`w-5 h-5 shrink-0 ${activeKey === key ? "text-white" : "text-gray-300 group-hover:text-[#B91C1C] transition-colors"}`} />
+                                    <span className="text-sm font-black uppercase tracking-widest leading-none">{t(key)}</span>
+                                    {activeKey !== key && <ChevronRight className="w-4 h-4 ml-auto opacity-20 group-hover:opacity-40" />}
                                 </button>
                             ))}
                         </div>
@@ -79,12 +105,12 @@ export default function Settings() {
                 {/* Content */}
                 <div className="lg:col-span-3 space-y-6">
                     {/* ──── PROFILE SECTION ──── */}
-                    {activeSection === "Profile & Identity" && (
+                    {activeKey === "settings.profileIdentity" && (
                         <div className="bg-white border border-gray-100 rounded-[2.5rem] shadow-sm p-10 relative overflow-hidden animate-in fade-in slide-in-from-bottom-4">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/5 blur-[40px] pointer-events-none" />
                             <h2 className="text-sm font-black text-gray-400 uppercase tracking-[0.2em] mb-10 flex items-center gap-3 relative z-10">
                                 <div className="w-1.5 h-1.5 rounded-full bg-[#B91C1C]" />
-                                Identity & Protocol
+                                {t("settings.identityProtocol")}
                             </h2>
 
                             <div className="flex items-center gap-8 mb-10 relative z-10">
@@ -100,22 +126,15 @@ export default function Settings() {
                                     <p className="text-xl font-black text-gray-900 tracking-tight">{name}</p>
                                     <p className="text-sm text-gray-400 font-black uppercase tracking-widest">{designation} · {dept}</p>
                                     <button onClick={() => handleAction("photo")} className="text-sm font-black text-[#B91C1C] uppercase tracking-widest mt-2 hover:translate-x-1 transition-transform flex items-center gap-1.5">
-                                        {action === "photo" ? "Initializing..." : <>Request Credential Update <ChevronRight className="w-3 h-3" /></>}
+                                        {action === "photo" ? t("settings.initializing") : <>{t("settings.requestCredential")} <ChevronRight className="w-3 h-3" /></>}
                                     </button>
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
-                                {[
-                                    { label: "Officer Name", value: name, setter: setName },
-                                    { label: "Professional Mail Node", value: email, setter: setEmail },
-                                    { label: "Designation / Title", value: designation, setter: setDesignation },
-                                    { label: "Department / Ward Assignment", value: ward, setter: setWard },
-                                    { label: "Encrypted Contact", value: phone, setter: setPhone },
-                                    { label: "Governance Division", value: dept, setter: setDept },
-                                ].map(({ label, value, setter }) => (
-                                    <div key={label} className="space-y-2">
-                                        <label className="text-sm font-black uppercase tracking-widest text-gray-400 ml-1">{label}</label>
+                                {profileFields.map(({ labelKey, value, setter }) => (
+                                    <div key={labelKey} className="space-y-2">
+                                        <label className="text-sm font-black uppercase tracking-widest text-gray-400 ml-1">{t(labelKey)}</label>
                                         <input
                                             value={value}
                                             onChange={e => setter(e.target.value)}
@@ -131,34 +150,28 @@ export default function Settings() {
                                     className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-2xl text-base font-black uppercase tracking-[0.2em] transition-all shadow-xl active:scale-95 ${saved ? "bg-emerald-500 text-white shadow-emerald-500/20" : "bg-[#B91C1C] text-white hover:bg-neutral-800 shadow-red-900/20"}`}
                                 >
                                     <Save className="w-4 h-4" />
-                                    {saved ? "Changes Committed" : "Commit Protocol"}
+                                    {saved ? t("settings.committed") : t("settings.commitProtocol")}
                                 </button>
                                 <button onClick={() => { setSaved(false); }} className="px-10 py-4 bg-gray-100 rounded-2xl text-base font-black text-gray-900 hover:bg-gray-200 transition-all uppercase tracking-widest">
-                                    Abort
+                                    {t("settings.abort")}
                                 </button>
                             </div>
                         </div>
                     )}
 
                     {/* ──── NOTIFICATIONS SECTION ──── */}
-                    {activeSection === "Notifications & Alerts" && (
+                    {activeKey === "settings.notificationsAlerts" && (
                         <div className="bg-white border border-gray-100 rounded-[2.5rem] shadow-sm p-10 animate-in fade-in slide-in-from-right-4">
                             <h2 className="text-sm font-black text-gray-400 uppercase tracking-[0.2em] mb-10 flex items-center gap-3">
                                 <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                                Notifications & Protocol Alerts
+                                {t("settings.notifAlertsHeader")}
                             </h2>
                             <div className="space-y-6">
-                                {[
-                                    { label: "New Grievance Alerts", desc: "Notification when a new complaint is geo-assigned to your ward", on: true },
-                                    { label: "Critical Escalations", desc: "Ping when unresolved issues hit the 7-day threshold", on: true },
-                                    { label: "Sentiment Spike Warnings", desc: "AI-detected trends of citizen dissatisfaction in your area", on: true },
-                                    { label: "Department Memo", desc: "Administrative and internal policy updates", on: false },
-                                    { label: "System Maintenance", desc: "Scheduled down-time for district security patches", on: false },
-                                ].map(({ label, desc, on }) => (
-                                    <div key={label} className="flex items-center justify-between p-6 bg-gray-50 rounded-3xl border border-transparent hover:border-amber-100 transition-all group">
+                                {notifItems.map(({ labelKey, descKey, on }) => (
+                                    <div key={labelKey} className="flex items-center justify-between p-6 bg-gray-50 rounded-3xl border border-transparent hover:border-amber-100 transition-all group">
                                         <div className="max-w-md">
-                                            <p className="text-lg font-black text-gray-900">{label}</p>
-                                            <p className="text-base text-gray-400 font-medium mt-0.5">{desc}</p>
+                                            <p className="text-lg font-black text-gray-900">{t(labelKey)}</p>
+                                            <p className="text-base text-gray-400 font-medium mt-0.5">{t(descKey)}</p>
                                         </div>
                                         <Toggle defaultOn={on} />
                                     </div>
@@ -168,36 +181,32 @@ export default function Settings() {
                     )}
 
                     {/* ──── SECURITY SECTION ──── */}
-                    {activeSection === "Security & Access" && (
+                    {activeKey === "settings.securityAccess" && (
                         <div className="bg-white border border-gray-100 rounded-[2.5rem] shadow-sm p-10 animate-in fade-in slide-in-from-right-4">
                             <h2 className="text-sm font-black text-gray-400 uppercase tracking-[0.2em] mb-10 flex items-center gap-3">
                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                Multi-Factor Security Protocol
+                                {t("settings.securityHeader")}
                             </h2>
                             <div className="space-y-6">
-                                {[
-                                    { label: "Gov-Bio 2FA Authentication", desc: "Require biometric or mobile OTP for all district logins", on: true },
-                                    { label: "Forced Session Timeout", desc: "Auto-logout after 20 minutes of inactivity", on: true },
-                                    { label: "Login Anomaly Detection", desc: "Alert me of login attempts from non-trusted mobile nodes", on: false },
-                                ].map(({ label, desc, on }) => (
-                                    <div key={label} className="flex items-center justify-between p-6 bg-gray-50 rounded-3xl group">
+                                {securityItems.map(({ labelKey, descKey, on }) => (
+                                    <div key={labelKey} className="flex items-center justify-between p-6 bg-gray-50 rounded-3xl group">
                                         <div className="max-w-md">
-                                            <p className="text-lg font-black text-gray-900">{label}</p>
-                                            <p className="text-base text-gray-400 font-medium mt-0.5">{desc}</p>
+                                            <p className="text-lg font-black text-gray-900">{t(labelKey)}</p>
+                                            <p className="text-base text-gray-400 font-medium mt-0.5">{t(descKey)}</p>
                                         </div>
                                         <Toggle defaultOn={on} />
                                     </div>
                                 ))}
-                                
+
                                 <div className="p-8 border-2 border-dashed border-gray-100 rounded-[2rem] space-y-4">
-                                    <h4 className="text-sm font-black uppercase tracking-widest text-gray-400">Trusted Device Management</h4>
+                                    <h4 className="text-sm font-black uppercase tracking-widest text-gray-400">{t("settings.trustedDevices")}</h4>
                                     <div className="flex items-center justify-between py-2 border-b border-gray-50 text-base font-bold text-gray-900">
                                         <span>District-Mobile (Samsung S23)</span>
-                                        <span className="text-emerald-500 font-black">ACTIVE</span>
+                                        <span className="text-emerald-500 font-black">{t("settings.active")}</span>
                                     </div>
                                     <div className="flex items-center justify-between py-2 text-base font-bold text-gray-400">
                                         <span>Officer-Laptop (MacBook Pro)</span>
-                                        <button className="text-red-500 hover:underline">Revoke Access</button>
+                                        <button className="text-red-500 hover:underline">{t("settings.revokeAccess")}</button>
                                     </div>
                                 </div>
                             </div>
@@ -205,23 +214,23 @@ export default function Settings() {
                     )}
 
                     {/* ──── PERFORMANCE SECTION ──── */}
-                    {activeSection === "Performance Metrics" && (
+                    {activeKey === "settings.performanceMetrics" && (
                         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
                                     <div className="p-3 bg-emerald-50 rounded-2xl w-fit mb-4"><CheckCircle2 className="w-5 h-5 text-emerald-600" /></div>
                                     <h4 className="text-3xl font-black text-gray-900">{stats.resolved}</h4>
-                                    <p className="text-sm font-black uppercase text-gray-400 tracking-widest mt-1">Grievances Resolved</p>
+                                    <p className="text-sm font-black uppercase text-gray-400 tracking-widest mt-1">{t("settings.grievancesResolved")}</p>
                                 </div>
                                 <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
                                     <div className="p-3 bg-blue-50 rounded-2xl w-fit mb-4"><Clock className="w-5 h-5 text-blue-600" /></div>
                                     <h4 className="text-3xl font-black text-gray-900">{stats.avgTime}</h4>
-                                    <p className="text-sm font-black uppercase text-gray-400 tracking-widest mt-1">Avg Resolution Time</p>
+                                    <p className="text-sm font-black uppercase text-gray-400 tracking-widest mt-1">{t("settings.avgResolutionTime")}</p>
                                 </div>
                                 <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
                                     <div className="p-3 bg-amber-50 rounded-2xl w-fit mb-4"><Star className="w-5 h-5 text-amber-600" /></div>
                                     <h4 className="text-3xl font-black text-gray-900">{stats.satisfaction}</h4>
-                                    <p className="text-sm font-black uppercase text-gray-400 tracking-widest mt-1">Satisfaction Score</p>
+                                    <p className="text-sm font-black uppercase text-gray-400 tracking-widest mt-1">{t("settings.satisfactionScore")}</p>
                                 </div>
                             </div>
 
@@ -229,9 +238,9 @@ export default function Settings() {
                                 <div className="flex items-center justify-between mb-8">
                                     <h2 className="text-sm font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-3">
                                         <Activity className="w-4 h-4 text-[#B91C1C]" />
-                                        Resolution Efficiency Trend
+                                        {t("settings.efficiencyTrend")}
                                     </h2>
-                                    <button className="text-sm font-black uppercase text-[#B91C1C] flex items-center gap-2">Download Full Report <ExternalLink className="w-3 h-3" /></button>
+                                    <button className="text-sm font-black uppercase text-[#B91C1C] flex items-center gap-2">{t("settings.downloadReport")} <ExternalLink className="w-3 h-3" /></button>
                                 </div>
                                 <div className="h-48 flex items-end gap-3 px-4">
                                     {[30, 45, 25, 60, 80, 55, 90].map((h, i) => (
@@ -247,8 +256,6 @@ export default function Settings() {
                             </div>
                         </div>
                     )}
-
-
                 </div>
             </div>
         </DashboardLayout>

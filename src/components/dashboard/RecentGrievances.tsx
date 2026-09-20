@@ -2,12 +2,15 @@ import { ArrowUpRight, Filter, Plus } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { NewGrievanceModal } from "@/components/NewGrievanceModal";
+import { useLanguage } from "@/context/LanguageContext";
+
 
 interface StatusBadgeProps {
     status: string;
 }
 
 export function StatusBadge({ status }: StatusBadgeProps) {
+  const { t } = useLanguage();
     const styles: Record<string, string> = {
         "Open": "bg-gray-50 text-gray-700 border-gray-200/50",
         "In Progress": "bg-amber-50 text-amber-700 border-amber-200/50",
@@ -110,11 +113,11 @@ export function RecentGrievances() {
                         <thead>
                             <tr className="bg-gray-50/50 border-b border-gray-100">
                                 <th className="px-6 py-5 text-base font-bold uppercase tracking-widest text-gray-400">ID</th>
-                                <th className="px-6 py-5 text-base font-bold uppercase tracking-widest text-gray-400">Citizen</th>
+                                <th className="px-6 py-5 text-base font-bold uppercase tracking-widest text-gray-400">{t("grievances.citizen")}</th>
                                 <th className="px-6 py-5 text-base font-bold uppercase tracking-widest text-gray-400">Problem</th>
                                 <th className="px-6 py-5 text-base font-bold uppercase tracking-widest text-gray-400">Area</th>
-                                <th className="px-6 py-5 text-base font-bold uppercase tracking-widest text-gray-400">Priority</th>
-                                <th className="px-6 py-5 text-base font-bold uppercase tracking-widest text-gray-400">Status</th>
+                                <th className="px-6 py-5 text-base font-bold uppercase tracking-widest text-gray-400">{t("common.priority")}</th>
+                                <th className="px-6 py-5 text-base font-bold uppercase tracking-widest text-gray-400">{t("dashboard.status")}</th>
                                 <th className="px-6 py-5 text-base font-bold uppercase tracking-widest text-gray-400 text-right">Time</th>
                             </tr>
                         </thead>

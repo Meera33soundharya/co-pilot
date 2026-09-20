@@ -1,7 +1,9 @@
 import { useState, useMemo } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useComplaints } from "@/context/ComplaintsContext";
+import { useLanguage } from "@/context/LanguageContext";
 import {
+
     Users, Building2, Search,
     Phone, MapPin,
     ChevronRight, Star
@@ -28,6 +30,7 @@ const CITIZENS = [
 ];
 
 export default function PeopleManagement() {
+    const { t } = useLanguage();
     const [tab, setTab] = useState<"officers" | "citizens">("officers");
     const [search, setSearch] = useState("");
     const [selected, setSelected] = useState<string | null>(null);
@@ -53,7 +56,7 @@ export default function PeopleManagement() {
 
     return (
         <DashboardLayout
-            title="People Management"
+            title={t("people.title")}
             subtitle="Manage officers and citizens across all wards"
         >
             <div className="space-y-6">

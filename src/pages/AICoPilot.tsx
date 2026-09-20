@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import { Sparkles, FileText, Mic } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function AICoPilot() {
+  const { t } = useLanguage();
   const [inputContext, setInputContext] = useState("");
   const [output, setOutput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -55,8 +57,8 @@ export default function AICoPilot() {
 
   return (
     <DashboardLayout 
-      title="AI Co-Pilot" 
-      subtitle="Your secure intelligence assistant for drafting, summarization, and analysis."
+      title={t("aiCopilot.title", "AI Co-Pilot")} 
+      subtitle={t("aiCopilot.subtitle", "Your secure intelligence assistant for drafting, summarization, and analysis.")}
     >
       <div className="h-[calc(100vh-14rem)] min-h-[500px]">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
@@ -70,7 +72,7 @@ export default function AICoPilot() {
             <textarea 
               value={inputContext}
               onChange={e => setInputContext(e.target.value)}
-              placeholder="Paste documents, notes, or provide context here..."
+              placeholder={t("aiCopilot.placeholder", "Paste documents, notes, or provide context here...")}
               className="flex-1 w-full bg-white border border-gray-300 rounded-xl p-4 text-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none mb-6 custom-scrollbar shadow-sm"
             />
             
@@ -102,7 +104,7 @@ export default function AICoPilot() {
               {loading ? (
                 <div className="h-full flex flex-col items-center justify-center gap-3 text-gray-500">
                   <Sparkles className="w-8 h-8 animate-spin" />
-                  <span className="text-lg">Processing your request...</span>
+                  <span className="text-lg">{t("aiCopilot.processing", "Processing your request...")}</span>
                 </div>
               ) : output ? (
                 <div className="w-full text-lg text-gray-800 whitespace-pre-wrap leading-relaxed space-y-4">
@@ -120,7 +122,7 @@ export default function AICoPilot() {
               ) : (
                 <div className="h-full flex flex-col items-center justify-center gap-3 text-gray-400">
                   <Sparkles className="w-8 h-8 opacity-50" />
-                  <span className="text-lg text-center max-w-sm">Select an action on the left to generate content based on your context.</span>
+                  <span className="text-lg text-center max-w-sm">{t("aiCopilot.selectAction", "Select an action on the left to generate content based on your context.")}</span>
                 </div>
               )}
             </div>
@@ -131,3 +133,9 @@ export default function AICoPilot() {
     </DashboardLayout>
   );
 }
+
+
+
+
+
+

@@ -11,6 +11,7 @@ import AdminSlide from "./AdminSlide";
 import { useState, useEffect } from "react";
 import { useComplaints } from "@/context/ComplaintsContext";
 import { useLanguage } from "@/context/LanguageContext";
+import TranslationWidget from "./TranslationWidget";
 
 interface DashboardLayoutProps {
     children: ReactNode;
@@ -110,6 +111,7 @@ const CITIZEN_NAV: NavGroup[] = [
 ];
 
 export default function DashboardLayout({ children, title, subtitle, bgImage, actions, isDark = false }: DashboardLayoutProps) {
+    
     const navigate = useNavigate();
     const location = useLocation();
     const { currentUser, logout, complaints, notifications, readNotification } = useComplaints();
@@ -182,7 +184,7 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
                             <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white animate-pulse" />
                         </div>
                         <div>
-                            <span className="font-black text-lg text-gray-900 block leading-none tracking-tight">GovPilot</span>
+                            <span className="font-black text-lg text-gray-900 block leading-none tracking-tight">{t("login.title")}</span>
                             <span className="text-[10px] font-bold uppercase tracking-widest leading-none block mt-1.5 flex items-center gap-1" style={{ color: roleCfg.color }}>
                                 <div className="w-1.5 h-1.5 rounded-full bg-current animate-ping" /> {roleCfg.label}
                             </span>
@@ -306,7 +308,7 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
                         </button>
 
                         {role === 'admin' && (
-                            <button title="Admin Menu" onClick={() => setAdminSlideOpen(true)} className="hidden md:inline-flex items-center gap-2 px-3 py-1 rounded-lg hover:bg-gray-50">
+                            <button title={t("common.adminMenu")} onClick={() => setAdminSlideOpen(true)} className="hidden md:inline-flex items-center gap-2 px-3 py-1 rounded-lg hover:bg-gray-50">
                                 <Layers className="w-5 h-5 text-gray-400" />
                                 <span className="text-lg text-gray-600">Admin</span>
                             </button>
@@ -330,7 +332,7 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
                         ) : (
                             <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-100">
                                 <User className="w-3.5 h-3.5 text-emerald-600" />
-                                <span className="text-base font-bold text-emerald-700">Citizen Portal</span>
+                                <span className="text-base font-bold text-emerald-700">{t("common.citizenPortal")}</span>
                             </div>
                         )}
                     </div>
@@ -363,6 +365,8 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
 
                         <span className="hidden sm:block text-sm font-bold text-gray-900 tabular-nums">{time}</span>
                         <div className="w-px h-5 bg-gray-300 hidden sm:block" />
+
+                        <TranslationWidget />
 
                         {/* Notification bell */}
                         <div className="relative">
@@ -420,7 +424,7 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
                                                                 {!n.read && (
                                                                     <div className="mt-2 flex items-center gap-1.5">
                                                                         <div className="w-1.5 h-1.5 rounded-full bg-[#B91C1C]" />
-                                                                        <span className="text-sm font-bold text-[#B91C1C] uppercase tracking-wide">Unread</span>
+                                                                        <span className="text-sm font-bold text-[#B91C1C] uppercase tracking-wide">{t("common.unread")}</span>
                                                                     </div>
                                                                 )}
                                                             </div>
@@ -530,8 +534,7 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
                                             setShowToast(false);
                                         }}
                                         className="text-sm font-bold text-blue-600 uppercase tracking-wide hover:underline flex items-center gap-1"
-                                    >
-                                        Take Action <ChevronRight className="w-3 h-3" />
+                                    >{t("common.takeAction")}<ChevronRight className="w-3 h-3" />
                                     </button>
                                 </div>
                             </div>

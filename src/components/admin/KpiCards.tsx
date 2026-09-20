@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Activity, TrendingUp, TrendingDown, Award } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
+
 
 function Card({ title, value, delta, positive = true, icon: Icon, isPrimary = false }: { title: string; value: string | number; delta?: string; positive?: boolean; icon: any; isPrimary?: boolean }) {
   const bgColor = isPrimary ? "bg-[#B91C1C] text-white shadow-[#B91C1C]/20" : "bg-white text-gray-900 border border-gray-100";
@@ -31,6 +33,7 @@ function Card({ title, value, delta, positive = true, icon: Icon, isPrimary = fa
 }
 
 export default function KpiCards() {
+    const { t } = useLanguage();
   const [stats, setStats] = useState({ open: 128, assigned: 430, closedToday: 24, responseTime: 3.6 });
 
   useEffect(() => {
@@ -47,8 +50,8 @@ export default function KpiCards() {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      <Card title="Open Complaints" value={stats.open} delta="+3%" positive={false} icon={Activity} isPrimary={true} />
-      <Card title="Assigned" value={stats.assigned} delta="+1.2%" positive={true} icon={TrendingUp} />
+      <Card title={t("dashboard.openComplaints")} value={stats.open} delta="+3%" positive={false} icon={Activity} isPrimary={true} />
+      <Card title={t("dashboard.assigned")} value={stats.assigned} delta="+1.2%" positive={true} icon={TrendingUp} />
       <Card title="Closed Today" value={stats.closedToday} delta="-0.4%" positive={false} icon={TrendingDown} />
       <Card title="Avg Response (hrs)" value={stats.responseTime} icon={Award} />
     </div>

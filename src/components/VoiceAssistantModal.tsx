@@ -3,6 +3,8 @@ import { Mic, Square, Send, X, Loader2, CheckCircle2 } from "lucide-react";
 import { useVoiceAssistant } from "@/hooks/useVoiceAssistant";
 import { extractEntities, analyzeComplaint } from "@/services/aiService";
 import { useComplaints } from "@/context/ComplaintsContext";
+import { useLanguage } from "@/context/LanguageContext";
+
 
 interface VoiceAssistantModalProps {
     isOpen: boolean;
@@ -10,6 +12,7 @@ interface VoiceAssistantModalProps {
 }
 
 export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProps) {
+    const { t } = useLanguage();
     const { addComplaint } = useComplaints();
     
     const [step, setStep] = useState<"idle" | "listening" | "processing" | "review" | "success">("idle");
@@ -165,11 +168,11 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
                                     <textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} rows={3} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-gray-500">Department</label>
+                                    <label className="text-xs font-black uppercase tracking-widest text-gray-500">{t("grievances.dept")}</label>
                                     <input type="text" value={form.dept} onChange={e => setForm({...form, dept: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-gray-500">Priority</label>
+                                    <label className="text-xs font-black uppercase tracking-widest text-gray-500">{t("common.priority")}</label>
                                     <select value={form.priority} onChange={e => setForm({...form, priority: e.target.value as any})} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
                                         <option value="Low">Low</option>
                                         <option value="Medium">Medium</option>
@@ -213,8 +216,7 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
                                 disabled={!isSupported}
                                 className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-full font-bold hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-50"
                             >
-                                <Mic className="w-5 h-5" /> Start Listening
-                            </button>
+                                <Mic className="w-5 h-5" />{t("speechAi.startListening")}</button>
                         )}
 
                         {(step === "listening" || isListening) && (
@@ -232,8 +234,7 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
                                 disabled={!form.issue || !form.description}
                                 className="flex items-center gap-2 px-8 py-3 bg-emerald-600 text-white rounded-full font-bold hover:bg-emerald-700 transition-colors shadow-sm disabled:opacity-50"
                             >
-                                <Send className="w-5 h-5" /> Submit Complaint
-                            </button>
+                                <Send className="w-5 h-5" />{t("nav.submitComplaint")}</button>
                         )}
                         
                     </div>

@@ -7,8 +7,11 @@ import {
 import HolographicRing from "../components/HolographicRing";
 import SegmentedRing from "../components/SegmentedRing";
 import { useComplaints } from "@/context/ComplaintsContext";
+import { useLanguage } from "@/context/LanguageContext";
+
 
 export default function Landing() {
+    const { t } = useLanguage();
     const navigate = useNavigate();
     const { currentUser, logout } = useComplaints();
 
@@ -68,7 +71,7 @@ export default function Landing() {
                         <BrainCircuit className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                        <h1 className="text-lg font-black text-gray-900 tracking-tight leading-none">GovPilot</h1>
+                        <h1 className="text-lg font-black text-gray-900 tracking-tight leading-none">{t("login.title")}</h1>
                         <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#B91C1C] mt-1 leading-none">District Governance AI</p>
                     </div>
                 </div>

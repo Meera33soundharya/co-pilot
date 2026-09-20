@@ -1,4 +1,6 @@
 import React from "react";
+import { useLanguage } from "@/context/LanguageContext";
+
 
 const mock = [
   { id: 1, title: 'Bilateral Meeting with Trade Delegation', time: 'Jun 19, 2026 10:49 AM', status: 'Scheduled', place: 'State House' },
@@ -8,12 +10,11 @@ const mock = [
 ];
 
 export default function MeetingsList() {
+    const { t } = useLanguage();
   return (
     <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm relative overflow-hidden">
       <h3 className="text-base font-black text-gray-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-3">
-        <div className="w-2 h-2 rounded-full bg-[#B91C1C]" />
-        Upcoming Meetings
-      </h3>
+        <div className="w-2 h-2 rounded-full bg-[#B91C1C]" />{t("meetings.upcoming")}</h3>
       <div className="space-y-4">
         {mock.map(m => (
           <div key={m.id} className="p-4 rounded-2xl bg-gray-50 border border-gray-100 hover:border-red-100 transition-colors flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">

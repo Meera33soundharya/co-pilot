@@ -7,7 +7,9 @@ import {
   Search, Filter, Calendar, ChevronDown, Sparkles,
   AlertTriangle, CheckCircle2, XCircle, TrendingDown
 } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 import {
+
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, PieChart, Pie, Cell
 } from "recharts";
@@ -31,6 +33,7 @@ const departments = [
 ];
 
 export default function ExecutiveSummary() {
+    const { t } = useLanguage();
   const { complaints } = useComplaints();
   const [period, setPeriod] = useState("Last 90 Days");
   const [isLoading, setIsLoading] = useState(false);
@@ -281,9 +284,7 @@ export default function ExecutiveSummary() {
             <div className="mt-6 p-6 bg-gray-50 border border-gray-200 rounded-2xl animate-in fade-in">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
-                  <label className="block text-sm font-black text-gray-700 uppercase tracking-widest mb-2">
-                    Department
-                  </label>
+                  <label className="block text-sm font-black text-gray-700 uppercase tracking-widest mb-2">{t("grievances.dept")}</label>
                   <select className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900">
                     <option>All Departments</option>
                     <option>Water Supply</option>
@@ -303,14 +304,12 @@ export default function ExecutiveSummary() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-black text-gray-700 uppercase tracking-widest mb-2">
-                    Status
-                  </label>
+                  <label className="block text-sm font-black text-gray-700 uppercase tracking-widest mb-2">{t("dashboard.status")}</label>
                   <select className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900">
                     <option>All Status</option>
                     <option>Active</option>
                     <option>Completed</option>
-                    <option>Pending</option>
+                    <option>{t("reports.pending")}</option>
                   </select>
                 </div>
               </div>

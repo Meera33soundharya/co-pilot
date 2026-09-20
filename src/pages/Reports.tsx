@@ -6,7 +6,9 @@ import {
     ResponsiveContainer, RadarChart, Radar, PolarGrid,
     PolarAngleAxis, PolarRadiusAxis, AreaChart, Area
 } from "recharts";
+import { useLanguage } from "@/context/LanguageContext";
 import {
+
     Download, Calendar, ChevronDown,
     TrendingUp, Clock, CheckCircle2, Award,
     RefreshCw, Sparkles, Zap, Shield, Target,
@@ -25,6 +27,7 @@ const timeframes = [
 ];
 
 export default function Reports() {
+    const { t } = useLanguage();
     const { complaints } = useComplaints();
     const [reportType, setReportType] = useState<ReportType>("Executive Summary");
     const [periodStr, setPeriodStr] = useState("Last 90 Days");
@@ -173,7 +176,7 @@ export default function Reports() {
     };
 
     return (
-        <DashboardLayout title="Reports" subtitle={`Unified Governance KPI & Intelligence Portal (${filteredComplaints.length} Records)`}>
+        <DashboardLayout title={t("nav.reports")} subtitle={`Unified Governance KPI & Intelligence Portal (${filteredComplaints.length} Records)`}>
             <div className="space-y-8 pb-20">
 
                 {/* ── Control Console ──────────────────────────────────── */}

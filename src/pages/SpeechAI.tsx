@@ -4,6 +4,8 @@ import {
   Loader2, Sparkles, AlertCircle, Clock, Heart, Info, Star, CheckCircle2
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
+import { useLanguage } from "@/context/LanguageContext";
+
 
 /* ─── Language Config ─────────────────────────────────────── */
 const LANGUAGES = [
@@ -88,6 +90,7 @@ const INITIAL_BROADCASTS = [
 
 /* ─── Component ───────────────────────────────────────────── */
 export default function SpeechAI() {
+    const { t } = useLanguage();
   const [inputText,       setInputText]       = useState("Water supply will be disrupted tomorrow from 10 AM to 4 PM in Wards 12 and 13. Please store sufficient water.");
   const [selectedLangId,  setSelectedLangId]  = useState("english");
   const [selectedToneId,  setSelectedToneId]  = useState("formal");
@@ -257,7 +260,7 @@ export default function SpeechAI() {
 
   return (
     <DashboardLayout
-      title="Speech AI"
+      title={t("nav.speechAi")}
       subtitle="Create spoken announcements for citizens in any Indian language"
     >
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">

@@ -9,6 +9,8 @@ import { useComplaints } from "@/context/ComplaintsContext";
 import { ExecutiveSummaryPanel } from "./ExecutiveSummaryPanel";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
+import { useLanguage } from "@/context/LanguageContext";
+
 
 interface DocumentPreviewModalProps {
     document: DocumentRecord;
@@ -19,6 +21,7 @@ interface DocumentPreviewModalProps {
 type TabType = "overview" | "ai" | "ocr";
 
 export function DocumentPreviewModal({ document, onClose, onSelectDocument }: DocumentPreviewModalProps) {
+    const { t } = useLanguage();
     const { updateStatus, deleteDocument, allDocuments, regenerateSummary } = useDocuments();
     const { currentUser, allComplaints } = useComplaints();
     const [activeTab, setActiveTab] = useState<TabType>("overview");
@@ -194,15 +197,15 @@ export function DocumentPreviewModal({ document, onClose, onSelectDocument }: Do
                     <p className="font-semibold text-gray-900">{document.complaintId || 'Not Linked'}</p>
                 </div>
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Category</p>
+                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">{t("common.category")}</p>
                     <p className="font-semibold text-gray-900">{document.category}</p>
                 </div>
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Department</p>
+                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">{t("grievances.dept")}</p>
                     <p className="font-semibold text-gray-900">{document.dept}</p>
                 </div>
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Ward</p>
+                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">{t("dashboard.ward")}</p>
                     <p className="font-semibold text-gray-900">{document.ward || linkedComplaint?.ward || 'Unassigned'}</p>
                 </div>
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
@@ -318,7 +321,7 @@ export function DocumentPreviewModal({ document, onClose, onSelectDocument }: Do
 
                 <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
                     <div className="bg-gray-50 p-3 rounded-lg border border-gray-100 flex flex-col justify-center items-center">
-                        <p className="text-[10px] text-gray-500 uppercase font-bold text-center">Status</p>
+                        <p className="text-[10px] text-gray-500 uppercase font-bold text-center">{t("dashboard.status")}</p>
                         <p className={`font-semibold text-sm text-center mt-1 ${hasOcr ? 'text-emerald-600' : 'text-amber-600'}`}>{status}</p>
                     </div>
                     <div className="bg-gray-50 p-3 rounded-lg border border-gray-100 flex flex-col justify-center items-center">
@@ -334,7 +337,7 @@ export function DocumentPreviewModal({ document, onClose, onSelectDocument }: Do
                         <p className="font-semibold text-gray-900 text-sm text-center mt-1">{hasOcr ? '1.2s' : '-'}</p>
                     </div>
                     <div className="bg-gray-50 p-3 rounded-lg border border-gray-100 flex flex-col justify-center items-center">
-                        <p className="text-[10px] text-gray-500 uppercase font-bold text-center">Language</p>
+                        <p className="text-[10px] text-gray-500 uppercase font-bold text-center">{t("settings.language")}</p>
                         <p className="font-semibold text-gray-900 text-sm text-center mt-1">{hasOcr ? 'English (en-IN)' : '-'}</p>
                     </div>
                     <div className="bg-gray-50 p-3 rounded-lg border border-gray-100 flex flex-col justify-center items-center">

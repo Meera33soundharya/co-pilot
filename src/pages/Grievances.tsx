@@ -423,7 +423,7 @@ export default function Grievances() {
                                     {detail.originalComplaintTamil || detail.issue}
                                 </h2>
                                 <div className="bg-gray-50 rounded-2xl border border-gray-100 p-4">
-                                    <p className="text-lg font-black uppercase tracking-widest text-gray-400 mb-1.5">Details</p>
+                                    <p className="text-lg font-black uppercase tracking-widest text-gray-400 mb-1.5">{t("grievances.details")}</p>
                                     <p className="text-lg text-gray-600 leading-relaxed">
                                         {detail.originalComplaintTamil || detail.description || detail.issue}
                                     </p>

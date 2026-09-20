@@ -100,6 +100,7 @@ function ComplaintTimeline({ status }: { status: Status }) {
 }
 
 export default function CitizenModule() {
+    
     const { complaints, currentUser, rateComplaint, reopenComplaint, announcements } = useComplaints();
     const { t, language } = useLanguage();
     const navigate = useNavigate();
@@ -194,7 +195,7 @@ export default function CitizenModule() {
                                     <button
                                         onClick={(e) => { e.stopPropagation(); setDismissedAnns(p => [...p, ann.id]); }}
                                         className="shrink-0 p-1 rounded-lg hover:bg-black/10 text-gray-400 transition-colors"
-                                        title="Dismiss"
+                                        title={t("common.dismiss")}
                                     >
                                         <X className="w-3.5 h-3.5" />
                                     </button>
@@ -224,7 +225,7 @@ export default function CitizenModule() {
                     <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm flex flex-col justify-between">
                         <div className="flex justify-between items-start mb-4">
                             <div className="p-4 bg-blue-50 rounded-2xl"><MessageSquare className="w-8 h-8 text-blue-600" /></div>
-                            <span className="text-xl font-black text-gray-400 uppercase tracking-widest">Reports</span>
+                            <span className="text-xl font-black text-gray-400 uppercase tracking-widest">{t("nav.reports")}</span>
                         </div>
                         <div>
                             <p className="text-5xl font-black text-gray-900">{stats.total}</p>
@@ -263,11 +264,11 @@ export default function CitizenModule() {
                             <select value={filter} onChange={e => setFilter(e.target.value as any)}
                                 className="bg-transparent text-white/70 text-base font-black uppercase tracking-widest px-6 focus:outline-none">
                                 <option value="All" className="bg-gray-900 text-white">All Status</option>
-                                <option value="New" className="bg-gray-900 text-white">New</option>
+                                <option value="New" className="bg-gray-900 text-white">{t("common.new")}</option>
                                 <option value="Assigned" className="bg-gray-900 text-white">In Queue</option>
                                 <option value="In Progress" className="bg-gray-900 text-white">In Progress</option>
                                 <option value="Pending Verification" className="bg-gray-900 text-white">Verifying</option>
-                                <option value="Resolved" className="bg-gray-900 text-white">Resolved</option>
+                                <option value="Resolved" className="bg-gray-900 text-white">{t("dashboard.resolved")}</option>
                             </select>
                         </div>
                     </div>
@@ -411,7 +412,7 @@ export default function CitizenModule() {
                                                                     {/* Officer Proof Card */}
                                                                     <div className="bg-emerald-50 rounded-[18px] p-4 border border-emerald-100">
                                                                         <div className="flex items-center justify-between mb-3">
-                                                                            <span className="text-xs font-black uppercase text-emerald-700">Resolution Proof</span>
+                                                                            <span className="text-xs font-black uppercase text-emerald-700">{t("grievances.resolutionProof")}</span>
                                                                             <div className="flex items-center gap-1 bg-emerald-100 px-2 py-1 rounded text-[10px] font-black text-emerald-800 uppercase">
                                                                                 <MapPin className="w-3 h-3" /> GPS Verified
                                                                             </div>
@@ -432,7 +433,7 @@ export default function CitizenModule() {
                                                                                 return c.resolutionProof ? (
                                                                                     <img src={c.resolutionProof} className="w-full h-full object-cover" />
                                                                                 ) : (
-                                                                                    <span className="text-xs font-bold text-emerald-600/50 uppercase">Pending</span>
+                                                                                    <span className="text-xs font-bold text-emerald-600/50 uppercase">{t("reports.pending")}</span>
                                                                                 );
                                                                             })()}
                                                                         </div>
@@ -446,7 +447,7 @@ export default function CitizenModule() {
                                                                 <div className="bg-blue-50/80 backdrop-blur-xl p-6 rounded-[18px] border border-blue-100 shadow-sm">
                                                                     <div className="flex items-center gap-2 mb-3">
                                                                         <Info className="w-5 h-5 text-blue-600" />
-                                                                        <h5 className="text-base font-black uppercase tracking-widest text-blue-900">Resolution Notes</h5>
+                                                                        <h5 className="text-base font-black uppercase tracking-widest text-blue-900">{t("grievances.resolutionNotes")}</h5>
                                                                     </div>
                                                                     <p className="text-sm font-medium text-blue-800 leading-relaxed">
                                                                         {c.resolutionNotes}
@@ -628,9 +629,7 @@ export default function CitizenModule() {
                                     <h4 className="text-lg font-black text-gray-900 mb-1">Complaint Updated</h4>
                                     <p className="text-sm font-medium text-gray-600 mb-4">Work completed successfully. Waiting for citizen verification.</p>
                                     <div className="flex items-center gap-2">
-                                        <button className="px-4 py-2 bg-gray-900 text-white rounded-xl text-xs font-bold transition-all hover:bg-gray-800">
-                                            View Details
-                                        </button>
+                                        <button className="px-4 py-2 bg-gray-900 text-white rounded-xl text-xs font-bold transition-all hover:bg-gray-800">{t("common.viewDetails")}</button>
                                         <button className="px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold transition-all hover:bg-emerald-100 border border-emerald-200">
                                             Give Feedback
                                         </button>

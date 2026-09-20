@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import type { CurrentUser } from "@/context/ComplaintsContext";
 import SegmentedRing from "../components/SegmentedRing";
+import { useLanguage } from "@/context/LanguageContext";
+
 
 /* ── Demo accounts ───────────────────────────────────────── */
 const ACCOUNTS = [
@@ -126,6 +128,7 @@ function BootOverlay({ onDone }: { onDone: () => void }) {
     MAIN LOGIN
 ════════════════════════════════════════════════════════ */
 export default function Login() {
+    const { t } = useLanguage();
     const navigate = useNavigate();
     const { login } = useComplaints();
     const [email, setEmail]       = useState("");
@@ -225,7 +228,7 @@ export default function Login() {
 
                     {/* Heading */}
                     <div>
-                        <h2 className="text-6xl font-medium text-gray-900 ">Welcome back</h2>
+                        <h2 className="text-6xl font-medium text-gray-900 ">{t("login.welcome")}</h2>
                         <p className="text-gray-600 text-xl font-medium mt-1">Sign in to access your portal</p>
                     </div>
 
@@ -347,9 +350,7 @@ export default function Login() {
                                 id="citizen-portal-link"
                                 className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl bg-white border border-gray-200 text-gray-800 text-xl font-medium uppercase tracking-wide hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm group"
                             >
-                                <MessageSquare className="w-5 h-5 text-[#B91C1C] group-hover:scale-110 transition-transform" />
-                                Submit Complaint
-                                <ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+                                <MessageSquare className="w-5 h-5 text-[#B91C1C] group-hover:scale-110 transition-transform" />{t("nav.submitComplaint")}<ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
                             </a>
 
                             <a

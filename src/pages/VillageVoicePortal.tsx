@@ -4,6 +4,8 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useComplaints } from "@/context/ComplaintsContext";
+import { useLanguage } from "@/context/LanguageContext";
+
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -112,6 +114,7 @@ function isYes(text: string): boolean {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function VillageVoicePortal() {
+    const { t } = useLanguage();
   const navigate = useNavigate();
   const { addComplaint } = useComplaints();
 
@@ -456,9 +459,7 @@ export default function VillageVoicePortal() {
         <button
           onClick={() => navigate("/")}
           className="px-4 py-1.5 bg-white/40 hover:bg-white/60 text-[#2B4B6F] rounded-full font-black text-sm tracking-widest uppercase shadow-sm transition-all"
-        >
-          Back
-        </button>
+        >{t("common.back")}</button>
         <div className="flex flex-col items-center">
           <span className="font-black text-[#2B4B6F] uppercase tracking-widest text-sm">
             {lang === "TA" ? "வாய்மொழி போர்ட்டல்" : "Voice Portal"}

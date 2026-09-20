@@ -8,6 +8,8 @@ import {
 import { resolveComplaintImage } from "@/services/fallbackImageService";
 import { AiImageWrapper } from "@/components/AiImageBadge";
 import { VoiceAssistantFAB } from "@/components/VoiceAssistantFAB";
+import { useLanguage } from "@/context/LanguageContext";
+
 
 
 function escapeHtml(value: string | undefined) {
@@ -196,14 +198,14 @@ function buildReportHtml(doc: any, complaint: any) {
 
   <div class="grid4">
     <div class="card"><div class="label">Complaint ID</div><div class="value">${escapeHtml(complaint?.id || doc.complaintId)}</div></div>
-    <div class="card"><div class="label">Category</div><div class="value">${escapeHtml(complaint?.category || "—")}</div></div>
-    <div class="card"><div class="label">Department</div><div class="value">${escapeHtml(complaint?.dept || doc.dept)}</div></div>
-    <div class="card" style="background:#f0fdf4;border-color:#bbf7d0;"><div class="label" style="color:#166534;">Status</div><div class="value" style="color:#166534;">${escapeHtml(complaint?.status || "Resolved")}</div></div>
+    <div class="card"><div class="label">{t("common.category")}</div><div class="value">${escapeHtml(complaint?.category || "—")}</div></div>
+    <div class="card"><div class="label">{t("grievances.dept")}</div><div class="value">${escapeHtml(complaint?.dept || doc.dept)}</div></div>
+    <div class="card" style="background:#f0fdf4;border-color:#bbf7d0;"><div class="label" style="color:#166534;">{t("dashboard.status")}</div><div class="value" style="color:#166534;">${escapeHtml(complaint?.status || "Resolved")}</div></div>
   </div>
 
   <div class="grid4" style="margin-top:0;">
-    <div class="card"><div class="label">Citizen</div><div class="value">${escapeHtml(complaint?.citizen || "—")}</div></div>
-    <div class="card"><div class="label">Ward</div><div class="value">${escapeHtml(complaint?.ward || "—")}</div></div>
+    <div class="card"><div class="label">{t("grievances.citizen")}</div><div class="value">${escapeHtml(complaint?.citizen || "—")}</div></div>
+    <div class="card"><div class="label">{t("dashboard.ward")}</div><div class="value">${escapeHtml(complaint?.ward || "—")}</div></div>
     <div class="card"><div class="label">Officer</div><div class="value">${escapeHtml(officer)}</div></div>
     <div class="card"><div class="label">Resolved On</div><div class="value">${escapeHtml(resolvedOn)}</div></div>
   </div>
@@ -219,7 +221,7 @@ function buildReportHtml(doc: any, complaint: any) {
   <div class="section">
     <h2>Resolution Information</h2>
     <div class="notes-box">
-      <div class="lbl">Resolution Notes</div>
+      <div class="lbl">{t("grievances.resolutionNotes")}</div>
       <p>${escapeHtml(resolutionText)}</p>
     </div>
     ${complaint?.adminRemarks ? `<div class="notes-box" style="background:#faf5ff;border-color:#e9d5ff;"><div class="lbl" style="color:#7c3aed;">Admin Remarks</div><p style="color:#3b0764;">${escapeHtml(complaint.adminRemarks)}</p></div>` : ""}
@@ -276,6 +278,7 @@ async function downloadPDF(doc: any, complaint: any) {
 }
 
 export default function ResolutionReports() {
+    const { t } = useLanguage();
     const { closedDocs, allComplaints, currentUser, clearClosedDocs, deleteClosedDoc } = useComplaints();
     const [search, setSearch] = useState("");
     const [deptFilter, setDeptFilter] = useState("All");
@@ -298,7 +301,7 @@ export default function ResolutionReports() {
 
     return (
         <DashboardLayout 
-            title="Resolution Reports" 
+            title={t("nav.resolutionReports")} 
             subtitle="Permanent record of all verified and closed complaint resolutions."
         >
             <div className="space-y-6">
@@ -343,9 +346,7 @@ export default function ResolutionReports() {
                                     <button
                                         onClick={() => setConfirmClear(false)}
                                         className="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-black rounded-xl hover:bg-gray-200 transition-colors"
-                                    >
-                                        Cancel
-                                    </button>
+                                    >{t("common.cancel")}</button>
                                 </div>
                             ) : (
                                 <button
@@ -411,8 +412,7 @@ export default function ResolutionReports() {
                                         className="flex-1 py-3.5 bg-[#B91C1C] hover:bg-red-800 text-white text-sm font-black uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-95"
                                         onClick={() => setSelectedDoc(doc)}
                                     >
-                                        <Eye className="w-4 h-4" /> View Details
-                                    </button>
+                                        <Eye className="w-4 h-4" />{t("common.viewDetails")}</button>
                                     <button 
                                         className="w-12 h-12 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-2xl flex items-center justify-center transition-all active:scale-95 shrink-0"
                                         onClick={() => {
@@ -484,15 +484,15 @@ export default function ResolutionReports() {
                                                 <p className="text-lg font-bold text-gray-900">{complaint.id}</p>
                                             </div>
                                             <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                                                <p className="text-xs font-black text-gray-400 uppercase mb-1">Department</p>
+                                                <p className="text-xs font-black text-gray-400 uppercase mb-1">{t("grievances.dept")}</p>
                                                 <p className="text-lg font-bold text-gray-900">{complaint.dept}</p>
                                             </div>
                                             <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                                                <p className="text-xs font-black text-gray-400 uppercase mb-1">Category</p>
+                                                <p className="text-xs font-black text-gray-400 uppercase mb-1">{t("common.category")}</p>
                                                 <p className="text-lg font-bold text-gray-900">{complaint.category}</p>
                                             </div>
                                             <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
-                                                <p className="text-xs font-black text-emerald-600 uppercase mb-1">Status</p>
+                                                <p className="text-xs font-black text-emerald-600 uppercase mb-1">{t("dashboard.status")}</p>
                                                 <p className="text-lg font-bold text-emerald-700">{complaint.status}</p>
                                             </div>
                                         </div>
@@ -513,7 +513,7 @@ export default function ResolutionReports() {
                                             {/* Notes & Remarks */}
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                                                 <div className="p-5 bg-blue-50 rounded-2xl border border-blue-100">
-                                                    <p className="text-sm font-black text-blue-600 uppercase mb-2">Resolution Notes</p>
+                                                    <p className="text-sm font-black text-blue-600 uppercase mb-2">{t("grievances.resolutionNotes")}</p>
                                                     <p className="text-blue-900 font-medium">{complaint.resolutionNotes || selectedDoc.summary}</p>
                                                 </div>
                                                 
@@ -530,7 +530,7 @@ export default function ResolutionReports() {
                                                         </div>
                                                         <div className="w-px h-10 bg-gray-200 mx-2"/>
                                                         <div>
-                                                            <p className="text-sm font-black text-gray-400 uppercase mb-1">Ward</p>
+                                                            <p className="text-sm font-black text-gray-400 uppercase mb-1">{t("dashboard.ward")}</p>
                                                             <p className="font-bold text-gray-700">{complaint.ward}</p>
                                                         </div>
                                                     </div>
@@ -628,9 +628,7 @@ export default function ResolutionReports() {
                             <button 
                                 onClick={() => setSelectedDoc(null)}
                                 className="px-6 py-3 bg-white border border-gray-200 text-gray-700 text-sm font-black uppercase tracking-widest rounded-xl hover:bg-gray-50 transition-colors"
-                            >
-                                Close
-                            </button>
+                            >{t("common.close")}</button>
                             <button 
                                 onClick={() => {
                                     const c = allComplaints.find(c => c.id === selectedDoc.complaintId);

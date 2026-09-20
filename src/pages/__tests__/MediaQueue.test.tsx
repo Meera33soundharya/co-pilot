@@ -2,6 +2,8 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import MediaQueue from '../MediaQueue';
+import { useLanguage } from "@/context/LanguageContext";
+
 
 // Mock DashboardLayout to avoid rendering full layout complexities
 vi.mock('@/components/DashboardLayout', () => ({
@@ -20,25 +22,25 @@ describe('MediaQueue Table Component', () => {
     // Check Uploading (MQ-1000) -> expects Cancel button
     const uploadingRow = screen.getByText('MQ-1000').closest('tr');
     expect(uploadingRow).toBeDefined();
-    expect(uploadingRow?.querySelector('button[title="Cancel"]')).toBeDefined();
+    expect(uploadingRow?.querySelector('button[title={t("common.cancel")}]')).toBeDefined();
 
     // Check Queued (MQ-1001) -> expects Cancel, Prioritize
     const queuedRow = screen.getByText('MQ-1001').closest('tr');
     expect(queuedRow).toBeDefined();
     expect(queuedRow?.querySelector('button[title="Prioritize"]')).toBeDefined();
-    expect(queuedRow?.querySelector('button[title="Cancel"]')).toBeDefined();
+    expect(queuedRow?.querySelector('button[title={t("common.cancel")}]')).toBeDefined();
 
     // Check Processing (MQ-1005) -> expects View Progress, Cancel
     const processingRow = screen.getByText('MQ-1005').closest('tr');
     expect(processingRow).toBeDefined();
     expect(processingRow?.querySelector('button[title="View Progress"]')).toBeDefined();
-    expect(processingRow?.querySelector('button[title="Cancel"]')).toBeDefined();
+    expect(processingRow?.querySelector('button[title={t("common.cancel")}]')).toBeDefined();
 
     // Check Completed (MQ-1002) -> expects View Result, Download
     const completedRow = screen.getByText('MQ-1002').closest('tr');
     expect(completedRow).toBeDefined();
     expect(completedRow?.querySelector('button[title="View Result"]')).toBeDefined();
-    expect(completedRow?.querySelector('button[title="Download"]')).toBeDefined();
+    expect(completedRow?.querySelector('button[title={t("reports.download")}]')).toBeDefined();
 
     // Check Failed (MQ-1008) -> expects Retry, View Error, Delete
     const failedRow = screen.getByText('MQ-1008').closest('tr');

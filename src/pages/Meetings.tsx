@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Calendar, Users, MapPin, Plus, Trash2, X } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
+import { useLanguage } from "@/context/LanguageContext";
+
 
 interface Meeting {
   id: number;
@@ -55,6 +57,7 @@ const INITIAL_MEETINGS: Meeting[] = [
 ];
 
 export default function Meetings() {
+    const { t } = useLanguage();
   const [meetings, setMeetings] = useState<Meeting[]>(() => {
     const saved = localStorage.getItem("politico_meetings");
     return saved ? JSON.parse(saved) : INITIAL_MEETINGS;
@@ -98,7 +101,7 @@ export default function Meetings() {
   };
 
   return (
-    <DashboardLayout title="Meetings" subtitle="Manage meetings, agendas & minutes">
+    <DashboardLayout title={t("nav.meetings")} subtitle="Manage meetings, agendas & minutes">
       <div className="max-w-5xl mx-auto px-2 space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold text-gray-900">All Meetings</h2>
@@ -107,8 +110,7 @@ export default function Meetings() {
               onClick={() => setMeetings([])} 
               className="flex items-center gap-3 bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 px-6 py-3 rounded-2xl text-sm font-black uppercase tracking-widest transition-all shadow-sm active:scale-95"
             >
-              <Trash2 className="w-4 h-4" /> Delete All
-            </button>
+              <Trash2 className="w-4 h-4" />{t("announcements.deleteAll")}</button>
             <button 
               onClick={() => setShowAddForm(true)} 
               className="flex items-center gap-3 bg-[#B91C1C] hover:bg-[#991717] text-white px-6 py-3 rounded-2xl text-sm font-black uppercase tracking-widest transition-all shadow-xl active:scale-95"
@@ -124,8 +126,7 @@ export default function Meetings() {
             <div className="w-full max-w-md bg-white border border-gray-200 rounded-2xl p-6 shadow-2xl space-y-6">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-red-500" /> Schedule Meeting
-                </h3>
+                  <Calendar className="w-5 h-5 text-red-500" />{t("meetings.schedule")}</h3>
                 <button 
                   onClick={() => setShowAddForm(false)} 
                   className="p-1 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-900 transition-colors"
@@ -172,7 +173,7 @@ export default function Meetings() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-sm font-black uppercase tracking-widest text-gray-500">Location</label>
+                    <label className="text-sm font-black uppercase tracking-widest text-gray-500">{t("grievances.location")}</label>
                     <input 
                       type="text" 
                       value={newLocation} 
@@ -183,7 +184,7 @@ export default function Meetings() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-sm font-black uppercase tracking-widest text-gray-500">Status</label>
+                    <label className="text-sm font-black uppercase tracking-widest text-gray-500">{t("dashboard.status")}</label>
                     <select 
                       value={newStatus} 
                       onChange={e => setNewStatus(e.target.value as "Scheduled" | "Completed")}
@@ -198,9 +199,7 @@ export default function Meetings() {
                 <button 
                   type="submit" 
                   className="w-full py-4 bg-red-600 hover:bg-red-700 text-white text-base font-black uppercase tracking-widest transition-all rounded-xl shadow-lg shadow-red-950/20 active:scale-95"
-                >
-                  Schedule Meeting
-                </button>
+                >{t("meetings.schedule")}</button>
               </form>
             </div>
           </div>

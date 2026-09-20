@@ -23,6 +23,7 @@ const STEP_LABELS: Record<FlowStep, string> = {
 };
 
 export default function VoiceAssistant() {
+
   const { login, addComplaint } = useComplaints();
   const { langTag, t } = useLanguage();
   const [open, setOpen] = useState(false);
@@ -205,7 +206,7 @@ export default function VoiceAssistant() {
                 {/* Success ticket */}
                 {step === 'done' && ticketId && (
                   <div className="mt-3 bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-center">
-                    <p className="text-base text-emerald-700 font-bold uppercase tracking-widest mb-1">Case ID</p>
+                    <p className="text-base text-emerald-700 font-bold uppercase tracking-widest mb-1">{t("dashboard.caseId")}</p>
                     <p className="text-lg font-black text-emerald-800 font-mono">{ticketId}</p>
                   </div>
                 )}

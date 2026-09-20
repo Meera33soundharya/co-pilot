@@ -209,4 +209,24 @@ export const api = {
       return res.json();
     },
   },
+
+  translate: {
+    translateText: async (text: string, targetLanguage: string): Promise<{ translation: string }> => {
+      const res = await fetch("/api/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, target_language: targetLanguage }),
+      });
+      if (!res.ok) {
+        const errorText = await res.text();
+        let errorMsg = "Translation failed";
+        try {
+          const parsed = JSON.parse(errorText);
+          if (parsed.detail) errorMsg = parsed.detail;
+        } catch {}
+        throw new Error(errorMsg);
+      }
+      return res.json();
+    },
+  },
 };

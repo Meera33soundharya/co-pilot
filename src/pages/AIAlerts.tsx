@@ -1,6 +1,8 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { useState } from "react";
 import { AlertTriangle, Info, Zap, Filter, BellOff, Eye, ArrowRight, Activity, X, CheckCircle2 } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
+
 
 type AlertSeverity = "Critical" | "High" | "Medium" | "Low";
 
@@ -40,6 +42,7 @@ const statusStyle: Record<string, string> = {
 };
 
 export default function AIAlerts() {
+    const { t } = useLanguage();
     const [severityFilter, setSeverityFilter] = useState<string>("All");
     const [statusFilter, setStatusFilter] = useState<string>("All");
     const [alertStatuses, setAlertStatuses] = useState<Record<string, string>>({});
@@ -77,14 +80,14 @@ export default function AIAlerts() {
                         <div className="p-6 space-y-4">
                             <p className="text-lg text-gray-700 leading-relaxed">{detail.description}</p>
                             <div className="grid grid-cols-2 gap-3 text-base">
-                                <div><p className="text-gray-400 font-bold uppercase tracking-widest text-sm mb-0.5">Ward</p><p className="font-bold text-gray-800">{detail.ward}</p></div>
-                                <div><p className="text-gray-400 font-bold uppercase tracking-widest text-sm mb-0.5">Category</p><p className="font-bold text-gray-800">{detail.category}</p></div>
+                                <div><p className="text-gray-400 font-bold uppercase tracking-widest text-sm mb-0.5">{t("dashboard.ward")}</p><p className="font-bold text-gray-800">{detail.ward}</p></div>
+                                <div><p className="text-gray-400 font-bold uppercase tracking-widest text-sm mb-0.5">{t("common.category")}</p><p className="font-bold text-gray-800">{detail.category}</p></div>
                                 <div><p className="text-gray-400 font-bold uppercase tracking-widest text-sm mb-0.5">Severity</p><p className="font-bold" style={{ color: detail.severity === 'Critical' ? '#B91C1C' : '#D97706' }}>{detail.severity}</p></div>
                                 <div><p className="text-gray-400 font-bold uppercase tracking-widest text-sm mb-0.5">AI Confidence</p><p className="font-bold text-red-600">{detail.aiConfidence}%</p></div>
                             </div>
                             <div className="flex gap-3 pt-2">
                                 <button onClick={() => { handleAcknowledge(detail.id); setDetail(null); }} className="flex-1 py-2.5 rounded-xl bg-amber-50 text-amber-700 text-base font-black uppercase tracking-widest hover:bg-amber-100 transition-all">Acknowledge</button>
-                                <button onClick={() => { handleResolve(detail.id); setDetail(null); }} className="flex-1 py-2.5 rounded-xl text-white text-base font-black uppercase tracking-widest transition-all" style={{ backgroundColor: '#B91C1C' }}>Mark Resolved</button>
+                                <button onClick={() => { handleResolve(detail.id); setDetail(null); }} className="flex-1 py-2.5 rounded-xl text-white text-base font-black uppercase tracking-widest transition-all" style={{ backgroundColor: '#B91C1C' }}>{t("field.resolve")}</button>
                             </div>
                         </div>
                     </div>
@@ -184,8 +187,7 @@ export default function AIAlerts() {
                                                     onClick={() => handleDismiss(alertItem.id)}
                                                     className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-xl text-sm font-black text-gray-600 hover:bg-gray-200 transition-all"
                                                 >
-                                                    <BellOff className="w-3 h-3" /> Dismiss
-                                                </button>
+                                                    <BellOff className="w-3 h-3" />{t("common.dismiss")}</button>
                                                 {currentStatus !== "acknowledged" && currentStatus !== "resolved" && (
                                                     <button
                                                         onClick={() => handleAcknowledge(alertItem.id)}
@@ -200,8 +202,7 @@ export default function AIAlerts() {
                                                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-black text-white hover:opacity-90 transition-all shadow-md"
                                                         style={{ backgroundColor: '#B91C1C' }}
                                                     >
-                                                        <CheckCircle2 className="w-3 h-3" /> Resolve
-                                                    </button>
+                                                        <CheckCircle2 className="w-3 h-3" />{t("common.resolve")}</button>
                                                 )}
                                                 <button
                                                     onClick={() => setDetail(alertItem)}

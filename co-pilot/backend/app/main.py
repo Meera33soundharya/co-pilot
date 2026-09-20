@@ -24,7 +24,7 @@ logger.info("🚀 GovPilot Backend starting up...")
 # ─────────────────────────────────────────────────────────────
 from app.database.db import engine, Base, SessionLocal
 from app.models.models import DbUser, DbComplaint, DbAuditEntry
-from app.routes import auth, complaints, documents, speech
+from app.routes import auth, complaints, documents, speech, translate
 
 # ─────────────────────────────────────────────────────────────
 # Create all DB tables (idempotent — safe to call every startup)
@@ -147,6 +147,7 @@ app.include_router(auth.router, prefix="/api")
 app.include_router(complaints.router, prefix="/api")
 app.include_router(documents.router, prefix="/api")
 app.include_router(speech.router, prefix="/api")
+app.include_router(translate.router, prefix="/api")
 logger.info("✅ All API routes registered")
 
 

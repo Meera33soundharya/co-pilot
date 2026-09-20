@@ -2,7 +2,9 @@ import { useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useComplaints } from "@/context/ComplaintsContext";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/context/LanguageContext";
 import {
+
     User, Phone, Mail, MapPin, Shield, Building2,
     Edit3, Save, X, CheckCircle2, Camera, LogOut,
     Bell, Lock, Globe, Star, FileText, Clock,
@@ -58,6 +60,7 @@ function StatCard({ icon: Icon, label, value, color }: { icon: any; label: strin
 
 // ── Main Page ──────────────────────────────────────────────────────────
 export default function Profile() {
+    const { t } = useLanguage();
     const { currentUser, logout, complaints } = useComplaints();
     const navigate = useNavigate();
 
@@ -114,7 +117,7 @@ export default function Profile() {
     }
 
     return (
-        <DashboardLayout title="My Profile" subtitle="Manage your account, preferences, and settings">
+        <DashboardLayout title={t("profile.title")} subtitle="Manage your account, preferences, and settings">
 
             {/* Toast */}
             {toast && (
@@ -136,8 +139,7 @@ export default function Profile() {
                         }} />
                         {/* AI Badge */}
                         <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-white/20 backdrop-blur-sm text-white text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest">
-                            <Sparkles className="w-3 h-3" /> AI Co-Pilot
-                        </div>
+                            <Sparkles className="w-3 h-3" />{t("nav.aiCopilot")}</div>
                     </div>
 
                     <div className="px-8 pb-8">
@@ -159,12 +161,10 @@ export default function Profile() {
                                     <>
                                         <button onClick={() => setEditing(false)}
                                             className="flex items-center gap-2 px-4 py-2.5 border border-gray-200 rounded-2xl text-base font-black text-gray-500 hover:bg-gray-50 transition-all">
-                                            <X className="w-3.5 h-3.5" /> Cancel
-                                        </button>
+                                            <X className="w-3.5 h-3.5" />{t("common.cancel")}</button>
                                         <button onClick={doSave}
                                             className="flex items-center gap-2 px-5 py-2.5 bg-[#B91C1C] text-white rounded-2xl text-base font-black hover:bg-red-800 transition-all shadow-lg shadow-red-200">
-                                            <Save className="w-3.5 h-3.5" /> Save Changes
-                                        </button>
+                                            <Save className="w-3.5 h-3.5" />{t("profile.save")}</button>
                                     </>
                                 )}
                             </div>
@@ -281,7 +281,7 @@ export default function Profile() {
                         <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm space-y-3">
                             <div className="flex items-center gap-2">
                                 <Lock className="w-4 h-4 text-gray-400" />
-                                <h4 className="font-black text-gray-900 text-lg">Security</h4>
+                                <h4 className="font-black text-gray-900 text-lg">{t("settings.security")}</h4>
                             </div>
 
                             <button onClick={() => setShowPwdPanel(!showPwdPanel)}
@@ -338,8 +338,7 @@ export default function Profile() {
                         {/* Logout */}
                         <button onClick={doLogout}
                             className="w-full flex items-center justify-center gap-2.5 py-4 bg-red-50 border border-red-100 text-[#B91C1C] rounded-3xl text-base font-black uppercase tracking-widest hover:bg-[#B91C1C] hover:text-white transition-all shadow-sm">
-                            <LogOut className="w-4 h-4" /> Sign Out
-                        </button>
+                            <LogOut className="w-4 h-4" />{t("common.signOut")}</button>
                     </div>
                 </div>
             </div>

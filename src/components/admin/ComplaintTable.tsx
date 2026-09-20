@@ -1,7 +1,10 @@
 import React, { useMemo, useState } from "react";
 import { useComplaints } from "@/context/ComplaintsContext";
+import { useLanguage } from "@/context/LanguageContext";
+
 
 export default function ComplaintTable() {
+    const { t } = useLanguage();
   const { complaints } = useComplaints();
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("All");
@@ -27,11 +30,11 @@ export default function ComplaintTable() {
         <div className="flex items-center gap-2">
           <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search complaints" className="px-3 py-1.5 rounded-lg border text-lg" />
           <select value={status} onChange={e => setStatus(e.target.value)} className="px-3 py-1.5 rounded-lg border text-lg">
-            <option>All</option>
-            <option>New</option>
-            <option>Assigned</option>
+            <option>{t("common.all")}</option>
+            <option>{t("common.new")}</option>
+            <option>{t("dashboard.assigned")}</option>
             <option>In Progress</option>
-            <option>Resolved</option>
+            <option>{t("dashboard.resolved")}</option>
             <option>Closed</option>
           </select>
         </div>
@@ -43,10 +46,10 @@ export default function ComplaintTable() {
             <tr>
               <th className="p-3">ID</th>
               <th className="p-3">Title</th>
-              <th className="p-3">Ward</th>
-              <th className="p-3">Status</th>
-              <th className="p-3">Assigned To</th>
-              <th className="p-3">Priority</th>
+              <th className="p-3">{t("dashboard.ward")}</th>
+              <th className="p-3">{t("dashboard.status")}</th>
+              <th className="p-3">{t("field.assignedTo")}</th>
+              <th className="p-3">{t("common.priority")}</th>
             </tr>
           </thead>
           <tbody>

@@ -1,5 +1,7 @@
 import { Component } from "react";
 import type { ErrorInfo, ReactNode } from "react";
+import { useLanguage } from "@/context/LanguageContext";
+
 
 interface Props {
   children: ReactNode;
@@ -26,7 +28,7 @@ export class ErrorBoundary extends Component<Props, State> {
       return this.props.fallback ?? (
         <div className="min-h-screen bg-[#0A0F1C] text-white flex items-center justify-center px-6">
           <div className="max-w-xl rounded-[2rem] border border-white/10 bg-white/10 p-8 text-center shadow-2xl backdrop-blur-xl">
-            <p className="text-sm font-black uppercase tracking-[0.35em] text-white/50">GovPilot</p>
+            <p className="text-sm font-black uppercase tracking-[0.35em] text-white/50">{"login.title"}</p>
             <h1 className="mt-4 text-2xl font-black">Something went wrong</h1>
             <p className="mt-3 text-base text-white/70">
               The app hit a runtime error. Refreshing the page should restore the dashboard.

@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { MapPin, TrendingUp, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/context/LanguageContext";
+
 
 const wards = [
     { id: "W01", name: "Ward 01", x: 20, y: 20, w: 90, h: 70, cases: 176, resolved: 154, risk: "low", dept: "Education" },
@@ -28,6 +30,7 @@ const riskConfig = {
 };
 
 export function WardHeatmap() {
+    const { t } = useLanguage();
     const navigate = useNavigate();
     const [hovered, setHovered] = useState<string | null>(null);
 
@@ -136,7 +139,7 @@ export function WardHeatmap() {
                                     <span className="font-black text-gray-900">{hoveredWard.cases}</span>
                                 </div>
                                 <div className="flex justify-between text-base">
-                                    <span className="text-gray-500 font-bold">Resolved</span>
+                                    <span className="text-gray-500 font-bold">{t("dashboard.resolved")}</span>
                                     <span className="font-black text-emerald-600">{hoveredWard.resolved}</span>
                                 </div>
                                 <div className="flex justify-between text-base">

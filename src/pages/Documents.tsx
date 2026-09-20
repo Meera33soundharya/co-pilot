@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from "react";
+﻿import React, { useState, useMemo, useRef } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { 
     FileText, FolderOpen, Download, Search, Upload, Clock, 
@@ -9,6 +9,7 @@ import { useDocuments, type DocumentRecord, type DocumentCategory } from "@/cont
 import { useComplaints } from "@/context/ComplaintsContext";
 import { DocumentPreviewModal } from "@/components/documents/DocumentPreviewModal";
 import { ManualUploadModal } from "@/components/documents/ManualUploadModal";
+import { useLanguage } from "@/context/LanguageContext";
 
 const categories: { name: DocumentCategory; icon: React.ReactNode; color: string; countStr: string }[] = [
     { name: "Complaint Documents", icon: <AlertCircle className="w-6 h-6" />, color: "text-amber-600", countStr: "Active Issues" },
@@ -27,6 +28,7 @@ const statusStyles = {
 };
 
 export default function Documents() {
+    const { t } = useLanguage();
     const { allDocuments, uploadDocument, deleteDocument, updateStatus } = useDocuments();
     const { currentUser } = useComplaints();
     
@@ -118,7 +120,7 @@ export default function Documents() {
     };
 
     return (
-        <DashboardLayout title="Document Management" subtitle="Enterprise Document System & Secure Registry">
+        <DashboardLayout title={t("documents.title", "Document Management")} subtitle={t("documents.subtitle", "Enterprise Document System & Secure Registry")}>
             
             {previewDoc && (
                 <DocumentPreviewModal 
@@ -166,7 +168,7 @@ export default function Documents() {
                     <div className="w-20 h-20 bg-indigo-50 border border-indigo-100 shadow-sm rounded-full flex items-center justify-center mb-4 transition-transform hover:scale-110">
                         <UploadCloud className={`w-10 h-10 ${isDragging ? "text-indigo-600" : "text-indigo-500"}`} />
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">AI Bulk Upload & Auto-Categorization</h3>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">{t("documents.bulkUpload", "AI Bulk Upload & Auto-Categorization")}</h3>
                     <p className="text-gray-500 font-medium text-lg mb-4 max-w-xl mx-auto">
                         Drag & drop multiple files here. Our AI engine will automatically scan, classify, and extract data from your documents.
                     </p>
@@ -211,7 +213,7 @@ export default function Documents() {
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <input
                             type="text"
-                            placeholder="Search by ID, Citizen, Officer, Department, or Keyword..."
+                            placeholder={t("documents.search", "Search by ID, Citizen, Officer, Department, or Keyword...")}
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-none rounded-xl font-medium text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-500/20"
@@ -350,3 +352,6 @@ export default function Documents() {
         </DashboardLayout>
     );
 }
+
+
+

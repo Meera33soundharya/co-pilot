@@ -1,4 +1,6 @@
 import React from "react";
+import { useLanguage } from "@/context/LanguageContext";
+
 
 const draft = [
   { id: 1, title: 'Youth Employment Response', source: 'Reuters', due: 'Jun 17' },
@@ -14,12 +16,11 @@ const published = [
 ];
 
 export default function MediaQueueBoard() {
+    const { t } = useLanguage();
   return (
     <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm relative overflow-hidden">
       <h3 className="text-sm font-black text-gray-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-3">
-        <div className="w-1.5 h-1.5 rounded-full bg-[#B91C1C]" />
-        Media Queue
-      </h3>
+        <div className="w-1.5 h-1.5 rounded-full bg-[#B91C1C]" />{t("nav.mediaQueue")}</h3>
       <div className="flex flex-col gap-6">
         <div>
           <div className="text-base font-black uppercase text-gray-400 mb-2">Draft</div>

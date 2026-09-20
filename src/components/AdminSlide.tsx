@@ -1,6 +1,7 @@
-import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
+import { useLanguage } from "@/context/LanguageContext";
+
 
 type NavItem = { icon?: any; label: string; path: string; badge?: string };
 type NavGroup = { group: string; items: NavItem[] };
@@ -13,7 +14,7 @@ export default function AdminSlide({ open, onClose, navGroups }: { open: boolean
       <aside className="fixed left-0 top-0 bottom-0 w-72 bg-white z-70 shadow-2xl border-r border-gray-100 p-4 overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-black">Admin Quick Nav</h3>
-          <button onClick={onClose} className="text-gray-400">Close</button>
+          <button onClick={onClose} className="text-gray-400">{t("common.close")}</button>
         </div>
 
         {navGroups.map(g => (

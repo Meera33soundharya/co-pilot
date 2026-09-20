@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   Search, FileText, FileImage, FileVideo, FileAudio,
   X, Eye, Download, RotateCcw, AlertCircle, Trash, Trash2,
@@ -199,11 +200,13 @@ function PriorityPicker({ item, onChange, onClose }: {
 // ─── Detail Side Panel ────────────────────────────────────────────────────────
 type PanelTab = "details" | "logs";
 
-function DetailPanel({ item, onClose, onReprocess }: {
+function DetailPanel({
+  item, onClose, onReprocess }: {
   item: QueueItem;
   onClose: () => void;
   onReprocess: (id: string) => void;
 }) {
+  const { t } = useLanguage();
   const [tab, setTab] = useState<PanelTab>("details");
   const navigate = useNavigate();
 
@@ -275,7 +278,7 @@ function DetailPanel({ item, onClose, onReprocess }: {
 
               {/* Status + progress */}
               <div className="space-y-2">
-                <div className="text-xs font-black text-gray-400 uppercase tracking-widest">Status</div>
+                <div className="text-xs font-black text-gray-400 uppercase tracking-widest">{t("dashboard.status")}</div>
                 <div className="flex items-center gap-3">
                   <span className={`px-3 py-1 rounded-full text-sm font-black uppercase ${statusBadgeClass(item.status)}`}>
                     {item.status}
@@ -309,7 +312,7 @@ function DetailPanel({ item, onClose, onReprocess }: {
 
               {/* Priority */}
               <div className="space-y-1">
-                <div className="text-xs font-black text-gray-400 uppercase tracking-widest">Priority</div>
+                <div className="text-xs font-black text-gray-400 uppercase tracking-widest">{t("common.priority")}</div>
                 <span className={`inline-flex px-3 py-1 rounded-full text-sm font-black border ${priorityClass(item.priority)}`}>
                   {item.priority}
                 </span>
@@ -409,7 +412,7 @@ function DetailPanel({ item, onClose, onReprocess }: {
 
         {/* Footer */}
         <div className="px-6 py-3 border-t border-gray-100 flex items-center gap-1 text-xs text-gray-400">
-          <span>Media Queue</span>
+          <span>{t("mediaQueue.title", "Media Queue")}</span>
           <ChevronRight className="w-3 h-3" />
           <span>{item.complaintId}</span>
           <ChevronRight className="w-3 h-3" />
@@ -517,6 +520,7 @@ function ActionCell({ item, onAction, onView, onLogs, onComplaint }: ActionCellP
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function MediaQueue() {
+    const { t } = useLanguage();
   const navigate = useNavigate();
   const [items, setItems]               = useState<QueueItem[]>(INITIAL_DATA);
   const [search, setSearch]             = useState("");
@@ -573,7 +577,7 @@ export default function MediaQueue() {
 
   return (
     <DashboardLayout
-      title="Media Queue"
+      title={t("nav.mediaQueue")}
       subtitle="AI-powered automated ingestion, OCR, and evidence analysis pipeline."
     >
       <div className="space-y-5">
@@ -596,110 +600,28 @@ export default function MediaQueue() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
               type="text"
-              placeholder="Search by Queue ID, Complaint ID, or File Name…"
+              placeholder={t("mediaQueue.searchPlaceholder", "Search by Queue ID, Complaint ID, or File Name…")}
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as "All" | Status)}
-            className="px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none cursor-pointer">
-            <option value="All">All Statuses</option>
-            {(["Uploading","Queued","Processing","Completed","Failed","Cancelled"] as Status[]).map(s => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-          <select value={typeFilter} onChange={e => setTypeFilter(e.target.value as "All" | FileType)}
-            className="px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none cursor-pointer">
-            <option value="All">All Types</option>
-            {(["PDF","Image","Video","Audio","Doc"] as FileType[]).map(t => (
-              <option key={t} value={t}>{t}</option>
-            ))}
-          </select>
         </div>
 
-        {/* Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
-          <table className="min-w-full text-sm border-collapse">
-            <thead>
-              <tr className="border-b border-gray-100 bg-gray-50 text-[11px] font-black text-gray-400 uppercase tracking-widest">
-                <th className="px-4 py-4 text-left whitespace-nowrap">Queue / Complaint</th>
-                <th className="px-4 py-4 text-left whitespace-nowrap">File Info</th>
-                <th className="px-4 py-4 text-left whitespace-nowrap">Status &amp; Progress</th>
-                <th className="px-4 py-4 text-left whitespace-nowrap">Priority</th>
-                <th className="px-4 py-4 text-left whitespace-nowrap">AI Service</th>
-                <th className="px-4 py-4 text-left whitespace-nowrap">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {filtered.map(item => (
-                <tr key={item.id} className="hover:bg-blue-50/20 transition-colors group">
-
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    <div className="font-bold text-gray-900 text-base">{item.id}</div>
-                    <button
-                      onClick={() => navigate(`/complaints/${item.complaintId}`)}
-                      className="text-blue-600 text-sm hover:underline flex items-center gap-1"
-                    >
-                      {item.complaintId} <ExternalLink className="w-3 h-3" />
-                    </button>
-                    <div className="text-gray-400 text-xs mt-0.5">{item.date}</div>
-                  </td>
-
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2.5 bg-gray-50 rounded-lg border border-gray-100 shrink-0">
-                        <FileIcon type={item.fileType} />
-                      </div>
-                      <div>
-                        <div className="font-semibold text-gray-800 text-base max-w-[220px] truncate">{item.fileName}</div>
-                        <div className="text-gray-400 text-sm">{item.fileSize}</div>
+        {/* Media Table */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <table className="w-full">
+            <tbody>
+              {filtered.map(i => (
+                <tr key={i.id} className="border-b border-gray-100">
+                  <td colSpan={6} className="px-4 py-4">
+                    <div className="flex items-center justify-between">
+                      <span>{i.fileName}</span>
+                      <div className="flex gap-2">
+                        <button onClick={() => openPanel(i, "logs")}>Logs</button>
+                        <button onClick={() => navigate(`/complaints/${i.complaintId}`)}>Complaint</button>
                       </div>
                     </div>
-                  </td>
-
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className={`px-3 py-1 rounded-full text-sm font-black uppercase tracking-wide ${statusBadgeClass(item.status)}`}>
-                        {item.status}
-                      </span>
-                      {item.status === "Failed" && (
-                        <span className="text-sm font-bold text-red-500">
-                          {item.retryCount ?? 0}/{item.maxRetries ?? 3} retries
-                        </span>
-                      )}
-                    </div>
-                    {["Uploading","Processing","Completed","Failed"].includes(item.status) && (
-                      <div className="w-32 h-2 bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all ${progressBarColor(item.status)}`}
-                          style={{ width: `${item.progress}%` }}
-                        />
-                      </div>
-                    )}
-                  </td>
-
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    <span className={`px-3 py-1.5 rounded-full text-sm font-black border ${priorityClass(item.priority)}`}>
-                      {item.priority}
-                    </span>
-                  </td>
-
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-1.5 text-purple-600 font-bold text-base">
-                      <Sparkles className="w-4 h-4 shrink-0" />
-                      {item.aiService}
-                    </div>
-                  </td>
-
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    <ActionCell
-                      item={item}
-                      onAction={handleAction}
-                      onView={i => openPanel(i, "details")}
-                      onLogs={i => openPanel(i, "logs")}
-                      onComplaint={cid => navigate(`/complaints/${cid}`)}
-                    />
                   </td>
                 </tr>
               ))}
@@ -727,3 +649,14 @@ export default function MediaQueue() {
     </DashboardLayout>
   );
 }
+
+
+
+
+
+
+
+
+
+
+

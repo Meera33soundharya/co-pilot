@@ -1,7 +1,9 @@
-import React, { useState, useRef } from "react";
+import { useState, useRef } from "react";
 import { X, Upload, FileText } from "lucide-react";
 import { useDocuments, type DocumentCategory } from "@/context/DocumentContext";
 import { useComplaints } from "@/context/ComplaintsContext";
+import { useLanguage } from "@/context/LanguageContext";
+
 
 export function ManualUploadModal({ onClose }: { onClose: () => void }) {
     const { uploadDocument } = useDocuments();
@@ -88,7 +90,7 @@ export function ManualUploadModal({ onClose }: { onClose: () => void }) {
                     </div>
 
                     <div className="pt-2 flex items-center justify-end gap-3">
-                        <button type="button" onClick={onClose} className="px-6 py-2.5 rounded-xl text-gray-600 font-bold hover:bg-gray-100 transition-colors">Cancel</button>
+                        <button type="button" onClick={onClose} className="px-6 py-2.5 rounded-xl text-gray-600 font-bold hover:bg-gray-100 transition-colors">{t("common.cancel")}</button>
                         <button type="submit" disabled={!file} className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold disabled:opacity-50 flex items-center gap-2 shadow-md shadow-indigo-600/20 transition-all">
                             <Upload className="w-4 h-4" /> Upload & Save
                         </button>

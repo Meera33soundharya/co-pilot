@@ -6,6 +6,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   PieChart, Pie, Cell, LineChart, Line, ResponsiveContainer, Legend
 } from "recharts";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   AlertTriangle, CheckCircle2, Clock, Users, TrendingUp,
   Search, Filter, ChevronDown, X, Eye, RefreshCw,
@@ -92,7 +93,7 @@ function AssignModal({
         </div>
         <div className="space-y-3">
           <div>
-            <label className="text-xs font-semibold text-gray-500 mb-1 block">Department</label>
+            <label className="text-xs font-semibold text-gray-500 mb-1 block">{t("grievances.dept")}</label>
             <select
               value={dept}
               onChange={e => setDept(e.target.value)}
@@ -112,9 +113,7 @@ function AssignModal({
           </div>
         </div>
         <div className="flex gap-2 mt-5">
-          <button onClick={onClose} className="flex-1 py-2.5 border border-gray-200 text-gray-600 text-sm font-semibold rounded-xl hover:bg-gray-50">
-            Cancel
-          </button>
+          <button onClick={onClose} className="flex-1 py-2.5 border border-gray-200 text-gray-600 text-sm font-semibold rounded-xl hover:bg-gray-50">{t("common.cancel")}</button>
           <button
             onClick={() => { onAssign(dept, officer); onClose(); }}
             className="flex-1 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700"
@@ -186,6 +185,7 @@ function ViewModal({ complaint, onClose }: { complaint: Complaint; onClose: () =
 
 // ── Main Component ─────────────────────────────────────────────
 export default function AdminPanel() {
+  const { t } = useLanguage();
   const { allComplaints, updateStatus, assignComplaint } = useComplaints();
 
   const [search, setSearch]           = useState("");
@@ -420,7 +420,7 @@ export default function AdminPanel() {
                       <td className="px-4 py-3 text-gray-700 whitespace-nowrap text-xs">{c.dept}</td>
                       <td className="px-4 py-3 text-gray-700 text-xs whitespace-nowrap">{c.ward}</td>
                       <td className="px-4 py-3 text-xs text-gray-600 whitespace-nowrap">
-                        {c.assignedTo || <span className="text-gray-300 italic">Unassigned</span>}
+                        {c.assignedTo || <span className="text-gray-300 italic">{t("grievances.unassigned")}</span>}
                       </td>
                       <td className="px-4 py-3"><StatusBadge status={c.status} /></td>
                       <td className="px-4 py-3"><PriorityBadge priority={c.priority} /></td>

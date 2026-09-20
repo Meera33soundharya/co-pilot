@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Clock, MapPin, Plus, Trash2, Calendar, X, ChevronLeft, ChevronRight } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
+import { useLanguage } from "@/context/LanguageContext";
+
 
 interface ScheduleEvent {
   id: number;
@@ -99,6 +101,7 @@ function migrateLegacy(events: any[]): ScheduleEvent[] {
 
 // ── Component ───────────────────────────────────────────────────
 export default function Schedule() {
+    const { t } = useLanguage();
   const [events, setEvents] = useState<ScheduleEvent[]>(() => {
     try {
       const saved = localStorage.getItem("politico_events_v2");
@@ -186,7 +189,7 @@ export default function Schedule() {
   );
 
   return (
-    <DashboardLayout title="Schedule" subtitle="Operational event calendar">
+    <DashboardLayout title={t("nav.schedule")} subtitle="Operational event calendar">
       <div className="max-w-5xl mx-auto space-y-6 px-2">
 
         {/* ── Calendar Block ── */}
@@ -198,8 +201,7 @@ export default function Schedule() {
                 onClick={() => setEvents([])}
                 className="px-4 py-2 flex items-center gap-2 rounded bg-red-500/10 text-sm font-bold text-red-500 border border-red-500/20 hover:bg-red-500/20 transition-colors active:scale-95"
               >
-                <Trash2 className="w-4 h-4" /> Delete All
-              </button>
+                <Trash2 className="w-4 h-4" />{t("announcements.deleteAll")}</button>
               <button
                 onClick={() => { setNewDate(today); setShowAddForm(true); }}
                 className="px-4 py-2 flex items-center gap-2 rounded bg-red-600 text-sm font-bold text-white hover:bg-red-700 transition-colors shadow-lg shadow-red-900/20 active:scale-95"

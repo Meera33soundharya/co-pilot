@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { X, CheckCircle2, Loader2, MapPin, User, Tag, AlertTriangle } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
+
 
 interface NewGrievanceModalProps {
     isOpen: boolean;
@@ -11,6 +13,7 @@ const wards = ["Ward 01", "Ward 02", "Ward 03", "Ward 04", "Ward 05", "Ward 06",
 const priorities = ["Low", "Medium", "High"];
 
 export function NewGrievanceModal({ isOpen, onClose }: NewGrievanceModalProps) {
+    const { t } = useLanguage();
     const [step, setStep] = useState<"form" | "loading" | "success">("form");
     const [form, setForm] = useState({
         citizen: "",
@@ -125,8 +128,7 @@ export function NewGrievanceModal({ isOpen, onClose }: NewGrievanceModalProps) {
                         {/* Priority */}
                         <div className="space-y-1.5">
                             <label className="flex items-center gap-1.5 text-sm font-black uppercase tracking-widest text-gray-500">
-                                <AlertTriangle className="w-3 h-3" /> Priority
-                            </label>
+                                <AlertTriangle className="w-3 h-3" />{t("common.priority")}</label>
                             <div className="flex gap-3">
                                 {priorities.map(p => {
                                     const colors = {
