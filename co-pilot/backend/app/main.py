@@ -23,8 +23,8 @@ logger.info("🚀 GovPilot Backend starting up...")
 # Import DB and models AFTER logging so retry messages appear
 # ─────────────────────────────────────────────────────────────
 from app.database.db import engine, Base, SessionLocal
-from app.models.models import DbUser, DbComplaint, DbAuditEntry
-from app.routes import auth, complaints, documents, speech, translate
+from app.models.models import DbUser, DbComplaint, DbAuditEntry, DbDepartment, DbOfficer, DbNotification, DbAnnouncement
+from app.routes import auth, complaints, documents, speech, translate, departments, officers, notifications, announcements, copilot
 
 # ─────────────────────────────────────────────────────────────
 # Create all DB tables (idempotent — safe to call every startup)
@@ -145,6 +145,11 @@ seed_database()
 # ─────────────────────────────────────────────────────────────
 app.include_router(auth.router, prefix="/api")
 app.include_router(complaints.router, prefix="/api")
+app.include_router(departments.router, prefix="/api")
+app.include_router(officers.router, prefix="/api")
+app.include_router(notifications.router, prefix="/api")
+app.include_router(announcements.router, prefix="/api")
+app.include_router(copilot.router, prefix="/api")
 app.include_router(documents.router, prefix="/api")
 app.include_router(speech.router, prefix="/api")
 app.include_router(translate.router, prefix="/api")

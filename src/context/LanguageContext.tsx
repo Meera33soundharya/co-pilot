@@ -30,7 +30,7 @@ interface LanguageContextValue {
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 
-const STORAGE_KEY = "govpilot_language";
+const STORAGE_KEY = "govpilot_language_v2";
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLang] = useState<Lang>(() => {
@@ -42,6 +42,16 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     }
     return "en";
   });
+
+  // Clear any legacy Google Translate cookies to ensure React DOM stability
+  useEffect(() => {
+    try {
+      document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`;
+    } catch {
+      // ignore
+    }
+  }, []);
 
   // Persist to localStorage whenever language changes
   useEffect(() => {

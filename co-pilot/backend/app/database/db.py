@@ -11,7 +11,9 @@ logger = logging.getLogger(__name__)
 # Database URL — Render provides "postgres://" but SQLAlchemy
 # requires "postgresql://"  Fix it automatically.
 # ─────────────────────────────────────────────────────────────
-raw_url = os.environ.get("DATABASE_URL", "sqlite:///./govpilot.db")
+backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+default_db_path = os.path.join(backend_dir, "govpilot.db").replace("\\", "/")
+raw_url = os.environ.get("DATABASE_URL", f"sqlite:///{default_db_path}")
 if raw_url.startswith("postgres://"):
     raw_url = raw_url.replace("postgres://", "postgresql://", 1)
 

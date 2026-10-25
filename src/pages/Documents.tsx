@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { 
     FileText, FolderOpen, Download, Search, Upload, Clock, 
@@ -133,12 +133,12 @@ export default function Documents() {
             {/* Dashboard Overview Cards */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
                 {[
-                    { label: "Total Documents", value: metrics.total, color: "text-indigo-600", bg: "bg-indigo-50" },
-                    { label: "Pending Verification", value: metrics.pending, color: "text-amber-600", bg: "bg-amber-50" },
-                    { label: "Approved Assets", value: metrics.approved, color: "text-emerald-600", bg: "bg-emerald-50" },
-                    { label: "Resolution Reports", value: metrics.resolutions, color: "text-blue-600", bg: "bg-blue-50" },
-                    { label: "Govt Circulars", value: metrics.circulars, color: "text-purple-600", bg: "bg-purple-50" },
-                    { label: "Meeting Docs", value: metrics.meetings, color: "text-rose-600", bg: "bg-rose-50" },
+                    { label: t("documents.total", "Total Documents"), value: metrics.total, color: "text-indigo-600", bg: "bg-indigo-50" },
+                    { label: t("documents.pending", "Pending Verification"), value: metrics.pending, color: "text-amber-600", bg: "bg-amber-50" },
+                    { label: t("documents.approved", "Approved Assets"), value: metrics.approved, color: "text-emerald-600", bg: "bg-emerald-50" },
+                    { label: t("documents.resolutions", "Resolution Reports"), value: metrics.resolutions, color: "text-blue-600", bg: "bg-blue-50" },
+                    { label: t("documents.circulars", "Govt Circulars"), value: metrics.circulars, color: "text-purple-600", bg: "bg-purple-50" },
+                    { label: t("documents.meetings", "Meeting Docs"), value: metrics.meetings, color: "text-rose-600", bg: "bg-rose-50" },
                 ].map((stat, i) => (
                     <div key={i} className="bg-white/70 backdrop-blur-xl border border-white p-5 rounded-3xl shadow-sm hover:shadow-md transition-shadow">
                         <div className={`w-10 h-10 rounded-xl ${stat.bg} ${stat.color} flex items-center justify-center mb-3`}>
@@ -170,7 +170,7 @@ export default function Documents() {
                     </div>
                     <h3 className="text-2xl font-bold text-gray-900 mb-2">{t("documents.bulkUpload", "AI Bulk Upload & Auto-Categorization")}</h3>
                     <p className="text-gray-500 font-medium text-lg mb-4 max-w-xl mx-auto">
-                        Drag & drop multiple files here. Our AI engine will automatically scan, classify, and extract data from your documents.
+                        {t("documents.bulkUploadDesc", "Drag & drop multiple files here. Our AI engine will automatically scan, classify, and extract data from your documents.")}
                     </p>
                     <div className="flex gap-4">
                         <span className="px-4 py-1.5 bg-gray-100 text-gray-600 text-xs font-bold rounded-full uppercase tracking-wider">PDF</span>
@@ -191,7 +191,7 @@ export default function Documents() {
                             selectedCategory === "All" ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-600 hover:bg-gray-100"
                         }`}
                     >
-                        All Assets
+                        {t("documents.allAssets", "All Assets")}
                     </button>
                     {categories.map(cat => (
                         <button
@@ -202,7 +202,7 @@ export default function Documents() {
                             }`}
                         >
                             <span className={cat.color}>{cat.icon}</span>
-                            {cat.name}
+                            {t(`documents.cat.${cat.name}`, cat.name)}
                         </button>
                     ))}
                 </div>

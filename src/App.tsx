@@ -41,6 +41,7 @@ import Constituency from "./pages/Constituency";
 import AICoPilot from "./pages/AICoPilot";
 import VillageVoicePortal from "./pages/VillageVoicePortal";
 import ResolutionReports from "./pages/ResolutionReports";
+import GlobalTranslationAgent from "./components/GlobalTranslationAgent";
 
 import { Toaster } from 'sonner';
 import { useEffect } from 'react';
@@ -130,11 +131,11 @@ function App() {
               <Route path="/admin-panel" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
-
             {/* Global overlays */}
             <AIAssistant />
             <CommandPalette />
             <VoiceAssistant />
+            <GlobalTranslationAgent />
           </DocumentProvider>
         </BrowserRouter>
       </ComplaintsProvider>

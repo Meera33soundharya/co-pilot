@@ -335,7 +335,7 @@ export const translations: Record<Lang, TranslationDict> = {
     // ── Login ─────────────────────────────────────────────────────
     'login.title': 'GovPilot',
     'login.subtitle': 'Governance Intelligence Platform',
-    'login.welcome': 'Welcome back',
+    'login.welcome': 'Welcome Back',
     'login.selectRole': 'Select your role to continue',
     'login.admin': 'District Administrator',
     'login.officer': 'Field Officer',
@@ -351,6 +351,9 @@ export const translations: Record<Lang, TranslationDict> = {
     'speak_phone': 'Please say your phone number or say skip.',
     'speak_issue': 'Now describe the problem you want to report.',
     'complaint_submitted': 'Your complaint has been submitted. Case ID',
+    'speak_area': 'Please say your area or village.',
+    'speak_ward': 'Please say your ward number.',
+    'review_prompt': 'Please confirm the above details.',
 
     // ── Announcements page strings ────────────────────────────────
     'announcements.postAndManage': 'Post and manage official ward announcements',
@@ -417,6 +420,26 @@ export const translations: Record<Lang, TranslationDict> = {
     'settings.security.sessionTimeoutDesc': 'Auto-logout after 20 minutes of inactivity',
     'settings.security.loginAnomaly': 'Login Anomaly Detection',
     'settings.security.loginAnomalyDesc': 'Alert me of login attempts from non-trusted mobile nodes',
+
+    // ── Documents ──
+    'documents.title': 'Documents',
+    'documents.subtitle': 'Enterprise Document System & Secure Registry',
+    'documents.total': 'Total Documents',
+    'documents.pending': 'Pending Verification',
+    'documents.approved': 'Approved Assets',
+    'documents.resolutions': 'Resolution Reports',
+    'documents.circulars': 'Govt Circulars',
+    'documents.meetings': 'Meeting Docs',
+    'documents.bulkUpload': 'AI Bulk Upload & Auto-Categorization',
+    'documents.bulkUploadDesc': 'Drag & drop multiple files here. Our AI engine will automatically scan, classify, and extract data from your documents.',
+    'documents.allAssets': 'All Assets',
+    'documents.search': 'Search by ID, Citizen, Officer, Department, or Keyword...',
+    'documents.cat.Complaint Documents': 'Complaint Documents',
+    'documents.cat.Resolution Reports': 'Resolution Reports',
+    'documents.cat.Government Circulars': 'Government Circulars',
+    'documents.cat.Meeting Documents': 'Meeting Documents',
+    'documents.cat.Policy Documents': 'Policy Documents',
+    'documents.cat.Field Officer Reports': 'Field Officer Reports',
   },
 
   ta: {
@@ -762,6 +785,14 @@ export const translations: Record<Lang, TranslationDict> = {
     'speak_issue': 'இப்போது புகாரை விவரிக்கவும்.',
     'complaint_submitted': 'உங்கள் புகார் சமர்ப்பிக்கப்பட்டது. வழக்கு ஐடி',
 
+    // ── Voice assistant additional prompts ────────────────────────
+    'ask_area': 'உங்கள் பகுதி அல்லது கிராமத்தின் பெயரை சொல்லுங்கள்.',
+    'ask_ward': 'உங்கள் வார்ட் எண்ணை சொல்லுங்கள்.',
+    'review_details': 'நீங்கள் வழங்கிய விவரங்களை சரிபார்க்கவும்.',
+    'confirm_submission': 'இந்தக் காம்ப்ளெயின்டை சமர்ப்பிக்க உறுதி செய்கிறீர்களா? ஆம்/இல்லை',
+    'edit_prompt': 'எது திருத்த வேண்டும்? (பெயர், தொலைபேசி, புகார், பகுதி, வார்ட்)',
+    'submission_success': 'புகார் வெற்றிகரமாக பதிவு செய்யப்பட்டது.',
+
     // ── Announcements page strings ────────────────────────────────
     'announcements.postAndManage': 'அதிகாரப்பூர்வ வார்டு அறிவிப்புகளை வெளியிட்டு நிர்வகிக்கவும்',
     'announcements.stayUpdated': 'அதிகாரப்பூர்வ அரசு அறிவிப்புகளுடன் புதுப்பித்த நிலையில் இருங்கள்',
@@ -827,5 +858,25 @@ export const translations: Record<Lang, TranslationDict> = {
     'settings.security.sessionTimeoutDesc': '20 நிமிட செயலற்ற நிலையில் தானாக வெளியேறும்',
     'settings.security.loginAnomaly': 'உள்நுழைவு முரண்பாடு கண்டறிதல்',
     'settings.security.loginAnomalyDesc': 'நம்பகமற்ற சாதனங்களில் இருந்து உள்நுழைவு முயற்சிகளை எனக்கு அறிவிக்கவும்',
+
+    // ── Documents ──
+    'documents.title': 'ஆவணங்கள்',
+    'documents.subtitle': 'நிறுவன ஆவண அமைப்பு & பாதுகாப்பான பதிவு',
+    'documents.total': 'மொத்த ஆவணங்கள்',
+    'documents.pending': 'சரிபார்ப்பு நிலுவை',
+    'documents.approved': 'அங்கீகரிக்கப்பட்டவை',
+    'documents.resolutions': 'தீர்வு அறிக்கைகள்',
+    'documents.circulars': 'அரசு சுற்றறிக்கைகள்',
+    'documents.meetings': 'கூட்ட ஆவணங்கள்',
+    'documents.bulkUpload': 'AI மொத்த பதிவேற்றம் & தானியங்கி வகைப்பாடு',
+    'documents.bulkUploadDesc': 'கோப்புகளை இங்கே இழுத்து விடவும். எங்கள் AI இன்ஜின் உங்கள் ஆவணங்களை ஸ்கேன் செய்து பிரித்தெடுக்கும்.',
+    'documents.allAssets': 'அனைத்து ஆவணங்கள்',
+    'documents.search': 'ஐடி, குடிமகன், அதிகாரி, துறை அல்லது முக்கிய சொல் மூலம் தேடுக...',
+    'documents.cat.Complaint Documents': 'புகார் ஆவணங்கள்',
+    'documents.cat.Resolution Reports': 'தீர்வு அறிக்கைகள்',
+    'documents.cat.Government Circulars': 'அரசு சுற்றறிக்கைகள்',
+    'documents.cat.Meeting Documents': 'கூட்ட ஆவணங்கள்',
+    'documents.cat.Policy Documents': 'கொள்கை ஆவணங்கள்',
+    'documents.cat.Field Officer Reports': 'கள அலுவலர் அறிக்கைகள்',
   },
 };

@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Languages, X, Loader2, ArrowRight } from "lucide-react";
-import { api } from "@/services/api";
+import { executeTranslationAgent } from "@/services/translationAgent";
 
 export default function TranslationWidget() {
     const [isOpen, setIsOpen] = useState(false);
     const [text, setText] = useState("");
-    const [targetLang, setTargetLang] = useState("Tamil");
+    const [targetLang, setTargetLang] = useState<"Tamil" | "English" | "Auto Detect">("Tamil");
     const [translation, setTranslation] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
@@ -20,8 +20,13 @@ export default function TranslationWidget() {
         setTranslation("");
         
         try {
-            const res = await api.translate.translateText(text, targetLang);
-            setTranslation(res.translation);
+            const mode = targetLang === "Tamil" ? "ta" : targetLang === "English" ? "en" : "auto";
+            const res = await executeTranslationAgent(text, mode);
+            if (res.translatedText) {
+                setTranslation(res.translatedText);
+            } else {
+                throw new Error("No translation returned");
+            }
         } catch (err: any) {
             setError(err.message || "Translation failed.");
         } finally {

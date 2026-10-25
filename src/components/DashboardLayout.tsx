@@ -115,7 +115,7 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
     const navigate = useNavigate();
     const location = useLocation();
     const { currentUser, logout, complaints, notifications, readNotification } = useComplaints();
-    const { language, toggleLanguage, t } = useLanguage();
+    const { language, setLanguage, toggleLanguage, t } = useLanguage();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [adminSlideOpen, setAdminSlideOpen] = useState(false);
     const [showNotifs, setShowNotifs] = useState(false);
@@ -341,7 +341,7 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
                         {/* Dual language pill toggle */}
                         <div className="flex items-center rounded-lg border border-gray-200 overflow-hidden bg-gray-50 shadow-sm">
                             <button
-                                onClick={() => language !== 'en' && toggleLanguage()}
+                                onClick={() => setLanguage('en')}
                                 className={`px-3 py-1.5 text-sm font-bold transition-all duration-200 ${
                                     language === 'en'
                                         ? 'bg-[#B91C1C] text-white shadow-inner'
@@ -352,7 +352,7 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
                             </button>
                             <div className="w-px h-4 bg-gray-300" />
                             <button
-                                onClick={() => language !== 'ta' && toggleLanguage()}
+                                onClick={() => setLanguage('ta')}
                                 className={`px-3 py-1.5 text-sm font-bold transition-all duration-200 ${
                                     language === 'ta'
                                         ? 'bg-[#B91C1C] text-white shadow-inner'

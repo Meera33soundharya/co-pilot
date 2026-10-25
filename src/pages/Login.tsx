@@ -128,7 +128,7 @@ function BootOverlay({ onDone }: { onDone: () => void }) {
     MAIN LOGIN
 ════════════════════════════════════════════════════════ */
 export default function Login() {
-    const { t } = useLanguage();
+    const { language, setLanguage, t } = useLanguage();
     const navigate = useNavigate();
     const { login } = useComplaints();
     const [email, setEmail]       = useState("");
@@ -211,7 +211,35 @@ export default function Login() {
             </div>
 
             {/* ── RIGHT — login form panel ───────────────────── */}
-            <div className="flex-1 flex flex-col items-center justify-center p-6 lg:p-14 bg-[#F4F2EE] overflow-y-auto">
+            <div className="flex-1 flex flex-col items-center justify-center p-6 lg:p-14 bg-[#F4F2EE] overflow-y-auto relative">
+
+                {/* Language Switcher */}
+                <div className="absolute top-6 right-6 z-10 flex items-center bg-white/95 backdrop-blur-md rounded-2xl border border-gray-200 p-1 shadow-sm">
+                    <button
+                        type="button"
+                        id="lang-btn-en"
+                        onClick={() => setLanguage('en')}
+                        className={`px-3.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 flex items-center gap-1.5 ${
+                            language === 'en'
+                                ? 'bg-[#B91C1C] text-white shadow-sm'
+                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                        }`}
+                    >
+                        <span>🌐</span> English
+                    </button>
+                    <button
+                        type="button"
+                        id="lang-btn-ta"
+                        onClick={() => setLanguage('ta')}
+                        className={`px-3.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 ${
+                            language === 'ta'
+                                ? 'bg-[#B91C1C] text-white shadow-sm'
+                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                        }`}
+                    >
+                        தமிழ்
+                    </button>
+                </div>
 
                 {/* Mobile logo */}
                 <div className="flex lg:hidden items-center gap-3 mb-10">
@@ -228,7 +256,7 @@ export default function Login() {
 
                     {/* Heading */}
                     <div>
-                        <h2 className="text-6xl font-medium text-gray-900 ">{t("login.welcome")}</h2>
+                        <h2 className="text-6xl font-medium text-gray-900 ">{t("login.welcome", "Welcome Back")}</h2>
                         <p className="text-gray-600 text-xl font-medium mt-1">Sign in to access your portal</p>
                     </div>
 
@@ -350,7 +378,7 @@ export default function Login() {
                                 id="citizen-portal-link"
                                 className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl bg-white border border-gray-200 text-gray-800 text-xl font-medium uppercase tracking-wide hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm group"
                             >
-                                <MessageSquare className="w-5 h-5 text-[#B91C1C] group-hover:scale-110 transition-transform" />{t("nav.submitComplaint")}<ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
+                                <MessageSquare className="w-5 h-5 text-[#B91C1C] group-hover:scale-110 transition-transform" />{t("nav.submitComplaint", "Submit Complaint")}<ChevronRight className="w-4 h-4 text-gray-400 group-hover:translate-x-0.5 transition-transform" />
                             </a>
 
                             <a

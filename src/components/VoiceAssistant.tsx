@@ -1,11 +1,14 @@
 import { useState, useCallback } from 'react';
 import { useComplaints } from '@/context/ComplaintsContext';
-import { Mic, X, Loader2, CheckCircle2, AlertCircle, User, Phone, FileText } from 'lucide-react';
+import { Mic, X, Loader2, CheckCircle2, AlertCircle, User, Phone, FileText, MapPin } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { speak, listenOnce, checkMicPermission } from '@/utils/speech';
 
 type FlowStep = 'idle' | 'checking-mic' | 'asking-name' | 'listening-name' |
   'asking-phone' | 'listening-phone' | 'asking-issue' | 'listening-issue' |
+  'asking-area' | 'listening-area' |
+  'asking-ward' | 'listening-ward' |
+  'confirming' | 'listening-confirm' |
   'submitting' | 'done' | 'error';
 
 const STEP_LABELS: Record<FlowStep, string> = {
@@ -31,6 +34,8 @@ export default function VoiceAssistant() {
   const [capturedName, setCapturedName] = useState('');
   const [capturedPhone, setCapturedPhone] = useState('');
   const [capturedIssue, setCapturedIssue] = useState('');
+  const [capturedArea, setCapturedArea] = useState('');
+  const [capturedWard, setCapturedWard] = useState('');
   const [ticketId, setTicketId] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
