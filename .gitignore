@@ -42,3 +42,6 @@ env/
 .env
 .env.local
 .env.production
+
+# Scratch
+scratch/

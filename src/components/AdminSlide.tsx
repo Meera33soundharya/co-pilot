@@ -2,11 +2,11 @@ import { NavLink } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import { useLanguage } from "@/context/LanguageContext";
 
-
 type NavItem = { icon?: any; label: string; path: string; badge?: string };
 type NavGroup = { group: string; items: NavItem[] };
 
 export default function AdminSlide({ open, onClose, navGroups }: { open: boolean; onClose: () => void; navGroups: NavGroup[] }) {
+  const { t } = useLanguage();
   if (!open) return null;
   return (
     <div>

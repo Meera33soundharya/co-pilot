@@ -4,13 +4,12 @@ import { useNavigate } from "react-router-dom";
 import { NewGrievanceModal } from "@/components/NewGrievanceModal";
 import { useLanguage } from "@/context/LanguageContext";
 
-
 interface StatusBadgeProps {
     status: string;
 }
 
 export function StatusBadge({ status }: StatusBadgeProps) {
-  const { t } = useLanguage();
+    const { t } = useLanguage();
     const styles: Record<string, string> = {
         "Open": "bg-gray-50 text-gray-700 border-gray-200/50",
         "In Progress": "bg-amber-50 text-amber-700 border-amber-200/50",
@@ -57,6 +56,7 @@ const avatarColors = [
 
 export function RecentGrievances() {
     const navigate = useNavigate();
+    const { t } = useLanguage();
     const [hovered, setHovered] = useState<string | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
 

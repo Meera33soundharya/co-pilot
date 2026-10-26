@@ -79,7 +79,7 @@ export default function TranslationWidget() {
                                     <select
                                         className="w-full text-sm p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B91C1C]/20"
                                         value={targetLang}
-                                        onChange={(e) => setTargetLang(e.target.value)}
+                                        onChange={(e) => setTargetLang(e.target.value as "Tamil" | "English" | "Auto Detect")}
                                     >
                                         <option value="Auto Detect">Auto Detect</option>
                                         <option value="English">English</option>

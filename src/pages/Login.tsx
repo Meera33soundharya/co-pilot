@@ -14,47 +14,47 @@ import { useLanguage } from "@/context/LanguageContext";
 /* ── Demo accounts ───────────────────────────────────────── */
 const ACCOUNTS = [
     {
-        role: "admin" as const, label: "Admin", icon: Shield,
+        role: "admin" as const, labelKey: "login.admin", icon: Shield,
         color: "#c62828ff", bg: "bg-red-50",  border: "border-red-200",
         text: "text-red-700", glow: "shadow-red-500/20",
         email: "admin@govpilot.in", password: "Admin@2026",
         user: { id: "admin_1", name: "District Admin", role: "admin" as const },
-        desc: "Full system access & analytics",
-        portal: "Admin Portal",
+        descKey: "login.adminDesc",
+        portalKey: "login.adminPortal",
         redirectTo: "/dashboard",
     },
     {
-        role: "officer" as const, label: "Field Officer", icon: Building2,
+        role: "officer" as const, labelKey: "login.officer", icon: Building2,
         color: "#1D4ED8", bg: "bg-blue-50", border: "border-blue-200",
         text: "text-blue-700", glow: "shadow-blue-500/20",
         email: "officer@govpilot.in", password: "Officer@2026",
         user: { id: "officer_1", name: "Rajiv Kumar", role: "officer" as const, dept: "Water Supply Department" },
-        desc: "Manage & resolve complaints",
-        portal: "Field Officer Portal",
+        descKey: "login.officerDesc",
+        portalKey: "login.officerPortal",
         redirectTo: "/field-portal",
     },
     {
-        role: "citizen" as const, label: "Citizen", icon: User,
+        role: "citizen" as const, labelKey: "login.citizen", icon: User,
         color: "#059669", bg: "bg-emerald-50", border: "border-emerald-200",
         text: "text-emerald-700", glow: "shadow-emerald-500/20",
         email: "citizen@govpilot.in", password: "Citizen@2026",
         user: { id: "citizen_amit", name: "Amit Patel", role: "citizen" as const, citizenId: "citizen_amit" },
-        desc: "Submit & track your complaints",
-        portal: "Citizen Portal",
+        descKey: "login.citizenDesc",
+        portalKey: "login.citizenPortal",
         redirectTo: "/citizen",
     },
 ];
 
 /* ── Animated boot overlay ───────────────────────────────── */
-function BootOverlay({ onDone }: { onDone: () => void }) {
+function BootOverlay({ onDone, t }: { onDone: () => void; t: (key: string, fallback?: string) => string }) {
     const [step, setStep] = useState<0 | 1 | 2 | 3>(0);
     const stableDone = useCallback(onDone, []);
 
     const steps = [
-        "Initialising Governance Core…",
-        "Establishing Secure Link…",
-        "Loading Role Permissions…",
-        "Access Granted — Welcome",
+        t("login.bootInit", "Initialising Governance Core…"),
+        t("login.bootLink", "Establishing Secure Link…"),
+        t("login.bootPermissions", "Loading Role Permissions…"),
+        t("login.bootGranted", "Access Granted — Welcome"),
     ];
 
     useEffect(() => {
@@ -93,7 +93,7 @@ function BootOverlay({ onDone }: { onDone: () => void }) {
 
                 <div className="text-center space-y-2">
                     <p className="text-white font-medium text-lg ">
-                        {step < 3 ? "Authenticating…" : "Access Granted"}
+                        {step < 3 ? t("login.authenticating", "Authenticating…") : t("login.accessGranted", "Access Granted")}
                     </p>
                     <p className="text-white/40 text-base font-mono">{steps[step]}</p>
                 </div>
@@ -151,9 +151,9 @@ export default function Login() {
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
-        if (!email || !password) { setError("Please enter your email and password."); return; }
+        if (!email || !password) { setError(t("login.errorEmpty", "Please enter your email and password.")); return; }
         const matched = ACCOUNTS.find(a => a.email === email && a.password === password);
-        if (!matched) { setError("Invalid credentials — use quick access below to auto-fill."); return; }
+        if (!matched) { setError(t("login.errorInvalid", "Invalid credentials — use quick access below to auto-fill.")); return; }
         setLoading(true);
         setSelected(matched.user);
         setSelectedAccount(matched);
@@ -173,7 +173,7 @@ export default function Login() {
 
     return (
         <div className="min-h-screen flex overflow-hidden" style={{ fontFamily: "'Inter', sans-serif" }}>
-            {booting && <BootOverlay onDone={handleDone} />}
+            {booting && <BootOverlay onDone={handleDone} t={t} />}
 
             {/* ── LEFT — Live Holographic Ring Panel ─────────────── */}
             <div className="hidden lg:flex lg:w-[52%] shrink-0 relative flex-col justify-between p-14 bg-[#030810] overflow-hidden">
@@ -256,13 +256,22 @@ export default function Login() {
 
                     {/* Heading */}
                     <div>
-                        <h2 className="text-6xl font-medium text-gray-900 ">{t("login.welcome", "Welcome Back")}</h2>
-                        <p className="text-gray-600 text-xl font-medium mt-1">Sign in to access your portal</p>
+                        <h2
+                            className="font-medium text-gray-900"
+                            style={{
+                                fontSize: language === 'ta' ? 'clamp(1.8rem, 4vw, 2.8rem)' : 'clamp(2.5rem, 5vw, 3.75rem)',
+                                lineHeight: language === 'ta' ? 1.4 : 1.1,
+                                fontFamily: language === 'ta' ? "'Noto Sans Tamil', 'Inter', sans-serif" : "'Inter', sans-serif",
+                            }}
+                        >
+                            {t("login.welcome", "Welcome Back")}
+                        </h2>
+                        <p className="text-gray-600 text-xl font-medium mt-1">{t("login.signInSubtitle", "Sign in to access your portal")}</p>
                     </div>
 
                     {/* Quick role selector */}
                     <div>
-                        <p className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-3">Select Your Portal</p>
+                        <p className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-3">{t("login.selectPortal", "Select Your Portal")}</p>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             {ACCOUNTS.map(acct => {
                                 const Icon = acct.icon;
@@ -286,19 +295,19 @@ export default function Login() {
                                         </div>
                                         <div className="flex flex-col sm:items-center justify-center w-full px-1">
                                             <p className={`text-lg sm:text-xl font-bold uppercase leading-tight w-full ${isActive ? acct.text : "text-gray-900"}`}>
-                                                {acct.label}
+                                                {t(acct.labelKey)}
                                             </p>
                                             <p className={`text-xs mt-1 font-semibold ${isActive ? acct.text : "text-gray-400"}`}>
-                                                {acct.portal}
+                                                {t(acct.portalKey)}
                                             </p>
-                                            <p className="text-xs mt-0.5 text-gray-400 hidden sm:block">{acct.desc}</p>
+                                            <p className="text-xs mt-0.5 text-gray-400 hidden sm:block">{t(acct.descKey)}</p>
                                         </div>
                                     </button>
                                 );
                             })}
                         </div>
                         <p className="text-lg font-medium text-gray-500 text-center mt-3">
-                            Tap a role to auto-fill credentials, then click Sign In
+                            {t("login.tapRole", "Tap a role to auto-fill credentials, then click Sign In")}
                         </p>
                     </div>
 
@@ -308,7 +317,7 @@ export default function Login() {
 
                             {/* Email */}
                             <div className="space-y-1.5">
-                                <label className="section-label ml-0.5">Official Email</label>
+                                <label className="section-label ml-0.5">{t("login.email", "Official Email")}</label>
                                 <div className="relative group">
                                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-[#C62828] transition-colors pointer-events-none" />
                                     <input
@@ -325,7 +334,7 @@ export default function Login() {
 
                             {/* Password */}
                             <div className="space-y-1.5">
-                                <label className="section-label ml-0.5">Password</label>
+                                <label className="section-label ml-0.5">{t("login.password", "Password")}</label>
                                 <div className="relative group">
                                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-[#C62828] transition-colors pointer-events-none" />
                                     <input
@@ -364,14 +373,14 @@ export default function Login() {
                             >
                                 {loading
                                     ? <Loader2 className="w-5 h-5 animate-spin" />
-                                    : <>Sign In Securely <ArrowRight className="w-5 h-5" /></>
+                                    : <>{t("login.signIn", "Sign In Securely")} <ArrowRight className="w-5 h-5" /></>
                                 }
                             </button>
                         </form>
 
                         {/* Citizen public portal options */}
                         <div className="mt-6 pt-6 border-t border-gray-100 space-y-3">
-                            <p className="text-lg font-medium uppercase tracking-wide text-gray-500 text-center mb-2">Citizen Services (No Account Required)</p>
+                            <p className="text-lg font-medium uppercase tracking-wide text-gray-500 text-center mb-2">{t("login.citizenServices", "Citizen Services (No Account Required)")}</p>
                             
                             <a
                                 href="/submit-complaint"
@@ -387,14 +396,14 @@ export default function Login() {
                                 className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl bg-[#B91C1C] text-white text-xl font-medium uppercase tracking-wide hover:bg-[#991717] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md group"
                             >
                                 <Mic className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
-                                Speak to Register
+                                {t("login.speakToRegister", "Speak to Register")}
                                 <ChevronRight className="w-4 h-4 text-white/70 group-hover:translate-x-0.5 transition-transform" />
                             </a>
                         </div>
                     </div>
 
                     <p className="text-center text-lg font-medium uppercase tracking-wide text-gray-400">
-                        Secured · District Council · 2026
+                        {t("login.secured", "Secured · District Council · 2026")}
                     </p>
                 </div>
             </div>

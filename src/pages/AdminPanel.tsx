@@ -75,6 +75,7 @@ function formatDate(ts: number) {
 function AssignModal({
   complaint, onClose, onAssign
 }: { complaint: Complaint; onClose: () => void; onAssign: (dept: string, officer: string) => void }) {
+  const { t } = useLanguage();
   const [dept, setDept]       = useState(complaint.dept);
   const [officer, setOfficer] = useState(complaint.assignedTo || "");
 

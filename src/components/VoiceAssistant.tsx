@@ -3,6 +3,8 @@ import { useComplaints } from '@/context/ComplaintsContext';
 import { Mic, X, Loader2, CheckCircle2, AlertCircle, User, Phone, FileText, MapPin } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { speak, listenOnce, checkMicPermission } from '@/utils/speech';
+import { executeTranslationAgent, hasTamilCharacters } from '@/services/translationAgent';
+import { triggerN8nWorkflow } from '@/services/n8nService';
 
 type FlowStep = 'idle' | 'checking-mic' | 'asking-name' | 'listening-name' |
   'asking-phone' | 'listening-phone' | 'asking-issue' | 'listening-issue' |
@@ -20,13 +22,18 @@ const STEP_LABELS: Record<FlowStep, string> = {
   'listening-phone': '🎤 Listening for phone number…',
   'asking-issue': '🗣️ Speaking: "Describe the problem"',
   'listening-issue': '🎤 Listening for your complaint…',
+  'asking-area': '🗣️ Speaking: "Please say your area or street"',
+  'listening-area': '🎤 Listening for your area…',
+  'asking-ward': '🗣️ Speaking: "Please say your ward number"',
+  'listening-ward': '🎤 Listening for your ward…',
+  'confirming': '🗣️ Confirming details…',
+  'listening-confirm': '🎤 Listening for confirmation…',
   'submitting': '📤 Submitting your complaint…',
   'done': '✅ Complaint submitted successfully!',
   'error': '❌ Something went wrong',
 };
 
 export default function VoiceAssistant() {
-
   const { login, addComplaint } = useComplaints();
   const { langTag, t } = useLanguage();
   const [open, setOpen] = useState(false);
@@ -46,6 +53,8 @@ export default function VoiceAssistant() {
     setCapturedName('');
     setCapturedPhone('');
     setCapturedIssue('');
+    setCapturedArea('');
+    setCapturedWard('');
     setTicketId('');
     setErrorMsg('');
   }, []);
@@ -84,7 +93,8 @@ export default function VoiceAssistant() {
 
     setStep('listening-phone');
     const phone = await listenOnce(langTag, 10000);
-    setCapturedPhone(phone.replace(/\s+/g, '') || '');
+    const finalPhone = phone ? phone.replace(/\s+/g, '') : '';
+    setCapturedPhone(finalPhone);
 
     // ── Step 4: Ask for issue ──
     setStep('asking-issue');
@@ -95,49 +105,103 @@ export default function VoiceAssistant() {
     const finalIssue = issue || (langTag === 'ta-IN' ? 'எட்டத்திற்கான உதவி' : 'Help needed');
     setCapturedIssue(finalIssue);
 
-    // ── Step 5: Submit ──
+    // ── Step 5: Ask for Area / Street ──
+    setStep('asking-area');
+    await speak(t('speak_area') || 'Please say your area or street name.', langTag);
+
+    setStep('listening-area');
+    const area = await listenOnce(langTag, 10000);
+    const finalArea = area?.trim() || (langTag === 'ta-IN' ? 'நகர பகுதி' : 'Central Area');
+    setCapturedArea(finalArea);
+
+    // ── Step 6: Ask for Ward ──
+    setStep('asking-ward');
+    await speak(t('speak_ward') || 'Please say your ward number.', langTag);
+
+    setStep('listening-ward');
+    const rawWard = await listenOnce(langTag, 10000);
+    const extractedWardNum = rawWard ? rawWard.match(/\d+/) : null;
+    const finalWard = extractedWardNum
+      ? `Ward ${extractedWardNum[0].padStart(2, '0')}`
+      : (rawWard?.trim() || 'Ward 01');
+    setCapturedWard(finalWard);
+
+    // ── Step 7: Submit ──
     setStep('submitting');
 
     const guestId = 'guest_' + Math.random().toString(36).slice(2, 8);
     login({ id: guestId, name: finalName, role: 'citizen', citizenId: guestId });
 
-    const ward = 'Ward 01';
     const priority: 'Low' | 'Medium' | 'High' =
       /(urgent|immediate|burst|flood|emergency|அவசரம்|பிடிபிடுப்பு)/i.test(finalIssue) ? 'High' : 'Medium';
 
-    // ── Simulate AI processing of Tamil speech ──
-    const summary = finalIssue.length > 50 ? finalIssue.slice(0, 50) + "..." : finalIssue;
-    
-    // In a real app, this would hit an LLM API to translate.
-    // For this prototype, we'll use a placeholder English translation 
-    // unless the user spoke in English.
-    const isTamil = langTag === 'ta-IN';
-    const translatedEnglish = isTamil 
-      ? `(AI Translation of Tamil Voice): ${finalIssue}` 
-      : finalIssue;
+    const isTamil = langTag === 'ta-IN' || hasTamilCharacters(finalIssue);
 
+    // Real Tamil-to-English translation using the translationAgent service
+    let translatedEnglish = finalIssue;
+    if (isTamil) {
+      try {
+        const transRes = await executeTranslationAgent(finalIssue, 'en');
+        if (transRes.success && transRes.translatedText) {
+          translatedEnglish = transRes.translatedText;
+        }
+      } catch (err) {
+        console.warn('Translation agent error:', err);
+      }
+    }
+
+    const summary = translatedEnglish.length > 60
+      ? translatedEnglish.slice(0, 57) + '...'
+      : translatedEnglish;
+
+    // Register complaint in state / context
     const id = addComplaint({
       citizen: finalName,
-      phone: phone.replace(/\s+/g, '') || '',
-      ward,
+      phone: finalPhone,
+      ward: finalWard,
+      area: finalArea,
       issue: summary,
-      description: finalIssue,
+      description: translatedEnglish,
       priority,
       source: 'voice',
       originalComplaintTamil: isTamil ? finalIssue : undefined,
       translatedEnglish: translatedEnglish,
       aiSummary: summary,
-      landmark: 'Near Bus Stand', // Mock extracted entity
-      area: 'Local Area',         // Mock extracted entity
+      landmark: finalArea,
     });
 
-    setTicketId(id);
-    setStep('done');
+    // Verify registration succeeded before notifying n8n workflow
+    if (id) {
+      setTicketId(id);
+      setStep('done');
 
-    // Speak confirmation
-    await speak(`${t('complaint_submitted')} ${id}`, langTag);
+      // Dispatch to n8n AI Agent Workflow with sanitized payload (no direct citizen phone or raw personal info)
+      triggerN8nWorkflow({
+        action: 'grievance_submitted',
+        timestamp: new Date().toISOString(),
+        grievance: {
+          ticketId: id,
+          priority,
+          ward: finalWard,
+          area: finalArea,
+          source: 'voice_assistant',
+          originalTamil: isTamil ? finalIssue : undefined,
+          translatedEnglish,
+          summary,
+        },
+      }).catch((n8nErr) => {
+        console.warn('n8n agent dispatch caught:', n8nErr);
+      });
 
-    // Auto-close after 6s
+      // Speak confirmation back to citizen in their language
+      await speak(`${t('complaint_submitted')} ${id}`, langTag);
+    } else {
+      setStep('error');
+      setErrorMsg('Failed to create complaint record. Please try again.');
+      return;
+    }
+
+    // Auto-close after 6 seconds
     setTimeout(() => {
       setOpen(false);
       resetState();
@@ -163,8 +227,12 @@ export default function VoiceAssistant() {
                   {stepIcon()}
                   <strong className="text-lg text-gray-800 font-bold">Voice Assistant</strong>
                 </div>
-                <button onClick={handleClose} className="p-1.5 rounded-lg hover:bg-gray-200 transition-colors">
-                  <X className="w-4 h-4 text-gray-500" />
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-200/50 transition-colors"
+                >
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
@@ -173,7 +241,7 @@ export default function VoiceAssistant() {
                 <p className="text-lg font-semibold text-gray-700 mb-4">{STEP_LABELS[step]}</p>
 
                 {/* Listening animation */}
-                {(step === 'listening-name' || step === 'listening-phone' || step === 'listening-issue') && (
+                {(step === 'listening-name' || step === 'listening-phone' || step === 'listening-issue' || step === 'listening-area' || step === 'listening-ward') && (
                   <div className="flex items-center justify-center gap-1 py-3">
                     {[...Array(5)].map((_, i) => (
                       <div
@@ -204,7 +272,19 @@ export default function VoiceAssistant() {
                 {capturedIssue && (
                   <div className="flex items-center gap-2 text-base text-gray-600 mb-1.5 bg-gray-50 px-3 py-2 rounded-lg">
                     <FileText className="w-3.5 h-3.5 text-gray-400" />
-                    <span className="font-semibold">Issue:</span> {capturedIssue.slice(0, 60)}{capturedIssue.length > 60 ? '…' : ''}
+                    <span className="font-semibold">Issue:</span> {capturedIssue.slice(0, 50)}{capturedIssue.length > 50 ? '…' : ''}
+                  </div>
+                )}
+                {capturedArea && (
+                  <div className="flex items-center gap-2 text-base text-gray-600 mb-1.5 bg-gray-50 px-3 py-2 rounded-lg">
+                    <MapPin className="w-3.5 h-3.5 text-gray-400" />
+                    <span className="font-semibold">Area:</span> {capturedArea}
+                  </div>
+                )}
+                {capturedWard && (
+                  <div className="flex items-center gap-2 text-base text-gray-600 mb-1.5 bg-gray-50 px-3 py-2 rounded-lg">
+                    <MapPin className="w-3.5 h-3.5 text-gray-400" />
+                    <span className="font-semibold">Ward:</span> {capturedWard}
                   </div>
                 )}
 
@@ -228,6 +308,7 @@ export default function VoiceAssistant() {
 
           {/* FAB Button */}
           <button
+            type="button"
             title="Voice Assistant"
             onClick={startFlow}
             disabled={isActive}

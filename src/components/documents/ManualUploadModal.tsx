@@ -6,6 +6,7 @@ import { useLanguage } from "@/context/LanguageContext";
 
 
 export function ManualUploadModal({ onClose }: { onClose: () => void }) {
+    const { t } = useLanguage();
     const { uploadDocument } = useDocuments();
     const { currentUser } = useComplaints();
     

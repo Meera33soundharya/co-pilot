@@ -14,6 +14,8 @@ import { MapContainer, TileLayer, Marker, Tooltip, useMapEvents, useMap } from '
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useLanguage } from "@/context/LanguageContext";
+import LanguageToggle from "@/components/LanguageToggle";
+import { executeTranslationAgent, hasTamilCharacters } from "@/services/translationAgent";
 
 
 // Fix Leaflet icon issue
