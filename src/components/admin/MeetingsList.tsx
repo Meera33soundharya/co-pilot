@@ -21,7 +21,7 @@ export default function MeetingsList() {
             <div>
               <div className="font-black text-gray-900 mb-1 flex items-center gap-2 text-base flex-wrap">
                 {m.title}
-                <span className="text-[10px] font-black uppercase tracking-widest bg-blue-100 text-blue-700 px-2 py-0.5 rounded-md">{m.status}</span>
+                <span className="text-[10px] font-black uppercase tracking-widest bg-blue-100 text-blue-700 px-2 py-0.5 rounded-md">{t(m.status, m.status)}</span>
               </div>
               <div className="text-sm text-gray-500 font-bold">{m.time} &middot; {m.place}</div>
             </div>

@@ -1,3 +1,4 @@
+import { useLanguage } from "@/context/LanguageContext";
 import React, { useMemo } from "react";
 import { useComplaints } from "@/context/ComplaintsContext";
 
@@ -8,6 +9,7 @@ const ALL_WARDS = [
 ];
 
 export default function HeatmapPanel() {
+  const { t } = useLanguage();
   const { complaints } = useComplaints();
 
   const wardData = useMemo(() => {
@@ -35,7 +37,7 @@ export default function HeatmapPanel() {
     <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm relative overflow-hidden">
       <h3 className="text-base font-black text-gray-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-3">
         <div className="w-2 h-2 rounded-full bg-[#B91C1C]" />
-        Issue Heatmap by Ward
+        {t("admin.heatmapByWard", "Issue Heatmap by Ward")}
       </h3>
       <div className="grid grid-cols-6 gap-2 mb-4">
         {wardData.map(({ ward, total, open, health }) => (
@@ -53,9 +55,9 @@ export default function HeatmapPanel() {
         ))}
       </div>
       <div className="flex items-center gap-6 text-sm font-bold text-gray-400">
-        <span className="flex items-center gap-2"><span className="w-3 h-3 rounded bg-emerald-200 inline-block border border-emerald-300" /> Healthy ≥70%</span>
-        <span className="flex items-center gap-2"><span className="w-3 h-3 rounded bg-amber-200 inline-block border border-amber-300" /> At Risk 40–69%</span>
-        <span className="flex items-center gap-2"><span className="w-3 h-3 rounded bg-red-300 inline-block border border-red-400" /> Critical &lt;40%</span>
+        <span className="flex items-center gap-2"><span className="w-3 h-3 rounded bg-emerald-200 inline-block border border-emerald-300" /> {t("admin.healthy", "Healthy ≥70%")}</span>
+        <span className="flex items-center gap-2"><span className="w-3 h-3 rounded bg-amber-200 inline-block border border-amber-300" /> {t("admin.atRisk", "At Risk 40–69%")}</span>
+        <span className="flex items-center gap-2"><span className="w-3 h-3 rounded bg-red-300 inline-block border border-red-400" /> {t("admin.critical", "Critical <40%")}</span>
       </div>
     </div>
   );

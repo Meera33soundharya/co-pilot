@@ -68,10 +68,10 @@ export default function AICoPilotPanel() {
               <Bot className="w-4 h-4 text-[#C81D25]" />
             </div>
           </div>
-          <span className="text-lg font-bold text-white tracking-wide">Analysis Engine</span>
+          <span className="text-lg font-bold text-white tracking-wide">{t("admin.analysisEngine", "Analysis Engine")}</span>
         </div>
         <div className="flex gap-2">
-          <button className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-base font-bold text-white/70 hover:text-white hover:bg-white/10 transition-colors">Clear</button>
+          <button className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-base font-bold text-white/70 hover:text-white hover:bg-white/10 transition-colors">{t("admin.clear", "Clear")}</button>
           <button className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-base font-bold text-white/70 hover:text-white hover:bg-white/10 transition-colors flex items-center gap-1">
             Model: GPT-4 Turbo <ChevronDown className="w-3 h-3" />
           </button>
@@ -102,7 +102,7 @@ export default function AICoPilotPanel() {
             <div className="absolute inset-0 border-2 border-dashed border-[#C81D25]/0 rounded-2xl pointer-events-none group-hover:border-[#C81D25]/30 transition-colors flex items-center justify-center">
               <div className="opacity-0 group-hover:opacity-100 flex flex-col items-center gap-2 text-white/40 transition-opacity bg-[#060912]/80 px-6 py-4 rounded-xl backdrop-blur-md">
                 <Paperclip className="w-6 h-6" />
-                <span className="text-base font-bold tracking-widest uppercase">Drop Files</span>
+                <span className="text-base font-bold tracking-widest uppercase">{t("admin.dropFiles", "Drop Files")}</span>
               </div>
             </div>
           </div>
@@ -115,18 +115,18 @@ export default function AICoPilotPanel() {
               className="relative overflow-hidden group px-6 py-3 bg-gradient-to-r from-[#C81D25] to-[#800F15] text-white rounded-xl font-bold text-lg shadow-lg shadow-[#C81D25]/20 hover:shadow-[#C81D25]/40 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {loading ? <Sparkles className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-              {loading ? "Analyzing..." : "Analyze Complaint"}
+              {loading ? t("admin.analyzing", "Analyzing...") : t("admin.analyzeComplaint", "Analyze Complaint")}
               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
             </button>
             
             <button disabled className="px-5 py-3 bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 rounded-xl font-bold text-lg transition-all disabled:opacity-50 flex items-center gap-2">
-              <AlignLeft className="w-4 h-4" /> Summarize
+              <AlignLeft className="w-4 h-4" /> {t("admin.summarize", "Summarize")}
             </button>
             <button disabled className="px-5 py-3 bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 rounded-xl font-bold text-lg transition-all disabled:opacity-50 flex items-center gap-2">
-              <FileText className="w-4 h-4" /> Draft Speech
+              <FileText className="w-4 h-4" /> {t("admin.draftSpeech", "Draft Speech")}
             </button>
             <button disabled className="px-5 py-3 bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 rounded-xl font-bold text-lg transition-all disabled:opacity-50 flex items-center gap-2">
-              <ListChecks className="w-4 h-4" /> Action Plan
+              <ListChecks className="w-4 h-4" /> {t("admin.actionPlan", "Action Plan")}
             </button>
           </div>
         </div>
@@ -136,7 +136,7 @@ export default function AICoPilotPanel() {
           <div className="mt-8 pt-8 border-t border-white/10 animate-fade-in">
             <div className="flex items-center gap-3 mb-6">
               <Sparkles className="w-5 h-5 text-[#C81D25]" />
-              <h3 className="text-lg font-black text-white">AI Analysis Report</h3>
+              <h3 className="text-lg font-black text-white">{t("admin.aiReport", "AI Analysis Report")}</h3>
               <div className="ml-auto flex items-center gap-2">
                 <button className="p-2 rounded-lg bg-white/5 text-white/50 hover:text-white hover:bg-white/10 transition-colors" title="Copy"><Copy className="w-4 h-4" /></button>
                 <button className="p-2 rounded-lg bg-white/5 text-white/50 hover:text-white hover:bg-white/10 transition-colors" title="Export PDF"><Download className="w-4 h-4" /></button>
@@ -165,21 +165,21 @@ export default function AICoPilotPanel() {
                   </div>
                   <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col gap-2 relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500" />
-                    <span className="text-sm font-black uppercase tracking-widest text-white/40 flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3" /> Confidence</span>
+                    <span className="text-sm font-black uppercase tracking-widest text-white/40 flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3" /> {t("admin.confidence", "Confidence")}</span>
                     <span className="text-base font-bold text-white truncate">94.8%</span>
                   </div>
                 </div>
 
                 {/* Summary Card */}
                 <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-                  <h4 className="text-base font-black uppercase tracking-widest text-white/40 mb-3">Executive Summary</h4>
+                  <h4 className="text-base font-black uppercase tracking-widest text-white/40 mb-3">{t("admin.executiveSummary", "Executive Summary")}</h4>
                   <p className="text-white/90 text-lg leading-relaxed">{result.summary}</p>
                 </div>
 
                 {/* Action Plan Card */}
                 {result.actionPlan && result.actionPlan.length > 0 && (
                   <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-                    <h4 className="text-base font-black uppercase tracking-widest text-white/40 mb-4">Recommended Action Plan</h4>
+                    <h4 className="text-base font-black uppercase tracking-widest text-white/40 mb-4">{t("admin.recommendedPlan", "Recommended Action Plan")}</h4>
                     <ul className="space-y-3">
                       {result.actionPlan.map((step: string, i: number) => (
                         <li key={i} className="flex gap-3 text-lg text-white/80 items-start">
@@ -197,7 +197,7 @@ export default function AICoPilotPanel() {
                 {result.reasoning && (
                   <div className="bg-black/30 border border-white/5 rounded-2xl p-6 shadow-inner">
                     <h4 className="text-base font-black uppercase tracking-widest text-white/30 mb-3 flex items-center gap-2">
-                      <Bot className="w-3 h-3" /> System Reasoning Log
+                      <Bot className="w-3 h-3" /> {t("admin.reasoningLog", "System Reasoning Log")}
                     </h4>
                     <p className="text-base text-white/50 leading-relaxed font-mono whitespace-pre-wrap">{result.reasoning}</p>
                   </div>
@@ -214,7 +214,7 @@ export default function AICoPilotPanel() {
         <div className="p-4 border-t border-white/10 bg-white/5">
           <div className="relative">
             <input 
-              placeholder="Ask a follow-up question..." 
+              placeholder={t("admin.askFollowup", "Ask a follow-up question...")} 
               className="w-full bg-[#060912]/50 border border-white/10 rounded-xl pl-4 pr-12 py-3 text-lg text-white focus:outline-none focus:border-[#C81D25]/50 focus:ring-1 focus:ring-[#C81D25]/50 transition-all placeholder:text-white/30"
             />
             <button className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-[#C81D25] hover:bg-[#800F15] text-white flex items-center justify-center transition-colors">

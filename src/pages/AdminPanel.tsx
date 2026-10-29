@@ -270,17 +270,17 @@ export default function AdminPanel() {
 
   return (
     <DashboardLayout 
-      title="Admin Portal — Complaint Management"
-      subtitle="Monitor, assign, and manage all citizen complaints from the voice-based submission system"
+      title={t("admin.portalTitle", "Admin Portal — Complaint Management")}
+      subtitle={t("admin.portalSubtitle", "Monitor, assign, and manage all citizen complaints from the voice-based submission system")}
     >
       <div className="space-y-6">
           {/* ── KPI Cards ── */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            <KPICard icon={Layers}       label="Total Complaints" value={stats.total}      color="bg-blue-500"   />
-            <KPICard icon={Clock}        label="Pending"          value={stats.pending}     color="bg-purple-500" sub="New + Categorized + Assigned" />
-            <KPICard icon={TrendingUp}   label="In Progress"      value={stats.inProgress}  color="bg-yellow-500" />
-            <KPICard icon={CheckCircle2} label="Resolved"         value={stats.resolved}    color="bg-green-500"  />
-            <KPICard icon={AlertTriangle}label="High Priority"    value={stats.high}        color="bg-red-500"    />
+            <KPICard icon={Layers}       label={t("dashboard.totalComplaintsKpi", "Total Complaints")} value={stats.total}      color="bg-blue-500"   />
+            <KPICard icon={Clock}        label={t("common.pending", "Pending")}          value={stats.pending}     color="bg-purple-500" sub="New + Categorized + Assigned" />
+            <KPICard icon={TrendingUp}   label={t("dashboard.inProgress", "In Progress")}      value={stats.inProgress}  color="bg-yellow-500" />
+            <KPICard icon={CheckCircle2} label={t("dashboard.resolved", "Resolved")}         value={stats.resolved}    color="bg-green-500"  />
+            <KPICard icon={AlertTriangle}label={t("dashboard.highPriority", "High Priority")}    value={stats.high}        color="bg-red-500"    />
           </div>
 
           {/* ── Charts ── */}
@@ -288,7 +288,7 @@ export default function AdminPanel() {
             {/* By Department */}
             <div className="bg-white rounded-xl border border-gray-200 p-5">
               <h3 className="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
-                <Building2 className="w-4 h-4 text-blue-500" /> Complaints by Department
+                <Building2 className="w-4 h-4 text-blue-500" /> {t("admin.byDept", "Complaints by Department")}
               </h3>
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={deptChart} margin={{ left: -10, right: 10 }}>
@@ -304,7 +304,7 @@ export default function AdminPanel() {
             {/* By Status (Pie) */}
             <div className="bg-white rounded-xl border border-gray-200 p-5">
               <h3 className="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
-                <PieIcon className="w-4 h-4 text-purple-500" /> Complaints by Status
+                <PieIcon className="w-4 h-4 text-purple-500" /> {t("admin.byStatus", "Complaints by Status")}
               </h3>
               <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
@@ -319,7 +319,7 @@ export default function AdminPanel() {
             {/* By Ward */}
             <div className="bg-white rounded-xl border border-gray-200 p-5">
               <h3 className="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
-                <Users className="w-4 h-4 text-indigo-500" /> Complaints by Ward
+                <Users className="w-4 h-4 text-indigo-500" /> {t("admin.byWard", "Complaints by Ward")}
               </h3>
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={wardChart} margin={{ left: -10, right: 10 }}>
@@ -335,7 +335,7 @@ export default function AdminPanel() {
             {/* By Date (Line) */}
             <div className="bg-white rounded-xl border border-gray-200 p-5">
               <h3 className="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-green-500" /> Complaints Over Time
+                <TrendingUp className="w-4 h-4 text-green-500" /> {t("admin.overTime", "Complaints Over Time")}
               </h3>
               <ResponsiveContainer width="100%" height={200}>
                 <LineChart data={dateChart} margin={{ left: -10, right: 10 }}>
@@ -355,7 +355,7 @@ export default function AdminPanel() {
             <div className="px-5 py-4 border-b border-gray-100 flex flex-wrap items-center gap-3">
               <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
                 <BarChart2 className="w-4 h-4 text-blue-500" />
-                All Complaints
+                {t("admin.allComplaints", "All Complaints")}
                 <span className="ml-1 px-2 py-0.5 text-xs bg-blue-50 text-blue-600 rounded-full font-bold">{filtered.length}</span>
               </h3>
 
@@ -366,7 +366,7 @@ export default function AdminPanel() {
                 <input
                   value={search}
                   onChange={e => { setSearch(e.target.value); setPage(1); }}
-                  placeholder="Search…"
+                  placeholder={t("common.search", "Search...")}
                   className="pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 w-44"
                 />
               </div>
@@ -394,9 +394,19 @@ export default function AdminPanel() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-100">
-                    {["Complaint ID","Citizen","Department","Ward","Assigned Officer","Status","Priority","Date","Actions"].map(h => (
-                      <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
-                        {h}
+                    {[
+    { key: "id", label: t("common.id", "Complaint ID") },
+    { key: "citizen", label: t("role.citizen", "Citizen") },
+    { key: "dept", label: t("grievances.dept", "Department") },
+    { key: "ward", label: t("dashboard.ward", "Ward") },
+    { key: "officer", label: t("field.assignedTo", "Assigned Officer") },
+    { key: "status", label: t("dashboard.status", "Status") },
+    { key: "priority", label: t("common.priority", "Priority") },
+    { key: "date", label: t("common.date", "Date") },
+    { key: "actions", label: t("common.actions", "Actions") }
+  ].map(col => (
+                      <th key={col.key} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
+                        {col.label}
                       </th>
                     ))}
                   </tr>
@@ -405,7 +415,7 @@ export default function AdminPanel() {
                   {pageData.length === 0 && (
                     <tr>
                       <td colSpan={9} className="text-center py-12 text-gray-400 text-sm">
-                        No complaints match your filters.
+                        {t("admin.noMatch", "No complaints match your filters.")}
                       </td>
                     </tr>
                   )}
@@ -431,7 +441,7 @@ export default function AdminPanel() {
                           {/* View */}
                           <button
                             onClick={() => setViewTarget(c)}
-                            title="View Complaint"
+                            title={t("admin.viewComplaint", "View Complaint")}
                             className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
                           >
                             <Eye className="w-3.5 h-3.5" />
@@ -439,7 +449,7 @@ export default function AdminPanel() {
                           {/* Assign */}
                           <button
                             onClick={() => setAssignTarget(c)}
-                            title="Assign Department / Officer"
+                            title={t("admin.assignOfficer", "Assign Department / Officer")}
                             className="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
                           >
                             <UserCheck className="w-3.5 h-3.5" />
@@ -448,7 +458,7 @@ export default function AdminPanel() {
                           <button
                             onClick={() => handleClose(c.id)}
                             disabled={c.status === "Closed"}
-                            title="Close Complaint"
+                            title={t("admin.closeComplaint", "Close Complaint")}
                             className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                           >
                             <X className="w-3.5 h-3.5" />

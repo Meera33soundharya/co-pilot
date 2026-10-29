@@ -57,28 +57,28 @@ export default function PeopleManagement() {
     return (
         <DashboardLayout
             title={t("people.title")}
-            subtitle="Manage officers and citizens across all wards"
+            subtitle={t("people.subtitle", "Manage officers and citizens across all wards")}
         >
             <div className="space-y-6">
 
                 {/* Tabs */}
                 <div className="flex items-center gap-2 bg-white border border-gray-100 rounded-2xl p-1.5 w-fit shadow-sm">
-                    {(["officers", "citizens"] as const).map(t => (
+                    {(["officers", "citizens"] as const).map(tabKey => (
                         <button
-                            key={t}
-                            onClick={() => { setTab(t); setSearch(""); setSelected(null); }}
+                            key={tabKey}
+                            onClick={() => { setTab(tabKey); setSearch(""); setSelected(null); }}
                             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-base font-black transition-all capitalize ${
-                                tab === t
+                                tab === tabKey
                                     ? "bg-[#B91C1C] text-white shadow-lg shadow-red-200"
                                     : "text-gray-500 hover:text-gray-700"
                             }`}
                         >
-                            {t === "officers" ? <Building2 className="w-3.5 h-3.5" /> : <Users className="w-3.5 h-3.5" />}
-                            {t}
+                            {tabKey === "officers" ? <Building2 className="w-3.5 h-3.5" /> : <Users className="w-3.5 h-3.5" />}
+                            {tabKey === "officers" ? t("people.officers", "Officers") : t("people.citizens", "Citizens")}
                             <span className={`text-[9px] px-2 py-0.5 rounded-full font-black ${
-                                tab === t ? "bg-white/20 text-white" : "bg-gray-100 text-gray-500"
+                                tab === tabKey ? "bg-white/20 text-white" : "bg-gray-100 text-gray-500"
                             }`}>
-                                {t === "officers" ? OFFICERS.length : CITIZENS.length}
+                                {tabKey === "officers" ? OFFICERS.length : CITIZENS.length}
                             </span>
                         </button>
                     ))}
@@ -89,7 +89,7 @@ export default function PeopleManagement() {
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input
                         type="text"
-                        placeholder={tab === "officers" ? "Search officers, departments, wards..." : "Search citizens, wards..."}
+                        placeholder={tab === "officers" ? t("people.searchOfficers", "Search officers, departments, wards...") : t("people.searchCitizens", "Search citizens, wards...")}
                         value={search}
                         onChange={e => setSearch(e.target.value)}
                         className="w-full pl-11 pr-4 py-3 bg-white border border-gray-100 rounded-2xl text-lg font-bold focus:outline-none focus:border-[#B91C1C]/30 text-gray-700 placeholder:text-gray-300 shadow-sm"
@@ -104,7 +104,7 @@ export default function PeopleManagement() {
                             filteredOfficers.length === 0 ? (
                                 <div className="bg-white rounded-3xl border border-gray-100 p-16 text-center">
                                     <Building2 className="w-12 h-12 text-gray-200 mx-auto mb-4" />
-                                    <p className="text-lg font-black text-gray-400">No officers found</p>
+                                    <p className="text-lg font-black text-gray-400">{t("people.noOfficers", "No officers found")}</p>
                                 </div>
                             ) : filteredOfficers.map(o => (
                                 <div
@@ -123,10 +123,10 @@ export default function PeopleManagement() {
                                                 <h4 className="text-lg font-black text-gray-900">{o.name}</h4>
                                                 <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase ${
                                                     o.status === "Active" ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-amber-50 text-amber-600 border border-amber-100"
-                                                }`}>{o.status}</span>
+                                                }`}>{t(o.status, o.status)}</span>
                                             </div>
                                             <div className="flex items-center gap-3 text-sm text-gray-400 font-bold flex-wrap">
-                                                <span className="flex items-center gap-1"><Building2 className="w-3 h-3" />{o.dept}</span>
+                                                <span className="flex items-center gap-1"><Building2 className="w-3 h-3" />{t(o.dept, o.dept)}</span>
                                                 <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{o.ward}</span>
                                             </div>
                                         </div>
@@ -135,7 +135,7 @@ export default function PeopleManagement() {
                                                 <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
                                                 <span className="text-base font-black text-gray-700">{o.rating}</span>
                                             </div>
-                                            <span className="text-sm text-gray-400">{o.resolved} resolved</span>
+                                            <span className="text-sm text-gray-400">{o.resolved} {t("people.resolved", "resolved")}</span>
                                         </div>
                                         <ChevronRight className={`w-4 h-4 text-gray-300 transition-transform ${selected === o.id ? "rotate-90" : ""}`} />
                                     </div>
@@ -147,7 +147,7 @@ export default function PeopleManagement() {
                             filteredCitizens.length === 0 ? (
                                 <div className="bg-white rounded-3xl border border-gray-100 p-16 text-center">
                                     <Users className="w-12 h-12 text-gray-200 mx-auto mb-4" />
-                                    <p className="text-lg font-black text-gray-400">No citizens found</p>
+                                    <p className="text-lg font-black text-gray-400">{t("people.noCitizens", "No citizens found")}</p>
                                 </div>
                             ) : filteredCitizens.map(c => (
                                 <div
@@ -169,8 +169,8 @@ export default function PeopleManagement() {
                                             </div>
                                         </div>
                                         <div className="flex flex-col items-end gap-1 shrink-0">
-                                            <span className="text-base font-black text-gray-700">{c.complaints} complaints</span>
-                                            <span className="text-sm text-emerald-600">{c.resolved} resolved</span>
+                                            <span className="text-base font-black text-gray-700">{c.complaints} {t("people.complaints", "complaints")}</span>
+                                            <span className="text-sm text-emerald-600">{c.resolved} {t("people.resolved", "resolved")}</span>
                                         </div>
                                         <ChevronRight className={`w-4 h-4 text-gray-300 transition-transform ${selected === c.id ? "rotate-90" : ""}`} />
                                     </div>
@@ -188,16 +188,16 @@ export default function PeopleManagement() {
                                         {selectedOfficer.name.split(" ").pop()?.charAt(0)}
                                     </div>
                                     <h3 className="text-base font-black text-gray-900">{selectedOfficer.name}</h3>
-                                    <p className="text-sm text-gray-400 font-medium mt-1">{selectedOfficer.dept}</p>
+                                    <p className="text-sm text-gray-400 font-medium mt-1">{t(selectedOfficer.dept, selectedOfficer.dept)}</p>
                                     <span className={`mt-2 inline-block text-[9px] font-black px-3 py-1 rounded-full uppercase ${
                                         selectedOfficer.status === "Active" ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-amber-50 text-amber-600 border border-amber-100"
-                                    }`}>{selectedOfficer.status}</span>
+                                    }`}>{t(selectedOfficer.status, selectedOfficer.status)}</span>
                                 </div>
                                 <div className="space-y-3 flex-1">
                                     {[
-                                        { label: "Assigned Ward(s)", value: selectedOfficer.ward },
-                                        { label: "Total Resolved", value: String(selectedOfficer.resolved), color: "text-emerald-600" },
-                                        { label: "Currently Pending", value: String(selectedOfficer.pending), color: "text-amber-600" },
+                                        { label: t("people.assignedWards", "Assigned Ward(s)"), value: selectedOfficer.ward },
+                                        { label: t("people.totalResolved", "Total Resolved"), value: String(selectedOfficer.resolved), color: "text-emerald-600" },
+                                        { label: t("people.currentlyPending", "Currently Pending"), value: String(selectedOfficer.pending), color: "text-amber-600" },
                                     ].map(item => (
                                         <div key={item.label} className="flex justify-between items-center py-3 border-b border-gray-50">
                                             <span className="text-base font-bold text-gray-500">{item.label}</span>
@@ -206,7 +206,7 @@ export default function PeopleManagement() {
                                     ))}
                                     <div className="py-3">
                                         <div className="flex justify-between items-center mb-2">
-                                            <span className="text-base font-bold text-gray-500">Citizen Rating</span>
+                                            <span className="text-base font-bold text-gray-500">{t("people.citizenRating", "Citizen Rating")}</span>
                                             <div className="flex items-center gap-1">
                                                 <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
                                                 <span className="text-lg font-black text-gray-900">{selectedOfficer.rating}</span>
@@ -229,10 +229,10 @@ export default function PeopleManagement() {
                                 </div>
                                 <div className="space-y-3 flex-1">
                                     {[
-                                        { label: "Phone", value: selectedCitizen.phone },
-                                        { label: "Total Complaints", value: String(citizenComplaints.length) },
-                                        { label: "Resolved",         value: String(citizenComplaints.filter(c => c.status === "Resolved" || c.status === "Closed").length),   color: "text-emerald-600" },
-                                        { label: "Pending",          value: String(citizenComplaints.filter(c => c.status !== "Resolved" && c.status !== "Closed").length), color: "text-amber-600" },
+                                        { label: t("people.phone", "Phone"), value: selectedCitizen.phone },
+                                        { label: t("people.totalComplaints", "Total Complaints"), value: String(citizenComplaints.length) },
+                                        { label: t("people.resolvedTitle", "Resolved"),         value: String(citizenComplaints.filter(c => c.status === "Resolved" || c.status === "Closed").length),   color: "text-emerald-600" },
+                                        { label: t("people.pendingTitle", "Pending"),          value: String(citizenComplaints.filter(c => c.status !== "Resolved" && c.status !== "Closed").length), color: "text-amber-600" },
                                     ].map(item => (
                                         <div key={item.label} className="flex justify-between items-center py-3 border-b border-gray-50">
                                             <span className="text-base font-bold text-gray-500">{item.label}</span>
@@ -242,9 +242,9 @@ export default function PeopleManagement() {
                                     
                                     {/* Complaint History */}
                                     <div className="mt-4 border-t border-gray-100 pt-4">
-                                        <h4 className="text-sm font-black uppercase text-gray-400 tracking-widest mb-3">Complaint History</h4>
+                                        <h4 className="text-sm font-black uppercase text-gray-400 tracking-widest mb-3">{t("people.complaintHistory", "Complaint History")}</h4>
                                         {citizenComplaints.length === 0 ? (
-                                            <p className="text-sm text-gray-400 font-bold text-center py-4 bg-gray-50 rounded-xl">No complaints found.</p>
+                                            <p className="text-sm text-gray-400 font-bold text-center py-4 bg-gray-50 rounded-xl">{t("people.noComplaints", "No complaints found.")}</p>
                                         ) : (
                                             <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
                                                 {citizenComplaints.map(c => (
@@ -270,9 +270,9 @@ export default function PeopleManagement() {
                                     {tab === "officers" ? <Building2 className="w-8 h-8 text-gray-200" /> : <Users className="w-8 h-8 text-gray-200" />}
                                 </div>
                                 <p className="text-lg font-black text-gray-400 mb-2">
-                                    Select a{tab === "officers" ? "n Officer" : " Citizen"}
+                                    {tab === "officers" ? t("people.selectOfficer", "Select an Officer") : t("people.selectCitizen", "Select a Citizen")}
                                 </p>
-                                <p className="text-base text-gray-300">Click any row to view details</p>
+                                <p className="text-base text-gray-300">{t("people.clickRowDetails", "Click any row to view details")}</p>
                             </div>
                         )}
                     </div>
@@ -283,7 +283,7 @@ export default function PeopleManagement() {
                     <div className="bg-gray-900 rounded-3xl p-7 shadow-2xl text-white overflow-hidden relative">
                         <div className="absolute top-0 right-0 w-48 h-48 bg-red-500/10 blur-[60px] pointer-events-none" />
                         <div className="relative z-10">
-                            <h3 className="text-sm font-black uppercase tracking-widest text-white/40 mb-5">Department Performance Summary</h3>
+                            <h3 className="text-sm font-black uppercase tracking-widest text-white/40 mb-5">{t("people.deptSummary", "Department Performance Summary")}</h3>
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
                                 {OFFICERS.map(o => (
                                     <div key={o.id} className="bg-white/5 border border-white/10 rounded-2xl p-4">
@@ -293,13 +293,13 @@ export default function PeopleManagement() {
                                             </div>
                                             <div className="min-w-0">
                                                 <p className="text-sm font-black text-white truncate">{o.name.split(" ").pop()}</p>
-                                                <p className="text-[8px] text-white/30 truncate">{o.dept.split(" ")[0]}</p>
+                                                <p className="text-[8px] text-white/30 truncate">{t(o.dept, o.dept.split(" ")[0])}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center justify-between">
                                             <div>
                                                 <p className="text-lg font-black text-white">{o.resolved}</p>
-                                                <p className="text-[8px] text-white/30">resolved</p>
+                                                <p className="text-[8px] text-white/30">{t("people.resolved", "resolved")}</p>
                                             </div>
                                             <div className="flex items-center gap-1">
                                                 <Star className="w-3 h-3 text-amber-400 fill-amber-400" />

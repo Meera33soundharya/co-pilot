@@ -37,6 +37,7 @@ import {
     Mic,
     Building2,
 } from "lucide-react";
+import PredictiveSurgeHotspotEngine from "@/components/admin/PredictiveSurgeHotspotEngine";
 
 const timeframes = [
     { key: "7D", label: "7D", days: 7 },
@@ -395,6 +396,9 @@ export default function Analytics() {
                             ))}
                         </div>
                     </div>
+
+                    {/* Prophet-Style Seasonal Predictive Hotspot Engine */}
+                    <PredictiveSurgeHotspotEngine />
 
                     <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
                         <div className="rounded-[2rem] border border-white/10 bg-slate-900/80 p-5 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-6">

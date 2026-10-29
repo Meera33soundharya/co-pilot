@@ -152,10 +152,10 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
     const assignedCount = complaints.filter(c => c.status === "Assigned" && (role === "admin" || c.dept === currentUser?.dept)).length;
 
     const roleCfg = {
-        admin: { color: "#B91C1C", label: "Administrator", abbr: "AD" },
-        officer: { color: "#2563EB", label: "Field Officer", abbr: "OF" },
-        citizen: { color: "#059669", label: "Citizen", abbr: currentUser?.name?.slice(0, 2).toUpperCase() ?? "CT" },
-    }[role] || { color: "#6B7280", label: "Observer", abbr: "OB" };
+        admin: { color: "#B91C1C", label: t("role.admin", "Administrator"), abbr: "AD" },
+        officer: { color: "#2563EB", label: t("role.officer", "Field Officer"), abbr: "OF" },
+        citizen: { color: "#059669", label: t("role.citizen", "Citizen"), abbr: currentUser?.name?.slice(0, 2).toUpperCase() ?? "CT" },
+    }[role] || { color: "#6B7280", label: t("role.observer", "Observer"), abbr: "OB" };
 
     function handleLogout() {
         logout();
@@ -204,7 +204,7 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
                     {role === "admin" && <Shield className="w-5 h-5 shrink-0" />}
                     {role === "officer" && <Building2 className="w-5 h-5 shrink-0" />}
                     {role === "citizen" && <User className="w-5 h-5 shrink-0" />}
-                <span className="truncate text-sm font-bold">{currentUser?.name ?? roleCfg.label}</span>
+                <span className="truncate text-sm font-bold">{currentUser?.name ? (currentUser.name === "District Admin" ? t("role.districtAdmin", currentUser.name) : currentUser.name) : roleCfg.label}</span>
                 </div>
 
                 {/* Live new complaints banner */}
@@ -214,7 +214,7 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
                         className="mx-3 mt-2 flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wide text-red-700 bg-red-50 border border-red-100 hover:bg-red-100 transition-colors group"
                     >
                         <span className="live-dot w-2.5 h-2.5 shrink-0" />
-                        {newCount} New Complaint{newCount > 1 ? "s" : ""}
+                        {newCount} {t("common.newComplaints", "New Complaints")}
                         <ChevronRight className="w-3.5 h-3.5 ml-auto text-red-400 group-hover:translate-x-0.5 transition-transform" />
                     </button>
                 )}
@@ -290,8 +290,8 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
                             {roleCfg.abbr}
                         </div>
                         <div className="flex-1 text-left min-w-0">
-                            <p className="text-sm font-bold text-gray-900 truncate leading-tight">{currentUser?.name ?? roleCfg.label}</p>
-                            <p className="text-xs font-semibold text-gray-400 capitalize mt-0.5 uppercase tracking-wide">{role}</p>
+                            <p className="text-sm font-bold text-gray-900 truncate leading-tight">{currentUser?.name ? (currentUser.name === "District Admin" ? t("role.districtAdmin", currentUser.name) : currentUser.name) : roleCfg.label}</p>
+                            <p className="text-xs font-semibold text-gray-400 capitalize mt-0.5 uppercase tracking-wide">{roleCfg.label}</p>
                         </div>
                         <LogOut className="w-4 h-4 text-gray-300 group-hover:text-[#B91C1C] transition-colors" />
                     </button>
@@ -310,7 +310,7 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
                         {role === 'admin' && (
                             <button title={t("common.adminMenu")} onClick={() => setAdminSlideOpen(true)} className="hidden md:inline-flex items-center gap-2 px-3 py-1 rounded-lg hover:bg-gray-50">
                                 <Layers className="w-5 h-5 text-gray-400" />
-                                <span className="text-lg text-gray-600">Admin</span>
+                                <span className="text-lg text-gray-600">{t("role.admin", "Admin")}</span>
                             </button>
                         )}
 
@@ -521,7 +521,7 @@ export default function DashboardLayout({ children, title, subtitle, bgImage, ac
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="flex justify-between items-start mb-1">
-                                        <p className="text-base font-bold uppercase text-gray-900">{lastNotif.title}</p>
+                                        <p className="text-base font-bold uppercase text-gray-900">{t(lastNotif.title, lastNotif.title)}</p>
                                         <button onClick={() => setShowToast(false)} className="text-gray-300 hover:text-gray-500">
                                             <X className="w-4 h-4" />
                                         </button>

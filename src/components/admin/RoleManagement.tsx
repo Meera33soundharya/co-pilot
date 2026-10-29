@@ -1,3 +1,4 @@
+import { useLanguage } from "@/context/LanguageContext";
 import React from "react";
 import { Shield, Building2, User, Edit2 } from "lucide-react";
 
@@ -8,11 +9,12 @@ const mock = [
 ];
 
 export default function RoleManagement() {
+  const { t } = useLanguage();
   return (
     <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm relative overflow-hidden">
       <h3 className="text-base font-black text-gray-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-3">
         <div className="w-2 h-2 rounded-full bg-[#B91C1C]" />
-        Role &amp; Permission Management
+        {t("admin.roleManagement", "Role & Permission Management")}
       </h3>
       <div className="space-y-3">
         {mock.map(u => {
@@ -35,7 +37,7 @@ export default function RoleManagement() {
 
               {/* Role badge */}
               <span className={`hidden sm:inline-flex items-center px-3 py-1.5 rounded-xl text-sm font-black uppercase tracking-widest border ${u.color} shrink-0`}>
-                {u.role}
+                {t(u.role, u.role)}
               </span>
 
               {/* Edit button */}

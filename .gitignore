@@ -43,5 +43,7 @@ env/
 .env.local
 .env.production
 
-# Scratch
+# Scratch & Backups
 scratch/
+backups/
+*.zip

@@ -26,6 +26,48 @@ export interface Announcement {
     timestamp: number;
 }
 
+export function normalizeAnnouncement(item: any): Announcement {
+    const defaultTitle = "Official Announcement";
+    let title: { en: string; ta: string };
+    if (typeof item?.title === "string") {
+        title = { en: item.title, ta: item.title };
+    } else if (item?.title && typeof item.title === "object") {
+        title = {
+            en: item.title.en || item.title.ta || defaultTitle,
+            ta: item.title.ta || item.title.en || defaultTitle,
+        };
+    } else {
+        title = { en: defaultTitle, ta: defaultTitle };
+    }
+
+    let body: { en: string; ta: string };
+    if (typeof item?.body === "string") {
+        body = { en: item.body, ta: item.body };
+    } else if (item?.body && typeof item.body === "object") {
+        body = {
+            en: item.body.en || item.body.ta || "",
+            ta: item.body.ta || item.body.en || "",
+        };
+    } else {
+        body = { en: "", ta: "" };
+    }
+
+    const validTypes: AnnouncementType[] = ["General", "Alert", "Resolution", "Event"];
+    const type: AnnouncementType = validTypes.includes(item?.type) ? item.type : "General";
+
+    return {
+        id: item?.id || `ANN-${Date.now().toString(36).toUpperCase()}`,
+        title,
+        body,
+        type,
+        ward: item?.ward || "All Wards",
+        postedBy: item?.postedBy || "Municipal Administration",
+        date: item?.date || new Date(item?.timestamp || Date.now()).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
+        pinned: Boolean(item?.pinned),
+        timestamp: typeof item?.timestamp === "number" ? item.timestamp : Date.now(),
+    };
+}
+
 // ── Auth / Role ────────────────────────────────────────────────
 export type Role = "admin" | "officer" | "citizen";
 
@@ -102,9 +144,11 @@ interface ComplaintsCtx {
     categorize: (id: string, category: Category) => void;
     rateComplaint: (id: string, rating: number) => void;
     reopenComplaint: (id: string, note: string) => void;
+    withdrawComplaint: (id: string, reason?: string) => void;
     readNotification: (id: string) => void;
     postAnnouncement: (data: { title: { en: string; ta: string }; body: { en: string; ta: string }; type: AnnouncementType; ward: string }) => void;
     deleteAnnouncement: (id: string) => void;
+    resetAnnouncements: () => void;
     closedDocs: ClosedDoc[];
     clearClosedDocs: () => void;
     deleteClosedDoc: (assetId: string) => void;
@@ -157,10 +201,19 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
 
     const [announcements, setAnnouncements] = useState<Announcement[]>(() => {
         try {
-            const saved = localStorage.getItem("co_pilot_announcements_v3");
-            return saved ? (JSON.parse(saved) as Announcement[]) : INITIAL_ANNOUNCEMENTS;
+            let saved = localStorage.getItem("co_pilot_announcements_v3");
+            if (!saved) {
+                saved = localStorage.getItem("co_pilot_announcements_v2") || localStorage.getItem("co_pilot_announcements");
+            }
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    return parsed.map(normalizeAnnouncement);
+                }
+            }
+            return INITIAL_ANNOUNCEMENTS.map(normalizeAnnouncement);
         } catch {
-            return INITIAL_ANNOUNCEMENTS;
+            return INITIAL_ANNOUNCEMENTS.map(normalizeAnnouncement);
         }
     });
 
@@ -183,6 +236,7 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         localStorage.setItem("co_pilot_announcements_v3", JSON.stringify(announcements));
+        localStorage.setItem("co_pilot_announcements_v2", JSON.stringify(announcements));
     }, [announcements]);
 
     useEffect(() => {
@@ -229,13 +283,26 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
                 }
             }
         });
-        const offAnnouncements = announcementsChannel.onMessage(data => setAnnouncements(data as Announcement[]));
+        const offAnnouncements = announcementsChannel.onMessage(data => {
+            if (Array.isArray(data)) {
+                setAnnouncements(data.map(normalizeAnnouncement));
+            }
+        });
 
         // Fallback: localStorage storage events (different browser instances on same device)
         const handleStorage = (e: StorageEvent) => {
-            if (e.key === "co_pilot_complaints_v2" && e.newValue) setAll(JSON.parse(e.newValue));
-            if (e.key === "co_pilot_notifications_v2" && e.newValue) setNotifications(JSON.parse(e.newValue));
-            if (e.key === "co_pilot_announcements_v2" && e.newValue) setAnnouncements(JSON.parse(e.newValue));
+            if ((e.key === "co_pilot_complaints_v4" || e.key === "co_pilot_complaints_v2") && e.newValue) {
+                try { setAll(JSON.parse(e.newValue)); } catch {}
+            }
+            if ((e.key === "co_pilot_notifications_v3" || e.key === "co_pilot_notifications_v2") && e.newValue) {
+                try { setNotifications(JSON.parse(e.newValue)); } catch {}
+            }
+            if ((e.key === "co_pilot_announcements_v3" || e.key === "co_pilot_announcements_v2") && e.newValue) {
+                try {
+                    const parsed = JSON.parse(e.newValue);
+                    if (Array.isArray(parsed)) setAnnouncements(parsed.map(normalizeAnnouncement));
+                } catch {}
+            }
         };
         window.addEventListener("storage", handleStorage);
 
@@ -669,8 +736,26 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
         }));
     }
 
+    function withdrawComplaint(id: string, reason?: string) {
+        setAll(prev => prev.map(c => {
+            if (c.id !== id) return c;
+            return {
+                ...c,
+                status: "Closed" as Status,
+                audit: [...c.audit, makeAudit("Citizen", "Complaint Withdrawn by Citizen", reason || "Self-resolved or closed by user")],
+            };
+        }));
+        pushNotif({
+            type: "status_change",
+            title: "Grievance Withdrawn",
+            message: `Grievance #${id} was withdrawn by citizen. Reason: ${reason || "Self-resolved"}`,
+            target: "all",
+            complaintId: id,
+        });
+    }
+
     function postAnnouncement(data: { title: { en: string; ta: string }; body: { en: string; ta: string }; type: AnnouncementType; ward: string }) {
-        const ann: Announcement = {
+        const ann: Announcement = normalizeAnnouncement({
             id: `ANN-${String(announcements.length + 1).padStart(3, "0")}`,
             title: data.title,
             body: data.body,
@@ -679,12 +764,13 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
             postedBy: currentUser?.name ?? "Administrator",
             date: new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
             timestamp: Date.now(),
-        };
+        });
         const updated = [ann, ...announcements];
         setAnnouncements(updated);
 
         // Immediately broadcast to all open tabs (citizen portal etc.)
         announcementsChannel.send(updated);
+        localStorage.setItem("co_pilot_announcements_v3", JSON.stringify(updated));
         localStorage.setItem("co_pilot_announcements_v2", JSON.stringify(updated));
 
         // Push a notification targeting ALL users so citizens see it immediately in bell + toast
@@ -701,7 +787,16 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
         const updated = announcements.filter(a => a.id !== id);
         setAnnouncements(updated);
         announcementsChannel.send(updated);
+        localStorage.setItem("co_pilot_announcements_v3", JSON.stringify(updated));
         localStorage.setItem("co_pilot_announcements_v2", JSON.stringify(updated));
+    }
+
+    function resetAnnouncements() {
+        const fresh = INITIAL_ANNOUNCEMENTS.map(normalizeAnnouncement);
+        setAnnouncements(fresh);
+        announcementsChannel.send(fresh);
+        localStorage.setItem("co_pilot_announcements_v3", JSON.stringify(fresh));
+        localStorage.setItem("co_pilot_announcements_v2", JSON.stringify(fresh));
     }
 
     function clearClosedDocs() {
@@ -722,9 +817,9 @@ export function ComplaintsProvider({ children }: { children: ReactNode }) {
             currentUser, login, logout,
             complaints, allComplaints,
             notifications: userNotifications, readNotification,
-            announcements, postAnnouncement, deleteAnnouncement,
+            announcements, postAnnouncement, deleteAnnouncement, resetAnnouncements,
             addComplaint, updateStatus, verifyComplaint, assignComplaint, notifyCitizen, categorize,
-            rateComplaint, reopenComplaint,
+            rateComplaint, reopenComplaint, withdrawComplaint,
             closedDocs, clearClosedDocs, deleteClosedDoc
         }}>
             {children}

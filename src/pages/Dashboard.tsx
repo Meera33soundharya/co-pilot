@@ -189,7 +189,7 @@ export default function Dashboard() {
                                         }`}>{a.type}</span>
                                         <span className="text-xs text-gray-400 font-bold">{new Date(a.timestamp).toLocaleDateString()}</span>
                                     </div>
-                                    <p className="font-bold text-gray-900 line-clamp-1">{a.title.en}</p>
+                                    <p className="font-bold text-gray-900 line-clamp-1">{typeof a.title === "string" ? a.title : (a.title?.en ?? a.title?.ta ?? "")}</p>
                                 </div>
                             ))}
                             {announcements.length === 0 && (

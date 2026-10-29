@@ -1,7 +1,9 @@
+import { useLanguage } from "@/context/LanguageContext";
 import React from "react";
 import { Brain, Activity, ShieldCheck, Zap, Sparkles, Target, Clock, MessageSquare, Cpu, Layers } from "lucide-react";
 
 export default function AIStatsPanel() {
+  const { t } = useLanguage();
   return (
     <div className="flex flex-col gap-6 h-full">
       {/* Intro Card */}
@@ -19,24 +21,24 @@ export default function AIStatsPanel() {
               <div className="absolute inset-0 bg-white/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             </div>
             <div>
-              <h2 className="text-2xl font-black text-white tracking-tight">AI Workspace</h2>
-              <p className="text-lg font-medium text-white/60">GovPilot Intelligence Core v4.2</p>
+              <h2 className="text-2xl font-black text-white tracking-tight">{t("admin.aiWorkspace", "AI Workspace")}</h2>
+              <p className="text-lg font-medium text-white/60">{t("admin.aiCore", "GovPilot Intelligence Core v4.2")}</p>
             </div>
           </div>
 
           <p className="text-base text-white/70 leading-relaxed font-medium mb-8">
-            Advanced neural analysis for incoming complaints, automated summarization, and strategic action plan generation tailored for municipal workflows.
+            {t("admin.aiDesc", "Advanced neural analysis for incoming complaints, automated summarization, and strategic action plan generation tailored for municipal workflows.")}
           </p>
 
           <div className="flex flex-wrap gap-2">
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-base font-bold text-white/80">
-              <Sparkles className="w-3.5 h-3.5 text-[#C81D25]" /> Semantic Search
+              <Sparkles className="w-3.5 h-3.5 text-[#C81D25]" /> {t("admin.semanticSearch", "Semantic Search")}
             </div>
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-base font-bold text-white/80">
-              <ShieldCheck className="w-3.5 h-3.5 text-[#C81D25]" /> XAI Certified
+              <ShieldCheck className="w-3.5 h-3.5 text-[#C81D25]" /> {t("admin.xaiCertified", "XAI Certified")}
             </div>
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-base font-bold text-white/80">
-              <Activity className="w-3.5 h-3.5 text-[#C81D25]" /> Live Processing
+              <Activity className="w-3.5 h-3.5 text-[#C81D25]" /> {t("admin.liveProcessing", "Live Processing")}
             </div>
           </div>
         </div>
@@ -55,7 +57,7 @@ export default function AIStatsPanel() {
             </span>
           </div>
           <div className="text-3xl font-black text-white tracking-tight mb-1">12,408</div>
-          <div className="text-base font-bold text-white/40 uppercase tracking-widest">Processed</div>
+          <div className="text-base font-bold text-white/40 uppercase tracking-widest">{t("admin.processed", "Processed")}</div>
         </div>
 
         {/* Stat 2 */}
@@ -66,7 +68,7 @@ export default function AIStatsPanel() {
             </div>
           </div>
           <div className="text-3xl font-black text-white tracking-tight mb-1">99.2%</div>
-          <div className="text-base font-bold text-white/40 uppercase tracking-widest">Accuracy</div>
+          <div className="text-base font-bold text-white/40 uppercase tracking-widest">{t("admin.accuracy", "Accuracy")}</div>
         </div>
 
         {/* Stat 3 */}
@@ -78,7 +80,7 @@ export default function AIStatsPanel() {
             </div>
             <div>
               <div className="text-2xl font-black text-white tracking-tight">1.2s</div>
-              <div className="text-base font-bold text-white/40 uppercase tracking-widest">Avg Response Time</div>
+              <div className="text-base font-bold text-white/40 uppercase tracking-widest">{t("admin.avgResponseTime", "Avg Response Time")}</div>
             </div>
           </div>
         </div>
@@ -91,7 +93,7 @@ export default function AIStatsPanel() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
             </div>
-            <span className="text-lg font-bold text-emerald-400">Core Systems Online</span>
+            <span className="text-lg font-bold text-emerald-400">{t("admin.coreSystemsOnline", "Core Systems Online")}</span>
          </div>
          <Cpu className="w-4 h-4 text-emerald-400/50" />
       </div>

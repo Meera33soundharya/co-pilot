@@ -25,17 +25,17 @@ export default function ComplaintTable() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 relative z-10">
         <h3 className="text-sm font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-3">
           <div className="w-1.5 h-1.5 rounded-full bg-[#B91C1C]" />
-          Complaint Assignment & Monitoring
+          {t("admin.complaintAssignment", "Complaint Assignment & Monitoring")}
         </h3>
         <div className="flex items-center gap-2">
-          <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search complaints" className="px-3 py-1.5 rounded-lg border text-lg" />
+          <input value={q} onChange={e => setQ(e.target.value)} placeholder={t("admin.searchComplaints", "Search complaints...")} className="px-3 py-1.5 rounded-lg border text-lg" />
           <select value={status} onChange={e => setStatus(e.target.value)} className="px-3 py-1.5 rounded-lg border text-lg">
             <option>{t("common.all")}</option>
             <option>{t("common.new")}</option>
             <option>{t("dashboard.assigned")}</option>
-            <option>In Progress</option>
+            <option value="In Progress">{t("dashboard.inProgress", "In Progress")}</option>
             <option>{t("dashboard.resolved")}</option>
-            <option>Closed</option>
+            <option value="Closed">{t("dashboard.closed", "Closed")}</option>
           </select>
         </div>
       </div>
@@ -44,8 +44,8 @@ export default function ComplaintTable() {
         <table className="w-full text-lg">
           <thead className="text-left text-base text-gray-500 uppercase tracking-widest">
             <tr>
-              <th className="p-3">ID</th>
-              <th className="p-3">Title</th>
+              <th className="p-3">{t("common.id", "ID")}</th>
+              <th className="p-3">{t("common.title", "Title")}</th>
               <th className="p-3">{t("dashboard.ward")}</th>
               <th className="p-3">{t("dashboard.status")}</th>
               <th className="p-3">{t("field.assignedTo")}</th>
@@ -58,9 +58,9 @@ export default function ComplaintTable() {
                 <td className="p-3 font-black">{c.id}</td>
                 <td className="p-3">{c.issue}</td>
                 <td className="p-3">{c.ward}</td>
-                <td className="p-3">{c.status}</td>
+                <td className="p-3">{t(c.status, c.status)}</td>
                 <td className="p-3">{c.assignedTo ?? "—"}</td>
-                <td className="p-3">{c.priority ?? "Normal"}</td>
+                <td className="p-3">{t(c.priority ?? "Normal", c.priority ?? "Normal")}</td>
               </tr>
             ))}
           </tbody>

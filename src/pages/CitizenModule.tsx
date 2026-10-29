@@ -8,7 +8,7 @@ import {
     ChevronRight, Search, Filter, Shield,
     Star, RefreshCw, MessageCircle, ImageIcon,
     X, Zap, Mail, Phone, Info, Megaphone, Bell,
-    FileText, ThumbsUp, ThumbsDown, Check, User, Mic
+    FileText, ThumbsUp, ThumbsDown, Check, User, Mic, XCircle
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import type { Status, Priority } from "@/store/complaintsStore";
@@ -101,7 +101,7 @@ function ComplaintTimeline({ status }: { status: Status }) {
 
 export default function CitizenModule() {
     
-    const { complaints, currentUser, rateComplaint, reopenComplaint, announcements } = useComplaints();
+    const { complaints, currentUser, rateComplaint, reopenComplaint, withdrawComplaint, announcements } = useComplaints();
     const { t, language } = useLanguage();
     const navigate = useNavigate();
     const location = useLocation();
@@ -112,6 +112,9 @@ export default function CitizenModule() {
     const [selectedC, setSelectedC] = useState<string | null>(null);
     const [dismissedAnns, setDismissedAnns] = useState<string[]>([]);
     const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
+    const [withdrawingComplaint, setWithdrawingComplaint] = useState<any | null>(null);
+    const [withdrawReason, setWithdrawReason] = useState<string>("Issue resolved on its own / by neighborhood");
+    const [customWithdrawReason, setCustomWithdrawReason] = useState<string>("");
 
     useEffect(() => {
         if (location.hash === "#track-complaint") {
@@ -189,8 +192,8 @@ export default function CitizenModule() {
                                             <span className="text-xl text-gray-500 font-bold flex items-center gap-2"><MapPin className="w-4 h-4" />{ann.ward}</span>
                                             <span className="text-xl text-gray-400 font-bold">{ann.date}</span>
                                         </div>
-                                        <p className="text-xl font-black text-gray-900 leading-snug">{ann.title[language]}</p>
-                                        <p className="text-lg text-gray-500 mt-2 line-clamp-1">{ann.body[language]}</p>
+                                        <p className="text-xl font-black text-gray-900 leading-snug">{typeof ann.title === "string" ? ann.title : (ann.title?.[language] ?? ann.title?.en ?? "")}</p>
+                                        <p className="text-lg text-gray-500 mt-2 line-clamp-1">{typeof ann.body === "string" ? ann.body : (ann.body?.[language] ?? ann.body?.en ?? "")}</p>
                                     </div>
                                     <button
                                         onClick={(e) => { e.stopPropagation(); setDismissedAnns(p => [...p, ann.id]); }}

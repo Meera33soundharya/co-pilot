@@ -52,8 +52,8 @@ export default function KpiCards() {
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       <Card title={t("dashboard.openComplaints")} value={stats.open} delta="+3%" positive={false} icon={Activity} isPrimary={true} />
       <Card title={t("dashboard.assigned")} value={stats.assigned} delta="+1.2%" positive={true} icon={TrendingUp} />
-      <Card title="Closed Today" value={stats.closedToday} delta="-0.4%" positive={false} icon={TrendingDown} />
-      <Card title="Avg Response (hrs)" value={stats.responseTime} icon={Award} />
+      <Card title={t("dashboard.closedToday", "Closed Today")} value={stats.closedToday} delta="-0.4%" positive={false} icon={TrendingDown} />
+      <Card title={t("dashboard.avgResponse", "Avg Response (hrs)")} value={stats.responseTime} icon={Award} />
     </div>
   );
 }
